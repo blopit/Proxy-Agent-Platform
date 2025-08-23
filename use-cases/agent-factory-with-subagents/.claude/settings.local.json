@@ -20,7 +20,8 @@
       "Bash(gh issue view:*)",
       "mcp__archon",
       "WebSearch",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(sed:*)"
     ],
     "deny": []
   }

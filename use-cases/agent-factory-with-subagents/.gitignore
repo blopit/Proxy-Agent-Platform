@@ -8,3 +8,4 @@ asana_manager
 brave_search_agent
 pgvector_search_agent
 test_rag_agent
+hybrid_search_agent

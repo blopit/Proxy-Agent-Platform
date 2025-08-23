@@ -551,7 +551,7 @@ Build a library of common patterns:
 - ✅ Document everything
 - ✅ Validate against requirements
 
-### NEVER:
+### Anti-patterns to ALWAYS avoid:
 - ❌ Hardcode API keys or secrets
 - ❌ Skip testing phase
 - ❌ Ignore error handling
