@@ -54,15 +54,14 @@ Monitor the AI assistant to ensure it:
 
 ### 📊 Code Review Process
 **AI Assistant Validation**:
-- Performs automated code review
+- Performs automated code review using the **Validator** sub-agen
 - Runs unit tests
 - Runs integration tests
 - Executes manual tests
 
 **Human Validation**:
-- Final review and approval using the **Validator** sub-agent for systematic quality checks
 - Strategic oversight
-- Quality assurance
+- Manual testing
 
 ## 🔧 Key Components
 
