@@ -2,10 +2,9 @@
 Focus Agent - Handles focus sessions and attention management
 """
 
-from typing import List, Tuple
 
-from src.core.models import AgentRequest, Message
 from src.agents.base import BaseProxyAgent
+from src.core.models import AgentRequest, Message
 
 
 class FocusAgent(BaseProxyAgent):
@@ -14,7 +13,7 @@ class FocusAgent(BaseProxyAgent):
     def __init__(self, db):
         super().__init__("focus", db)
 
-    async def _handle_request(self, request: AgentRequest, history: List[Message]) -> Tuple[str, int]:
+    async def _handle_request(self, request: AgentRequest, history: list[Message]) -> tuple[str, int]:
         """Handle focus-specific requests"""
         query = request.query.lower().strip()
 

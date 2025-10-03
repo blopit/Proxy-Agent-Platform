@@ -2,16 +2,16 @@
 Tests for proxy agents using SQLite
 """
 
-import pytest
-import tempfile
 import os
-from datetime import datetime
+import tempfile
 
-from src.core.models import AgentRequest, Message
-from src.database.adapter import DatabaseAdapter
-from src.agents.task_agent import TaskAgent
+import pytest
+
 from src.agents.focus_agent import FocusAgent
 from src.agents.registry import AgentRegistry
+from src.agents.task_agent import TaskAgent
+from src.core.models import AgentRequest, Message
+from src.database.adapter import DatabaseAdapter
 
 
 @pytest.fixture

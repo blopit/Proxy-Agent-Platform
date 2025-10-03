@@ -4,10 +4,11 @@ TDD tests for CLI functionality.
 This module tests the CLI interface using test-driven development.
 """
 
-import pytest
-from unittest.mock import Mock, patch
-import sys
 import os
+import sys
+from unittest.mock import Mock, patch
+
+import pytest
 
 # Add the project root to path
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))

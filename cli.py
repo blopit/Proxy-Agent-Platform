@@ -6,17 +6,15 @@ A command-line interface for interacting with the Proxy Agent Platform API.
 Provides task management, agent interaction, and productivity tracking.
 """
 
+import argparse
 import json
 import sys
-import argparse
-from typing import Dict, Any, Optional
-from datetime import datetime
+from typing import Any
+
 import httpx
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
-from rich.progress import Progress
-from rich import print as rprint
+from rich.table import Table
 
 # Configuration
 API_BASE_URL = "http://localhost:8000"
@@ -42,7 +40,7 @@ class ProxyAgentCLI:
 
     # Task Management Commands
 
-    def create_task(self, title: str, description: str = "", priority: str = "medium", duration: Optional[int] = None):
+    def create_task(self, title: str, description: str = "", priority: str = "medium", duration: int | None = None):
         """Create a new task."""
         task_data = {
             "title": title,
@@ -67,7 +65,7 @@ class ProxyAgentCLI:
             console.print(f"❌ Error creating task: {e}", style="red")
             return None
 
-    def list_tasks(self, status: Optional[str] = None, limit: int = 10):
+    def list_tasks(self, status: str | None = None, limit: int = 10):
         """List user tasks."""
         params = {"user_id": self.user_id, "limit": limit}
         if status:
@@ -105,7 +103,7 @@ class ProxyAgentCLI:
             console.print(f"❌ Error fetching tasks: {e}", style="red")
             return None
 
-    def complete_task(self, task_id: int, actual_duration: Optional[int] = None):
+    def complete_task(self, task_id: int, actual_duration: int | None = None):
         """Mark a task as completed."""
         params = {"user_id": self.user_id}
         if actual_duration:
@@ -153,7 +151,7 @@ class ProxyAgentCLI:
 
     # Agent Interaction Commands
 
-    def interact_with_agent(self, agent_type: str, action: str, data: Dict[str, Any] = None):
+    def interact_with_agent(self, agent_type: str, action: str, data: dict[str, Any] = None):
         """Interact with a specific proxy agent."""
         request_data = {
             "agent_type": agent_type,

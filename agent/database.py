@@ -7,18 +7,26 @@ including user data, tasks, focus sessions, energy tracking, and gamification.
 
 import os
 from datetime import datetime
-from typing import Optional, List
-from sqlalchemy import (
-    create_engine, Column, Integer, String, Text, DateTime, Boolean,
-    Float, ForeignKey, Enum as SQLEnum, JSON
-)
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, relationship
-from sqlalchemy.sql import func
-from pydantic import BaseModel
 from enum import Enum
+
 from dotenv import load_dotenv
+from pydantic import BaseModel
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.sql import func
 
 load_dotenv()
 
@@ -243,7 +251,7 @@ class UserCreate(BaseModel):
     email: str
     username: str
     password: str
-    full_name: Optional[str] = None
+    full_name: str | None = None
 
 
 class UserResponse(BaseModel):
@@ -251,7 +259,7 @@ class UserResponse(BaseModel):
     id: int
     email: str
     username: str
-    full_name: Optional[str]
+    full_name: str | None
     total_xp: int
     current_level: int
     current_streak: int
@@ -265,24 +273,24 @@ class UserResponse(BaseModel):
 class TaskCreate(BaseModel):
     """Task creation schema."""
     title: str
-    description: Optional[str] = None
+    description: str | None = None
     priority: TaskPriority = TaskPriority.MEDIUM
-    estimated_duration: Optional[int] = None
-    due_date: Optional[datetime] = None
+    estimated_duration: int | None = None
+    due_date: datetime | None = None
 
 
 class TaskResponse(BaseModel):
     """Task response schema."""
     id: int
     title: str
-    description: Optional[str]
+    description: str | None
     status: TaskStatus
     priority: TaskPriority
-    estimated_duration: Optional[int]
-    actual_duration: Optional[int]
+    estimated_duration: int | None
+    actual_duration: int | None
     created_at: datetime
-    due_date: Optional[datetime]
-    completed_at: Optional[datetime]
+    due_date: datetime | None
+    completed_at: datetime | None
     ai_suggested: bool
     xp_reward: int
 

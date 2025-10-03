@@ -4,24 +4,23 @@ Test API routes and endpoints.
 Comprehensive tests for FastAPI routes to increase coverage.
 """
 
-import pytest
-from unittest.mock import AsyncMock, Mock, patch
-from fastapi.testclient import TestClient
-from fastapi import HTTPException
-import sys
 import os
+import sys
+from unittest.mock import AsyncMock, Mock, patch
+
+import pytest
+from fastapi.testclient import TestClient
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'agent'))
 
 # Import routers
-from routers.tasks import router as tasks_router
-from routers.agents import router as agents_router
-from routers.focus import router as focus_router
-from routers.energy import router as energy_router
-from routers.progress import router as progress_router
-
 # Import main app
 from main import app
+from routers.agents import router as agents_router
+from routers.energy import router as energy_router
+from routers.focus import router as focus_router
+from routers.progress import router as progress_router
+from routers.tasks import router as tasks_router
 
 
 class TestTasksRouter:

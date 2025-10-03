@@ -3,13 +3,14 @@ Flexible provider configuration for LLM models.
 Based on examples/agent/providers.py pattern.
 """
 
-from typing import Optional
-from pydantic_ai.providers.openai import OpenAIProvider
+
 from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai.providers.openai import OpenAIProvider
+
 from .settings import settings
 
 
-def get_llm_model(model_choice: Optional[str] = None) -> OpenAIModel:
+def get_llm_model(model_choice: str | None = None) -> OpenAIModel:
     """
     Get LLM model configuration based on environment variables.
     
@@ -22,10 +23,10 @@ def get_llm_model(model_choice: Optional[str] = None) -> OpenAIModel:
     llm_choice = model_choice or settings.llm_model
     base_url = settings.llm_base_url
     api_key = settings.llm_api_key
-    
+
     # Create provider based on configuration
     provider = OpenAIProvider(base_url=base_url, api_key=api_key)
-    
+
     return OpenAIModel(llm_choice, provider=provider)
 
 

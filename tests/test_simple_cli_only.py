@@ -4,10 +4,11 @@ Test simple CLI functionality without external dependencies.
 This file focuses on testing CLI logic without requiring the backend to be running.
 """
 
-import pytest
-from unittest.mock import Mock, patch, call
-import sys
 import os
+import sys
+from unittest.mock import Mock, call, patch
+
+import pytest
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))

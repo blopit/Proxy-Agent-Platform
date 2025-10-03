@@ -95,7 +95,9 @@
       "Bash(uniq:*)",
       "Bash(awk:*)",
       "Bash(sed:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(.venv/bin/pip install:*)",
+      "Bash(UV_HTTP_TIMEOUT=120 uv sync)"
     ],
     "deny": []
   }

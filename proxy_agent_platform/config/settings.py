@@ -5,18 +5,17 @@ This module provides configuration management following the CLAUDE.md standards 
 PydanticAI development with proper environment variable loading.
 """
 
-import os
 from functools import lru_cache
-from typing import Optional, Dict, Any
 from pathlib import Path
+from typing import Any
 
-from pydantic import Field, ConfigDict, validator
-from pydantic_settings import BaseSettings
+from dotenv import load_dotenv
+from pydantic import ConfigDict, Field, validator
 from pydantic_ai.models import Model
-from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.models.anthropic import AnthropicModel
 from pydantic_ai.models.gemini import GeminiModel
-from dotenv import load_dotenv
+from pydantic_ai.models.openai import OpenAIModel
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -54,7 +53,7 @@ class Settings(BaseSettings):
     redis_url: str = Field(default="redis://localhost:6379/0", description="Redis URL")
 
     # External Services
-    brave_api_key: Optional[str] = Field(default=None, description="Brave Search API key")
+    brave_api_key: str | None = Field(default=None, description="Brave Search API key")
     gmail_credentials_path: str = Field(
         default="./credentials/credentials.json",
         description="Path to Gmail credentials.json"
@@ -63,15 +62,15 @@ class Settings(BaseSettings):
         default="./credentials/token.json",
         description="Path to Gmail token.json"
     )
-    github_token: Optional[str] = Field(default=None, description="GitHub API token")
-    github_webhook_secret: Optional[str] = Field(default=None, description="GitHub webhook secret")
+    github_token: str | None = Field(default=None, description="GitHub API token")
+    github_webhook_secret: str | None = Field(default=None, description="GitHub webhook secret")
 
     # Mobile Integration
-    ios_shortcuts_webhook_url: Optional[str] = Field(
+    ios_shortcuts_webhook_url: str | None = Field(
         default=None,
         description="iOS Shortcuts webhook URL"
     )
-    android_tiles_webhook_url: Optional[str] = Field(
+    android_tiles_webhook_url: str | None = Field(
         default=None,
         description="Android tiles webhook URL"
     )
@@ -98,13 +97,13 @@ class Settings(BaseSettings):
     )
 
     # Monitoring & Observability
-    sentry_dsn: Optional[str] = Field(default=None, description="Sentry DSN for error tracking")
+    sentry_dsn: str | None = Field(default=None, description="Sentry DSN for error tracking")
     prometheus_enabled: bool = Field(default=False, description="Enable Prometheus metrics")
     jaeger_enabled: bool = Field(default=False, description="Enable Jaeger tracing")
 
     # Development/Testing
     testing: bool = Field(default=False, description="Testing mode")
-    test_database_url: Optional[str] = Field(
+    test_database_url: str | None = Field(
         default=None,
         description="Test database URL"
     )
@@ -130,7 +129,7 @@ class Settings(BaseSettings):
         """Get the credentials directory path."""
         return Path(self.gmail_credentials_path).parent
 
-    def get_database_config(self) -> Dict[str, Any]:
+    def get_database_config(self) -> dict[str, Any]:
         """Get database configuration dictionary."""
         return {
             "url": self.test_database_url if self.testing else self.database_url,
@@ -140,7 +139,7 @@ class Settings(BaseSettings):
             "pool_pre_ping": True,
         }
 
-    def get_celery_config(self) -> Dict[str, Any]:
+    def get_celery_config(self) -> dict[str, Any]:
         """Get Celery configuration dictionary."""
         return {
             "broker_url": self.celery_broker_url,
@@ -186,7 +185,7 @@ def load_settings() -> Settings:
         raise ValueError(error_msg) from e
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """Get cached settings instance."""
     return load_settings()
@@ -229,6 +228,7 @@ def get_llm_model() -> Model:
 def setup_logging() -> None:
     """Setup structured logging with proper configuration."""
     import logging
+
     import structlog
 
     settings = get_settings()

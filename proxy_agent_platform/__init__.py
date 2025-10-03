@@ -11,28 +11,26 @@ __author__ = "Proxy Agent Platform Team"
 __email__ = "support@proxyagent.dev"
 
 from .agents import (
-    TaskProxy,
-    FocusProxy,
+    EmailProxy,
     EnergyProxy,
+    FocusProxy,
     ProgressProxy,
     ResearchProxy,
-    EmailProxy,
+    TaskProxy,
 )
-
 from .models import (
-    Task,
-    FocusSession,
-    EnergyLevel,
-    ProgressMetrics,
-    User,
     Achievement,
+    EnergyLevel,
+    FocusSession,
+    ProgressMetrics,
+    Task,
+    User,
 )
-
 from .services import (
     AgentRegistry,
-    TaskQueue,
     GamificationEngine,
     MobileIntegration,
+    TaskQueue,
 )
 
 __all__ = [

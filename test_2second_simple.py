@@ -5,6 +5,7 @@ Simple 2-second capture test for new SQLite structure
 
 import asyncio
 import time
+
 import httpx
 
 
@@ -60,7 +61,7 @@ async def test_quick_capture():
                 print(f"❌ Error in {response_time_ms:.0f}ms: {e}")
 
     # Test history retrieval
-    print(f"\n📋 Testing history retrieval...")
+    print("\n📋 Testing history retrieval...")
     async with httpx.AsyncClient() as client:
         start_time = time.time()
         response = await client.get(f"{base_url}/api/history/speed_test")

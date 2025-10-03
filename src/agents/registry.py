@@ -2,13 +2,12 @@
 Agent Registry - Manages all proxy agents
 """
 
-from typing import Dict, Optional
 
+from src.agents.base import BaseProxyAgent
+from src.agents.focus_agent import FocusAgent
+from src.agents.task_agent import TaskAgent
 from src.core.models import AgentRequest, AgentResponse
 from src.database.adapter import DatabaseAdapter, get_database
-from src.agents.base import BaseProxyAgent
-from src.agents.task_agent import TaskAgent
-from src.agents.focus_agent import FocusAgent
 
 
 class AgentRegistry:
@@ -16,13 +15,13 @@ class AgentRegistry:
 
     def __init__(self, db: DatabaseAdapter = None):
         self.db = db or get_database()
-        self.agents: Dict[str, BaseProxyAgent] = {
+        self.agents: dict[str, BaseProxyAgent] = {
             "task": TaskAgent(self.db),
             "focus": FocusAgent(self.db),
             # Energy and Progress agents to be added later
         }
 
-    def get_agent(self, agent_type: str) -> Optional[BaseProxyAgent]:
+    def get_agent(self, agent_type: str) -> BaseProxyAgent | None:
         """Get agent by type"""
         return self.agents.get(agent_type)
 
@@ -41,7 +40,7 @@ class AgentRegistry:
 
         return await agent.process_request(request)
 
-    def list_agents(self) -> Dict[str, str]:
+    def list_agents(self) -> dict[str, str]:
         """List available agents"""
         return {
             agent_type: agent.__class__.__name__

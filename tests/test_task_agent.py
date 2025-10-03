@@ -4,19 +4,21 @@ Test-Driven Development tests for Task Agent.
 This module demonstrates TDD by writing tests first, then implementing features.
 """
 
-import pytest
-import asyncio
-from unittest.mock import AsyncMock, Mock
-from sqlalchemy.ext.asyncio import AsyncSession
+import os
 
 # Import the agent we'll test
 import sys
-import os
+from unittest.mock import AsyncMock, Mock
+
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'agent'))
 
-from agents.task_agent import TaskAgent, TaskRequest
 from agents.base_agent import AgentResponse
-from database import Task, TaskStatus, TaskPriority, User
+
+from agents.task_agent import TaskAgent
+from database import Task, TaskPriority, TaskStatus, User
 
 
 class TestTaskAgent:

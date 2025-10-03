@@ -5,14 +5,14 @@ This module contains all the proxy agents that handle personal productivity task
 Each agent specializes in a specific domain while working together as a cohesive system.
 """
 
-from .base import BaseProxyAgent, AgentExecutionContext, AgentResult
-from .task_proxy import TaskProxy
-from .focus_proxy import FocusProxy
+from .base import AgentExecutionContext, AgentResult, BaseProxyAgent
+from .context_engineering_proxy import ContextEngineeringProxy
+from .email_proxy import EmailProxy
 from .energy_proxy import EnergyProxy
+from .focus_proxy import FocusProxy
 from .progress_proxy import ProgressProxy
 from .research_proxy import ResearchProxy
-from .email_proxy import EmailProxy
-from .context_engineering_proxy import ContextEngineeringProxy
+from .task_proxy import TaskProxy
 
 __all__ = [
     # Base classes

@@ -2,12 +2,10 @@
 Database Adapter - Easy to swap SQLite for PostgreSQL later
 """
 
-import sqlite3
-import json
 import asyncio
+import json
+import sqlite3
 from datetime import datetime
-from typing import List, Dict, Any, Optional
-from contextlib import asynccontextmanager
 
 from src.core.models import Message
 
@@ -74,11 +72,11 @@ class DatabaseAdapter:
         conn.close()
         return message.id
 
-    async def get_conversation_history(self, session_id: str, limit: int = 10) -> List[Message]:
+    async def get_conversation_history(self, session_id: str, limit: int = 10) -> list[Message]:
         """Get conversation history for a session"""
         return await asyncio.to_thread(self._get_history_sync, session_id, limit)
 
-    def _get_history_sync(self, session_id: str, limit: int) -> List[Message]:
+    def _get_history_sync(self, session_id: str, limit: int) -> list[Message]:
         """Synchronous history retrieval"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -126,7 +124,7 @@ class DatabaseAdapter:
 
 
 # Global database instance
-_db_instance: Optional[DatabaseAdapter] = None
+_db_instance: DatabaseAdapter | None = None
 
 
 def get_database() -> DatabaseAdapter:

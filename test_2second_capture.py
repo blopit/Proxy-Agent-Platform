@@ -6,8 +6,8 @@ Tests the FastAPI endpoint performance using Ottomator patterns
 
 import asyncio
 import time
+
 import httpx
-from agent.agents.base_proxy_agent import AgentRequest
 
 
 async def test_task_capture_speed():

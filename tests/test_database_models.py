@@ -4,18 +4,27 @@ Test database models and schemas.
 Comprehensive tests for database functionality to increase coverage.
 """
 
-import pytest
-from datetime import datetime
-from unittest.mock import Mock, AsyncMock
-import sys
 import os
+import sys
+from datetime import datetime
+
+import pytest
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'agent'))
 
 from database import (
-    TaskStatus, TaskPriority, EnergyLevel, AgentType,
-    Task, User, FocusSession, EnergyLog, Achievement, UserAchievement,
-    TaskCreate, TaskResponse, UserCreate, UserResponse
+    Achievement,
+    AgentType,
+    EnergyLevel,
+    EnergyLog,
+    FocusSession,
+    Task,
+    TaskCreate,
+    TaskPriority,
+    TaskStatus,
+    User,
+    UserAchievement,
+    UserCreate,
 )
 
 

@@ -1,9 +1,10 @@
 """Semantic Search Agent Package."""
 
-from agent import search_agent
 from dependencies import AgentDependencies
+from providers import get_embedding_model, get_llm_model
 from settings import Settings, load_settings
-from providers import get_llm_model, get_embedding_model
+
+from agent import search_agent
 
 __version__ = "1.0.0"
 

@@ -3,7 +3,6 @@ Base Agent - Simple foundation for all proxy agents
 """
 
 from datetime import datetime
-from typing import List, Tuple
 
 from src.core.models import AgentRequest, AgentResponse, Message
 from src.database.adapter import DatabaseAdapter
@@ -30,7 +29,7 @@ class BaseProxyAgent:
         )
         return await self.db.store_message(message)
 
-    async def get_history(self, session_id: str, limit: int = 10) -> List[Message]:
+    async def get_history(self, session_id: str, limit: int = 10) -> list[Message]:
         """Get conversation history"""
         return await self.db.get_conversation_history(session_id, limit)
 
@@ -94,7 +93,7 @@ class BaseProxyAgent:
                 processing_time_ms=processing_time
             )
 
-    async def _handle_request(self, request: AgentRequest, history: List[Message]) -> Tuple[str, int]:
+    async def _handle_request(self, request: AgentRequest, history: list[Message]) -> tuple[str, int]:
         """
         Handle specific agent logic - override in subclasses
         Returns: (response_text, xp_earned)

@@ -6,17 +6,17 @@ for the AI proxy agents productivity platform.
 """
 
 import os
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
-from dotenv import load_dotenv
-
 from routers import agents
-from database import init_db, close_db
+
+from database import close_db, init_db
 
 # Load environment variables
 load_dotenv()

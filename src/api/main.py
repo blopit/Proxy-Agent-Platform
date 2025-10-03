@@ -5,9 +5,9 @@ FastAPI App - Simple API for proxy agents
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.core.models import AgentRequest, AgentResponse
 from src.agents.registry import AgentRegistry
-from src.database.adapter import get_database, close_database
+from src.core.models import AgentRequest, AgentResponse
+from src.database.adapter import close_database, get_database
 
 # Create FastAPI app
 app = FastAPI(

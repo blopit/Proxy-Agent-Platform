@@ -6,13 +6,13 @@ CLAUDE.md standards for PydanticAI development.
 """
 
 from abc import ABC, abstractmethod
-from datetime import datetime, timezone
-from typing import Any, Dict, Optional, TypeVar, Generic, List
-from uuid import UUID, uuid4
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from enum import Enum
+from typing import Any, Generic, TypeVar
+from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 from pydantic_ai import Agent, RunContext
 
 from ..config import get_llm_model, get_settings
@@ -46,11 +46,11 @@ class AgentExecutionContext:
     user_id: UUID
     session_id: UUID
     execution_id: UUID
-    user_preferences: Dict[str, Any]
-    energy_level: Optional[float] = None
-    time_context: Optional[Dict[str, Any]] = None
-    mobile_context: Optional[Dict[str, Any]] = None
-    metadata: Optional[Dict[str, Any]] = None
+    user_preferences: dict[str, Any]
+    energy_level: float | None = None
+    time_context: dict[str, Any] | None = None
+    mobile_context: dict[str, Any] | None = None
+    metadata: dict[str, Any] | None = None
 
     def get_preference(self, key: str, default: Any = None) -> Any:
         """Get user preference value."""
@@ -85,10 +85,10 @@ class AgentResult(ProxyBaseModel):
     data: Any = Field(default=None, description="Result data from agent execution")
     message: str = Field(default="", description="Human-readable message about the result")
     execution_time: float = Field(default=0.0, description="Execution time in seconds")
-    tokens_used: Optional[int] = Field(default=None, description="Tokens consumed")
+    tokens_used: int | None = Field(default=None, description="Tokens consumed")
     xp_earned: int = Field(default=0, description="XP awarded for this action")
-    next_actions: List[str] = Field(default=[], description="Suggested next actions")
-    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata")
+    next_actions: list[str] = Field(default=[], description="Suggested next actions")
+    metadata: dict[str, Any] | None = Field(default=None, description="Additional metadata")
 
     def is_success(self) -> bool:
         """Check if the execution was successful."""
@@ -161,7 +161,7 @@ class BaseProxyAgent(ABC, Generic[DepsType]):
         @self.agent.tool
         async def get_current_time(ctx: RunContext[DepsType]) -> str:
             """Get the current time and date."""
-            return datetime.now(timezone.utc).isoformat()
+            return datetime.now(UTC).isoformat()
 
         @self.agent.tool
         async def log_activity(
@@ -171,7 +171,7 @@ class BaseProxyAgent(ABC, Generic[DepsType]):
         ) -> str:
             """Log an activity for tracking and analytics."""
             # This would integrate with the actual logging system
-            timestamp = datetime.now(timezone.utc).isoformat()
+            timestamp = datetime.now(UTC).isoformat()
             return f"Activity logged: {activity} at {timestamp} (importance: {importance})"
 
     async def execute(
@@ -313,7 +313,7 @@ class BaseProxyAgent(ABC, Generic[DepsType]):
         self,
         result: Any,
         context: AgentExecutionContext
-    ) -> List[str]:
+    ) -> list[str]:
         """Suggest next actions based on the result and context."""
         suggestions = []
 
@@ -391,7 +391,7 @@ class BaseProxyAgent(ABC, Generic[DepsType]):
                 execution_time=execution_time,
             )
 
-    def get_capabilities(self) -> Dict[str, Any]:
+    def get_capabilities(self) -> dict[str, Any]:
         """Get agent capabilities and metadata."""
         return {
             "agent_type": self.agent_type,

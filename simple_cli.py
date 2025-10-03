@@ -5,10 +5,9 @@ Simple CLI for Proxy Agent Platform API
 A minimal command-line interface for basic task management.
 """
 
-import requests
-import json
 import sys
 
+import requests
 
 API_URL = "http://localhost:8000"
 USER_ID = 1
@@ -24,12 +23,15 @@ def api_request(method, endpoint, data=None):
         elif method == "POST":
             response = requests.post(url, json=data)
         elif method == "PATCH":
-            response = requests.patch(url, json=data)
+            if data is not None:
+                response = requests.patch(url, json=data)
+            else:
+                response = requests.patch(url)
 
         response.raise_for_status()
         return response.json()
 
-    except requests.exceptions.RequestException as e:
+    except Exception as e:
         print(f"API Error: {e}")
         return None
 
@@ -95,11 +97,13 @@ def agent_status():
 
 def health_check():
     """Check API health."""
-    result = api_request("GET", "/health")
-
-    if result:
-        print(f"✅ API Health: {result['status']}")
-    else:
+    try:
+        result = api_request("GET", "/health")
+        if result:
+            print(f"✅ API Health: {result['status']}")
+        else:
+            print("❌ API is not responding")
+    except Exception:
         print("❌ API is not responding")
 
 

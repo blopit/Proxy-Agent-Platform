@@ -3,8 +3,8 @@ Core Models - Simple data structures for the platform
 """
 
 from datetime import datetime
-from typing import Dict, List, Optional, Any
-from uuid import uuid4, UUID
+from typing import Any
+from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
@@ -36,5 +36,5 @@ class Message(BaseModel):
     message_type: str  # user, agent, system
     content: str
     agent_type: str
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=datetime.utcnow)

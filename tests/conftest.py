@@ -4,11 +4,12 @@ Pytest configuration and shared fixtures.
 This file provides common test fixtures and configuration for TDD.
 """
 
-import pytest
 import asyncio
-from unittest.mock import AsyncMock, Mock
-import sys
 import os
+import sys
+from unittest.mock import AsyncMock, Mock
+
+import pytest
 
 # Add project paths
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'agent'))

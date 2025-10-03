@@ -6,12 +6,11 @@ Context Engineering MCP server tools into the productivity workflow.
 """
 
 from dataclasses import dataclass
-from typing import Dict, Any, List, Optional
-from datetime import datetime
+from typing import Any
 
 from pydantic_ai import RunContext
 
-from .base import BaseProxyAgent, AgentExecutionContext, AgentResult
+from .base import BaseProxyAgent
 
 
 @dataclass
@@ -19,9 +18,9 @@ class ContextEngineeringProxyDependencies:
     """Dependencies for the Context Engineering Proxy agent."""
     user_id: str
     repository_access: Any  # GitHub integration
-    mcp_server_client: Optional[Any] = None  # Client for Context Engineering MCP server
-    file_storage: Optional[Any] = None
-    session_id: Optional[str] = None
+    mcp_server_client: Any | None = None  # Client for Context Engineering MCP server
+    file_storage: Any | None = None
+    session_id: str | None = None
 
 
 class ContextEngineeringProxy(BaseProxyAgent[ContextEngineeringProxyDependencies]):
@@ -86,7 +85,7 @@ When executing PRPs:
             repository_path: str = ".",
             research_depth: str = "comprehensive",
             include_examples: bool = True
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """
             Generate a Product Requirements Prompt from a feature description.
 
@@ -179,7 +178,7 @@ Include relevant documentation URLs and API references.
             dry_run: bool = False,
             skip_tests: bool = False,
             parallel_execution: bool = False
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """
             Execute a Product Requirements Prompt to implement a feature.
 
@@ -277,7 +276,7 @@ Include relevant documentation URLs and API references.
             include_dependencies: bool = True,
             include_documentation: bool = True,
             max_file_size: int = 100000
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """
             Analyze repository structure and provide comprehensive context.
 
@@ -365,11 +364,11 @@ Include relevant documentation URLs and API references.
         @self.agent.tool
         async def validate_code_quality(
             ctx: RunContext[ContextEngineeringProxyDependencies],
-            file_paths: List[str] = None,
+            file_paths: list[str] = None,
             run_tests: bool = True,
             run_linting: bool = True,
             run_type_checking: bool = True
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """
             Run comprehensive code quality validation.
 

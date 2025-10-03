@@ -6,15 +6,14 @@ progress monitoring and intelligent task management.
 """
 
 from dataclasses import dataclass
-from typing import Dict, Any, List, Optional
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 
-from pydantic import Field
 from pydantic_ai import RunContext
 
-from .base import BaseProxyAgent, AgentExecutionContext, AgentResult, AgentStatus
-from ..models.task import Task, TaskStatus, TaskPriority, TaskCategory
+from ..models.task import Task, TaskCategory, TaskPriority, TaskStatus
+from .base import BaseProxyAgent
 
 
 class TaskAction(str, Enum):
@@ -33,10 +32,10 @@ class TaskProxyDependencies:
     """Dependencies for the Task Proxy agent."""
     user_id: str
     task_storage: Any  # Would be actual task storage service
-    calendar_integration: Optional[Any] = None
-    notification_service: Optional[Any] = None
-    context_engineering_agent: Optional[Any] = None
-    session_id: Optional[str] = None
+    calendar_integration: Any | None = None
+    notification_service: Any | None = None
+    context_engineering_agent: Any | None = None
+    session_id: str | None = None
 
 
 class TaskProxy(BaseProxyAgent[TaskProxyDependencies]):
@@ -102,8 +101,8 @@ When managing tasks:
             category: str = "general",
             estimated_minutes: int = 30,
             energy_required: str = "medium",
-            due_date: Optional[str] = None
-        ) -> Dict[str, Any]:
+            due_date: str | None = None
+        ) -> dict[str, Any]:
             """
             Capture a new task with intelligent categorization and scheduling.
 
@@ -164,7 +163,7 @@ When managing tasks:
             energy_level: float = 7.0,
             available_minutes: int = 60,
             focus_area: str = "any"
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """
             Get prioritized task recommendations based on current context.
 
@@ -245,8 +244,8 @@ When managing tasks:
             ctx: RunContext[TaskProxyDependencies],
             task_id: str,
             completion_notes: str = "",
-            actual_time_spent: Optional[int] = None
-        ) -> Dict[str, Any]:
+            actual_time_spent: int | None = None
+        ) -> dict[str, Any]:
             """
             Mark a task as completed and calculate XP rewards.
 
@@ -292,7 +291,7 @@ When managing tasks:
                     "task_id": task_id,
                     "xp_earned": xp_earned,
                     "message": f"🎉 Task completed! Earned {xp_earned} XP",
-                    "completion_time": datetime.now(timezone.utc).isoformat(),
+                    "completion_time": datetime.now(UTC).isoformat(),
                     "suggested_actions": [
                         "Take a moment to celebrate this win!",
                         "Review what you learned during this task",
@@ -312,7 +311,7 @@ When managing tasks:
             ctx: RunContext[TaskProxyDependencies],
             task_description: str,
             max_subtasks: int = 5
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """
             Break down a complex task into smaller, manageable subtasks.
 
@@ -379,7 +378,7 @@ When managing tasks:
             ctx: RunContext[TaskProxyDependencies],
             coding_task_description: str,
             complexity: str = "medium"
-        ) -> Dict[str, Any]:
+        ) -> dict[str, Any]:
             """
             Delegate a coding or development task to the Context Engineering agent.
 
@@ -408,7 +407,7 @@ When managing tasks:
                 return {
                     "success": True,
                     "delegation": delegation_result,
-                    "message": f"Successfully delegated coding task to Context Engineering agent",
+                    "message": "Successfully delegated coding task to Context Engineering agent",
                     "tracking_id": f"ce_task_{datetime.now().timestamp()}",
                     "suggested_actions": [
                         "Monitor progress through Context Engineering dashboard",
