@@ -1,0 +1,60 @@
+{
+  "name": "proxy-agent-platform",
+  "version": "0.1.0",
+  "description": "Personal productivity platform with AI proxy agents",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently \"npm run dev:ui\" \"npm run dev:agent\"",
+    "dev:debug": "concurrently \"npm run dev:ui\" \"npm run dev:agent -- --debug\"",
+    "dev:ui": "cd frontend && npm run dev",
+    "dev:agent": "cd agent && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+    "dev:proxy-platform": "npm run dev",
+    "build": "cd frontend && npm run build",
+    "start": "concurrently \"cd frontend && npm start\" \"cd agent && python -m uvicorn main:app --host 0.0.0.0 --port 8000\"",
+    "lint": "cd frontend && npm run lint",
+    "lint:fix": "cd frontend && npm run lint:fix",
+    "test": "npm run test:frontend && npm run test:agent",
+    "test:frontend": "cd frontend && npm test",
+    "test:agent": "cd agent && python -m pytest",
+    "install:all": "npm install && npm run install:frontend && npm run install:agent",
+    "install:frontend": "cd frontend && npm install",
+    "install:agent": "cd agent && python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt",
+    "clean": "rm -rf frontend/node_modules frontend/.next agent/.venv agent/__pycache__",
+    "setup": "npm run install:all && npm run setup:db",
+    "setup:db": "cd agent && python -m alembic upgrade head",
+    "db:migrate": "cd agent && python -m alembic revision --autogenerate",
+    "db:upgrade": "cd agent && python -m alembic upgrade head",
+    "production:build": "npm run build && cd agent && pip install -r requirements.txt",
+    "production:start": "npm start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "workspaces": [
+    "frontend"
+  ],
+  "keywords": [
+    "productivity",
+    "ai-agents",
+    "pydantic-ai",
+    "copilotkit",
+    "mobile-integration",
+    "gamification",
+    "task-management"
+  ],
+  "author": "Proxy Agent Platform Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/proxy-agent-platform.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/proxy-agent-platform/issues"
+  },
+  "homepage": "https://github.com/yourusername/proxy-agent-platform#readme"
+}

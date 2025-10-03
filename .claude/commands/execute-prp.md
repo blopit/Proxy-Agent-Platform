@@ -1,6 +1,15 @@
-# Execute BASE PRP
+---
+name: execute-prp
+description: Execute a Product Requirements Prompt (PRP) to implement a feature
+args:
+  - name: prp_file
+    description: Path to the PRP file to execute
+    required: true
+---
 
-Implement a feature using using the PRP file.
+# Execute PRP
+
+Implement a feature using the PRP file.
 
 ## PRP File: $ARGUMENTS
 

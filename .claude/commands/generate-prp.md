@@ -1,3 +1,12 @@
+---
+name: generate-prp
+description: Generate a comprehensive Product Requirements Prompt (PRP) for feature implementation
+args:
+  - name: feature_file
+    description: Path to the feature specification file
+    required: true
+---
+
 # Create PRP
 
 ## Feature file: $ARGUMENTS
