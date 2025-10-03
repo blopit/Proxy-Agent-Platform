@@ -15,7 +15,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 
-from routers import agents, tasks, focus, energy, progress, websocket
+from routers import agents
 from database import init_db, close_db
 
 # Load environment variables
@@ -61,12 +61,7 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(agents.router, prefix="/api/agents", tags=["agents"])
-app.include_router(tasks.router, prefix="/api/tasks", tags=["tasks"])
-app.include_router(focus.router, prefix="/api/focus", tags=["focus"])
-app.include_router(energy.router, prefix="/api/energy", tags=["energy"])
-app.include_router(progress.router, prefix="/api/progress", tags=["progress"])
-app.include_router(websocket.router, prefix="/ws", tags=["websocket"])
+app.include_router(agents.router)
 
 
 @app.get("/")

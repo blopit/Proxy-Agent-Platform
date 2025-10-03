@@ -109,7 +109,7 @@ Implement the four core proxy agent types using PydanticAI framework.
   - **Acceptance**: Generates progress reports and insights
   - **Files**: `agent/services/progress_reporter.py`
 
-### Phase 1.6: Integration & Testing
+### Phase 1.6: Integration, Testing & Human Validation
 - [ ] **T1.6.1** - Write unit tests for all proxy agents
   - **Effort**: 3 days
   - **Acceptance**: 90%+ test coverage for agent classes
@@ -129,6 +129,21 @@ Implement the four core proxy agent types using PydanticAI framework.
   - **Effort**: 1 day
   - **Acceptance**: Complete API docs for all agents
   - **Files**: `docs/agents/AGENT_API.md`
+
+- [ ] **T1.6.5** - **Human Technical Review** 🔄
+  - **Effort**: 0.5 days
+  - **Acceptance**: Technical reviewer approves agent architecture and implementation
+  - **Process**: Code review, architecture validation, security check
+
+- [ ] **T1.6.6** - **Human UX Testing** 🔄
+  - **Effort**: 1 day
+  - **Acceptance**: UX tester validates 2-second task capture and agent interactions
+  - **Process**: End-to-end workflow testing, usability validation
+
+- [ ] **T1.6.7** - **Target User Testing** 🔄
+  - **Effort**: 2 days
+  - **Acceptance**: 3+ ADHD professionals test and approve core agent functionality
+  - **Process**: Real-world usage scenarios, feedback collection and integration
 
 ---
 
@@ -154,6 +169,13 @@ Implement the four core proxy agent types using PydanticAI framework.
 - [ ] Documentation is complete and accurate
 - [ ] Security review completed
 - [ ] Performance benchmarks met
+
+### **Human Validation Requirements** 🔄
+- [ ] **Technical Review Passed**: Senior developer approves architecture and code quality
+- [ ] **UX Testing Passed**: UX tester validates user experience and 2-second capture
+- [ ] **Target User Approval**: 3+ ADHD professionals approve functionality in real-world scenarios
+- [ ] **Performance Validation**: Human testers confirm response times and reliability
+- [ ] **Integration Testing**: Human validation of cross-agent communication and workflows
 
 ---
 
