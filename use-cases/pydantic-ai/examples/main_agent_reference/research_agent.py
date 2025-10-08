@@ -42,6 +42,7 @@ Always strive to provide accurate, helpful, and actionable information.
 @dataclass
 class ResearchAgentDependencies:
     """Dependencies for the research agent - only configuration, no tool instances."""
+
     brave_api_key: str
     gmail_credentials_path: str
     gmail_token_path: str
@@ -50,25 +51,21 @@ class ResearchAgentDependencies:
 
 # Initialize the research agent
 research_agent = Agent(
-    get_llm_model(),
-    deps_type=ResearchAgentDependencies,
-    system_prompt=SYSTEM_PROMPT
+    get_llm_model(), deps_type=ResearchAgentDependencies, system_prompt=SYSTEM_PROMPT
 )
 
 
 @research_agent.tool
 async def search_web(
-    ctx: RunContext[ResearchAgentDependencies],
-    query: str,
-    max_results: int = 10
+    ctx: RunContext[ResearchAgentDependencies], query: str, max_results: int = 10
 ) -> list[dict[str, Any]]:
     """
     Search the web using Brave Search API.
-    
+
     Args:
         query: Search query
         max_results: Maximum number of results to return (1-20)
-    
+
     Returns:
         List of search results with title, URL, description, and score
     """
@@ -77,9 +74,7 @@ async def search_web(
         max_results = min(max(max_results, 1), 20)
 
         results = await search_web_tool(
-            api_key=ctx.deps.brave_api_key,
-            query=query,
-            count=max_results
+            api_key=ctx.deps.brave_api_key, query=query, count=max_results
         )
 
         logger.info(f"Found {len(results)} results for query: {query}")
@@ -96,17 +91,17 @@ async def create_email_draft(
     recipient_email: str,
     subject: str,
     context: str,
-    research_summary: str | None = None
+    research_summary: str | None = None,
 ) -> dict[str, Any]:
     """
     Create an email draft based on research context using the Email Agent.
-    
+
     Args:
         recipient_email: Email address of the recipient
         subject: Email subject line
         context: Context or purpose for the email
         research_summary: Optional research findings to include
-    
+
     Returns:
         Dictionary with draft creation results
     """
@@ -143,14 +138,14 @@ Please create a well-structured email that addresses the context provided.
         email_deps = EmailAgentDependencies(
             gmail_credentials_path=ctx.deps.gmail_credentials_path,
             gmail_token_path=ctx.deps.gmail_token_path,
-            session_id=ctx.deps.session_id
+            session_id=ctx.deps.session_id,
         )
 
         # Run the email agent
         result = await email_agent.run(
             email_prompt,
             deps=email_deps,
-            usage=ctx.usage  # Pass usage for token tracking
+            usage=ctx.usage,  # Pass usage for token tracking
         )
 
         logger.info(f"Email agent invoked for recipient: {recipient_email}")
@@ -160,17 +155,12 @@ Please create a well-structured email that addresses the context provided.
             "agent_response": result.data,
             "recipient": recipient_email,
             "subject": subject,
-            "context": context
+            "context": context,
         }
 
     except Exception as e:
         logger.error(f"Failed to create email draft via Email Agent: {e}")
-        return {
-            "success": False,
-            "error": str(e),
-            "recipient": recipient_email,
-            "subject": subject
-        }
+        return {"success": False, "error": str(e), "recipient": recipient_email, "subject": subject}
 
 
 @research_agent.tool
@@ -178,16 +168,16 @@ async def summarize_research(
     ctx: RunContext[ResearchAgentDependencies],
     search_results: list[dict[str, Any]],
     topic: str,
-    focus_areas: str | None = None
+    focus_areas: str | None = None,
 ) -> dict[str, Any]:
     """
     Create a comprehensive summary of research findings.
-    
+
     Args:
         search_results: List of search result dictionaries
         topic: Main research topic
         focus_areas: Optional specific areas to focus on
-    
+
     Returns:
         Dictionary with research summary
     """
@@ -196,7 +186,7 @@ async def summarize_research(
             return {
                 "summary": "No search results provided for summarization.",
                 "key_points": [],
-                "sources": []
+                "sources": [],
             }
 
         # Extract key information
@@ -229,7 +219,7 @@ Sources:
             "summary": summary,
             "topic": topic,
             "sources_count": len(sources),
-            "key_points": descriptions[:5]
+            "key_points": descriptions[:5],
         }
 
     except Exception as e:
@@ -237,7 +227,7 @@ Sources:
         return {
             "summary": f"Failed to summarize research: {str(e)}",
             "key_points": [],
-            "sources": []
+            "sources": [],
         }
 
 
@@ -246,17 +236,17 @@ def create_research_agent(
     brave_api_key: str,
     gmail_credentials_path: str,
     gmail_token_path: str,
-    session_id: str | None = None
+    session_id: str | None = None,
 ) -> Agent:
     """
     Create a research agent with specified dependencies.
-    
+
     Args:
         brave_api_key: Brave Search API key
         gmail_credentials_path: Path to Gmail credentials.json
         gmail_token_path: Path to Gmail token.json
         session_id: Optional session identifier
-        
+
     Returns:
         Configured research agent
     """

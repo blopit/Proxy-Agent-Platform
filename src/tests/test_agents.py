@@ -18,7 +18,7 @@ from src.database.adapter import DatabaseAdapter
 def temp_db():
     """Create temporary SQLite database for testing"""
     # Create temporary file
-    fd, path = tempfile.mkstemp(suffix='.db')
+    fd, path = tempfile.mkstemp(suffix=".db")
     os.close(fd)
 
     # Create database adapter
@@ -36,9 +36,7 @@ async def test_task_agent_capture(temp_db):
     agent = TaskAgent(temp_db)
 
     request = AgentRequest(
-        query="Add task: Call dentist tomorrow",
-        user_id="test_user",
-        session_id="test_session"
+        query="Add task: Call dentist tomorrow", user_id="test_user", session_id="test_session"
     )
 
     response = await agent.process_request(request)
@@ -56,9 +54,7 @@ async def test_focus_agent_session(temp_db):
 
     # Start focus
     request = AgentRequest(
-        query="Start focus session",
-        user_id="test_user",
-        session_id="test_session"
+        query="Start focus session", user_id="test_user", session_id="test_session"
     )
 
     response = await agent.process_request(request)
@@ -78,7 +74,7 @@ async def test_agent_registry(temp_db):
         query="Add task: Test registry",
         user_id="test_user",
         session_id="test_session",
-        agent_type="task"
+        agent_type="task",
     )
 
     response = await registry.process_request(request)
@@ -104,10 +100,7 @@ async def test_database_adapter(temp_db):
     """Test database adapter functionality"""
     # Store a message
     message = Message(
-        session_id="test_session",
-        message_type="user",
-        content="Test message",
-        agent_type="task"
+        session_id="test_session", message_type="user", content="Test message", agent_type="task"
     )
 
     message_id = await temp_db.store_message(message)
@@ -135,28 +128,18 @@ async def test_conversation_flow(temp_db):
     session_id = "conversation_test"
 
     # Add multiple tasks
-    tasks = [
-        "Add task: Morning workout",
-        "Create task: Team standup",
-        "New task: Review code"
-    ]
+    tasks = ["Add task: Morning workout", "Create task: Team standup", "New task: Review code"]
 
     for task in tasks:
         request = AgentRequest(
-            query=task,
-            user_id="test_user",
-            session_id=session_id,
-            agent_type="task"
+            query=task, user_id="test_user", session_id=session_id, agent_type="task"
         )
         response = await registry.process_request(request)
         assert response.success is True
 
     # List tasks
     request = AgentRequest(
-        query="show my tasks",
-        user_id="test_user",
-        session_id=session_id,
-        agent_type="task"
+        query="show my tasks", user_id="test_user", session_id=session_id, agent_type="task"
     )
 
     response = await registry.process_request(request)

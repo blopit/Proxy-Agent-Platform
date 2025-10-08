@@ -55,18 +55,21 @@ class DatabaseAdapter:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO messages (id, session_id, message_type, content, agent_type, metadata, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (
-            message.id,
-            message.session_id,
-            message.message_type,
-            message.content,
-            message.agent_type,
-            json.dumps(message.metadata),
-            message.created_at
-        ))
+        """,
+            (
+                message.id,
+                message.session_id,
+                message.message_type,
+                message.content,
+                message.agent_type,
+                json.dumps(message.metadata),
+                message.created_at,
+            ),
+        )
 
         conn.commit()
         conn.close()
@@ -81,28 +84,35 @@ class DatabaseAdapter:
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT id, session_id, message_type, content, agent_type, metadata, created_at
             FROM messages
             WHERE session_id = ?
             ORDER BY created_at DESC
             LIMIT ?
-        """, (session_id, limit))
+        """,
+            (session_id, limit),
+        )
 
         rows = cursor.fetchall()
         conn.close()
 
         messages = []
         for row in rows:
-            messages.append(Message(
-                id=row[0],
-                session_id=row[1],
-                message_type=row[2],
-                content=row[3],
-                agent_type=row[4],
-                metadata=json.loads(row[5]) if row[5] else {},
-                created_at=datetime.fromisoformat(row[6]) if isinstance(row[6], str) else row[6]
-            ))
+            messages.append(
+                Message(
+                    id=row[0],
+                    session_id=row[1],
+                    message_type=row[2],
+                    content=row[3],
+                    agent_type=row[4],
+                    metadata=json.loads(row[5]) if row[5] else {},
+                    created_at=datetime.fromisoformat(row[6])
+                    if isinstance(row[6], str)
+                    else row[6],
+                )
+            )
 
         return list(reversed(messages))  # Return in chronological order
 

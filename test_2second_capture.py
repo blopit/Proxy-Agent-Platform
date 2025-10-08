@@ -20,7 +20,7 @@ async def test_task_capture_speed():
         "New task: Buy groceries",
         "Create task: Review quarterly report",
         "Add: Schedule team meeting",
-        "Task: Update website content"
+        "Task: Update website content",
     ]
 
     base_url = "http://localhost:8000"
@@ -34,7 +34,7 @@ async def test_task_capture_speed():
                 "query": query,
                 "user_id": "test_user",
                 "session_id": "speed_test",
-                "agent_type": "task"
+                "agent_type": "task",
             }
 
             # Time the request
@@ -43,12 +43,8 @@ async def test_task_capture_speed():
             try:
                 response = await client.post(
                     f"{base_url}/api/agents/quick-capture",
-                    params={
-                        "query": query,
-                        "user_id": "test_user",
-                        "session_id": "speed_test"
-                    },
-                    timeout=5.0
+                    params={"query": query, "user_id": "test_user", "session_id": "speed_test"},
+                    timeout=5.0,
                 )
                 end_time = time.time()
 
@@ -85,7 +81,7 @@ async def test_concurrent_captures():
         "Task 2: Code review",
         "Task 3: Update documentation",
         "Task 4: Client call",
-        "Task 5: Project planning"
+        "Task 5: Project planning",
     ]
 
     async def capture_task(client, query, task_id):
@@ -95,9 +91,9 @@ async def test_concurrent_captures():
             params={
                 "query": query,
                 "user_id": f"user_{task_id}",
-                "session_id": f"concurrent_{task_id}"
+                "session_id": f"concurrent_{task_id}",
             },
-            timeout=5.0
+            timeout=5.0,
         )
         end_time = time.time()
         response_time = (end_time - start_time) * 1000
@@ -107,17 +103,16 @@ async def test_concurrent_captures():
         start_time = time.time()
 
         # Run all captures concurrently
-        results = await asyncio.gather(*[
-            capture_task(client, task, i)
-            for i, task in enumerate(tasks)
-        ])
+        results = await asyncio.gather(
+            *[capture_task(client, task, i) for i, task in enumerate(tasks)]
+        )
 
         total_time = (time.time() - start_time) * 1000
 
         print(f"\n📊 Concurrent Results ({len(tasks)} tasks in {total_time:.0f}ms):")
         for i, (response_time, status_code) in enumerate(results):
             status = "✅" if status_code == 200 else "❌"
-            print(f"  Task {i+1}: {response_time:.0f}ms {status}")
+            print(f"  Task {i + 1}: {response_time:.0f}ms {status}")
 
         # Check if all completed under 2 seconds
         max_time = max(result[0] for result in results)

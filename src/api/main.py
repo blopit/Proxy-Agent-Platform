@@ -13,7 +13,7 @@ from src.database.adapter import close_database, get_database
 app = FastAPI(
     title="Proxy Agent Platform",
     description="Personal productivity platform with AI proxy agents",
-    version="0.1.0"
+    version="0.1.0",
 )
 
 # Add CORS middleware
@@ -46,11 +46,7 @@ async def shutdown():
 @app.get("/")
 async def root():
     """Root endpoint"""
-    return {
-        "message": "Proxy Agent Platform",
-        "version": "0.1.0",
-        "agents": registry.list_agents()
-    }
+    return {"message": "Proxy Agent Platform", "version": "0.1.0", "agents": registry.list_agents()}
 
 
 @app.get("/health")
@@ -84,10 +80,7 @@ async def quick_capture(query: str, user_id: str, session_id: str = "mobile"):
     """Quick task capture - optimized for 2-second mobile use"""
     try:
         request = AgentRequest(
-            query=query,
-            user_id=user_id,
-            session_id=session_id,
-            agent_type="task"
+            query=query, user_id=user_id, session_id=session_id, agent_type="task"
         )
 
         response = await registry.process_request(request)
@@ -95,7 +88,7 @@ async def quick_capture(query: str, user_id: str, session_id: str = "mobile"):
             "success": response.success,
             "message": response.response,
             "xp_earned": response.xp_earned,
-            "processing_time_ms": response.processing_time_ms
+            "processing_time_ms": response.processing_time_ms,
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -116,10 +109,10 @@ async def get_history(session_id: str, limit: int = 10):
                     "content": msg.content,
                     "agent_type": msg.agent_type,
                     "created_at": msg.created_at.isoformat(),
-                    "metadata": msg.metadata
+                    "metadata": msg.metadata,
                 }
                 for msg in history
-            ]
+            ],
         }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -127,4 +120,5 @@ async def get_history(session_id: str, limit: int = 10):
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

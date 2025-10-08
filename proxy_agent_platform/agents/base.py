@@ -7,7 +7,7 @@ CLAUDE.md standards for PydanticAI development.
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import Enum
 from typing import Any, Generic, TypeVar
 from uuid import UUID, uuid4
@@ -21,6 +21,7 @@ from ..models.base import BaseModel as ProxyBaseModel
 
 class AgentStatus(str, Enum):
     """Status of agent execution."""
+
     IDLE = "idle"
     THINKING = "thinking"
     EXECUTING = "executing"
@@ -30,6 +31,7 @@ class AgentStatus(str, Enum):
 
 class AgentPriority(str, Enum):
     """Priority levels for agent tasks."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -43,6 +45,7 @@ class AgentExecutionContext:
 
     Provides all necessary context for agents to operate on behalf of users.
     """
+
     user_id: UUID
     session_id: UUID
     execution_id: UUID
@@ -80,6 +83,7 @@ class AgentResult(ProxyBaseModel):
 
     Standardized result format for all proxy agents.
     """
+
     agent_type: str = Field(..., description="Type of agent that produced this result")
     status: AgentStatus = Field(..., description="Execution status")
     data: Any = Field(default=None, description="Result data from agent execution")
@@ -102,7 +106,7 @@ class AgentResult(ProxyBaseModel):
 
 
 # Type variable for agent dependencies
-DepsType = TypeVar('DepsType')
+DepsType = TypeVar("DepsType")
 
 
 class BaseProxyAgent(ABC, Generic[DepsType]):
@@ -161,17 +165,15 @@ class BaseProxyAgent(ABC, Generic[DepsType]):
         @self.agent.tool
         async def get_current_time(ctx: RunContext[DepsType]) -> str:
             """Get the current time and date."""
-            return datetime.now(UTC).isoformat()
+            return datetime.now(timezone.utc).isoformat()
 
         @self.agent.tool
         async def log_activity(
-            ctx: RunContext[DepsType],
-            activity: str,
-            importance: str = "medium"
+            ctx: RunContext[DepsType], activity: str, importance: str = "medium"
         ) -> str:
             """Log an activity for tracking and analytics."""
             # This would integrate with the actual logging system
-            timestamp = datetime.now(UTC).isoformat()
+            timestamp = datetime.now(timezone.utc).isoformat()
             return f"Activity logged: {activity} at {timestamp} (importance: {importance})"
 
     async def execute(
@@ -214,14 +216,16 @@ class BaseProxyAgent(ABC, Generic[DepsType]):
                 data=result.data,
                 message=self._format_success_message(result),
                 execution_time=execution_time,
-                tokens_used=getattr(result.usage, 'total_tokens', None) if hasattr(result, 'usage') else None,
+                tokens_used=getattr(result.usage, "total_tokens", None)
+                if hasattr(result, "usage")
+                else None,
                 xp_earned=xp_earned,
                 next_actions=self._suggest_next_actions(result, context),
                 metadata={
                     "execution_id": execution_id,
                     "model_used": self.settings.llm_model,
                     "context_type": "mobile" if context.is_mobile_context() else "desktop",
-                }
+                },
             )
 
             return agent_result
@@ -238,14 +242,10 @@ class BaseProxyAgent(ABC, Generic[DepsType]):
                 metadata={
                     "execution_id": execution_id,
                     "error": str(error),
-                }
+                },
             )
 
-    def _enhance_prompt_with_context(
-        self,
-        prompt: str,
-        context: AgentExecutionContext
-    ) -> str:
+    def _enhance_prompt_with_context(self, prompt: str, context: AgentExecutionContext) -> str:
         """Enhance the user prompt with relevant context information."""
         enhanced_parts = [prompt]
 
@@ -262,7 +262,9 @@ class BaseProxyAgent(ABC, Generic[DepsType]):
 
         # Add mobile context
         if context.is_mobile_context():
-            enhanced_parts.append("\nNote: This request is from a mobile device - keep responses concise and actionable.")
+            enhanced_parts.append(
+                "\nNote: This request is from a mobile device - keep responses concise and actionable."
+            )
 
         # Add user preferences
         if context.user_preferences:
@@ -278,16 +280,13 @@ class BaseProxyAgent(ABC, Generic[DepsType]):
 
     def _format_success_message(self, result: Any) -> str:
         """Format a success message based on the result."""
-        if hasattr(result, 'data') and result.data:
+        if hasattr(result, "data") and result.data:
             return f"{self.agent_type.title()} completed successfully"
         else:
             return f"{self.agent_type.title()} executed"
 
     def _calculate_xp(
-        self,
-        result: Any,
-        context: AgentExecutionContext,
-        execution_time: float
+        self, result: Any, context: AgentExecutionContext, execution_time: float
     ) -> int:
         """Calculate XP earned for this execution."""
         base_xp = 10  # Base XP for any successful execution
@@ -309,11 +308,7 @@ class BaseProxyAgent(ABC, Generic[DepsType]):
         multiplier = context.get_preference("xp_multiplier", 1.0)
         return int(base_xp * multiplier)
 
-    def _suggest_next_actions(
-        self,
-        result: Any,
-        context: AgentExecutionContext
-    ) -> list[str]:
+    def _suggest_next_actions(self, result: Any, context: AgentExecutionContext) -> list[str]:
         """Suggest next actions based on the result and context."""
         suggestions = []
 

@@ -35,7 +35,7 @@ class TestAgentDependencies:
             db_pool=mock_pool,
             openai_client=mock_client,
             settings=test_settings,
-            session_id="test_session_123"
+            session_id="test_session_123",
         )
 
         assert deps.db_pool is mock_pool
@@ -48,10 +48,10 @@ class TestAgentDependencies:
         """Test dependency initialization process."""
         deps = AgentDependencies()
 
-        with patch.object(deps, 'settings', None):
-            with patch('..dependencies.load_settings', return_value=test_settings):
-                with patch('asyncpg.create_pool') as mock_create_pool:
-                    with patch('openai.AsyncOpenAI') as mock_openai:
+        with patch.object(deps, "settings", None):
+            with patch("..dependencies.load_settings", return_value=test_settings):
+                with patch("asyncpg.create_pool") as mock_create_pool:
+                    with patch("openai.AsyncOpenAI") as mock_openai:
                         mock_pool = AsyncMock()
                         mock_client = AsyncMock()
                         mock_create_pool.return_value = mock_pool
@@ -67,13 +67,11 @@ class TestAgentDependencies:
                         mock_create_pool.assert_called_once_with(
                             test_settings.database_url,
                             min_size=test_settings.db_pool_min_size,
-                            max_size=test_settings.db_pool_max_size
+                            max_size=test_settings.db_pool_max_size,
                         )
 
                         # Verify OpenAI client creation
-                        mock_openai.assert_called_once_with(
-                            api_key=test_settings.openai_api_key
-                        )
+                        mock_openai.assert_called_once_with(api_key=test_settings.openai_api_key)
 
     @pytest.mark.asyncio
     async def test_dependencies_initialize_idempotent(self, test_settings):
@@ -82,14 +80,12 @@ class TestAgentDependencies:
         mock_client = AsyncMock()
 
         deps = AgentDependencies(
-            db_pool=mock_pool,
-            openai_client=mock_client,
-            settings=test_settings
+            db_pool=mock_pool, openai_client=mock_client, settings=test_settings
         )
 
         # Initialize when already initialized - should not create new connections
-        with patch('asyncpg.create_pool') as mock_create_pool:
-            with patch('openai.AsyncOpenAI') as mock_openai:
+        with patch("asyncpg.create_pool") as mock_create_pool:
+            with patch("openai.AsyncOpenAI") as mock_openai:
                 await deps.initialize()
 
                 # Should not create new connections
@@ -136,8 +132,7 @@ class TestEmbeddingGeneration:
 
         # Verify OpenAI client was called correctly
         deps.openai_client.embeddings.create.assert_called_once_with(
-            model=deps.settings.embedding_model,
-            input="test text"
+            model=deps.settings.embedding_model, input="test text"
         )
 
     @pytest.mark.asyncio
@@ -145,7 +140,7 @@ class TestEmbeddingGeneration:
         """Test embedding generation auto-initializes dependencies."""
         deps = AgentDependencies()
 
-        with patch.object(deps, 'initialize') as mock_init:
+        with patch.object(deps, "initialize") as mock_init:
             mock_client = AsyncMock()
             mock_response = MagicMock()
             mock_response.data = [MagicMock()]
@@ -172,8 +167,7 @@ class TestEmbeddingGeneration:
 
         # Should still call OpenAI with empty string
         deps.openai_client.embeddings.create.assert_called_once_with(
-            model=deps.settings.embedding_model,
-            input=""
+            model=deps.settings.embedding_model, input=""
         )
 
     @pytest.mark.asyncio
@@ -190,8 +184,7 @@ class TestEmbeddingGeneration:
 
         # Should pass through long text (OpenAI will handle truncation)
         deps.openai_client.embeddings.create.assert_called_once_with(
-            model=deps.settings.embedding_model,
-            input=long_text
+            model=deps.settings.embedding_model, input=long_text
         )
 
     @pytest.mark.asyncio
@@ -200,9 +193,7 @@ class TestEmbeddingGeneration:
         deps, connection = test_dependencies
 
         # Make API call fail
-        deps.openai_client.embeddings.create.side_effect = openai.APIError(
-            "Rate limit exceeded"
-        )
+        deps.openai_client.embeddings.create.side_effect = openai.APIError("Rate limit exceeded")
 
         with pytest.raises(openai.APIError, match="Rate limit exceeded"):
             await deps.get_embedding("test text")
@@ -212,9 +203,7 @@ class TestEmbeddingGeneration:
         """Test embedding generation handles network errors."""
         deps, connection = test_dependencies
 
-        deps.openai_client.embeddings.create.side_effect = ConnectionError(
-            "Network unavailable"
-        )
+        deps.openai_client.embeddings.create.side_effect = ConnectionError("Network unavailable")
 
         with pytest.raises(ConnectionError, match="Network unavailable"):
             await deps.get_embedding("test text")
@@ -336,7 +325,7 @@ class TestDatabaseIntegration:
     @pytest.mark.asyncio
     async def test_database_pool_creation(self, test_settings):
         """Test database pool is created with correct parameters."""
-        with patch('asyncpg.create_pool') as mock_create_pool:
+        with patch("asyncpg.create_pool") as mock_create_pool:
             mock_pool = AsyncMock()
             mock_create_pool.return_value = mock_pool
 
@@ -347,14 +336,14 @@ class TestDatabaseIntegration:
             mock_create_pool.assert_called_once_with(
                 test_settings.database_url,
                 min_size=test_settings.db_pool_min_size,
-                max_size=test_settings.db_pool_max_size
+                max_size=test_settings.db_pool_max_size,
             )
             assert deps.db_pool is mock_pool
 
     @pytest.mark.asyncio
     async def test_database_connection_error(self, test_settings):
         """Test handling database connection errors."""
-        with patch('asyncpg.create_pool') as mock_create_pool:
+        with patch("asyncpg.create_pool") as mock_create_pool:
             mock_create_pool.side_effect = asyncpg.InvalidCatalogNameError(
                 "Database does not exist"
             )
@@ -393,7 +382,7 @@ class TestOpenAIIntegration:
 
     def test_openai_client_creation(self, test_settings):
         """Test OpenAI client creation with correct parameters."""
-        with patch('openai.AsyncOpenAI') as mock_openai:
+        with patch("openai.AsyncOpenAI") as mock_openai:
             mock_client = AsyncMock()
             mock_openai.return_value = mock_client
 
@@ -401,14 +390,10 @@ class TestOpenAIIntegration:
             deps.settings = test_settings
 
             # Create client manually (like initialize does)
-            deps.openai_client = openai.AsyncOpenAI(
-                api_key=test_settings.openai_api_key
-            )
+            deps.openai_client = openai.AsyncOpenAI(api_key=test_settings.openai_api_key)
 
             # Would be called in real initialization
-            mock_openai.assert_called_once_with(
-                api_key=test_settings.openai_api_key
-            )
+            mock_openai.assert_called_once_with(api_key=test_settings.openai_api_key)
 
     @pytest.mark.asyncio
     async def test_openai_api_key_validation(self, test_dependencies):
@@ -441,28 +426,32 @@ class TestSettingsIntegration:
 
     def test_load_settings_success(self):
         """Test successful settings loading."""
-        with patch.dict('os.environ', {
-            'DATABASE_URL': 'postgresql://test:test@localhost/test',
-            'OPENAI_API_KEY': 'test_key'
-        }):
+        with patch.dict(
+            "os.environ",
+            {"DATABASE_URL": "postgresql://test:test@localhost/test", "OPENAI_API_KEY": "test_key"},
+        ):
             settings = load_settings()
 
-            assert settings.database_url == 'postgresql://test:test@localhost/test'
-            assert settings.openai_api_key == 'test_key'
-            assert settings.llm_model == 'gpt-4o-mini'  # Default value
+            assert settings.database_url == "postgresql://test:test@localhost/test"
+            assert settings.openai_api_key == "test_key"
+            assert settings.llm_model == "gpt-4o-mini"  # Default value
 
     def test_load_settings_missing_database_url(self):
         """Test settings loading with missing DATABASE_URL."""
-        with patch.dict('os.environ', {
-            'OPENAI_API_KEY': 'test_key'
-        }, clear=True), pytest.raises(ValueError, match="DATABASE_URL"):
+        with (
+            patch.dict("os.environ", {"OPENAI_API_KEY": "test_key"}, clear=True),
+            pytest.raises(ValueError, match="DATABASE_URL"),
+        ):
             load_settings()
 
     def test_load_settings_missing_openai_key(self):
         """Test settings loading with missing OPENAI_API_KEY."""
-        with patch.dict('os.environ', {
-            'DATABASE_URL': 'postgresql://test:test@localhost/test'
-        }, clear=True), pytest.raises(ValueError, match="OPENAI_API_KEY"):
+        with (
+            patch.dict(
+                "os.environ", {"DATABASE_URL": "postgresql://test:test@localhost/test"}, clear=True
+            ),
+            pytest.raises(ValueError, match="OPENAI_API_KEY"),
+        ):
             load_settings()
 
     def test_settings_defaults(self, test_settings):
@@ -478,24 +467,27 @@ class TestSettingsIntegration:
 
     def test_settings_custom_values(self):
         """Test settings with custom environment values."""
-        with patch.dict('os.environ', {
-            'DATABASE_URL': 'postgresql://custom:custom@localhost/custom',
-            'OPENAI_API_KEY': 'custom_key',
-            'LLM_MODEL': 'gpt-4',
-            'DEFAULT_MATCH_COUNT': '20',
-            'MAX_MATCH_COUNT': '100',
-            'DEFAULT_TEXT_WEIGHT': '0.5',
-            'EMBEDDING_MODEL': 'text-embedding-ada-002'
-        }):
+        with patch.dict(
+            "os.environ",
+            {
+                "DATABASE_URL": "postgresql://custom:custom@localhost/custom",
+                "OPENAI_API_KEY": "custom_key",
+                "LLM_MODEL": "gpt-4",
+                "DEFAULT_MATCH_COUNT": "20",
+                "MAX_MATCH_COUNT": "100",
+                "DEFAULT_TEXT_WEIGHT": "0.5",
+                "EMBEDDING_MODEL": "text-embedding-ada-002",
+            },
+        ):
             settings = load_settings()
 
-            assert settings.database_url == 'postgresql://custom:custom@localhost/custom'
-            assert settings.openai_api_key == 'custom_key'
-            assert settings.llm_model == 'gpt-4'
+            assert settings.database_url == "postgresql://custom:custom@localhost/custom"
+            assert settings.openai_api_key == "custom_key"
+            assert settings.llm_model == "gpt-4"
             assert settings.default_match_count == 20
             assert settings.max_match_count == 100
             assert settings.default_text_weight == 0.5
-            assert settings.embedding_model == 'text-embedding-ada-002'
+            assert settings.embedding_model == "text-embedding-ada-002"
 
 
 class TestDependencyLifecycle:
@@ -504,8 +496,8 @@ class TestDependencyLifecycle:
     @pytest.mark.asyncio
     async def test_full_lifecycle(self, test_settings):
         """Test complete dependency lifecycle from creation to cleanup."""
-        with patch('asyncpg.create_pool') as mock_create_pool:
-            with patch('openai.AsyncOpenAI') as mock_openai:
+        with patch("asyncpg.create_pool") as mock_create_pool:
+            with patch("openai.AsyncOpenAI") as mock_openai:
                 mock_pool = AsyncMock()
                 mock_client = AsyncMock()
                 mock_create_pool.return_value = mock_pool
@@ -517,7 +509,7 @@ class TestDependencyLifecycle:
                 assert deps.openai_client is None
 
                 # Initialize
-                with patch('..dependencies.load_settings', return_value=test_settings):
+                with patch("..dependencies.load_settings", return_value=test_settings):
                     await deps.initialize()
 
                 assert deps.db_pool is mock_pool
@@ -541,9 +533,9 @@ class TestDependencyLifecycle:
         """Test multiple init/cleanup cycles work correctly."""
         deps = AgentDependencies()
 
-        with patch('asyncpg.create_pool') as mock_create_pool:
-            with patch('openai.AsyncOpenAI') as mock_openai:
-                with patch('..dependencies.load_settings', return_value=test_settings):
+        with patch("asyncpg.create_pool") as mock_create_pool:
+            with patch("openai.AsyncOpenAI") as mock_openai:
+                with patch("..dependencies.load_settings", return_value=test_settings):
                     # First cycle
                     mock_pool_1 = AsyncMock()
                     mock_client_1 = AsyncMock()

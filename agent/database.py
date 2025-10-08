@@ -10,7 +10,7 @@ from datetime import datetime
 from enum import Enum
 
 from dotenv import load_dotenv
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import (
     JSON,
     Boolean,
@@ -23,19 +23,18 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy.sql import func
 
 load_dotenv()
 
 # Database configuration
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql+asyncpg://localhost/proxy_agent_platform")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./proxy_agent_platform.db")
 
 # Create async engine
 engine = create_async_engine(DATABASE_URL, echo=True)
-async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+async_session = async_sessionmaker(engine, expire_on_commit=False)
 
 Base = declarative_base()
 
@@ -43,6 +42,7 @@ Base = declarative_base()
 # Enums
 class TaskStatus(str, Enum):
     """Task status enumeration."""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -51,6 +51,7 @@ class TaskStatus(str, Enum):
 
 class TaskPriority(str, Enum):
     """Task priority enumeration."""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -59,6 +60,7 @@ class TaskPriority(str, Enum):
 
 class EnergyLevel(str, Enum):
     """Energy level enumeration."""
+
     VERY_LOW = "very_low"
     LOW = "low"
     MEDIUM = "medium"
@@ -68,6 +70,7 @@ class EnergyLevel(str, Enum):
 
 class AgentType(str, Enum):
     """Agent type enumeration."""
+
     TASK = "task"
     FOCUS = "focus"
     ENERGY = "energy"
@@ -77,6 +80,7 @@ class AgentType(str, Enum):
 # SQLAlchemy Models
 class User(Base):
     """User model for the productivity platform."""
+
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -104,6 +108,7 @@ class User(Base):
 
 class Task(Base):
     """Task model managed by the Task Agent."""
+
     __tablename__ = "tasks"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -135,6 +140,7 @@ class Task(Base):
 
 class FocusSession(Base):
     """Focus session model managed by the Focus Agent."""
+
     __tablename__ = "focus_sessions"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -166,6 +172,7 @@ class FocusSession(Base):
 
 class EnergyLog(Base):
     """Energy tracking model managed by the Energy Agent."""
+
     __tablename__ = "energy_logs"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -196,6 +203,7 @@ class EnergyLog(Base):
 
 class Achievement(Base):
     """Achievement definitions for gamification."""
+
     __tablename__ = "achievements"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -216,6 +224,7 @@ class Achievement(Base):
 
 class UserAchievement(Base):
     """User achievements tracking."""
+
     __tablename__ = "user_achievements"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -232,6 +241,7 @@ class UserAchievement(Base):
 
 class AgentActivity(Base):
     """Activity log for AI agents."""
+
     __tablename__ = "agent_activities"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -248,6 +258,7 @@ class AgentActivity(Base):
 # Pydantic models for API responses
 class UserCreate(BaseModel):
     """User creation schema."""
+
     email: str
     username: str
     password: str
@@ -256,6 +267,7 @@ class UserCreate(BaseModel):
 
 class UserResponse(BaseModel):
     """User response schema."""
+
     id: int
     email: str
     username: str
@@ -266,12 +278,12 @@ class UserResponse(BaseModel):
     is_active: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TaskCreate(BaseModel):
     """Task creation schema."""
+
     title: str
     description: str | None = None
     priority: TaskPriority = TaskPriority.MEDIUM
@@ -281,6 +293,7 @@ class TaskCreate(BaseModel):
 
 class TaskResponse(BaseModel):
     """Task response schema."""
+
     id: int
     title: str
     description: str | None
@@ -294,8 +307,7 @@ class TaskResponse(BaseModel):
     ai_suggested: bool
     xp_reward: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Database functions
@@ -313,10 +325,13 @@ async def close_db():
     await engine.dispose()
 
 
-async def get_db() -> AsyncSession:
+async def get_db():
     """Get database session."""
     async with async_session() as session:
-        yield session
+        try:
+            yield session
+        finally:
+            await session.close()
 
 
 async def create_default_achievements():
@@ -327,37 +342,36 @@ async def create_default_achievements():
             "description": "Complete your first task!",
             "category": "task",
             "xp_reward": 100,
-            "criteria": {"tasks_completed": 1}
+            "criteria": {"tasks_completed": 1},
         },
         {
             "name": "Week Warrior",
             "description": "Maintain a 7-day productivity streak",
             "category": "streak",
             "xp_reward": 500,
-            "criteria": {"streak_days": 7}
+            "criteria": {"streak_days": 7},
         },
         {
             "name": "Focus Master",
             "description": "Complete a 2-hour focus session",
             "category": "focus",
             "xp_reward": 300,
-            "criteria": {"focus_duration_minutes": 120}
+            "criteria": {"focus_duration_minutes": 120},
         },
         {
             "name": "Energy Tracker",
             "description": "Log your energy for 7 consecutive days",
             "category": "energy",
             "xp_reward": 200,
-            "criteria": {"energy_logs_consecutive": 7}
-        }
+            "criteria": {"energy_logs_consecutive": 7},
+        },
     ]
 
     async with async_session() as session:
         for achievement_data in default_achievements:
             # Check if achievement exists
             existing = await session.execute(
-                "SELECT id FROM achievements WHERE name = :name",
-                {"name": achievement_data["name"]}
+                "SELECT id FROM achievements WHERE name = :name", {"name": achievement_data["name"]}
             )
             if not existing.first():
                 achievement = Achievement(**achievement_data)

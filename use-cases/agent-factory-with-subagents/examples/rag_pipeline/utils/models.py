@@ -12,19 +12,24 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 # Enums
 class SearchType(str, Enum):
     """Search type enum."""
+
     SEMANTIC = "semantic"
     KEYWORD = "keyword"
     HYBRID = "hybrid"
 
+
 class MessageRole(str, Enum):
     """Message role enum."""
+
     USER = "user"
     ASSISTANT = "assistant"
     SYSTEM = "system"
 
+
 # Request Models
 class SearchRequest(BaseModel):
     """Search request model."""
+
     query: str = Field(..., description="Search query")
     search_type: SearchType = Field(default=SearchType.SEMANTIC, description="Type of search")
     limit: int = Field(default=10, ge=1, le=50, description="Maximum results")
@@ -36,6 +41,7 @@ class SearchRequest(BaseModel):
 # Response Models
 class DocumentMetadata(BaseModel):
     """Document metadata model."""
+
     id: str
     title: str
     source: str
@@ -47,6 +53,7 @@ class DocumentMetadata(BaseModel):
 
 class ChunkResult(BaseModel):
     """Chunk search result model."""
+
     chunk_id: str
     document_id: str
     content: str
@@ -55,17 +62,16 @@ class ChunkResult(BaseModel):
     document_title: str
     document_source: str
 
-    @field_validator('score')
+    @field_validator("score")
     @classmethod
     def validate_score(cls, v: float) -> float:
         """Ensure score is between 0 and 1."""
         return max(0.0, min(1.0, v))
 
 
-
-
 class SearchResponse(BaseModel):
     """Search response model."""
+
     results: list[ChunkResult] = Field(default_factory=list)
     total_results: int = 0
     search_type: SearchType
@@ -74,6 +80,7 @@ class SearchResponse(BaseModel):
 
 class ToolCall(BaseModel):
     """Tool call information model."""
+
     tool_name: str
     args: dict[str, Any] = Field(default_factory=dict)
     tool_call_id: str | None = None
@@ -81,6 +88,7 @@ class ToolCall(BaseModel):
 
 class ChatResponse(BaseModel):
     """Chat response model."""
+
     message: str
     session_id: str
     sources: list[DocumentMetadata] = Field(default_factory=list)
@@ -90,6 +98,7 @@ class ChatResponse(BaseModel):
 
 class StreamDelta(BaseModel):
     """Streaming response delta."""
+
     content: str
     delta_type: Literal["text", "tool_call", "end"] = "text"
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -98,6 +107,7 @@ class StreamDelta(BaseModel):
 # Database Models
 class Document(BaseModel):
     """Document model."""
+
     id: str | None = None
     title: str
     source: str
@@ -109,6 +119,7 @@ class Document(BaseModel):
 
 class Chunk(BaseModel):
     """Document chunk model."""
+
     id: str | None = None
     document_id: str
     content: str
@@ -118,7 +129,7 @@ class Chunk(BaseModel):
     token_count: int | None = None
     created_at: datetime | None = None
 
-    @field_validator('embedding')
+    @field_validator("embedding")
     @classmethod
     def validate_embedding(cls, v: list[float] | None) -> list[float] | None:
         """Validate embedding dimensions."""
@@ -129,6 +140,7 @@ class Chunk(BaseModel):
 
 class Session(BaseModel):
     """Session model."""
+
     id: str | None = None
     user_id: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -139,6 +151,7 @@ class Session(BaseModel):
 
 class Message(BaseModel):
     """Message model."""
+
     id: str | None = None
     session_id: str
     role: MessageRole
@@ -152,6 +165,7 @@ class Message(BaseModel):
 # Agent Models
 class AgentDependencies(BaseModel):
     """Dependencies for the agent."""
+
     session_id: str
     database_url: str | None = None
     openai_api_key: str | None = None
@@ -159,10 +173,9 @@ class AgentDependencies(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
-
-
 class AgentContext(BaseModel):
     """Agent execution context."""
+
     session_id: str
     messages: list[Message] = Field(default_factory=list)
     tool_calls: list[ToolCall] = Field(default_factory=list)
@@ -173,16 +186,17 @@ class AgentContext(BaseModel):
 # Ingestion Models
 class IngestionConfig(BaseModel):
     """Configuration for document ingestion."""
+
     chunk_size: int = Field(default=1000, ge=100, le=5000)
     chunk_overlap: int = Field(default=200, ge=0, le=1000)
     max_chunk_size: int = Field(default=2000, ge=500, le=10000)
     use_semantic_chunking: bool = True
 
-    @field_validator('chunk_overlap')
+    @field_validator("chunk_overlap")
     @classmethod
     def validate_overlap(cls, v: int, info) -> int:
         """Ensure overlap is less than chunk size."""
-        chunk_size = info.data.get('chunk_size', 1000)
+        chunk_size = info.data.get("chunk_size", 1000)
         if v >= chunk_size:
             raise ValueError(f"Chunk overlap ({v}) must be less than chunk size ({chunk_size})")
         return v
@@ -190,6 +204,7 @@ class IngestionConfig(BaseModel):
 
 class IngestionResult(BaseModel):
     """Result of document ingestion."""
+
     document_id: str
     title: str
     chunks_created: int

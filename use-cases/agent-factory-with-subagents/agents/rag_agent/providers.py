@@ -1,6 +1,5 @@
 """Model providers for Semantic Search Agent."""
 
-
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.openai import OpenAIProvider
 from settings import load_settings
@@ -10,10 +9,10 @@ def get_llm_model(model_choice: str | None = None) -> OpenAIModel:
     """
     Get LLM model configuration based on environment variables.
     Supports any OpenAI-compatible API provider.
-    
+
     Args:
         model_choice: Optional override for model choice
-    
+
     Returns:
         Configured OpenAI-compatible model
     """
@@ -33,17 +32,14 @@ def get_embedding_model() -> OpenAIModel:
     """
     Get embedding model configuration.
     Uses OpenAI embeddings API (or compatible provider).
-    
+
     Returns:
         Configured embedding model
     """
     settings = load_settings()
 
     # For embeddings, use the same provider configuration
-    provider = OpenAIProvider(
-        base_url=settings.llm_base_url,
-        api_key=settings.llm_api_key
-    )
+    provider = OpenAIProvider(base_url=settings.llm_base_url, api_key=settings.llm_api_key)
 
     return OpenAIModel(settings.embedding_model, provider=provider)
 
@@ -51,7 +47,7 @@ def get_embedding_model() -> OpenAIModel:
 def get_model_info() -> dict:
     """
     Get information about current model configuration.
-    
+
     Returns:
         Dictionary with model configuration info
     """
@@ -68,7 +64,7 @@ def get_model_info() -> dict:
 def validate_llm_configuration() -> bool:
     """
     Validate that LLM configuration is properly set.
-    
+
     Returns:
         True if configuration is valid
     """

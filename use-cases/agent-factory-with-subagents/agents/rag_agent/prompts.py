@@ -1,6 +1,5 @@
 """System prompts for Semantic Search Agent."""
 
-
 from dependencies import AgentDependencies
 from pydantic_ai import RunContext
 
@@ -45,11 +44,11 @@ def get_dynamic_prompt(ctx: RunContext[AgentDependencies]) -> str:
 
     # Add user preferences
     if deps.user_preferences:
-        if deps.user_preferences.get('search_type'):
+        if deps.user_preferences.get("search_type"):
             parts.append(f"Preferred search type: {deps.user_preferences['search_type']}")
-        if deps.user_preferences.get('text_weight'):
+        if deps.user_preferences.get("text_weight"):
             parts.append(f"Preferred text weight: {deps.user_preferences['text_weight']}")
-        if deps.user_preferences.get('result_count'):
+        if deps.user_preferences.get("result_count"):
             parts.append(f"Preferred result count: {deps.user_preferences['result_count']}")
 
     # Add query history context

@@ -25,10 +25,10 @@ from pathlib import Path
 def parse_gitignore(gitignore_path: Path) -> set[str]:
     """
     Parse .gitignore file and return set of patterns to ignore.
-    
+
     Args:
         gitignore_path: Path to .gitignore file
-        
+
     Returns:
         Set of gitignore patterns
     """
@@ -38,13 +38,13 @@ def parse_gitignore(gitignore_path: Path) -> set[str]:
         return ignore_patterns
 
     try:
-        with open(gitignore_path, encoding='utf-8') as f:
+        with open(gitignore_path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 # Skip empty lines and comments
-                if line and not line.startswith('#'):
+                if line and not line.startswith("#"):
                     # Remove leading slash for consistency
-                    pattern = line.lstrip('/')
+                    pattern = line.lstrip("/")
                     ignore_patterns.add(pattern)
     except Exception as e:
         print(f"Warning: Could not read .gitignore: {e}")
@@ -55,12 +55,12 @@ def parse_gitignore(gitignore_path: Path) -> set[str]:
 def should_ignore_path(path: Path, template_root: Path, ignore_patterns: set[str]) -> bool:
     """
     Check if a path should be ignored based on gitignore patterns.
-    
+
     Args:
         path: Path to check
         template_root: Root directory of template
         ignore_patterns: Set of gitignore patterns
-        
+
     Returns:
         True if path should be ignored, False otherwise
     """
@@ -71,17 +71,21 @@ def should_ignore_path(path: Path, template_root: Path, ignore_patterns: set[str
         return False
 
     # Convert to string with forward slashes
-    rel_path_str = str(rel_path).replace('\\', '/')
+    rel_path_str = str(rel_path).replace("\\", "/")
 
     # Check against each ignore pattern
     for pattern in ignore_patterns:
         # Handle directory patterns (ending with /)
-        if pattern.endswith('/'):
-            pattern = pattern.rstrip('/')
-            if rel_path_str.startswith(pattern + '/') or rel_path_str == pattern:
+        if pattern.endswith("/"):
+            pattern = pattern.rstrip("/")
+            if rel_path_str.startswith(pattern + "/") or rel_path_str == pattern:
                 return True
         # Handle glob patterns
-        elif fnmatch.fnmatch(rel_path_str, pattern) or rel_path_str == pattern or rel_path_str.startswith(pattern + '/'):
+        elif (
+            fnmatch.fnmatch(rel_path_str, pattern)
+            or rel_path_str == pattern
+            or rel_path_str.startswith(pattern + "/")
+        ):
             return True
 
     return False
@@ -91,7 +95,7 @@ def get_template_files() -> list[tuple[str, str]]:
     """
     Get list of template files to copy with their relative paths.
     Uses gitignore-aware filtering to exclude build artifacts and dependencies.
-    
+
     Returns:
         List of (source_path, relative_path) tuples
     """
@@ -99,18 +103,20 @@ def get_template_files() -> list[tuple[str, str]]:
     files_to_copy = []
 
     # Parse .gitignore patterns
-    gitignore_path = template_root / '.gitignore'
+    gitignore_path = template_root / ".gitignore"
     ignore_patterns = parse_gitignore(gitignore_path)
 
     # Add the copy_template.py script itself to ignore patterns
-    ignore_patterns.add('copy_template.py')
+    ignore_patterns.add("copy_template.py")
 
     # Walk through all files in template directory
     for root, dirs, files in os.walk(template_root):
         root_path = Path(root)
 
         # Filter out ignored directories
-        dirs[:] = [d for d in dirs if not should_ignore_path(root_path / d, template_root, ignore_patterns)]
+        dirs[:] = [
+            d for d in dirs if not should_ignore_path(root_path / d, template_root, ignore_patterns)
+        ]
 
         for file in files:
             file_path = root_path / file
@@ -123,8 +129,8 @@ def get_template_files() -> list[tuple[str, str]]:
             rel_path = file_path.relative_to(template_root)
 
             # Rename README.md to README_TEMPLATE.md
-            if rel_path.name == 'README.md':
-                target_rel_path = rel_path.parent / 'README_TEMPLATE.md'
+            if rel_path.name == "README.md":
+                target_rel_path = rel_path.parent / "README_TEMPLATE.md"
             else:
                 target_rel_path = rel_path
 
@@ -136,7 +142,7 @@ def get_template_files() -> list[tuple[str, str]]:
 def create_directory_structure(target_dir: Path, files: list[tuple[str, str]]) -> None:
     """
     Create directory structure for all files.
-    
+
     Args:
         target_dir: Target directory path
         files: List of (source_path, relative_path) tuples
@@ -155,11 +161,11 @@ def create_directory_structure(target_dir: Path, files: list[tuple[str, str]]) -
 def copy_template_files(target_dir: Path, files: list[tuple[str, str]]) -> int:
     """
     Copy all template files to target directory.
-    
+
     Args:
         target_dir: Target directory path
         files: List of (source_path, relative_path) tuples
-    
+
     Returns:
         Number of files copied successfully
     """
@@ -181,10 +187,10 @@ def copy_template_files(target_dir: Path, files: list[tuple[str, str]]) -> int:
 def validate_template_integrity(target_dir: Path) -> bool:
     """
     Validate that essential template files were copied correctly.
-    
+
     Args:
         target_dir: Target directory path
-    
+
     Returns:
         True if template appears complete, False otherwise
     """
@@ -198,7 +204,7 @@ def validate_template_integrity(target_dir: Path) -> bool:
         "package.json",
         "tsconfig.json",
         "src/index.ts",
-        "src/types.ts"
+        "src/types.ts",
     ]
 
     missing_files = []
@@ -218,7 +224,7 @@ def validate_template_integrity(target_dir: Path) -> bool:
 def print_next_steps(target_dir: Path) -> None:
     """
     Print helpful next steps for using the template.
-    
+
     Args:
         target_dir: Target directory path
     """
@@ -276,24 +282,17 @@ Examples:
   python copy_template.py my-mcp-server
   python copy_template.py /path/to/my-new-server
   python copy_template.py ../customer-support-mcp
-        """
+        """,
+    )
+
+    parser.add_argument("target_directory", help="Target directory for the new MCP server project")
+
+    parser.add_argument(
+        "--force", action="store_true", help="Overwrite target directory if it exists"
     )
 
     parser.add_argument(
-        "target_directory",
-        help="Target directory for the new MCP server project"
-    )
-
-    parser.add_argument(
-        "--force",
-        action="store_true",
-        help="Overwrite target directory if it exists"
-    )
-
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what would be copied without actually copying"
+        "--dry-run", action="store_true", help="Show what would be copied without actually copying"
     )
 
     if len(sys.argv) == 1:
@@ -324,7 +323,9 @@ Examples:
     files_to_copy = get_template_files()
 
     if not files_to_copy:
-        print("❌ Error: No template files found. Make sure you're running this from the template directory.")
+        print(
+            "❌ Error: No template files found. Make sure you're running this from the template directory."
+        )
         return
 
     print(f"Found {len(files_to_copy)} files to copy")

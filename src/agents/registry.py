@@ -2,7 +2,6 @@
 Agent Registry - Manages all proxy agents
 """
 
-
 from src.agents.base import BaseProxyAgent
 from src.agents.focus_agent import FocusAgent
 from src.agents.task_agent import TaskAgent
@@ -35,14 +34,11 @@ class AgentRegistry:
                 response=f"Unknown agent type: {request.agent_type}",
                 request_id=request.request_id,
                 session_id=request.session_id,
-                agent_type=request.agent_type
+                agent_type=request.agent_type,
             )
 
         return await agent.process_request(request)
 
     def list_agents(self) -> dict[str, str]:
         """List available agents"""
-        return {
-            agent_type: agent.__class__.__name__
-            for agent_type, agent in self.agents.items()
-        }
+        return {agent_type: agent.__class__.__name__ for agent_type, agent in self.agents.items()}

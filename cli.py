@@ -40,20 +40,23 @@ class ProxyAgentCLI:
 
     # Task Management Commands
 
-    def create_task(self, title: str, description: str = "", priority: str = "medium", duration: int | None = None):
+    def create_task(
+        self,
+        title: str,
+        description: str = "",
+        priority: str = "medium",
+        duration: int | None = None,
+    ):
         """Create a new task."""
         task_data = {
             "title": title,
             "description": description,
             "priority": priority,
-            "estimated_duration": duration
+            "estimated_duration": duration,
         }
 
         try:
-            response = self.client.post(
-                f"/api/tasks/?user_id={self.user_id}",
-                json=task_data
-            )
+            response = self.client.post(f"/api/tasks/?user_id={self.user_id}", json=task_data)
             response.raise_for_status()
             task = response.json()
 
@@ -93,7 +96,7 @@ class ProxyAgentCLI:
                     task["title"][:40] + "..." if len(task["title"]) > 40 else task["title"],
                     task["status"],
                     task["priority"],
-                    str(task["xp_reward"])
+                    str(task["xp_reward"]),
                 )
 
             console.print(table)
@@ -111,8 +114,7 @@ class ProxyAgentCLI:
 
         try:
             response = self.client.patch(
-                f"/api/tasks/{task_id}/status?status=completed",
-                params=params
+                f"/api/tasks/{task_id}/status?status=completed", params=params
             )
             response.raise_for_status()
             result = response.json()
@@ -140,7 +142,7 @@ class ProxyAgentCLI:
                 f"Estimated Duration: {task['estimated_duration'] or 'Not set'} minutes\n"
                 f"XP Reward: {task['xp_reward']}\n"
                 f"Created: {task['created_at'][:10]}",
-                title=f"Task #{task['id']}"
+                title=f"Task #{task['id']}",
             )
             console.print(panel)
             return task
@@ -157,7 +159,7 @@ class ProxyAgentCLI:
             "agent_type": agent_type,
             "action": action,
             "data": data or {},
-            "user_id": self.user_id
+            "user_id": self.user_id,
         }
 
         try:
@@ -258,9 +260,9 @@ class ProxyAgentCLI:
                 f"[bold]{info['message']}[/bold]\n\n"
                 f"Version: {info['version']}\n"
                 f"Description: {info['description']}\n\n"
-                f"Available Agents:\n" +
-                "\n".join([f"  • {name}: {desc}" for name, desc in info['agents'].items()]),
-                title="Proxy Agent Platform API"
+                f"Available Agents:\n"
+                + "\n".join([f"  • {name}: {desc}" for name, desc in info["agents"].items()]),
+                title="Proxy Agent Platform API",
             )
             console.print(panel)
             return info
@@ -286,7 +288,7 @@ Examples:
   %(prog)s task show 1                   # Show task #1 details
   %(prog)s agent task recommend          # Get task recommendations
   %(prog)s recommendations               # Get all agent recommendations
-        """
+        """,
     )
 
     parser.add_argument("--url", default=API_BASE_URL, help="API base URL")
@@ -307,12 +309,18 @@ Examples:
     create_parser = task_subparsers.add_parser("create", help="Create a new task")
     create_parser.add_argument("title", help="Task title")
     create_parser.add_argument("--description", default="", help="Task description")
-    create_parser.add_argument("--priority", choices=["low", "medium", "high", "urgent"], default="medium")
+    create_parser.add_argument(
+        "--priority", choices=["low", "medium", "high", "urgent"], default="medium"
+    )
     create_parser.add_argument("--duration", type=int, help="Estimated duration in minutes")
 
     list_parser = task_subparsers.add_parser("list", help="List tasks")
-    list_parser.add_argument("--status", choices=["pending", "in_progress", "completed", "cancelled"])
-    list_parser.add_argument("--limit", type=int, default=10, help="Maximum number of tasks to show")
+    list_parser.add_argument(
+        "--status", choices=["pending", "in_progress", "completed", "cancelled"]
+    )
+    list_parser.add_argument(
+        "--limit", type=int, default=10, help="Maximum number of tasks to show"
+    )
 
     complete_parser = task_subparsers.add_parser("complete", help="Complete a task")
     complete_parser.add_argument("task_id", type=int, help="Task ID to complete")
@@ -336,7 +344,6 @@ Examples:
     # Execute commands
     try:
         with ProxyAgentCLI(args.url, args.user) as cli:
-
             if args.command == "info":
                 cli.show_api_info()
 

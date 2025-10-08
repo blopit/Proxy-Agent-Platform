@@ -2,7 +2,6 @@
 Task Agent - Handles task capture and management
 """
 
-
 from src.agents.base import BaseProxyAgent
 from src.core.models import AgentRequest, Message
 
@@ -13,7 +12,9 @@ class TaskAgent(BaseProxyAgent):
     def __init__(self, db):
         super().__init__("task", db)
 
-    async def _handle_request(self, request: AgentRequest, history: list[Message]) -> tuple[str, int]:
+    async def _handle_request(
+        self, request: AgentRequest, history: list[Message]
+    ) -> tuple[str, int]:
         """Handle task-specific requests"""
         query = request.query.lower().strip()
 
@@ -26,7 +27,7 @@ class TaskAgent(BaseProxyAgent):
                 request.session_id,
                 "task_created",
                 task,
-                {"priority": "medium", "status": "pending"}
+                {"priority": "medium", "status": "pending"},
             )
 
             return f"✅ Task captured: {task}", 25
@@ -47,7 +48,7 @@ class TaskAgent(BaseProxyAgent):
                 request.session_id,
                 "task_created",
                 request.query,
-                {"priority": "medium", "status": "pending"}
+                {"priority": "medium", "status": "pending"},
             )
             return f"✅ Task captured: {request.query}", 15
 

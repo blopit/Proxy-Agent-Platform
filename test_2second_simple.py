@@ -18,7 +18,7 @@ async def test_quick_capture():
         "Buy groceries",
         "Schedule dentist appointment",
         "Review quarterly report",
-        "Team standup at 9am"
+        "Team standup at 9am",
     ]
 
     base_url = "http://localhost:8000"
@@ -32,12 +32,8 @@ async def test_quick_capture():
             try:
                 response = await client.post(
                     f"{base_url}/api/quick-capture",
-                    params={
-                        "query": task,
-                        "user_id": "test_user",
-                        "session_id": "speed_test"
-                    },
-                    timeout=3.0
+                    params={"query": task, "user_id": "test_user", "session_id": "speed_test"},
+                    timeout=3.0,
                 )
 
                 end_time = time.time()
@@ -46,7 +42,9 @@ async def test_quick_capture():
                 if response.status_code == 200:
                     result = response.json()
                     print(f"✅ {response_time_ms:.0f}ms - {result['message']}")
-                    print(f"   XP: {result['xp_earned']}, Processing: {result['processing_time_ms']}ms")
+                    print(
+                        f"   XP: {result['xp_earned']}, Processing: {result['processing_time_ms']}ms"
+                    )
 
                     if response_time_ms < 2000:
                         print("🚀 PASSED: Under 2-second requirement")

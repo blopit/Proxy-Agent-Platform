@@ -41,6 +41,10 @@ dependencies = [
     "google-auth-httplib2>=0.2.0",
     "google-auth-oauthlib>=1.1.0",
     "structlog>=23.0.0",
+    "numpy>=2.3.3",
+    "scikit-learn>=1.7.2",
+    "asyncpg>=0.30.0",
+    "aiosqlite",
 ]
 
 [project.optional-dependencies]
@@ -182,3 +186,12 @@ extend-exclude = '''
   | dist
 )/
 '''
+
+[dependency-groups]
+dev = [
+    "bandit>=1.8.6",
+    "pytest-cov>=7.0.0",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+    "safety>=3.6.2",
+]

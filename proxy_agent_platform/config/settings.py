@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
-from pydantic import ConfigDict, Field, validator
+from pydantic import ConfigDict, Field, field_validator
 from pydantic_ai.models import Model
 from pydantic_ai.models.anthropic import AnthropicModel
 from pydantic_ai.models.gemini import GeminiModel
@@ -27,10 +27,7 @@ class Settings(BaseSettings):
     """
 
     model_config = ConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore"
+        env_file=".env", env_file_encoding="utf-8", case_sensitive=False, extra="ignore"
     )
 
     # Core Application Settings
@@ -40,12 +37,13 @@ class Settings(BaseSettings):
     secret_key: str = Field(..., description="Secret key for JWT and encryption")
 
     # LLM Configuration
-    llm_provider: str = Field(default="openai", description="LLM provider (openai, anthropic, gemini)")
+    llm_provider: str = Field(
+        default="openai", description="LLM provider (openai, anthropic, gemini)"
+    )
     llm_api_key: str = Field(..., description="API key for the LLM provider")
     llm_model: str = Field(default="gpt-4", description="Model name to use")
     llm_base_url: str = Field(
-        default="https://api.openai.com/v1",
-        description="Base URL for the LLM API"
+        default="https://api.openai.com/v1", description="Base URL for the LLM API"
     )
 
     # Database Configuration
@@ -55,30 +53,28 @@ class Settings(BaseSettings):
     # External Services
     brave_api_key: str | None = Field(default=None, description="Brave Search API key")
     gmail_credentials_path: str = Field(
-        default="./credentials/credentials.json",
-        description="Path to Gmail credentials.json"
+        default="./credentials/credentials.json", description="Path to Gmail credentials.json"
     )
     gmail_token_path: str = Field(
-        default="./credentials/token.json",
-        description="Path to Gmail token.json"
+        default="./credentials/token.json", description="Path to Gmail token.json"
     )
     github_token: str | None = Field(default=None, description="GitHub API token")
     github_webhook_secret: str | None = Field(default=None, description="GitHub webhook secret")
 
     # Mobile Integration
     ios_shortcuts_webhook_url: str | None = Field(
-        default=None,
-        description="iOS Shortcuts webhook URL"
+        default=None, description="iOS Shortcuts webhook URL"
     )
     android_tiles_webhook_url: str | None = Field(
-        default=None,
-        description="Android tiles webhook URL"
+        default=None, description="Android tiles webhook URL"
     )
 
     # Gamification
     xp_multiplier: float = Field(default=1.0, description="XP multiplier for achievements")
     streak_bonus_enabled: bool = Field(default=True, description="Enable streak bonuses")
-    achievement_notifications: bool = Field(default=True, description="Enable achievement notifications")
+    achievement_notifications: bool = Field(
+        default=True, description="Enable achievement notifications"
+    )
 
     # FastAPI Configuration
     host: str = Field(default="0.0.0.0", description="FastAPI host")
@@ -88,12 +84,10 @@ class Settings(BaseSettings):
 
     # Celery Configuration
     celery_broker_url: str = Field(
-        default="redis://localhost:6379/1",
-        description="Celery broker URL"
+        default="redis://localhost:6379/1", description="Celery broker URL"
     )
     celery_result_backend: str = Field(
-        default="redis://localhost:6379/2",
-        description="Celery result backend URL"
+        default="redis://localhost:6379/2", description="Celery result backend URL"
     )
 
     # Monitoring & Observability
@@ -103,13 +97,11 @@ class Settings(BaseSettings):
 
     # Development/Testing
     testing: bool = Field(default=False, description="Testing mode")
-    test_database_url: str | None = Field(
-        default=None,
-        description="Test database URL"
-    )
+    test_database_url: str | None = Field(default=None, description="Test database URL")
     mock_external_apis: bool = Field(default=False, description="Mock external API calls")
 
-    @validator('llm_provider')
+    @field_validator("llm_provider")
+    @classmethod
     def validate_llm_provider(cls, v: str) -> str:
         """Validate LLM provider is supported."""
         supported_providers = {"openai", "anthropic", "gemini", "ollama"}
@@ -117,7 +109,8 @@ class Settings(BaseSettings):
             raise ValueError(f"Unsupported LLM provider: {v}. Supported: {supported_providers}")
         return v.lower()
 
-    @validator('log_level')
+    @field_validator("log_level")
+    @classmethod
     def validate_log_level(cls, v: str) -> str:
         """Validate log level is supported."""
         valid_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
@@ -153,7 +146,7 @@ class Settings(BaseSettings):
                 "proxy_agent_platform.agents.*": {"queue": "agents"},
                 "proxy_agent_platform.tools.*": {"queue": "tools"},
                 "proxy_agent_platform.gamification.*": {"queue": "gamification"},
-            }
+            },
         }
 
 
@@ -236,7 +229,7 @@ def setup_logging() -> None:
     # Configure standard logging
     logging.basicConfig(
         level=getattr(logging, settings.log_level),
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Configure structlog
@@ -249,7 +242,8 @@ def setup_logging() -> None:
             structlog.processors.StackInfoRenderer(),
             structlog.processors.format_exc_info,
             structlog.processors.UnicodeDecoder(),
-            structlog.processors.JSONRenderer() if not settings.debug
+            structlog.processors.JSONRenderer()
+            if not settings.debug
             else structlog.dev.ConsoleRenderer(),
         ],
         context_class=dict,

@@ -2,7 +2,6 @@
 Focus Agent - Handles focus sessions and attention management
 """
 
-
 from src.agents.base import BaseProxyAgent
 from src.core.models import AgentRequest, Message
 
@@ -13,7 +12,9 @@ class FocusAgent(BaseProxyAgent):
     def __init__(self, db):
         super().__init__("focus", db)
 
-    async def _handle_request(self, request: AgentRequest, history: list[Message]) -> tuple[str, int]:
+    async def _handle_request(
+        self, request: AgentRequest, history: list[Message]
+    ) -> tuple[str, int]:
         """Handle focus-specific requests"""
         query = request.query.lower().strip()
 
@@ -23,17 +24,14 @@ class FocusAgent(BaseProxyAgent):
                 request.session_id,
                 "focus_started",
                 "Focus session started",
-                {"duration": 25, "type": "pomodoro"}
+                {"duration": 25, "type": "pomodoro"},
             )
             return "🎯 Focus session started! 25 minutes of deep work.", 30
 
         # Stop/pause focus
         elif any(word in query for word in ["stop", "end", "break", "pause"]):
             await self.store_message(
-                request.session_id,
-                "focus_stopped",
-                "Focus session paused",
-                {"type": "break"}
+                request.session_id, "focus_stopped", "Focus session paused", {"type": "break"}
             )
             return "⏸️ Focus session paused. Take a 5-minute break!", 20
 

@@ -22,7 +22,7 @@ from pathlib import Path
 def get_template_files() -> list[tuple[str, str]]:
     """
     Get list of template files to copy with their relative paths.
-    
+
     Returns:
         List of (source_path, relative_path) tuples
     """
@@ -81,7 +81,7 @@ def get_template_files() -> list[tuple[str, str]]:
 def create_directory_structure(target_dir: Path, files: list[tuple[str, str]]) -> None:
     """
     Create directory structure for all files.
-    
+
     Args:
         target_dir: Target directory path
         files: List of (source_path, relative_path) tuples
@@ -99,11 +99,11 @@ def create_directory_structure(target_dir: Path, files: list[tuple[str, str]]) -
 def copy_template_files(target_dir: Path, files: list[tuple[str, str]]) -> int:
     """
     Copy all template files to target directory.
-    
+
     Args:
         target_dir: Target directory path
         files: List of (source_path, relative_path) tuples
-    
+
     Returns:
         Number of files copied successfully
     """
@@ -125,10 +125,10 @@ def copy_template_files(target_dir: Path, files: list[tuple[str, str]]) -> int:
 def validate_template_integrity(target_dir: Path) -> bool:
     """
     Validate that essential template files were copied correctly.
-    
+
     Args:
         target_dir: Target directory path
-    
+
     Returns:
         True if template appears complete, False otherwise
     """
@@ -140,7 +140,7 @@ def validate_template_integrity(target_dir: Path) -> bool:
         "PRPs/templates/prp_pydantic_ai_base.md",
         "PRPs/INITIAL.md",
         "examples/basic_chat_agent/agent.py",
-        "examples/testing_examples/test_agent_patterns.py"
+        "examples/testing_examples/test_agent_patterns.py",
     ]
 
     missing_files = []
@@ -160,7 +160,7 @@ def validate_template_integrity(target_dir: Path) -> bool:
 def print_next_steps(target_dir: Path) -> None:
     """
     Print helpful next steps for using the template.
-    
+
     Args:
         target_dir: Target directory path
     """
@@ -207,24 +207,17 @@ Examples:
   python copy_template.py my-agent-project
   python copy_template.py /path/to/my-new-agent
   python copy_template.py ../customer-support-agent
-        """
+        """,
+    )
+
+    parser.add_argument("target_directory", help="Target directory for the new PydanticAI project")
+
+    parser.add_argument(
+        "--force", action="store_true", help="Overwrite target directory if it exists"
     )
 
     parser.add_argument(
-        "target_directory",
-        help="Target directory for the new PydanticAI project"
-    )
-
-    parser.add_argument(
-        "--force",
-        action="store_true",
-        help="Overwrite target directory if it exists"
-    )
-
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what would be copied without actually copying"
+        "--dry-run", action="store_true", help="Show what would be copied without actually copying"
     )
 
     if len(sys.argv) == 1:
@@ -255,7 +248,9 @@ Examples:
     files_to_copy = get_template_files()
 
     if not files_to_copy:
-        print("❌ Error: No template files found. Make sure you're running this from the template directory.")
+        print(
+            "❌ Error: No template files found. Make sure you're running this from the template directory."
+        )
         return
 
     print(f"Found {len(files_to_copy)} files to copy")

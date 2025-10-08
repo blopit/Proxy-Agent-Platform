@@ -6,7 +6,7 @@ progress monitoring and intelligent task management.
 """
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from enum import Enum
 from typing import Any
 
@@ -18,6 +18,7 @@ from .base import BaseProxyAgent
 
 class TaskAction(str, Enum):
     """Actions the Task Proxy can perform."""
+
     CAPTURE = "capture"
     PRIORITIZE = "prioritize"
     SCHEDULE = "schedule"
@@ -30,6 +31,7 @@ class TaskAction(str, Enum):
 @dataclass
 class TaskProxyDependencies:
     """Dependencies for the Task Proxy agent."""
+
     user_id: str
     task_storage: Any  # Would be actual task storage service
     calendar_integration: Any | None = None
@@ -87,7 +89,7 @@ When managing tasks:
             agent_type="task_proxy",
             system_prompt=system_prompt,
             deps_type=TaskProxyDependencies,
-            description="Intelligent task capture, prioritization, and management with context awareness"
+            description="Intelligent task capture, prioritization, and management with context awareness",
         )
 
     def _register_agent_tools(self) -> None:
@@ -101,7 +103,7 @@ When managing tasks:
             category: str = "general",
             estimated_minutes: int = 30,
             energy_required: str = "medium",
-            due_date: str | None = None
+            due_date: str | None = None,
         ) -> dict[str, Any]:
             """
             Capture a new task with intelligent categorization and scheduling.
@@ -122,7 +124,9 @@ When managing tasks:
                     description=description,
                     status=TaskStatus.PENDING,
                     priority=TaskPriority(priority.lower()),
-                    category=TaskCategory(category.lower()) if category.lower() in [c.value for c in TaskCategory] else TaskCategory.GENERAL,
+                    category=TaskCategory(category.lower())
+                    if category.lower() in [c.value for c in TaskCategory]
+                    else TaskCategory.GENERAL,
                     estimated_minutes=estimated_minutes,
                     energy_level_required=energy_required.lower(),
                     due_date=datetime.fromisoformat(due_date) if due_date else None,
@@ -136,7 +140,9 @@ When managing tasks:
 
                 # Send notification if configured
                 if ctx.deps.notification_service:
-                    await self._send_task_notification(ctx.deps.notification_service, task, "created")
+                    await self._send_task_notification(
+                        ctx.deps.notification_service, task, "created"
+                    )
 
                 return {
                     "success": True,
@@ -146,23 +152,19 @@ When managing tasks:
                     "suggested_actions": [
                         "Schedule this task in your calendar",
                         "Break down into smaller steps if complex",
-                        "Set up reminders if time-sensitive"
-                    ]
+                        "Set up reminders if time-sensitive",
+                    ],
                 }
 
             except Exception as e:
-                return {
-                    "success": False,
-                    "error": str(e),
-                    "message": "Failed to capture task"
-                }
+                return {"success": False, "error": str(e), "message": "Failed to capture task"}
 
         @self.agent.tool
         async def prioritize_tasks(
             ctx: RunContext[TaskProxyDependencies],
             energy_level: float = 7.0,
             available_minutes: int = 60,
-            focus_area: str = "any"
+            focus_area: str = "any",
         ) -> dict[str, Any]:
             """
             Get prioritized task recommendations based on current context.
@@ -181,7 +183,7 @@ When managing tasks:
                         "priority": "high",
                         "estimated_minutes": 45,
                         "energy_required": "high",
-                        "category": "work"
+                        "category": "work",
                     },
                     {
                         "id": "task_2",
@@ -189,7 +191,7 @@ When managing tasks:
                         "priority": "medium",
                         "estimated_minutes": 5,
                         "energy_required": "low",
-                        "category": "personal"
+                        "category": "personal",
                     },
                     {
                         "id": "task_3",
@@ -197,8 +199,8 @@ When managing tasks:
                         "priority": "medium",
                         "estimated_minutes": 30,
                         "energy_required": "medium",
-                        "category": "work"
-                    }
+                        "category": "work",
+                    },
                 ]
 
                 # Filter and prioritize based on context
@@ -217,7 +219,7 @@ When managing tasks:
                 priority_scores = {"urgent": 4, "high": 3, "medium": 2, "low": 1}
                 suitable_tasks.sort(
                     key=lambda t: (priority_scores[t["priority"]], -t["estimated_minutes"]),
-                    reverse=True
+                    reverse=True,
                 )
 
                 return {
@@ -226,25 +228,21 @@ When managing tasks:
                     "context": {
                         "energy_level": energy_level,
                         "available_minutes": available_minutes,
-                        "focus_area": focus_area
+                        "focus_area": focus_area,
                     },
                     "message": f"Found {len(suitable_tasks)} suitable tasks for your current context",
-                    "productivity_tip": self._get_productivity_tip(energy_level, available_minutes)
+                    "productivity_tip": self._get_productivity_tip(energy_level, available_minutes),
                 }
 
             except Exception as e:
-                return {
-                    "success": False,
-                    "error": str(e),
-                    "message": "Failed to prioritize tasks"
-                }
+                return {"success": False, "error": str(e), "message": "Failed to prioritize tasks"}
 
         @self.agent.tool
         async def complete_task(
             ctx: RunContext[TaskProxyDependencies],
             task_id: str,
             completion_notes: str = "",
-            actual_time_spent: int | None = None
+            actual_time_spent: int | None = None,
         ) -> dict[str, Any]:
             """
             Mark a task as completed and calculate XP rewards.
@@ -265,7 +263,7 @@ When managing tasks:
                     "title": "Example completed task",
                     "priority": "medium",
                     "estimated_minutes": 30,
-                    "category": "work"
+                    "category": "work",
                 }
 
                 # Calculate XP reward based on task characteristics
@@ -275,15 +273,17 @@ When managing tasks:
 
                 # Efficiency bonus if completed faster than estimated
                 if actual_time_spent and actual_time_spent < mock_task["estimated_minutes"]:
-                    efficiency_bonus = int((mock_task["estimated_minutes"] - actual_time_spent) / mock_task["estimated_minutes"] * 20)
+                    efficiency_bonus = int(
+                        (mock_task["estimated_minutes"] - actual_time_spent)
+                        / mock_task["estimated_minutes"]
+                        * 20
+                    )
                     xp_earned += efficiency_bonus
 
                 # Send completion notification
                 if ctx.deps.notification_service:
                     await self._send_task_notification(
-                        ctx.deps.notification_service,
-                        mock_task,
-                        "completed"
+                        ctx.deps.notification_service, mock_task, "completed"
                     )
 
                 return {
@@ -295,22 +295,16 @@ When managing tasks:
                     "suggested_actions": [
                         "Take a moment to celebrate this win!",
                         "Review what you learned during this task",
-                        "Consider what task to tackle next"
-                    ]
+                        "Consider what task to tackle next",
+                    ],
                 }
 
             except Exception as e:
-                return {
-                    "success": False,
-                    "error": str(e),
-                    "message": "Failed to complete task"
-                }
+                return {"success": False, "error": str(e), "message": "Failed to complete task"}
 
         @self.agent.tool
         async def break_down_task(
-            ctx: RunContext[TaskProxyDependencies],
-            task_description: str,
-            max_subtasks: int = 5
+            ctx: RunContext[TaskProxyDependencies], task_description: str, max_subtasks: int = 5
         ) -> dict[str, Any]:
             """
             Break down a complex task into smaller, manageable subtasks.
@@ -330,14 +324,14 @@ When managing tasks:
                         "Research and gather necessary resources",
                         "Create project timeline and milestones",
                         "Begin implementation of core features",
-                        "Review and refine project deliverables"
+                        "Review and refine project deliverables",
                     ]
                 elif "email" in task_description.lower():
                     subtasks = [
                         "Outline key points to communicate",
                         "Draft initial email content",
                         "Review and refine tone and clarity",
-                        "Send email and set follow-up reminders"
+                        "Send email and set follow-up reminders",
                     ]
                 else:
                     # Generic breakdown
@@ -345,7 +339,7 @@ When managing tasks:
                         "Research and understand requirements",
                         "Plan approach and gather resources",
                         "Execute main work",
-                        "Review and finalize results"
+                        "Review and finalize results",
                     ]
 
                 # Limit to max_subtasks
@@ -358,26 +352,22 @@ When managing tasks:
                         {
                             "title": subtask,
                             "estimated_minutes": 15 + (i * 10),  # Varying estimates
-                            "order": i + 1
+                            "order": i + 1,
                         }
                         for i, subtask in enumerate(subtasks)
                     ],
                     "message": f"Broke down task into {len(subtasks)} manageable steps",
-                    "tip": "Tackle these subtasks one at a time for steady progress"
+                    "tip": "Tackle these subtasks one at a time for steady progress",
                 }
 
             except Exception as e:
-                return {
-                    "success": False,
-                    "error": str(e),
-                    "message": "Failed to break down task"
-                }
+                return {"success": False, "error": str(e), "message": "Failed to break down task"}
 
         @self.agent.tool
         async def delegate_to_context_engineering(
             ctx: RunContext[TaskProxyDependencies],
             coding_task_description: str,
-            complexity: str = "medium"
+            complexity: str = "medium",
         ) -> dict[str, Any]:
             """
             Delegate a coding or development task to the Context Engineering agent.
@@ -391,7 +381,7 @@ When managing tasks:
                     return {
                         "success": False,
                         "message": "Context Engineering agent not available",
-                        "suggestion": "Set up Context Engineering integration for coding task delegation"
+                        "suggestion": "Set up Context Engineering integration for coding task delegation",
                     }
 
                 # Mock delegation to Context Engineering agent
@@ -400,8 +390,12 @@ When managing tasks:
                     "agent": "context_engineering",
                     "task_description": coding_task_description,
                     "complexity": complexity,
-                    "estimated_completion": "2-4 hours" if complexity == "medium" else "1-2 hours" if complexity == "low" else "1-2 days",
-                    "next_step": "Context Engineering agent will analyze requirements and create implementation plan"
+                    "estimated_completion": "2-4 hours"
+                    if complexity == "medium"
+                    else "1-2 hours"
+                    if complexity == "low"
+                    else "1-2 days",
+                    "next_step": "Context Engineering agent will analyze requirements and create implementation plan",
                 }
 
                 return {
@@ -412,22 +406,19 @@ When managing tasks:
                     "suggested_actions": [
                         "Monitor progress through Context Engineering dashboard",
                         "Review generated PRP when available",
-                        "Provide feedback on implementation approach"
-                    ]
+                        "Provide feedback on implementation approach",
+                    ],
                 }
 
             except Exception as e:
                 return {
                     "success": False,
                     "error": str(e),
-                    "message": "Failed to delegate to Context Engineering agent"
+                    "message": "Failed to delegate to Context Engineering agent",
                 }
 
     async def _send_task_notification(
-        self,
-        notification_service: Any,
-        task: Any,
-        action: str
+        self, notification_service: Any, task: Any, action: str
     ) -> None:
         """Send task-related notification."""
         # Mock notification sending
@@ -436,7 +427,9 @@ When managing tasks:
     def _get_productivity_tip(self, energy_level: float, available_minutes: int) -> str:
         """Get context-appropriate productivity tip."""
         if energy_level >= 8 and available_minutes >= 60:
-            return "High energy + good time block = perfect for tackling your most challenging task!"
+            return (
+                "High energy + good time block = perfect for tackling your most challenging task!"
+            )
         elif energy_level >= 6 and available_minutes >= 30:
             return "Good energy levels - great time for focused work on important tasks."
         elif energy_level <= 4:

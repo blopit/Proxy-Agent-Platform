@@ -10,7 +10,7 @@ from datetime import datetime
 
 import pytest
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'agent'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "agent"))
 
 from database import (
     Achievement,
@@ -70,7 +70,7 @@ class TestPydanticSchemas:
             "title": "Test Task",
             "description": "A test task",
             "priority": TaskPriority.HIGH,
-            "estimated_duration": 60
+            "estimated_duration": 60,
         }
 
         task = TaskCreate(**task_data)
@@ -93,7 +93,7 @@ class TestPydanticSchemas:
             "email": "test@example.com",
             "username": "testuser",
             "password": "securepassword",
-            "full_name": "Test User"
+            "full_name": "Test User",
         }
 
         user = UserCreate(**user_data)
@@ -104,27 +104,14 @@ class TestPydanticSchemas:
 
     def test_user_create_without_full_name(self):
         """Test UserCreate without optional fields."""
-        user = UserCreate(
-            email="test@example.com",
-            username="testuser",
-            password="password"
-        )
+        user = UserCreate(email="test@example.com", username="testuser", password="password")
         assert user.full_name is None
 
-    @pytest.mark.parametrize("invalid_email", [
-        "not_an_email",
-        "",
-        "missing@",
-        "@missing.com"
-    ])
+    @pytest.mark.parametrize("invalid_email", ["not_an_email", "", "missing@", "@missing.com"])
     def test_user_create_invalid_email_formats(self, invalid_email):
         """Test UserCreate handles invalid email formats."""
         # Note: Basic test - Pydantic email validation would be more robust
-        user = UserCreate(
-            email=invalid_email,
-            username="testuser",
-            password="password"
-        )
+        user = UserCreate(email=invalid_email, username="testuser", password="password")
         # Basic test passes - in real implementation, add email validation
         assert user.email == invalid_email
 
@@ -145,7 +132,7 @@ class TestTaskModel:
             xp_reward=50,
             ai_suggested=True,
             ai_priority_score=8.5,
-            ai_tags=["important", "urgent"]
+            ai_tags=["important", "urgent"],
         )
 
         assert task.id == 1
@@ -160,10 +147,7 @@ class TestTaskModel:
 
     def test_task_model_defaults(self):
         """Test Task model default values."""
-        task = Task(
-            user_id=1,
-            title="Minimal Task"
-        )
+        task = Task(user_id=1, title="Minimal Task")
 
         # Test defaults would be set by SQLAlchemy defaults
         assert task.title == "Minimal Task"
@@ -185,7 +169,7 @@ class TestUserModel:
             current_level=5,
             current_streak=10,
             longest_streak=15,
-            is_active=True
+            is_active=True,
         )
 
         assert user.id == 1
@@ -198,11 +182,7 @@ class TestUserModel:
 
     def test_user_gamification_fields(self):
         """Test user gamification-related fields."""
-        user = User(
-            email="gamer@example.com",
-            username="gamer",
-            hashed_password="hash"
-        )
+        user = User(email="gamer@example.com", username="gamer", hashed_password="hash")
 
         # Test that gamification fields can be set
         user.total_xp = 2500
@@ -228,7 +208,7 @@ class TestFocusSessionModel:
             interruptions=2,
             productivity_rating=8,
             focus_score=7.5,
-            xp_reward=150
+            xp_reward=150,
         )
 
         assert session.id == 1
@@ -247,7 +227,7 @@ class TestFocusSessionModel:
             user_id=1,
             planned_duration=60,
             ai_recommended_duration=75,
-            ai_optimal_time_slot={"start": "09:00", "end": "10:15"}
+            ai_optimal_time_slot={"start": "09:00", "end": "10:15"},
         )
 
         assert session.ai_recommended_duration == 75
@@ -268,7 +248,7 @@ class TestEnergyLogModel:
             sleep_hours=7.5,
             activity="Working on project",
             location="Home office",
-            notes="Feeling productive today"
+            notes="Feeling productive today",
         )
 
         assert log.id == 1
@@ -287,7 +267,7 @@ class TestEnergyLogModel:
             user_id=1,
             energy_level=EnergyLevel.MEDIUM,
             ai_energy_prediction=6.8,
-            ai_recommendations=["Take a break", "Go for a walk"]
+            ai_recommendations=["Take a break", "Go for a walk"],
         )
 
         assert log.ai_energy_prediction == 6.8
@@ -306,7 +286,7 @@ class TestAchievementModel:
             icon="trophy",
             category="task",
             xp_reward=100,
-            criteria={"tasks_completed": 1}
+            criteria={"tasks_completed": 1},
         )
 
         assert achievement.id == 1
@@ -326,9 +306,9 @@ class TestAchievementModel:
                 "tasks_completed": 50,
                 "focus_hours": 100,
                 "streak_days": 30,
-                "energy_logs": 90
+                "energy_logs": 90,
             },
-            xp_reward=1000
+            xp_reward=1000,
         )
 
         assert isinstance(achievement.criteria, dict)
@@ -341,12 +321,7 @@ class TestUserAchievementModel:
 
     def test_user_achievement_creation(self):
         """Test UserAchievement model creation."""
-        user_achievement = UserAchievement(
-            id=1,
-            user_id=1,
-            achievement_id=1,
-            progress=1.0
-        )
+        user_achievement = UserAchievement(id=1, user_id=1, achievement_id=1, progress=1.0)
 
         assert user_achievement.id == 1
         assert user_achievement.user_id == 1
@@ -355,11 +330,7 @@ class TestUserAchievementModel:
 
     def test_user_achievement_partial_progress(self):
         """Test UserAchievement with partial progress."""
-        user_achievement = UserAchievement(
-            user_id=1,
-            achievement_id=2,
-            progress=0.75
-        )
+        user_achievement = UserAchievement(user_id=1, achievement_id=2, progress=0.75)
 
         assert user_achievement.progress == 0.75
 
@@ -380,7 +351,7 @@ class TestSchemaConversion:
             ai_suggested=True,
             xp_reward=50,
             created_at=datetime.now(),
-            completed_at=datetime.now()
+            completed_at=datetime.now(),
         )
 
         # Mock the from_orm functionality
@@ -396,7 +367,7 @@ class TestSchemaConversion:
             "due_date": None,
             "completed_at": task.completed_at,
             "ai_suggested": task.ai_suggested,
-            "xp_reward": task.xp_reward
+            "xp_reward": task.xp_reward,
         }
 
         # Verify all expected fields are present
@@ -416,7 +387,7 @@ class TestSchemaConversion:
             current_level=3,
             current_streak=7,
             is_active=True,
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
 
         user_dict = {
@@ -428,7 +399,7 @@ class TestSchemaConversion:
             "current_level": user.current_level,
             "current_streak": user.current_streak,
             "is_active": user.is_active,
-            "created_at": user.created_at
+            "created_at": user.created_at,
         }
 
         assert user_dict["id"] == 1
@@ -459,12 +430,9 @@ class TestModelValidation:
         log = EnergyLog(user_id=1, energy_level=EnergyLevel.VERY_HIGH)
         assert log.energy_level == EnergyLevel.VERY_HIGH
 
-    @pytest.mark.parametrize("priority", [
-        TaskPriority.LOW,
-        TaskPriority.MEDIUM,
-        TaskPriority.HIGH,
-        TaskPriority.URGENT
-    ])
+    @pytest.mark.parametrize(
+        "priority", [TaskPriority.LOW, TaskPriority.MEDIUM, TaskPriority.HIGH, TaskPriority.URGENT]
+    )
     def test_task_priority_all_values(self, priority):
         """Test task accepts all valid priority values."""
         task = Task(user_id=1, title="Test", priority=priority)

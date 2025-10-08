@@ -23,6 +23,7 @@ except ImportError:
     # For direct execution or testing
     import os
     import sys
+
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from utils.providers import get_embedding_client, get_ingestion_model
 
@@ -34,6 +35,7 @@ ingestion_model = get_ingestion_model()
 @dataclass
 class ChunkingConfig:
     """Configuration for chunking."""
+
     chunk_size: int = 1000
     chunk_overlap: int = 200
     max_chunk_size: int = 2000
@@ -52,6 +54,7 @@ class ChunkingConfig:
 @dataclass
 class DocumentChunk:
     """Represents a document chunk."""
+
     content: str
     index: int
     start_char: int
@@ -72,7 +75,7 @@ class SemanticChunker:
     def __init__(self, config: ChunkingConfig):
         """
         Initialize chunker.
-        
+
         Args:
             config: Chunking configuration
         """
@@ -81,43 +84,31 @@ class SemanticChunker:
         self.model = ingestion_model
 
     async def chunk_document(
-        self,
-        content: str,
-        title: str,
-        source: str,
-        metadata: dict[str, Any] | None = None
+        self, content: str, title: str, source: str, metadata: dict[str, Any] | None = None
     ) -> list[DocumentChunk]:
         """
         Chunk a document into semantically coherent pieces.
-        
+
         Args:
             content: Document content
             title: Document title
             source: Document source
             metadata: Additional metadata
-        
+
         Returns:
             List of document chunks
         """
         if not content.strip():
             return []
 
-        base_metadata = {
-            "title": title,
-            "source": source,
-            **(metadata or {})
-        }
+        base_metadata = {"title": title, "source": source, **(metadata or {})}
 
         # First, try semantic chunking if enabled
         if self.config.use_semantic_splitting and len(content) > self.config.chunk_size:
             try:
                 semantic_chunks = await self._semantic_chunk(content)
                 if semantic_chunks:
-                    return self._create_chunk_objects(
-                        semantic_chunks,
-                        content,
-                        base_metadata
-                    )
+                    return self._create_chunk_objects(semantic_chunks, content, base_metadata)
             except Exception as e:
                 logger.warning(f"Semantic chunking failed, falling back to simple chunking: {e}")
 
@@ -127,10 +118,10 @@ class SemanticChunker:
     async def _semantic_chunk(self, content: str) -> list[str]:
         """
         Perform semantic chunking using LLM.
-        
+
         Args:
             content: Content to chunk
-        
+
         Returns:
             List of chunk boundaries
         """
@@ -170,21 +161,21 @@ class SemanticChunker:
     def _split_on_structure(self, content: str) -> list[str]:
         """
         Split content on structural boundaries.
-        
+
         Args:
             content: Content to split
-        
+
         Returns:
             List of sections
         """
         # Split on markdown headers, paragraphs, and other structural elements
         patterns = [
-            r'\n#{1,6}\s+.+?\n',  # Markdown headers
-            r'\n\n+',            # Multiple newlines (paragraph breaks)
-            r'\n[-*+]\s+',       # List items
-            r'\n\d+\.\s+',       # Numbered lists
-            r'\n```.*?```\n',    # Code blocks
-            r'\n\|\s*.+?\|\s*\n', # Tables
+            r"\n#{1,6}\s+.+?\n",  # Markdown headers
+            r"\n\n+",  # Multiple newlines (paragraph breaks)
+            r"\n[-*+]\s+",  # List items
+            r"\n\d+\.\s+",  # Numbered lists
+            r"\n```.*?```\n",  # Code blocks
+            r"\n\|\s*.+?\|\s*\n",  # Tables
         ]
 
         # Split by patterns but keep the separators
@@ -193,7 +184,7 @@ class SemanticChunker:
         for pattern in patterns:
             new_sections = []
             for section in sections:
-                parts = re.split(f'({pattern})', section, flags=re.MULTILINE | re.DOTALL)
+                parts = re.split(f"({pattern})", section, flags=re.MULTILINE | re.DOTALL)
                 new_sections.extend([part for part in parts if part.strip()])
             sections = new_sections
 
@@ -202,10 +193,10 @@ class SemanticChunker:
     async def _split_long_section(self, section: str) -> list[str]:
         """
         Split a long section using LLM for semantic boundaries.
-        
+
         Args:
             section: Section to split
-        
+
         Returns:
             List of sub-chunks
         """
@@ -225,6 +216,7 @@ class SemanticChunker:
 
             # Use Pydantic AI for LLM calls
             from pydantic_ai import Agent
+
             temp_agent = Agent(self.model)
 
             response = await temp_agent.run(prompt)
@@ -234,7 +226,7 @@ class SemanticChunker:
             # Validate chunks
             valid_chunks = []
             for chunk in chunks:
-                if (self.config.min_chunk_size <= len(chunk) <= self.config.max_chunk_size):
+                if self.config.min_chunk_size <= len(chunk) <= self.config.max_chunk_size:
                     valid_chunks.append(chunk)
 
             return valid_chunks if valid_chunks else self._simple_split(section)
@@ -246,10 +238,10 @@ class SemanticChunker:
     def _simple_split(self, text: str) -> list[str]:
         """
         Simple text splitting as fallback.
-        
+
         Args:
             text: Text to split
-        
+
         Returns:
             List of chunks
         """
@@ -267,7 +259,7 @@ class SemanticChunker:
             # Try to end at a sentence boundary
             chunk_end = end
             for i in range(end, max(start + self.config.min_chunk_size, end - 200), -1):
-                if text[i] in '.!?\n':
+                if text[i] in ".!?\n":
                     chunk_end = i + 1
                     break
 
@@ -276,18 +268,14 @@ class SemanticChunker:
 
         return chunks
 
-    def _simple_chunk(
-        self,
-        content: str,
-        base_metadata: dict[str, Any]
-    ) -> list[DocumentChunk]:
+    def _simple_chunk(self, content: str, base_metadata: dict[str, Any]) -> list[DocumentChunk]:
         """
         Simple rule-based chunking.
-        
+
         Args:
             content: Content to chunk
             base_metadata: Base metadata for chunks
-        
+
         Returns:
             List of document chunks
         """
@@ -295,19 +283,16 @@ class SemanticChunker:
         return self._create_chunk_objects(chunks, content, base_metadata)
 
     def _create_chunk_objects(
-        self,
-        chunks: list[str],
-        original_content: str,
-        base_metadata: dict[str, Any]
+        self, chunks: list[str], original_content: str, base_metadata: dict[str, Any]
     ) -> list[DocumentChunk]:
         """
         Create DocumentChunk objects from text chunks.
-        
+
         Args:
             chunks: List of chunk texts
             original_content: Original document content
             base_metadata: Base metadata
-        
+
         Returns:
             List of DocumentChunk objects
         """
@@ -327,16 +312,18 @@ class SemanticChunker:
             chunk_metadata = {
                 **base_metadata,
                 "chunk_method": "semantic" if self.config.use_semantic_splitting else "simple",
-                "total_chunks": len(chunks)
+                "total_chunks": len(chunks),
             }
 
-            chunk_objects.append(DocumentChunk(
-                content=chunk_text.strip(),
-                index=i,
-                start_char=start_pos,
-                end_char=end_pos,
-                metadata=chunk_metadata
-            ))
+            chunk_objects.append(
+                DocumentChunk(
+                    content=chunk_text.strip(),
+                    index=i,
+                    start_char=start_pos,
+                    end_char=end_pos,
+                    metadata=chunk_metadata,
+                )
+            )
 
             current_pos = end_pos
 
@@ -351,21 +338,17 @@ class SimpleChunker:
         self.config = config
 
     def chunk_document(
-        self,
-        content: str,
-        title: str,
-        source: str,
-        metadata: dict[str, Any] | None = None
+        self, content: str, title: str, source: str, metadata: dict[str, Any] | None = None
     ) -> list[DocumentChunk]:
         """
         Chunk document using simple rules.
-        
+
         Args:
             content: Document content
             title: Document title
             source: Document source
             metadata: Additional metadata
-        
+
         Returns:
             List of document chunks
         """
@@ -376,11 +359,11 @@ class SimpleChunker:
             "title": title,
             "source": source,
             "chunk_method": "simple",
-            **(metadata or {})
+            **(metadata or {}),
         }
 
         # Split on paragraphs first
-        paragraphs = re.split(r'\n\s*\n', content)
+        paragraphs = re.split(r"\n\s*\n", content)
         chunks = []
         current_chunk = ""
         current_pos = 0
@@ -399,13 +382,15 @@ class SimpleChunker:
             else:
                 # Save current chunk if it exists
                 if current_chunk:
-                    chunks.append(self._create_chunk(
-                        current_chunk,
-                        chunk_index,
-                        current_pos,
-                        current_pos + len(current_chunk),
-                        base_metadata.copy()
-                    ))
+                    chunks.append(
+                        self._create_chunk(
+                            current_chunk,
+                            chunk_index,
+                            current_pos,
+                            current_pos + len(current_chunk),
+                            base_metadata.copy(),
+                        )
+                    )
 
                     # Move position, but ensure overlap is respected
                     overlap_start = max(0, len(current_chunk) - self.config.chunk_overlap)
@@ -417,13 +402,15 @@ class SimpleChunker:
 
         # Add final chunk
         if current_chunk:
-            chunks.append(self._create_chunk(
-                current_chunk,
-                chunk_index,
-                current_pos,
-                current_pos + len(current_chunk),
-                base_metadata.copy()
-            ))
+            chunks.append(
+                self._create_chunk(
+                    current_chunk,
+                    chunk_index,
+                    current_pos,
+                    current_pos + len(current_chunk),
+                    base_metadata.copy(),
+                )
+            )
 
         # Update total chunks in metadata
         for chunk in chunks:
@@ -432,12 +419,7 @@ class SimpleChunker:
         return chunks
 
     def _create_chunk(
-        self,
-        content: str,
-        index: int,
-        start_pos: int,
-        end_pos: int,
-        metadata: dict[str, Any]
+        self, content: str, index: int, start_pos: int, end_pos: int, metadata: dict[str, Any]
     ) -> DocumentChunk:
         """Create a DocumentChunk object."""
         return DocumentChunk(
@@ -445,7 +427,7 @@ class SimpleChunker:
             index=index,
             start_char=start_pos,
             end_char=end_pos,
-            metadata=metadata
+            metadata=metadata,
         )
 
 
@@ -453,10 +435,10 @@ class SimpleChunker:
 def create_chunker(config: ChunkingConfig):
     """
     Create appropriate chunker based on configuration.
-    
+
     Args:
         config: Chunking configuration
-    
+
     Returns:
         Chunker instance
     """
@@ -469,11 +451,7 @@ def create_chunker(config: ChunkingConfig):
 # Example usage
 async def main():
     """Example usage of the chunker."""
-    config = ChunkingConfig(
-        chunk_size=500,
-        chunk_overlap=50,
-        use_semantic_splitting=True
-    )
+    config = ChunkingConfig(chunk_size=500, chunk_overlap=50, use_semantic_splitting=True)
 
     chunker = create_chunker(config)
 
@@ -502,9 +480,7 @@ async def main():
     """
 
     chunks = await chunker.chunk_document(
-        content=sample_text,
-        title="Big Tech AI Report",
-        source="example.md"
+        content=sample_text, title="Big Tech AI Report", source="example.md"
     )
 
     for i, chunk in enumerate(chunks):

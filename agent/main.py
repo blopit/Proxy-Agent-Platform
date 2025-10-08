@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
-from routers import agents
+from routers import router as agents_router
 
 from database import close_db, init_db
 
@@ -47,21 +47,34 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
 # Add middleware
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+# CORS configuration - secure environment-based origins
+
+# Get allowed origins from environment variable
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:8000")
+allowed_origins: list[str] = [origin.strip() for origin in allowed_origins_env.split(",")]
+
+# In production, never use wildcard origins
+if os.getenv("ENVIRONMENT") == "production":
+    if "*" in allowed_origins or not allowed_origins:
+        raise ValueError(
+            "Production environment requires specific CORS origins. Set ALLOWED_ORIGINS environment variable."
+        )
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
 # Include routers
-app.include_router(agents.router)
+app.include_router(agents_router)
 
 
 @app.get("/")
@@ -76,8 +89,8 @@ async def root():
             "task_agent": "Manages tasks and priorities",
             "focus_agent": "Optimizes focus and deep work sessions",
             "energy_agent": "Tracks and optimizes energy levels",
-            "progress_agent": "Monitors goals and celebrates achievements"
-        }
+            "progress_agent": "Monitors goals and celebrates achievements",
+        },
     }
 
 
@@ -94,8 +107,8 @@ async def global_exception_handler(request, exc):
         status_code=500,
         content={
             "error": "Internal server error",
-            "detail": str(exc) if os.getenv("DEBUG") else "An unexpected error occurred"
-        }
+            "detail": str(exc) if os.getenv("DEBUG") else "An unexpected error occurred",
+        },
     )
 
 
@@ -105,10 +118,4 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", "8000"))
     debug = os.getenv("DEBUG", "false").lower() == "true"
 
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=port,
-        reload=debug,
-        access_log=debug
-    )
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=debug, access_log=debug)

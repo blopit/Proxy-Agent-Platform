@@ -7,11 +7,7 @@ from pydantic_ai import Agent
 from tools import hybrid_search, semantic_search
 
 # Initialize the semantic search agent
-search_agent = Agent(
-    get_llm_model(),
-    deps_type=AgentDependencies,
-    system_prompt=MAIN_SYSTEM_PROMPT
-)
+search_agent = Agent(get_llm_model(), deps_type=AgentDependencies, system_prompt=MAIN_SYSTEM_PROMPT)
 
 # Register search tools
 search_agent.tool(semantic_search)

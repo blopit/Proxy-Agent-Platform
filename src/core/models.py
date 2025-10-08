@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 class AgentRequest(BaseModel):
     """Simple agent request"""
+
     query: str
     user_id: str
     session_id: str
@@ -20,6 +21,7 @@ class AgentRequest(BaseModel):
 
 class AgentResponse(BaseModel):
     """Simple agent response"""
+
     success: bool
     response: str
     request_id: str
@@ -31,6 +33,7 @@ class AgentResponse(BaseModel):
 
 class Message(BaseModel):
     """Database message model"""
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     session_id: str
     message_type: str  # user, agent, system

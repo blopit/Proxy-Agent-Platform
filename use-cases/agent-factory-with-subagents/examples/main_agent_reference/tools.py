@@ -18,11 +18,11 @@ async def search_web_tool(
     count: int = 10,
     offset: int = 0,
     country: str | None = None,
-    lang: str | None = None
+    lang: str | None = None,
 ) -> list[dict[str, Any]]:
     """
     Pure function to search the web using Brave Search API.
-    
+
     Args:
         api_key: Brave Search API key
         query: Search query
@@ -30,10 +30,10 @@ async def search_web_tool(
         offset: Offset for pagination
         country: Country code for localized results
         lang: Language code for results
-        
+
     Returns:
         List of search results as dictionaries
-        
+
     Raises:
         ValueError: If query is empty or API key missing
         Exception: If API request fails
@@ -47,16 +47,9 @@ async def search_web_tool(
     # Ensure count is within valid range
     count = min(max(count, 1), 20)
 
-    headers = {
-        "X-Subscription-Token": api_key,
-        "Accept": "application/json"
-    }
+    headers = {"X-Subscription-Token": api_key, "Accept": "application/json"}
 
-    params = {
-        "q": query,
-        "count": count,
-        "offset": offset
-    }
+    params = {"q": query, "count": count, "offset": offset}
 
     if country:
         params["country"] = country
@@ -71,7 +64,7 @@ async def search_web_tool(
                 "https://api.search.brave.com/res/v1/web/search",
                 headers=headers,
                 params=params,
-                timeout=30.0
+                timeout=30.0,
             )
 
             # Handle rate limiting
@@ -98,12 +91,14 @@ async def search_web_tool(
                 score = 1.0 - (idx * 0.05)  # Decrease by 0.05 for each position
                 score = max(score, 0.1)  # Minimum score of 0.1
 
-                results.append({
-                    "title": result.get("title", ""),
-                    "url": result.get("url", ""),
-                    "description": result.get("description", ""),
-                    "score": score
-                })
+                results.append(
+                    {
+                        "title": result.get("title", ""),
+                        "url": result.get("url", ""),
+                        "description": result.get("description", ""),
+                        "score": score,
+                    }
+                )
 
             logger.info(f"Found {len(results)} results for query: {query}")
             return results

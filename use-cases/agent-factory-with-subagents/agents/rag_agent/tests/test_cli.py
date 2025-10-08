@@ -27,13 +27,13 @@ class TestCLICommands:
         """Test CLI runs interactive mode when no subcommand provided."""
         runner = CliRunner()
 
-        with patch('..cli.interactive_mode') as mock_interactive:
+        with patch("..cli.interactive_mode") as mock_interactive:
             mock_interactive.return_value = asyncio.run(asyncio.sleep(0))  # Mock async function
 
-            result = runner.invoke(cli, [], input='\n')
+            result = runner.invoke(cli, [], input="\n")
 
             # Should attempt to run interactive mode
-            assert result.exit_code == 0 or 'KeyboardInterrupt' in str(result.exception)
+            assert result.exit_code == 0 or "KeyboardInterrupt" in str(result.exception)
 
     def test_search_command_basic(self):
         """Test basic search command functionality."""
@@ -44,17 +44,15 @@ class TestCLICommands:
             key_findings=["Finding 1", "Finding 2"],
             sources=["Source 1", "Source 2"],
             search_strategy="semantic",
-            result_count=2
+            result_count=2,
         )
 
-        with patch('..cli.search') as mock_search:
+        with patch("..cli.search") as mock_search:
             mock_search.return_value = mock_response
 
-            result = runner.invoke(search_cmd, [
-                '--query', 'test query',
-                '--type', 'semantic',
-                '--count', '5'
-            ])
+            result = runner.invoke(
+                search_cmd, ["--query", "test query", "--type", "semantic", "--count", "5"]
+            )
 
             # Should complete successfully
             assert result.exit_code == 0
@@ -62,9 +60,9 @@ class TestCLICommands:
 
             # Verify search was called with correct parameters
             call_args = mock_search.call_args
-            assert call_args[1]['query'] == 'test query'
-            assert call_args[1]['search_type'] == 'semantic'
-            assert call_args[1]['match_count'] == 5
+            assert call_args[1]["query"] == "test query"
+            assert call_args[1]["search_type"] == "semantic"
+            assert call_args[1]["match_count"] == 5
 
     def test_search_command_with_text_weight(self):
         """Test search command with text weight parameter."""
@@ -75,32 +73,28 @@ class TestCLICommands:
             key_findings=[],
             sources=[],
             search_strategy="hybrid",
-            result_count=10
+            result_count=10,
         )
 
-        with patch('..cli.search') as mock_search:
+        with patch("..cli.search") as mock_search:
             mock_search.return_value = mock_response
 
-            result = runner.invoke(search_cmd, [
-                '--query', 'test query',
-                '--type', 'hybrid',
-                '--text-weight', '0.7'
-            ])
+            result = runner.invoke(
+                search_cmd, ["--query", "test query", "--type", "hybrid", "--text-weight", "0.7"]
+            )
 
             assert result.exit_code == 0
             call_args = mock_search.call_args
-            assert call_args[1]['text_weight'] == 0.7
+            assert call_args[1]["text_weight"] == 0.7
 
     def test_search_command_error_handling(self):
         """Test search command handles errors gracefully."""
         runner = CliRunner()
 
-        with patch('..cli.search') as mock_search:
+        with patch("..cli.search") as mock_search:
             mock_search.side_effect = Exception("Search failed")
 
-            result = runner.invoke(search_cmd, [
-                '--query', 'test query'
-            ])
+            result = runner.invoke(search_cmd, ["--query", "test query"])
 
             # Should exit with error code 1
             assert result.exit_code == 1
@@ -111,13 +105,13 @@ class TestCLICommands:
         """Test interactive command invokes interactive mode."""
         runner = CliRunner()
 
-        with patch('..cli.interactive_mode') as mock_interactive:
+        with patch("..cli.interactive_mode") as mock_interactive:
             mock_interactive.return_value = asyncio.run(asyncio.sleep(0))
 
             result = runner.invoke(interactive, [])
 
             # Should attempt to run interactive mode
-            assert result.exit_code == 0 or 'KeyboardInterrupt' in str(result.exception)
+            assert result.exit_code == 0 or "KeyboardInterrupt" in str(result.exception)
 
     def test_info_command_success(self):
         """Test info command displays system information."""
@@ -133,7 +127,7 @@ class TestCLICommands:
         mock_settings.db_pool_min_size = 10
         mock_settings.db_pool_max_size = 20
 
-        with patch('..cli.load_settings', return_value=mock_settings):
+        with patch("..cli.load_settings", return_value=mock_settings):
             result = runner.invoke(info, [])
 
             assert result.exit_code == 0
@@ -145,7 +139,7 @@ class TestCLICommands:
         """Test info command handles settings loading errors."""
         runner = CliRunner()
 
-        with patch('..cli.load_settings') as mock_load_settings:
+        with patch("..cli.load_settings") as mock_load_settings:
             mock_load_settings.side_effect = Exception("Settings load failed")
 
             result = runner.invoke(info, [])
@@ -162,7 +156,7 @@ class TestDisplayFunctions:
         """Test welcome message display."""
         console = Console(file=sys.stdout, force_terminal=False)
 
-        with patch('..cli.console', console):
+        with patch("..cli.console", console):
             display_welcome()
 
         captured = capsys.readouterr()
@@ -176,17 +170,17 @@ class TestDisplayFunctions:
         console = Console(file=sys.stdout, force_terminal=False)
 
         response = {
-            'summary': 'This is a test summary of the search results.',
-            'key_findings': ['Finding 1', 'Finding 2', 'Finding 3'],
-            'sources': [
-                {'title': 'Document 1', 'source': 'doc1.pdf'},
-                {'title': 'Document 2', 'source': 'doc2.pdf'}
+            "summary": "This is a test summary of the search results.",
+            "key_findings": ["Finding 1", "Finding 2", "Finding 3"],
+            "sources": [
+                {"title": "Document 1", "source": "doc1.pdf"},
+                {"title": "Document 2", "source": "doc2.pdf"},
             ],
-            'search_strategy': 'hybrid',
-            'result_count': 10
+            "search_strategy": "hybrid",
+            "result_count": 10,
         }
 
-        with patch('..cli.console', console):
+        with patch("..cli.console", console):
             display_results(response)
 
         captured = capsys.readouterr()
@@ -203,13 +197,9 @@ class TestDisplayFunctions:
         """Test results display with minimal data."""
         console = Console(file=sys.stdout, force_terminal=False)
 
-        response = {
-            'summary': 'Minimal response',
-            'search_strategy': 'semantic',
-            'result_count': 0
-        }
+        response = {"summary": "Minimal response", "search_strategy": "semantic", "result_count": 0}
 
-        with patch('..cli.console', console):
+        with patch("..cli.console", console):
             display_results(response)
 
         captured = capsys.readouterr()
@@ -222,12 +212,9 @@ class TestDisplayFunctions:
         """Test results display when summary is missing."""
         console = Console(file=sys.stdout, force_terminal=False)
 
-        response = {
-            'search_strategy': 'auto',
-            'result_count': 5
-        }
+        response = {"search_strategy": "auto", "result_count": 5}
 
-        with patch('..cli.console', console):
+        with patch("..cli.console", console):
             display_results(response)
 
         captured = capsys.readouterr()
@@ -242,13 +229,13 @@ class TestInteractiveMode:
     @pytest.mark.asyncio
     async def test_interactive_mode_initialization(self):
         """Test interactive mode initializes properly."""
-        with patch('..cli.interactive_search') as mock_interactive_search:
-            with patch('..cli.display_welcome') as mock_display_welcome:
-                with patch('..cli.Prompt.ask') as mock_prompt:
-                    with patch('..cli.Confirm.ask') as mock_confirm:
+        with patch("..cli.interactive_search") as mock_interactive_search:
+            with patch("..cli.display_welcome") as mock_display_welcome:
+                with patch("..cli.Prompt.ask") as mock_prompt:
+                    with patch("..cli.Confirm.ask") as mock_confirm:
                         mock_deps = AsyncMock()
                         mock_interactive_search.return_value = mock_deps
-                        mock_prompt.side_effect = ['test query', 'exit']
+                        mock_prompt.side_effect = ["test query", "exit"]
                         mock_confirm.return_value = True
 
                         await interactive_mode()
@@ -264,19 +251,19 @@ class TestInteractiveMode:
             key_findings=["Finding 1"],
             sources=["Source 1"],
             search_strategy="auto",
-            result_count=1
+            result_count=1,
         )
 
-        with patch('..cli.interactive_search') as mock_interactive_search:
-            with patch('..cli.display_welcome'):
-                with patch('..cli.display_results') as mock_display_results:
-                    with patch('..cli.search') as mock_search:
-                        with patch('..cli.Prompt.ask') as mock_prompt:
-                            with patch('..cli.Confirm.ask') as mock_confirm:
+        with patch("..cli.interactive_search") as mock_interactive_search:
+            with patch("..cli.display_welcome"):
+                with patch("..cli.display_results") as mock_display_results:
+                    with patch("..cli.search") as mock_search:
+                        with patch("..cli.Prompt.ask") as mock_prompt:
+                            with patch("..cli.Confirm.ask") as mock_confirm:
                                 mock_deps = AsyncMock()
                                 mock_interactive_search.return_value = mock_deps
                                 mock_search.return_value = mock_response
-                                mock_prompt.side_effect = ['Python tutorial', 'exit']
+                                mock_prompt.side_effect = ["Python tutorial", "exit"]
                                 mock_confirm.return_value = True
 
                                 await interactive_mode()
@@ -284,7 +271,7 @@ class TestInteractiveMode:
                                 # Should perform search
                                 mock_search.assert_called()
                                 call_args = mock_search.call_args
-                                assert call_args[1]['query'] == 'Python tutorial'
+                                assert call_args[1]["query"] == "Python tutorial"
 
                                 # Should display results
                                 mock_display_results.assert_called()
@@ -292,13 +279,13 @@ class TestInteractiveMode:
     @pytest.mark.asyncio
     async def test_interactive_mode_help_command(self):
         """Test interactive mode handles help command."""
-        with patch('..cli.interactive_search') as mock_interactive_search:
-            with patch('..cli.display_welcome') as mock_display_welcome:
-                with patch('..cli.Prompt.ask') as mock_prompt:
-                    with patch('..cli.Confirm.ask') as mock_confirm:
+        with patch("..cli.interactive_search") as mock_interactive_search:
+            with patch("..cli.display_welcome") as mock_display_welcome:
+                with patch("..cli.Prompt.ask") as mock_prompt:
+                    with patch("..cli.Confirm.ask") as mock_confirm:
                         mock_deps = AsyncMock()
                         mock_interactive_search.return_value = mock_deps
-                        mock_prompt.side_effect = ['help', 'exit']
+                        mock_prompt.side_effect = ["help", "exit"]
                         mock_confirm.return_value = True
 
                         await interactive_mode()
@@ -309,14 +296,14 @@ class TestInteractiveMode:
     @pytest.mark.asyncio
     async def test_interactive_mode_clear_command(self):
         """Test interactive mode handles clear command."""
-        with patch('..cli.interactive_search') as mock_interactive_search:
-            with patch('..cli.display_welcome'):
-                with patch('..cli.console') as mock_console:
-                    with patch('..cli.Prompt.ask') as mock_prompt:
-                        with patch('..cli.Confirm.ask') as mock_confirm:
+        with patch("..cli.interactive_search") as mock_interactive_search:
+            with patch("..cli.display_welcome"):
+                with patch("..cli.console") as mock_console:
+                    with patch("..cli.Prompt.ask") as mock_prompt:
+                        with patch("..cli.Confirm.ask") as mock_confirm:
                             mock_deps = AsyncMock()
                             mock_interactive_search.return_value = mock_deps
-                            mock_prompt.side_effect = ['clear', 'exit']
+                            mock_prompt.side_effect = ["clear", "exit"]
                             mock_confirm.return_value = True
 
                             await interactive_mode()
@@ -327,32 +314,34 @@ class TestInteractiveMode:
     @pytest.mark.asyncio
     async def test_interactive_mode_set_preference(self):
         """Test interactive mode handles preference setting."""
-        with patch('..cli.interactive_search') as mock_interactive_search:
-            with patch('..cli.display_welcome'):
-                with patch('..cli.Prompt.ask') as mock_prompt:
-                    with patch('..cli.Confirm.ask') as mock_confirm:
-                        with patch('..cli.console') as mock_console:
+        with patch("..cli.interactive_search") as mock_interactive_search:
+            with patch("..cli.display_welcome"):
+                with patch("..cli.Prompt.ask") as mock_prompt:
+                    with patch("..cli.Confirm.ask") as mock_confirm:
+                        with patch("..cli.console") as mock_console:
                             mock_deps = AsyncMock()
                             mock_interactive_search.return_value = mock_deps
-                            mock_prompt.side_effect = ['set search_type=semantic', 'exit']
+                            mock_prompt.side_effect = ["set search_type=semantic", "exit"]
                             mock_confirm.return_value = True
 
                             await interactive_mode()
 
                             # Should set preference on deps
-                            mock_deps.set_user_preference.assert_called_once_with('search_type', 'semantic')
+                            mock_deps.set_user_preference.assert_called_once_with(
+                                "search_type", "semantic"
+                            )
 
     @pytest.mark.asyncio
     async def test_interactive_mode_invalid_set_command(self):
         """Test interactive mode handles invalid set commands."""
-        with patch('..cli.interactive_search') as mock_interactive_search:
-            with patch('..cli.display_welcome'):
-                with patch('..cli.Prompt.ask') as mock_prompt:
-                    with patch('..cli.Confirm.ask') as mock_confirm:
-                        with patch('..cli.console') as mock_console:
+        with patch("..cli.interactive_search") as mock_interactive_search:
+            with patch("..cli.display_welcome"):
+                with patch("..cli.Prompt.ask") as mock_prompt:
+                    with patch("..cli.Confirm.ask") as mock_confirm:
+                        with patch("..cli.console") as mock_console:
                             mock_deps = AsyncMock()
                             mock_interactive_search.return_value = mock_deps
-                            mock_prompt.side_effect = ['set invalid_format', 'exit']
+                            mock_prompt.side_effect = ["set invalid_format", "exit"]
                             mock_confirm.return_value = True
 
                             await interactive_mode()
@@ -365,13 +354,13 @@ class TestInteractiveMode:
     @pytest.mark.asyncio
     async def test_interactive_mode_exit_confirmation(self):
         """Test interactive mode handles exit confirmation."""
-        with patch('..cli.interactive_search') as mock_interactive_search:
-            with patch('..cli.display_welcome'):
-                with patch('..cli.Prompt.ask') as mock_prompt:
-                    with patch('..cli.Confirm.ask') as mock_confirm:
+        with patch("..cli.interactive_search") as mock_interactive_search:
+            with patch("..cli.display_welcome"):
+                with patch("..cli.Prompt.ask") as mock_prompt:
+                    with patch("..cli.Confirm.ask") as mock_confirm:
                         mock_deps = AsyncMock()
                         mock_interactive_search.return_value = mock_deps
-                        mock_prompt.side_effect = ['exit', 'quit']
+                        mock_prompt.side_effect = ["exit", "quit"]
                         # First time say no, second time say yes
                         mock_confirm.side_effect = [False, True]
 
@@ -385,23 +374,26 @@ class TestInteractiveMode:
     @pytest.mark.asyncio
     async def test_interactive_mode_search_error(self):
         """Test interactive mode handles search errors."""
-        with patch('..cli.interactive_search') as mock_interactive_search:
-            with patch('..cli.display_welcome'):
-                with patch('..cli.search') as mock_search:
-                    with patch('..cli.Prompt.ask') as mock_prompt:
-                        with patch('..cli.Confirm.ask') as mock_confirm:
-                            with patch('..cli.console') as mock_console:
+        with patch("..cli.interactive_search") as mock_interactive_search:
+            with patch("..cli.display_welcome"):
+                with patch("..cli.search") as mock_search:
+                    with patch("..cli.Prompt.ask") as mock_prompt:
+                        with patch("..cli.Confirm.ask") as mock_confirm:
+                            with patch("..cli.console") as mock_console:
                                 mock_deps = AsyncMock()
                                 mock_interactive_search.return_value = mock_deps
                                 mock_search.side_effect = Exception("Search failed")
-                                mock_prompt.side_effect = ['test query', 'exit']
+                                mock_prompt.side_effect = ["test query", "exit"]
                                 mock_confirm.return_value = True
 
                                 await interactive_mode()
 
                                 # Should print error message
-                                error_calls = [call for call in mock_console.print.call_args_list
-                                             if 'Error:' in str(call)]
+                                error_calls = [
+                                    call
+                                    for call in mock_console.print.call_args_list
+                                    if "Error:" in str(call)
+                                ]
                                 assert len(error_calls) > 0
 
 
@@ -412,19 +404,18 @@ class TestCLIInputValidation:
         """Test search command with empty query."""
         runner = CliRunner()
 
-        result = runner.invoke(search_cmd, ['--query', ''])
+        result = runner.invoke(search_cmd, ["--query", ""])
 
         # Should still accept empty query (might be valid use case)
-        assert result.exit_code == 0 or result.exit_code == 1  # May fail due to missing search function
+        assert (
+            result.exit_code == 0 or result.exit_code == 1
+        )  # May fail due to missing search function
 
     def test_search_command_invalid_type(self):
         """Test search command with invalid search type."""
         runner = CliRunner()
 
-        result = runner.invoke(search_cmd, [
-            '--query', 'test',
-            '--type', 'invalid_type'
-        ])
+        result = runner.invoke(search_cmd, ["--query", "test", "--type", "invalid_type"])
 
         # Should reject invalid type
         assert result.exit_code != 0
@@ -434,16 +425,15 @@ class TestCLIInputValidation:
         """Test search command with invalid count."""
         runner = CliRunner()
 
-        result = runner.invoke(search_cmd, [
-            '--query', 'test',
-            '--count', 'not_a_number'
-        ])
+        result = runner.invoke(search_cmd, ["--query", "test", "--count", "not_a_number"])
 
         # Should reject non-numeric count
         assert result.exit_code != 0
-        assert ("Invalid value" in result.output or
-                "Usage:" in result.output or
-                "not_a_number is not a valid integer" in result.output)
+        assert (
+            "Invalid value" in result.output
+            or "Usage:" in result.output
+            or "not_a_number is not a valid integer" in result.output
+        )
 
     def test_search_command_negative_count(self):
         """Test search command with negative count."""
@@ -454,36 +444,32 @@ class TestCLIInputValidation:
             key_findings=[],
             sources=[],
             search_strategy="auto",
-            result_count=0
+            result_count=0,
         )
 
-        with patch('..cli.search') as mock_search:
+        with patch("..cli.search") as mock_search:
             mock_search.return_value = mock_response
 
-            result = runner.invoke(search_cmd, [
-                '--query', 'test',
-                '--count', '-5'
-            ])
+            result = runner.invoke(search_cmd, ["--query", "test", "--count", "-5"])
 
             # Click accepts negative integers, but our code should handle it
             assert result.exit_code == 0
             call_args = mock_search.call_args
-            assert call_args[1]['match_count'] == -5  # Passed through
+            assert call_args[1]["match_count"] == -5  # Passed through
 
     def test_search_command_invalid_text_weight(self):
         """Test search command with invalid text weight."""
         runner = CliRunner()
 
-        result = runner.invoke(search_cmd, [
-            '--query', 'test',
-            '--text-weight', 'not_a_float'
-        ])
+        result = runner.invoke(search_cmd, ["--query", "test", "--text-weight", "not_a_float"])
 
         # Should reject non-numeric text weight
         assert result.exit_code != 0
-        assert ("Invalid value" in result.output or
-                "Usage:" in result.output or
-                "not_a_float is not a valid" in result.output)
+        assert (
+            "Invalid value" in result.output
+            or "Usage:" in result.output
+            or "not_a_float is not a valid" in result.output
+        )
 
 
 class TestCLIIntegration:
@@ -498,27 +484,34 @@ class TestCLIIntegration:
             key_findings=["Finding 1", "Finding 2"],
             sources=["Source 1", "Source 2"],
             search_strategy="hybrid",
-            result_count=15
+            result_count=15,
         )
 
-        with patch('..cli.search') as mock_search:
+        with patch("..cli.search") as mock_search:
             mock_search.return_value = mock_response
 
-            result = runner.invoke(search_cmd, [
-                '--query', 'comprehensive search test',
-                '--type', 'hybrid',
-                '--count', '15',
-                '--text-weight', '0.6'
-            ])
+            result = runner.invoke(
+                search_cmd,
+                [
+                    "--query",
+                    "comprehensive search test",
+                    "--type",
+                    "hybrid",
+                    "--count",
+                    "15",
+                    "--text-weight",
+                    "0.6",
+                ],
+            )
 
             assert result.exit_code == 0
 
             # Verify all parameters passed correctly
             call_args = mock_search.call_args
-            assert call_args[1]['query'] == 'comprehensive search test'
-            assert call_args[1]['search_type'] == 'hybrid'
-            assert call_args[1]['match_count'] == 15
-            assert call_args[1]['text_weight'] == 0.6
+            assert call_args[1]["query"] == "comprehensive search test"
+            assert call_args[1]["search_type"] == "hybrid"
+            assert call_args[1]["match_count"] == 15
+            assert call_args[1]["text_weight"] == 0.6
 
     def test_cli_search_output_format(self):
         """Test CLI search output formatting."""
@@ -529,23 +522,17 @@ class TestCLIIntegration:
             key_findings=[
                 "Key finding number one with details",
                 "Second important finding",
-                "Third critical insight"
+                "Third critical insight",
             ],
-            sources=[
-                "Python Documentation",
-                "Machine Learning Guide",
-                "API Reference Manual"
-            ],
+            sources=["Python Documentation", "Machine Learning Guide", "API Reference Manual"],
             search_strategy="semantic",
-            result_count=25
+            result_count=25,
         )
 
-        with patch('..cli.search') as mock_search:
+        with patch("..cli.search") as mock_search:
             mock_search.return_value = mock_response
 
-            result = runner.invoke(search_cmd, [
-                '--query', 'formatting test'
-            ])
+            result = runner.invoke(search_cmd, ["--query", "formatting test"])
 
             assert result.exit_code == 0
 
@@ -570,10 +557,10 @@ class TestCLIErrorScenarios:
         """Test CLI handles keyboard interrupt gracefully."""
         runner = CliRunner()
 
-        with patch('..cli.search') as mock_search:
+        with patch("..cli.search") as mock_search:
             mock_search.side_effect = KeyboardInterrupt()
 
-            result = runner.invoke(search_cmd, ['--query', 'test'])
+            result = runner.invoke(search_cmd, ["--query", "test"])
 
             # Should handle KeyboardInterrupt without crashing
             assert result.exit_code != 0
@@ -582,10 +569,10 @@ class TestCLIErrorScenarios:
         """Test CLI handles system exit gracefully."""
         runner = CliRunner()
 
-        with patch('..cli.search') as mock_search:
+        with patch("..cli.search") as mock_search:
             mock_search.side_effect = SystemExit(1)
 
-            result = runner.invoke(search_cmd, ['--query', 'test'])
+            result = runner.invoke(search_cmd, ["--query", "test"])
 
             # Should handle SystemExit
             assert result.exit_code == 1
@@ -594,10 +581,10 @@ class TestCLIErrorScenarios:
         """Test CLI handles unexpected exceptions."""
         runner = CliRunner()
 
-        with patch('..cli.search') as mock_search:
+        with patch("..cli.search") as mock_search:
             mock_search.side_effect = RuntimeError("Unexpected error occurred")
 
-            result = runner.invoke(search_cmd, ['--query', 'test'])
+            result = runner.invoke(search_cmd, ["--query", "test"])
 
             assert result.exit_code == 1
             assert "Error:" in result.output
@@ -612,12 +599,12 @@ class TestCLIUsability:
         runner = CliRunner()
 
         # Test main CLI help
-        result = runner.invoke(cli, ['--help'])
+        result = runner.invoke(cli, ["--help"])
         assert result.exit_code == 0
         assert "Semantic Search Agent CLI" in result.output
 
         # Test search command help
-        result = runner.invoke(search_cmd, ['--help'])
+        result = runner.invoke(search_cmd, ["--help"])
         assert result.exit_code == 0
         assert "Perform a one-time search" in result.output
         assert "--query" in result.output
@@ -626,12 +613,12 @@ class TestCLIUsability:
         assert "--text-weight" in result.output
 
         # Test interactive command help
-        result = runner.invoke(interactive, ['--help'])
+        result = runner.invoke(interactive, ["--help"])
         assert result.exit_code == 0
         assert "interactive search session" in result.output
 
         # Test info command help
-        result = runner.invoke(info, ['--help'])
+        result = runner.invoke(info, ["--help"])
         assert result.exit_code == 0
         assert "system information" in result.output
 
@@ -640,13 +627,15 @@ class TestCLIUsability:
         runner = CliRunner()
 
         # Test with typo in command name
-        result = runner.invoke(cli, ['searc'])  # Missing 'h'
+        result = runner.invoke(cli, ["searc"])  # Missing 'h'
 
         # Should suggest correct command or show usage
         assert result.exit_code != 0
-        assert ("Usage:" in result.output or
-                "No such command" in result.output or
-                "Did you mean" in result.output)
+        assert (
+            "Usage:" in result.output
+            or "No such command" in result.output
+            or "Did you mean" in result.output
+        )
 
     def test_cli_default_values(self):
         """Test CLI uses appropriate default values."""
@@ -657,18 +646,18 @@ class TestCLIUsability:
             key_findings=[],
             sources=[],
             search_strategy="auto",
-            result_count=10
+            result_count=10,
         )
 
-        with patch('..cli.search') as mock_search:
+        with patch("..cli.search") as mock_search:
             mock_search.return_value = mock_response
 
-            result = runner.invoke(search_cmd, ['--query', 'test with defaults'])
+            result = runner.invoke(search_cmd, ["--query", "test with defaults"])
 
             assert result.exit_code == 0
 
             # Check default values were used
             call_args = mock_search.call_args
-            assert call_args[1]['search_type'] == 'auto'  # Default type
-            assert call_args[1]['match_count'] == 10  # Default count
-            assert call_args[1]['text_weight'] is None  # No default text weight
+            assert call_args[1]["search_type"] == "auto"  # Default type
+            assert call_args[1]["match_count"] == 10  # Default count
+            assert call_args[1]["text_weight"] is None  # No default text weight

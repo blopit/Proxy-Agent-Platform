@@ -32,7 +32,12 @@ class TestAgentInitialization:
     def test_agent_has_registered_tools(self, test_agent):
         """Test agent has all required tools registered."""
         tool_names = [tool.name for tool in test_agent.tool_defs]
-        expected_tools = ['semantic_search', 'hybrid_search', 'auto_search', 'set_search_preference']
+        expected_tools = [
+            "semantic_search",
+            "hybrid_search",
+            "auto_search",
+            "set_search_preference",
+        ]
 
         for expected_tool in expected_tools:
             assert expected_tool in tool_names, f"Missing tool: {expected_tool}"
@@ -46,10 +51,7 @@ class TestAgentBasicFunctionality:
         """Test agent provides response to simple query."""
         deps, connection = test_dependencies
 
-        result = await test_agent.run(
-            "Search for Python tutorials",
-            deps=deps
-        )
+        result = await test_agent.run("Search for Python tutorials", deps=deps)
 
         assert result.data is not None
         assert isinstance(result.data, str)
@@ -87,7 +89,7 @@ class TestAgentToolCalling:
         deps, connection = test_dependencies
 
         # Configure mock database responses
-        connection.fetch.return_value = mock_database_responses['semantic_search']
+        connection.fetch.return_value = mock_database_responses["semantic_search"]
 
         # Create function model that calls tools
         call_count = 0
@@ -101,7 +103,9 @@ class TestAgentToolCalling:
             elif call_count == 2:
                 return {"auto_search": {"query": "test query", "match_count": 10}}
             else:
-                return ModelTextResponse(content="Based on the search results, here's what I found...")
+                return ModelTextResponse(
+                    content="Based on the search results, here's what I found..."
+                )
 
         function_model = FunctionModel(search_function)
         test_agent = search_agent.override(model=function_model)
@@ -110,11 +114,13 @@ class TestAgentToolCalling:
 
         # Verify tool was called
         messages = result.all_messages()
-        tool_calls = [msg for msg in messages if hasattr(msg, 'tool_name')]
+        tool_calls = [msg for msg in messages if hasattr(msg, "tool_name")]
         assert len(tool_calls) > 0, "No tool calls found"
 
         # Verify auto_search was called
-        auto_search_calls = [msg for msg in tool_calls if getattr(msg, 'tool_name', None) == 'auto_search']
+        auto_search_calls = [
+            msg for msg in tool_calls if getattr(msg, "tool_name", None) == "auto_search"
+        ]
         assert len(auto_search_calls) > 0, "auto_search tool was not called"
 
     @pytest.mark.asyncio
@@ -129,7 +135,9 @@ class TestAgentToolCalling:
             call_count += 1
 
             if call_count == 1:
-                return {"set_search_preference": {"preference_type": "search_type", "value": "semantic"}}
+                return {
+                    "set_search_preference": {"preference_type": "search_type", "value": "semantic"}
+                }
             else:
                 return ModelTextResponse(content="Preference set successfully.")
 
@@ -139,7 +147,7 @@ class TestAgentToolCalling:
         result = await test_agent.run("Set search preference to semantic", deps=deps)
 
         # Verify preference was set
-        assert deps.user_preferences.get('search_type') == 'semantic'
+        assert deps.user_preferences.get("search_type") == "semantic"
         assert result.data is not None
 
 
@@ -149,7 +157,7 @@ class TestSearchFunction:
     @pytest.mark.asyncio
     async def test_search_function_with_defaults(self):
         """Test search function with default parameters."""
-        with patch('..agent.search_agent') as mock_agent:
+        with patch("..agent.search_agent") as mock_agent:
             # Mock agent run result
             mock_result = AsyncMock()
             mock_result.data = "Search results found"
@@ -165,16 +173,13 @@ class TestSearchFunction:
     @pytest.mark.asyncio
     async def test_search_function_with_custom_params(self):
         """Test search function with custom parameters."""
-        with patch('..agent.search_agent') as mock_agent:
+        with patch("..agent.search_agent") as mock_agent:
             mock_result = AsyncMock()
             mock_result.data = "Custom search results"
             mock_agent.run.return_value = mock_result
 
             response = await search(
-                query="custom query",
-                search_type="semantic",
-                match_count=20,
-                text_weight=0.5
+                query="custom query", search_type="semantic", match_count=20, text_weight=0.5
             )
 
             assert isinstance(response, SearchResponse)
@@ -186,7 +191,7 @@ class TestSearchFunction:
         """Test search function with provided dependencies."""
         deps, connection = test_dependencies
 
-        with patch('..agent.search_agent') as mock_agent:
+        with patch("..agent.search_agent") as mock_agent:
             mock_result = AsyncMock()
             mock_result.data = "Search with deps"
             mock_agent.run.return_value = mock_result
@@ -205,7 +210,7 @@ class TestInteractiveSearch:
     @pytest.mark.asyncio
     async def test_interactive_search_creates_deps(self):
         """Test interactive search creates new dependencies."""
-        with patch.object(AgentDependencies, 'initialize') as mock_init:
+        with patch.object(AgentDependencies, "initialize") as mock_init:
             deps = await interactive_search()
 
             assert isinstance(deps, AgentDependencies)
@@ -265,7 +270,7 @@ class TestAgentResponseQuality:
         result = await test_agent.run("Find information about machine learning", deps=deps)
 
         response_lower = result.data.lower()
-        search_terms = ['search', 'find', 'information', 'results']
+        search_terms = ["search", "find", "information", "results"]
 
         # At least one search-related term should be mentioned
         assert any(term in response_lower for term in search_terms)
@@ -289,7 +294,7 @@ class TestAgentResponseQuality:
             "What is Python?",  # Conceptual
             "Find exact quote about 'machine learning'",  # Exact match
             "Show me tutorials",  # General
-            "API documentation for requests library"  # Technical
+            "API documentation for requests library",  # Technical
         ]
 
         for query in queries:
@@ -309,16 +314,16 @@ class TestAgentMemoryAndContext:
         deps, connection = test_dependencies
 
         # Set some preferences
-        deps.set_user_preference('search_type', 'semantic')
-        deps.add_to_history('previous query')
+        deps.set_user_preference("search_type", "semantic")
+        deps.add_to_history("previous query")
 
         test_agent = search_agent.override(model=TestModel())
 
         result = await test_agent.run("Another query", deps=deps)
 
         # Verify context is maintained
-        assert deps.user_preferences['search_type'] == 'semantic'
-        assert 'previous query' in deps.query_history
+        assert deps.user_preferences["search_type"] == "semantic"
+        assert "previous query" in deps.query_history
         assert result.data is not None
 
     @pytest.mark.asyncio

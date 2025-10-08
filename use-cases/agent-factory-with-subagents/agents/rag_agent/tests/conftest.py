@@ -29,7 +29,7 @@ def test_settings():
         default_text_weight=0.3,
         db_pool_min_size=1,
         db_pool_max_size=5,
-        embedding_dimension=1536
+        embedding_dimension=1536,
     )
 
 
@@ -68,7 +68,7 @@ async def test_dependencies(test_settings, mock_db_pool, mock_openai_client):
         settings=test_settings,
         session_id="test_session",
         user_preferences={},
-        query_history=[]
+        query_history=[],
     )
 
     return deps, connection
@@ -85,7 +85,7 @@ def sample_search_results():
             similarity=0.85,
             metadata={"page": 1},
             document_title="Python Tutorial",
-            document_source="tutorial.pdf"
+            document_source="tutorial.pdf",
         ),
         SearchResult(
             chunk_id="chunk_2",
@@ -94,8 +94,8 @@ def sample_search_results():
             similarity=0.78,
             metadata={"page": 5},
             document_title="ML Guide",
-            document_source="ml_guide.pdf"
-        )
+            document_source="ml_guide.pdf",
+        ),
     ]
 
 
@@ -104,27 +104,27 @@ def sample_hybrid_results():
     """Create sample hybrid search results for testing."""
     return [
         {
-            'chunk_id': 'chunk_1',
-            'document_id': 'doc_1',
-            'content': 'This is a sample chunk about Python programming.',
-            'combined_score': 0.85,
-            'vector_similarity': 0.80,
-            'text_similarity': 0.90,
-            'metadata': {'page': 1},
-            'document_title': 'Python Tutorial',
-            'document_source': 'tutorial.pdf'
+            "chunk_id": "chunk_1",
+            "document_id": "doc_1",
+            "content": "This is a sample chunk about Python programming.",
+            "combined_score": 0.85,
+            "vector_similarity": 0.80,
+            "text_similarity": 0.90,
+            "metadata": {"page": 1},
+            "document_title": "Python Tutorial",
+            "document_source": "tutorial.pdf",
         },
         {
-            'chunk_id': 'chunk_2',
-            'document_id': 'doc_2',
-            'content': 'Advanced concepts in machine learning and AI.',
-            'combined_score': 0.78,
-            'vector_similarity': 0.75,
-            'text_similarity': 0.82,
-            'metadata': {'page': 5},
-            'document_title': 'ML Guide',
-            'document_source': 'ml_guide.pdf'
-        }
+            "chunk_id": "chunk_2",
+            "document_id": "doc_2",
+            "content": "Advanced concepts in machine learning and AI.",
+            "combined_score": 0.78,
+            "vector_similarity": 0.75,
+            "text_similarity": 0.82,
+            "metadata": {"page": 5},
+            "document_title": "ML Guide",
+            "document_source": "ml_guide.pdf",
+        },
     ]
 
 
@@ -143,10 +143,10 @@ def test_agent(test_model):
 def create_search_function_model(search_results: list[dict[str, Any]]) -> FunctionModel:
     """
     Create FunctionModel that simulates search behavior.
-    
+
     Args:
         search_results: Expected search results to return
-    
+
     Returns:
         Configured FunctionModel
     """
@@ -163,12 +163,7 @@ def create_search_function_model(search_results: list[dict[str, Any]]) -> Functi
             )
         elif call_count == 2:
             # Second call - perform the search
-            return {
-                "auto_search": {
-                    "query": "test query",
-                    "match_count": 10
-                }
-            }
+            return {"auto_search": {"query": "test query", "match_count": 10}}
         else:
             # Final response with summary
             return ModelTextResponse(
@@ -188,30 +183,30 @@ def function_model_with_search(sample_search_results):
 def mock_database_responses():
     """Mock database query responses."""
     return {
-        'semantic_search': [
+        "semantic_search": [
             {
-                'chunk_id': 'chunk_1',
-                'document_id': 'doc_1',
-                'content': 'This is a sample chunk about Python programming.',
-                'similarity': 0.85,
-                'metadata': {'page': 1},
-                'document_title': 'Python Tutorial',
-                'document_source': 'tutorial.pdf'
+                "chunk_id": "chunk_1",
+                "document_id": "doc_1",
+                "content": "This is a sample chunk about Python programming.",
+                "similarity": 0.85,
+                "metadata": {"page": 1},
+                "document_title": "Python Tutorial",
+                "document_source": "tutorial.pdf",
             }
         ],
-        'hybrid_search': [
+        "hybrid_search": [
             {
-                'chunk_id': 'chunk_1',
-                'document_id': 'doc_1',
-                'content': 'This is a sample chunk about Python programming.',
-                'combined_score': 0.85,
-                'vector_similarity': 0.80,
-                'text_similarity': 0.90,
-                'metadata': {'page': 1},
-                'document_title': 'Python Tutorial',
-                'document_source': 'tutorial.pdf'
+                "chunk_id": "chunk_1",
+                "document_id": "doc_1",
+                "content": "This is a sample chunk about Python programming.",
+                "combined_score": 0.85,
+                "vector_similarity": 0.80,
+                "text_similarity": 0.90,
+                "metadata": {"page": 1},
+                "document_title": "Python Tutorial",
+                "document_source": "tutorial.pdf",
             }
-        ]
+        ],
     }
 
 
@@ -240,18 +235,24 @@ def assert_search_result_valid(result: SearchResult):
 def assert_hybrid_result_valid(result: dict[str, Any]):
     """Assert that a hybrid search result dictionary is valid."""
     required_keys = [
-        'chunk_id', 'document_id', 'content', 'combined_score',
-        'vector_similarity', 'text_similarity', 'metadata',
-        'document_title', 'document_source'
+        "chunk_id",
+        "document_id",
+        "content",
+        "combined_score",
+        "vector_similarity",
+        "text_similarity",
+        "metadata",
+        "document_title",
+        "document_source",
     ]
 
     for key in required_keys:
         assert key in result, f"Missing required key: {key}"
 
     # Validate score ranges
-    assert 0 <= result['combined_score'] <= 1
-    assert 0 <= result['vector_similarity'] <= 1
-    assert 0 <= result['text_similarity'] <= 1
+    assert 0 <= result["combined_score"] <= 1
+    assert 0 <= result["vector_similarity"] <= 1
+    assert 0 <= result["text_similarity"] <= 1
 
 
 def create_mock_agent_response(summary: str, sources: list[str] = None) -> str:

@@ -24,13 +24,13 @@ class TestREQ001CoreFunctionality:
         # Mock database response with semantic search results
         semantic_results = [
             {
-                'chunk_id': 'chunk_1',
-                'document_id': 'doc_1',
-                'content': 'Machine learning is a subset of artificial intelligence.',
-                'similarity': 0.89,
-                'metadata': {'page': 1},
-                'document_title': 'AI Handbook',
-                'document_source': 'ai_book.pdf'
+                "chunk_id": "chunk_1",
+                "document_id": "doc_1",
+                "content": "Machine learning is a subset of artificial intelligence.",
+                "similarity": 0.89,
+                "metadata": {"page": 1},
+                "document_title": "AI Handbook",
+                "document_source": "ai_book.pdf",
             }
         ]
         connection.fetch.return_value = semantic_results
@@ -45,8 +45,7 @@ class TestREQ001CoreFunctionality:
 
         # Verify embedding generation with correct model
         deps.openai_client.embeddings.create.assert_called_once_with(
-            model="text-embedding-3-small",
-            input="artificial intelligence concepts"
+            model="text-embedding-3-small", input="artificial intelligence concepts"
         )
 
         # Verify database query for vector similarity
@@ -65,15 +64,15 @@ class TestREQ001CoreFunctionality:
 
         hybrid_results = [
             {
-                'chunk_id': 'chunk_1',
-                'document_id': 'doc_1',
-                'content': 'def calculate_accuracy(predictions, labels): return sum(p == l for p, l in zip(predictions, labels)) / len(labels)',
-                'combined_score': 0.95,
-                'vector_similarity': 0.85,
-                'text_similarity': 0.95,
-                'metadata': {'type': 'code_example'},
-                'document_title': 'Python ML Examples',
-                'document_source': 'ml_code.py'
+                "chunk_id": "chunk_1",
+                "document_id": "doc_1",
+                "content": "def calculate_accuracy(predictions, labels): return sum(p == l for p, l in zip(predictions, labels)) / len(labels)",
+                "combined_score": 0.95,
+                "vector_similarity": 0.85,
+                "text_similarity": 0.95,
+                "metadata": {"type": "code_example"},
+                "document_title": "Python ML Examples",
+                "document_source": "ml_code.py",
             }
         ]
         connection.fetch.return_value = hybrid_results
@@ -81,16 +80,16 @@ class TestREQ001CoreFunctionality:
         ctx = RunContext(deps=deps)
 
         # Test auto-selection for exact technical query
-        result = await auto_search(ctx, 'def calculate_accuracy function')
+        result = await auto_search(ctx, "def calculate_accuracy function")
 
         # Should choose hybrid for technical terms
-        assert result['strategy'] == 'hybrid'
-        assert 'technical' in result['reason'].lower() or 'exact' in result['reason'].lower()
-        assert result.get('text_weight') == 0.5  # Higher weight for exact matching
+        assert result["strategy"] == "hybrid"
+        assert "technical" in result["reason"].lower() or "exact" in result["reason"].lower()
+        assert result.get("text_weight") == 0.5  # Higher weight for exact matching
 
         # Acceptance Criteria: Intelligently route queries to optimal search method ✓
-        assert len(result['results']) > 0
-        assert result['results'][0]['combined_score'] > 0.9
+        assert len(result["results"]) > 0
+        assert result["results"][0]["combined_score"] > 0.9
 
     @pytest.mark.asyncio
     async def test_search_result_summarization(self, test_dependencies):
@@ -98,23 +97,23 @@ class TestREQ001CoreFunctionality:
         deps, connection = test_dependencies
         connection.fetch.return_value = [
             {
-                'chunk_id': 'chunk_1',
-                'document_id': 'doc_1',
-                'content': 'Neural networks consist of layers of interconnected nodes.',
-                'similarity': 0.92,
-                'metadata': {'section': 'deep_learning'},
-                'document_title': 'Deep Learning Guide',
-                'document_source': 'dl_guide.pdf'
+                "chunk_id": "chunk_1",
+                "document_id": "doc_1",
+                "content": "Neural networks consist of layers of interconnected nodes.",
+                "similarity": 0.92,
+                "metadata": {"section": "deep_learning"},
+                "document_title": "Deep Learning Guide",
+                "document_source": "dl_guide.pdf",
             },
             {
-                'chunk_id': 'chunk_2',
-                'document_id': 'doc_2',
-                'content': 'Backpropagation is the key algorithm for training neural networks.',
-                'similarity': 0.87,
-                'metadata': {'section': 'algorithms'},
-                'document_title': 'ML Algorithms',
-                'document_source': 'algorithms.pdf'
-            }
+                "chunk_id": "chunk_2",
+                "document_id": "doc_2",
+                "content": "Backpropagation is the key algorithm for training neural networks.",
+                "similarity": 0.87,
+                "metadata": {"section": "algorithms"},
+                "document_title": "ML Algorithms",
+                "document_source": "algorithms.pdf",
+            },
         ]
 
         # Test with function model that provides summarization
@@ -125,14 +124,16 @@ class TestREQ001CoreFunctionality:
             call_count += 1
 
             if call_count == 1:
-                return ModelTextResponse(content="I'll search for information about neural networks.")
+                return ModelTextResponse(
+                    content="I'll search for information about neural networks."
+                )
             elif call_count == 2:
                 return {"auto_search": {"query": "neural network architecture", "match_count": 10}}
             else:
                 return ModelTextResponse(
                     content="Based on the search results, I found comprehensive information about neural networks. "
-                           "Key findings include: 1) Neural networks use interconnected layers of nodes, "
-                           "2) Backpropagation is essential for training. Sources: Deep Learning Guide, ML Algorithms."
+                    "Key findings include: 1) Neural networks use interconnected layers of nodes, "
+                    "2) Backpropagation is essential for training. Sources: Deep Learning Guide, ML Algorithms."
                 )
 
         function_model = FunctionModel(summarization_workflow)
@@ -148,7 +149,7 @@ class TestREQ001CoreFunctionality:
 
         # Acceptance Criteria: Provide meaningful summaries with proper source references ✓
         summary = result.data.lower()
-        assert ("source" in summary or "guide" in summary or "algorithms" in summary)
+        assert "source" in summary or "guide" in summary or "algorithms" in summary
 
 
 class TestREQ002InputOutputSpecifications:
@@ -165,10 +166,11 @@ class TestREQ002InputOutputSpecifications:
             "What is machine learning?",  # Question format
             "Find information about Python programming",  # Command format
             "Show me tutorials on neural networks",  # Request format
-            "I need help with data preprocessing"  # Conversational format
+            "I need help with data preprocessing",  # Conversational format
         ]
 
         from pydantic_ai import RunContext
+
         ctx = RunContext(deps=deps)
 
         for query in test_queries:
@@ -176,8 +178,8 @@ class TestREQ002InputOutputSpecifications:
 
             # All queries should be processed successfully
             assert result is not None
-            assert 'strategy' in result
-            assert 'results' in result
+            assert "strategy" in result
+            assert "results" in result
 
     @pytest.mark.asyncio
     async def test_search_type_specification(self, test_dependencies):
@@ -186,16 +188,17 @@ class TestREQ002InputOutputSpecifications:
         connection.fetch.return_value = []
 
         # Test explicit search type preferences
-        deps.set_user_preference('search_type', 'semantic')
+        deps.set_user_preference("search_type", "semantic")
 
         from pydantic_ai import RunContext
+
         ctx = RunContext(deps=deps)
 
         result = await auto_search(ctx, "test query")
 
         # Should respect user preference
-        assert result['strategy'] == 'semantic'
-        assert result['reason'] == 'User preference'
+        assert result["strategy"] == "semantic"
+        assert result["reason"] == "User preference"
 
     @pytest.mark.asyncio
     async def test_result_limit_specification(self, test_dependencies):
@@ -204,6 +207,7 @@ class TestREQ002InputOutputSpecifications:
         connection.fetch.return_value = []
 
         from pydantic_ai import RunContext
+
         ctx = RunContext(deps=deps)
 
         # Test default limit
@@ -228,7 +232,7 @@ class TestREQ002InputOutputSpecifications:
         connection.fetch.return_value = []
 
         # Mock agent response
-        with patch('..agent.search_agent') as mock_agent:
+        with patch("..agent.search_agent") as mock_agent:
             mock_result = AsyncMock()
             mock_result.data = "Search completed. Found relevant information about machine learning concepts. Key insights include supervised and unsupervised learning approaches."
             mock_agent.run.return_value = mock_result
@@ -248,6 +252,7 @@ class TestREQ002InputOutputSpecifications:
         connection.fetch.return_value = []
 
         from pydantic_ai import RunContext
+
         ctx = RunContext(deps=deps)
 
         # Test normal length query
@@ -274,7 +279,7 @@ class TestREQ003TechnicalRequirements:
         # Test LLM model configuration
         from ..providers import get_llm_model
 
-        with patch('..providers.load_settings') as mock_settings:
+        with patch("..providers.load_settings") as mock_settings:
             mock_settings.return_value.llm_model = "gpt-4o-mini"
             mock_settings.return_value.openai_api_key = "test_key"
 
@@ -287,10 +292,10 @@ class TestREQ003TechnicalRequirements:
         settings = load_settings.__wrapped__()  # Get original function
 
         # Mock environment for testing
-        with patch.dict('os.environ', {
-            'DATABASE_URL': 'postgresql://test:test@localhost/test',
-            'OPENAI_API_KEY': 'test_key'
-        }):
+        with patch.dict(
+            "os.environ",
+            {"DATABASE_URL": "postgresql://test:test@localhost/test", "OPENAI_API_KEY": "test_key"},
+        ):
             try:
                 settings = load_settings()
 
@@ -313,6 +318,7 @@ class TestREQ003TechnicalRequirements:
         connection.fetch.return_value = []
 
         from pydantic_ai import RunContext
+
         ctx = RunContext(deps=deps)
         await semantic_search(ctx, "test vector query")
 
@@ -337,8 +343,7 @@ class TestREQ003TechnicalRequirements:
 
         # Verify correct API call
         deps.openai_client.embeddings.create.assert_called_once_with(
-            model="text-embedding-3-small",
-            input="test text for embedding"
+            model="text-embedding-3-small", input="test text for embedding"
         )
 
 
@@ -348,7 +353,7 @@ class TestREQ004ExternalIntegrations:
     @pytest.mark.asyncio
     async def test_database_authentication(self):
         """Test PostgreSQL authentication via DATABASE_URL."""
-        with patch('asyncpg.create_pool') as mock_create_pool:
+        with patch("asyncpg.create_pool") as mock_create_pool:
             mock_pool = AsyncMock()
             mock_create_pool.return_value = mock_pool
 
@@ -365,9 +370,7 @@ class TestREQ004ExternalIntegrations:
 
             # Verify connection pool created with correct URL
             mock_create_pool.assert_called_once_with(
-                "postgresql://user:pass@localhost:5432/dbname",
-                min_size=10,
-                max_size=20
+                "postgresql://user:pass@localhost:5432/dbname", min_size=10, max_size=20
             )
 
     @pytest.mark.asyncio
@@ -380,7 +383,7 @@ class TestREQ004ExternalIntegrations:
         mock_settings.openai_api_key = "sk-test-api-key"
         deps.settings = mock_settings
 
-        with patch('openai.AsyncOpenAI') as mock_openai:
+        with patch("openai.AsyncOpenAI") as mock_openai:
             mock_client = AsyncMock()
             mock_openai.return_value = mock_client
 
@@ -399,6 +402,7 @@ class TestREQ004ExternalIntegrations:
         connection.fetch.return_value = []
 
         from pydantic_ai import RunContext
+
         ctx = RunContext(deps=deps)
 
         # Test semantic search calls match_chunks
@@ -421,17 +425,18 @@ class TestREQ005ToolRequirements:
         deps, connection = test_dependencies
         connection.fetch.return_value = [
             {
-                'chunk_id': 'chunk_1',
-                'document_id': 'doc_1',
-                'content': 'Test semantic content',
-                'similarity': 0.85,
-                'metadata': {},
-                'document_title': 'Test Doc',
-                'document_source': 'test.pdf'
+                "chunk_id": "chunk_1",
+                "document_id": "doc_1",
+                "content": "Test semantic content",
+                "similarity": 0.85,
+                "metadata": {},
+                "document_title": "Test Doc",
+                "document_source": "test.pdf",
             }
         ]
 
         from pydantic_ai import RunContext
+
         ctx = RunContext(deps=deps)
 
         # Test basic functionality
@@ -458,19 +463,20 @@ class TestREQ005ToolRequirements:
         deps, connection = test_dependencies
         connection.fetch.return_value = [
             {
-                'chunk_id': 'chunk_1',
-                'document_id': 'doc_1',
-                'content': 'Hybrid search test content',
-                'combined_score': 0.90,
-                'vector_similarity': 0.85,
-                'text_similarity': 0.95,
-                'metadata': {},
-                'document_title': 'Test Doc',
-                'document_source': 'test.pdf'
+                "chunk_id": "chunk_1",
+                "document_id": "doc_1",
+                "content": "Hybrid search test content",
+                "combined_score": 0.90,
+                "vector_similarity": 0.85,
+                "text_similarity": 0.95,
+                "metadata": {},
+                "document_title": "Test Doc",
+                "document_source": "test.pdf",
             }
         ]
 
         from pydantic_ai import RunContext
+
         ctx = RunContext(deps=deps)
 
         # Test with text_weight parameter
@@ -478,8 +484,8 @@ class TestREQ005ToolRequirements:
 
         # Verify tool behavior
         assert len(results) > 0
-        assert 'combined_score' in results[0]
-        assert results[0]['combined_score'] == 0.90
+        assert "combined_score" in results[0]
+        assert results[0]["combined_score"] == 0.90
 
         # Verify parameters
         args = connection.fetch.call_args[0]
@@ -499,6 +505,7 @@ class TestREQ005ToolRequirements:
         connection.fetch.return_value = []
 
         from pydantic_ai import RunContext
+
         ctx = RunContext(deps=deps)
 
         # Test query classification logic
@@ -506,20 +513,20 @@ class TestREQ005ToolRequirements:
             ("What is the concept of AI?", "semantic"),
             ('Find exact text "neural network"', "hybrid"),
             ("API_KEY configuration", "hybrid"),
-            ("General machine learning info", "hybrid")
+            ("General machine learning info", "hybrid"),
         ]
 
         for query, expected_strategy in test_cases:
             result = await auto_search(ctx, query)
 
-            assert result['strategy'] == expected_strategy
-            assert 'reason' in result
-            assert 'results' in result
+            assert result["strategy"] == expected_strategy
+            assert "reason" in result
+            assert "results" in result
 
         # Test fallback to semantic search - would be implementation specific
         # For now, verify default behavior works
         result = await auto_search(ctx, "default test query")
-        assert result['strategy'] in ['semantic', 'hybrid']
+        assert result["strategy"] in ["semantic", "hybrid"]
 
 
 class TestREQ006SuccessCriteria:
@@ -533,27 +540,28 @@ class TestREQ006SuccessCriteria:
         # Mock results with various similarity scores
         high_quality_results = [
             {
-                'chunk_id': 'chunk_1',
-                'document_id': 'doc_1',
-                'content': 'High quality relevant content',
-                'similarity': 0.92,  # Above threshold
-                'metadata': {},
-                'document_title': 'Quality Doc',
-                'document_source': 'quality.pdf'
+                "chunk_id": "chunk_1",
+                "document_id": "doc_1",
+                "content": "High quality relevant content",
+                "similarity": 0.92,  # Above threshold
+                "metadata": {},
+                "document_title": "Quality Doc",
+                "document_source": "quality.pdf",
             },
             {
-                'chunk_id': 'chunk_2',
-                'document_id': 'doc_2',
-                'content': 'Moderately relevant content',
-                'similarity': 0.75,  # Above threshold
-                'metadata': {},
-                'document_title': 'Moderate Doc',
-                'document_source': 'moderate.pdf'
-            }
+                "chunk_id": "chunk_2",
+                "document_id": "doc_2",
+                "content": "Moderately relevant content",
+                "similarity": 0.75,  # Above threshold
+                "metadata": {},
+                "document_title": "Moderate Doc",
+                "document_source": "moderate.pdf",
+            },
         ]
         connection.fetch.return_value = high_quality_results
 
         from pydantic_ai import RunContext
+
         ctx = RunContext(deps=deps)
         results = await semantic_search(ctx, "quality search query")
 
@@ -590,6 +598,7 @@ class TestREQ006SuccessCriteria:
         connection.fetch.return_value = []
 
         from pydantic_ai import RunContext
+
         ctx = RunContext(deps=deps)
 
         # Test cases designed to verify intelligent selection
@@ -598,16 +607,14 @@ class TestREQ006SuccessCriteria:
             ("What is the idea behind machine learning?", "semantic"),
             ("Similar concepts to neural networks", "semantic"),
             ("About artificial intelligence", "semantic"),
-
             # Exact/technical queries should use hybrid
             ('Find exact quote "deep learning"', "hybrid"),
             ("API_KEY environment variable", "hybrid"),
             ("def calculate_accuracy function", "hybrid"),
             ("verbatim text needed", "hybrid"),
-
             # General queries should use hybrid (balanced)
             ("Python programming tutorials", "hybrid"),
-            ("Machine learning algorithms", "hybrid")
+            ("Machine learning algorithms", "hybrid"),
         ]
 
         correct_selections = 0
@@ -615,7 +622,7 @@ class TestREQ006SuccessCriteria:
 
         for query, expected_strategy in test_cases:
             result = await auto_search(ctx, query)
-            if result['strategy'] == expected_strategy:
+            if result["strategy"] == expected_strategy:
                 correct_selections += 1
 
         # Verify >80% accuracy
@@ -628,23 +635,23 @@ class TestREQ006SuccessCriteria:
         deps, connection = test_dependencies
         connection.fetch.return_value = [
             {
-                'chunk_id': 'chunk_1',
-                'document_id': 'doc_1',
-                'content': 'Machine learning is a branch of AI that focuses on algorithms.',
-                'similarity': 0.90,
-                'metadata': {},
-                'document_title': 'ML Fundamentals',
-                'document_source': 'ml_book.pdf'
+                "chunk_id": "chunk_1",
+                "document_id": "doc_1",
+                "content": "Machine learning is a branch of AI that focuses on algorithms.",
+                "similarity": 0.90,
+                "metadata": {},
+                "document_title": "ML Fundamentals",
+                "document_source": "ml_book.pdf",
             },
             {
-                'chunk_id': 'chunk_2',
-                'document_id': 'doc_2',
-                'content': 'Supervised learning uses labeled training data.',
-                'similarity': 0.85,
-                'metadata': {},
-                'document_title': 'Learning Types',
-                'document_source': 'learning.pdf'
-            }
+                "chunk_id": "chunk_2",
+                "document_id": "doc_2",
+                "content": "Supervised learning uses labeled training data.",
+                "similarity": 0.85,
+                "metadata": {},
+                "document_title": "Learning Types",
+                "document_source": "learning.pdf",
+            },
         ]
 
         # Test with function model that provides quality summarization
@@ -657,15 +664,17 @@ class TestREQ006SuccessCriteria:
             if call_count == 1:
                 return ModelTextResponse(content="I'll search for machine learning information.")
             elif call_count == 2:
-                return {"auto_search": {"query": "machine learning fundamentals", "match_count": 10}}
+                return {
+                    "auto_search": {"query": "machine learning fundamentals", "match_count": 10}
+                }
             else:
                 return ModelTextResponse(
                     content="Based on my search of the knowledge base, I found comprehensive information "
-                           "about machine learning fundamentals. Key insights include: "
-                           "1) Machine learning is a branch of AI focused on algorithms, "
-                           "2) Supervised learning utilizes labeled training data for model development. "
-                           "These findings are sourced from 'ML Fundamentals' and 'Learning Types' documents, "
-                           "providing reliable educational content on this topic."
+                    "about machine learning fundamentals. Key insights include: "
+                    "1) Machine learning is a branch of AI focused on algorithms, "
+                    "2) Supervised learning utilizes labeled training data for model development. "
+                    "These findings are sourced from 'ML Fundamentals' and 'Learning Types' documents, "
+                    "providing reliable educational content on this topic."
                 )
 
         function_model = FunctionModel(quality_summary_workflow)
@@ -679,9 +688,9 @@ class TestREQ006SuccessCriteria:
         # Coherence indicators
         assert len(result.data) > 100  # Substantial content
         assert "machine learning" in summary  # Topic relevance
-        assert ("key" in summary or "insights" in summary)  # Structured findings
-        assert ("sources" in summary or "documents" in summary)  # Source attribution
-        assert ("fundamentals" in summary or "learning types" in summary)  # Source references
+        assert "key" in summary or "insights" in summary  # Structured findings
+        assert "sources" in summary or "documents" in summary  # Source attribution
+        assert "fundamentals" in summary or "learning types" in summary  # Source references
 
 
 class TestREQ007SecurityCompliance:
@@ -690,15 +699,16 @@ class TestREQ007SecurityCompliance:
     def test_api_key_management(self, test_settings):
         """Test API key security - no hardcoded credentials."""
         # Verify settings use environment variables
-        assert hasattr(test_settings, 'database_url')
-        assert hasattr(test_settings, 'openai_api_key')
+        assert hasattr(test_settings, "database_url")
+        assert hasattr(test_settings, "openai_api_key")
 
         # In real implementation, keys come from environment
         # Test validates this pattern is followed
         from ..settings import Settings
+
         config = Settings.model_config
-        assert config['env_file'] == '.env'
-        assert 'env_file_encoding' in config
+        assert config["env_file"] == ".env"
+        assert "env_file_encoding" in config
 
     @pytest.mark.asyncio
     async def test_input_sanitization(self, test_dependencies):
@@ -707,6 +717,7 @@ class TestREQ007SecurityCompliance:
         connection.fetch.return_value = []
 
         from pydantic_ai import RunContext
+
         ctx = RunContext(deps=deps)
 
         # Test potentially malicious inputs are handled safely
@@ -714,14 +725,14 @@ class TestREQ007SecurityCompliance:
             "'; DROP TABLE documents; --",
             "<script>alert('xss')</script>",
             "../../etc/passwd",
-            "'; UNION SELECT * FROM users; --"
+            "'; UNION SELECT * FROM users; --",
         ]
 
         for malicious_input in malicious_inputs:
             # Should not raise exceptions or cause issues
             result = await auto_search(ctx, malicious_input)
             assert result is not None
-            assert 'results' in result
+            assert "results" in result
 
             # Verify parameterized queries are used (no SQL injection possible)
             connection.fetch.assert_called()
@@ -734,6 +745,7 @@ class TestREQ007SecurityCompliance:
         connection.fetch.return_value = []
 
         from pydantic_ai import RunContext
+
         ctx = RunContext(deps=deps)
 
         # Test maximum reasonable query length
@@ -752,10 +764,10 @@ class TestREQ007SecurityCompliance:
         # (Implementation would include audit logging settings)
 
         # Verify secure connection requirements
-        assert test_settings.database_url.startswith(('postgresql://', 'postgres://'))
+        assert test_settings.database_url.startswith(("postgresql://", "postgres://"))
 
         # Verify environment variable usage for sensitive data
-        sensitive_fields = ['database_url', 'openai_api_key']
+        sensitive_fields = ["database_url", "openai_api_key"]
         for field in sensitive_fields:
             assert hasattr(test_settings, field)
 
@@ -785,6 +797,7 @@ class TestREQ008ConstraintsLimitations:
         connection.fetch.return_value = []
 
         from pydantic_ai import RunContext
+
         ctx = RunContext(deps=deps)
 
         # Test limit enforcement in semantic search
@@ -807,6 +820,7 @@ class TestREQ008ConstraintsLimitations:
         connection.fetch.return_value = []
 
         from pydantic_ai import RunContext
+
         ctx = RunContext(deps=deps)
 
         # Test at limit boundary
@@ -825,7 +839,7 @@ class TestREQ008ConstraintsLimitations:
 
         # Verify expected database function calls
         # This validates the agent works with existing schema
-        expected_functions = ['match_chunks', 'hybrid_search']
+        expected_functions = ["match_chunks", "hybrid_search"]
 
         # The implementation should call these PostgreSQL functions
         # (Verified through previous tests that show correct function calls)
@@ -843,13 +857,13 @@ class TestOverallRequirementsCompliance:
         # Mock comprehensive results
         comprehensive_results = [
             {
-                'chunk_id': 'comprehensive_1',
-                'document_id': 'integration_doc',
-                'content': 'Comprehensive test of semantic search capabilities with machine learning concepts.',
-                'similarity': 0.88,
-                'metadata': {'type': 'integration_test'},
-                'document_title': 'Integration Test Document',
-                'document_source': 'integration_test.pdf'
+                "chunk_id": "comprehensive_1",
+                "document_id": "integration_doc",
+                "content": "Comprehensive test of semantic search capabilities with machine learning concepts.",
+                "similarity": 0.88,
+                "metadata": {"type": "integration_test"},
+                "document_title": "Integration Test Document",
+                "document_source": "integration_test.pdf",
             }
         ]
         connection.fetch.return_value = comprehensive_results
@@ -862,15 +876,22 @@ class TestOverallRequirementsCompliance:
             call_count += 1
 
             if call_count == 1:
-                return ModelTextResponse(content="I'll perform a comprehensive search of the knowledge base.")
+                return ModelTextResponse(
+                    content="I'll perform a comprehensive search of the knowledge base."
+                )
             elif call_count == 2:
-                return {"auto_search": {"query": "comprehensive machine learning search", "match_count": 15}}
+                return {
+                    "auto_search": {
+                        "query": "comprehensive machine learning search",
+                        "match_count": 15,
+                    }
+                }
             else:
                 return ModelTextResponse(
                     content="Comprehensive search completed successfully. Found high-quality results about "
-                           "machine learning concepts with 88% similarity. The search automatically selected "
-                           "the optimal strategy and retrieved relevant information from the Integration Test Document. "
-                           "Key findings demonstrate the system's semantic understanding capabilities."
+                    "machine learning concepts with 88% similarity. The search automatically selected "
+                    "the optimal strategy and retrieved relevant information from the Integration Test Document. "
+                    "Key findings demonstrate the system's semantic understanding capabilities."
                 )
 
         function_model = FunctionModel(comprehensive_workflow)
@@ -908,7 +929,7 @@ class TestOverallRequirementsCompliance:
 
         # REQ-008: Constraints ✓
         embedding_call = deps.openai_client.embeddings.create.call_args
-        assert embedding_call[1]['model'] == 'text-embedding-3-small'  # Correct model
+        assert embedding_call[1]["model"] == "text-embedding-3-small"  # Correct model
 
         # Overall integration success
         assert "successfully" in result.data.lower() or "completed" in result.data.lower()
@@ -919,14 +940,14 @@ def validate_all_requirements():
     """Summary function to validate all requirements are tested."""
 
     requirements_tested = {
-        'REQ-001': 'Core Functionality - Semantic search, hybrid search, auto-selection',
-        'REQ-002': 'Input/Output Specifications - Natural language queries, string responses',
-        'REQ-003': 'Technical Requirements - Model configuration, context windows',
-        'REQ-004': 'External Integrations - PostgreSQL/PGVector, OpenAI embeddings',
-        'REQ-005': 'Tool Requirements - semantic_search, hybrid_search, auto_search tools',
-        'REQ-006': 'Success Criteria - Search accuracy >0.7, auto-selection >80%',
-        'REQ-007': 'Security/Compliance - API key management, input sanitization',
-        'REQ-008': 'Constraints/Limitations - Embedding dimensions, result limits'
+        "REQ-001": "Core Functionality - Semantic search, hybrid search, auto-selection",
+        "REQ-002": "Input/Output Specifications - Natural language queries, string responses",
+        "REQ-003": "Technical Requirements - Model configuration, context windows",
+        "REQ-004": "External Integrations - PostgreSQL/PGVector, OpenAI embeddings",
+        "REQ-005": "Tool Requirements - semantic_search, hybrid_search, auto_search tools",
+        "REQ-006": "Success Criteria - Search accuracy >0.7, auto-selection >80%",
+        "REQ-007": "Security/Compliance - API key management, input sanitization",
+        "REQ-008": "Constraints/Limitations - Embedding dimensions, result limits",
     }
 
     return requirements_tested
@@ -940,24 +961,28 @@ def test_requirements_coverage():
 
     # Verify we have test classes for all major requirement categories
     expected_test_classes = [
-        'TestREQ001CoreFunctionality',
-        'TestREQ002InputOutputSpecifications',
-        'TestREQ003TechnicalRequirements',
-        'TestREQ004ExternalIntegrations',
-        'TestREQ005ToolRequirements',
-        'TestREQ006SuccessCriteria',
-        'TestREQ007SecurityCompliance',
-        'TestREQ008ConstraintsLimitations'
+        "TestREQ001CoreFunctionality",
+        "TestREQ002InputOutputSpecifications",
+        "TestREQ003TechnicalRequirements",
+        "TestREQ004ExternalIntegrations",
+        "TestREQ005ToolRequirements",
+        "TestREQ006SuccessCriteria",
+        "TestREQ007SecurityCompliance",
+        "TestREQ008ConstraintsLimitations",
     ]
 
     # Get all test classes defined in this module
     import inspect
+
     current_module = inspect.getmembers(inspect.getmodule(inspect.currentframe()))
-    defined_classes = [name for name, obj in current_module if inspect.isclass(obj) and name.startswith('TestREQ')]
+    defined_classes = [
+        name for name, obj in current_module if inspect.isclass(obj) and name.startswith("TestREQ")
+    ]
 
     # Verify all expected test classes are defined
     for expected_class in expected_test_classes:
-        assert expected_class in [cls[0] for cls in current_module if inspect.isclass(cls[1])], \
+        assert expected_class in [cls[0] for cls in current_module if inspect.isclass(cls[1])], (
             f"Missing test class: {expected_class}"
+        )
 
     assert len(requirements) == 8, "Should test all 8 major requirement categories"

@@ -3,7 +3,6 @@ Flexible provider configuration for LLM models.
 Based on examples/agent/providers.py pattern.
 """
 
-
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
@@ -13,10 +12,10 @@ from .settings import settings
 def get_llm_model(model_choice: str | None = None) -> OpenAIModel:
     """
     Get LLM model configuration based on environment variables.
-    
+
     Args:
         model_choice: Optional override for model choice
-    
+
     Returns:
         Configured OpenAI-compatible model
     """
@@ -33,7 +32,7 @@ def get_llm_model(model_choice: str | None = None) -> OpenAIModel:
 def get_model_info() -> dict:
     """
     Get information about current model configuration.
-    
+
     Returns:
         Dictionary with model configuration info
     """
@@ -49,7 +48,7 @@ def get_model_info() -> dict:
 def validate_llm_configuration() -> bool:
     """
     Validate that LLM configuration is properly set.
-    
+
     Returns:
         True if configuration is valid
     """

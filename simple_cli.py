@@ -38,11 +38,7 @@ def api_request(method, endpoint, data=None):
 
 def create_task(title, description=""):
     """Create a new task."""
-    data = {
-        "title": title,
-        "description": description,
-        "priority": "medium"
-    }
+    data = {"title": title, "description": description, "priority": "medium"}
 
     result = api_request("POST", f"/api/tasks/?user_id={USER_ID}", data)
 
@@ -61,9 +57,11 @@ def list_tasks():
         print(f"\n📋 Your Tasks ({len(result)} total):")
         print("-" * 50)
         for task in result:
-            status_emoji = "✅" if task['status'] == 'completed' else "⏳"
+            status_emoji = "✅" if task["status"] == "completed" else "⏳"
             print(f"{status_emoji} [{task['id']}] {task['title']}")
-            print(f"    Status: {task['status']} | Priority: {task['priority']} | XP: {task['xp_reward']}")
+            print(
+                f"    Status: {task['status']} | Priority: {task['priority']} | XP: {task['xp_reward']}"
+            )
     else:
         print("❌ Failed to fetch tasks")
 
@@ -87,7 +85,7 @@ def agent_status():
         print(f"\n🤖 Agent Status: {result['status']}")
         print(f"   Active Agents: {result['active_agents']}")
 
-        for agent_name, info in result['agents'].items():
+        for agent_name, info in result["agents"].items():
             print(f"\n   {agent_name.title()} Agent:")
             print(f"      Status: {info['status']}")
             print(f"      Model: {info['model']}")

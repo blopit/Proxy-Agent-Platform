@@ -42,26 +42,22 @@ def get_llm_model() -> OpenAIModel:
     """Get configured LLM model from environment settings."""
     try:
         settings = Settings()
-        provider = OpenAIProvider(
-            base_url=settings.llm_base_url,
-            api_key=settings.llm_api_key
-        )
+        provider = OpenAIProvider(base_url=settings.llm_base_url, api_key=settings.llm_api_key)
         return OpenAIModel(settings.llm_model, provider=provider)
     except Exception:
         # For testing without env vars
         import os
+
         os.environ.setdefault("LLM_API_KEY", "test-key")
         settings = Settings()
-        provider = OpenAIProvider(
-            base_url=settings.llm_base_url,
-            api_key="test-key"
-        )
+        provider = OpenAIProvider(base_url=settings.llm_base_url, api_key="test-key")
         return OpenAIModel(settings.llm_model, provider=provider)
 
 
 @dataclass
 class AnalysisDependencies:
     """Dependencies for the analysis agent."""
+
     report_format: str = "business"  # business, technical, academic
     include_recommendations: bool = True
     session_id: str | None = None
@@ -69,6 +65,7 @@ class AnalysisDependencies:
 
 class DataInsight(BaseModel):
     """Individual insight extracted from data."""
+
     insight: str = Field(description="The key insight or finding")
     confidence: float = Field(ge=0.0, le=1.0, description="Confidence level in this insight")
     data_points: list[str] = Field(description="Supporting data points")
@@ -80,29 +77,23 @@ class DataAnalysisReport(BaseModel):
     # Required fields
     summary: str = Field(description="Executive summary of the analysis")
     key_insights: list[DataInsight] = Field(
-        min_items=1,
-        max_items=10,
-        description="Key insights discovered in the data"
+        min_items=1, max_items=10, description="Key insights discovered in the data"
     )
 
     # Validated fields
     confidence_score: float = Field(
-        ge=0.0, le=1.0,
-        description="Overall confidence in the analysis"
+        ge=0.0, le=1.0, description="Overall confidence in the analysis"
     )
     data_quality: str = Field(
-        pattern="^(excellent|good|fair|poor)$",
-        description="Assessment of data quality"
+        pattern="^(excellent|good|fair|poor)$", description="Assessment of data quality"
     )
 
     # Optional structured fields
     recommendations: list[str] | None = Field(
-        default=None,
-        description="Actionable recommendations based on findings"
+        default=None, description="Actionable recommendations based on findings"
     )
     limitations: list[str] | None = Field(
-        default=None,
-        description="Limitations or caveats in the analysis"
+        default=None, description="Limitations or caveats in the analysis"
     )
 
     # Metadata
@@ -134,23 +125,21 @@ structured_agent = Agent(
     get_llm_model(),
     deps_type=AnalysisDependencies,
     result_type=DataAnalysisReport,  # This is when we DO want structured output
-    system_prompt=SYSTEM_PROMPT
+    system_prompt=SYSTEM_PROMPT,
 )
 
 
 @structured_agent.tool
 def analyze_numerical_data(
-    ctx: RunContext[AnalysisDependencies],
-    data_description: str,
-    numbers: list[float]
+    ctx: RunContext[AnalysisDependencies], data_description: str, numbers: list[float]
 ) -> str:
     """
     Analyze numerical data and provide statistical insights.
-    
+
     Args:
         data_description: Description of what the numbers represent
         numbers: List of numerical values to analyze
-    
+
     Returns:
         Statistical analysis summary
     """
@@ -167,7 +156,7 @@ def analyze_numerical_data(
 
         # Calculate variance and standard deviation
         variance = sum((x - average) ** 2 for x in numbers) / count
-        std_dev = variance ** 0.5
+        std_dev = variance**0.5
 
         # Simple trend analysis
         if count > 1:
@@ -182,7 +171,7 @@ Statistical Analysis of {data_description}:
 - Range: {minimum:.2f} to {maximum:.2f}  
 - Standard Deviation: {std_dev:.2f}
 - Overall Trend: {trend}
-- Data Quality: {'good' if std_dev < average * 0.5 else 'variable'}
+- Data Quality: {"good" if std_dev < average * 0.5 else "variable"}
 """
 
         logger.info(f"Analyzed {count} data points for: {data_description}")
@@ -194,16 +183,15 @@ Statistical Analysis of {data_description}:
 
 
 async def analyze_data(
-    data_input: str,
-    dependencies: AnalysisDependencies | None = None
+    data_input: str, dependencies: AnalysisDependencies | None = None
 ) -> DataAnalysisReport:
     """
     Analyze data and return structured report.
-    
+
     Args:
         data_input: Raw data or description to analyze
         dependencies: Optional analysis configuration
-    
+
     Returns:
         Structured DataAnalysisReport with validation
     """
@@ -215,20 +203,20 @@ async def analyze_data(
 
 
 def analyze_data_sync(
-    data_input: str,
-    dependencies: AnalysisDependencies | None = None
+    data_input: str, dependencies: AnalysisDependencies | None = None
 ) -> DataAnalysisReport:
     """
     Synchronous version of analyze_data.
-    
+
     Args:
         data_input: Raw data or description to analyze
         dependencies: Optional analysis configuration
-    
+
     Returns:
         Structured DataAnalysisReport with validation
     """
     import asyncio
+
     return asyncio.run(analyze_data(data_input, dependencies))
 
 
@@ -252,7 +240,7 @@ if __name__ == "__main__":
                 
                 Customer satisfaction scores: 4.2, 4.5, 4.1, 4.6, 4.3
                 Return rate: 3.2%
-                """
+                """,
             },
             {
                 "title": "Website Analytics",
@@ -263,8 +251,8 @@ if __name__ == "__main__":
                 - Page load time: 2.1 seconds
                 - Conversion rate: 3.8%
                 - Mobile traffic: 68%
-                """
-            }
+                """,
+            },
         ]
 
         for scenario in scenarios:
@@ -272,13 +260,10 @@ if __name__ == "__main__":
             print(f"Input Data: {scenario['data'][:100]}...")
 
             # Configure for business report
-            deps = AnalysisDependencies(
-                report_format="business",
-                include_recommendations=True
-            )
+            deps = AnalysisDependencies(report_format="business", include_recommendations=True)
 
             try:
-                report = await analyze_data(scenario['data'], deps)
+                report = await analyze_data(scenario["data"], deps)
 
                 print(f"Summary: {report.summary}")
                 print(f"Confidence: {report.confidence_score}")

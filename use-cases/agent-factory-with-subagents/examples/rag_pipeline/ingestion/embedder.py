@@ -19,6 +19,7 @@ except ImportError:
     # For direct execution or testing
     import os
     import sys
+
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from utils.providers import get_embedding_client, get_embedding_model
 
@@ -40,11 +41,11 @@ class EmbeddingGenerator:
         model: str = EMBEDDING_MODEL,
         batch_size: int = 100,
         max_retries: int = 3,
-        retry_delay: float = 1.0
+        retry_delay: float = 1.0,
     ):
         """
         Initialize embedding generator.
-        
+
         Args:
             model: OpenAI embedding model to use
             batch_size: Number of texts to process in parallel
@@ -60,7 +61,7 @@ class EmbeddingGenerator:
         self.model_configs = {
             "text-embedding-3-small": {"dimensions": 1536, "max_tokens": 8191},
             "text-embedding-3-large": {"dimensions": 3072, "max_tokens": 8191},
-            "text-embedding-ada-002": {"dimensions": 1536, "max_tokens": 8191}
+            "text-embedding-ada-002": {"dimensions": 1536, "max_tokens": 8191},
         }
 
         if model not in self.model_configs:
@@ -72,23 +73,20 @@ class EmbeddingGenerator:
     async def generate_embedding(self, text: str) -> list[float]:
         """
         Generate embedding for a single text.
-        
+
         Args:
             text: Text to embed
-        
+
         Returns:
             Embedding vector
         """
         # Truncate text if too long
         if len(text) > self.config["max_tokens"] * 4:  # Rough token estimation
-            text = text[:self.config["max_tokens"] * 4]
+            text = text[: self.config["max_tokens"] * 4]
 
         for attempt in range(self.max_retries):
             try:
-                response = await embedding_client.embeddings.create(
-                    model=self.model,
-                    input=text
-                )
+                response = await embedding_client.embeddings.create(model=self.model, input=text)
 
                 return response.data[0].embedding
 
@@ -97,7 +95,7 @@ class EmbeddingGenerator:
                     raise
 
                 # Exponential backoff for rate limits
-                delay = self.retry_delay * (2 ** attempt)
+                delay = self.retry_delay * (2**attempt)
                 logger.warning(f"Rate limit hit, retrying in {delay}s")
                 await asyncio.sleep(delay)
 
@@ -113,16 +111,13 @@ class EmbeddingGenerator:
                     raise
                 await asyncio.sleep(self.retry_delay)
 
-    async def generate_embeddings_batch(
-        self,
-        texts: list[str]
-    ) -> list[list[float]]:
+    async def generate_embeddings_batch(self, texts: list[str]) -> list[list[float]]:
         """
         Generate embeddings for a batch of texts.
-        
+
         Args:
             texts: List of texts to embed
-        
+
         Returns:
             List of embedding vectors
         """
@@ -135,15 +130,14 @@ class EmbeddingGenerator:
 
             # Truncate if too long
             if len(text) > self.config["max_tokens"] * 4:
-                text = text[:self.config["max_tokens"] * 4]
+                text = text[: self.config["max_tokens"] * 4]
 
             processed_texts.append(text)
 
         for attempt in range(self.max_retries):
             try:
                 response = await embedding_client.embeddings.create(
-                    model=self.model,
-                    input=processed_texts
+                    model=self.model, input=processed_texts
                 )
 
                 return [data.embedding for data in response.data]
@@ -152,7 +146,7 @@ class EmbeddingGenerator:
                 if attempt == self.max_retries - 1:
                     raise
 
-                delay = self.retry_delay * (2 ** attempt)
+                delay = self.retry_delay * (2**attempt)
                 logger.warning(f"Rate limit hit, retrying batch in {delay}s")
                 await asyncio.sleep(delay)
 
@@ -169,16 +163,13 @@ class EmbeddingGenerator:
                     return await self._process_individually(processed_texts)
                 await asyncio.sleep(self.retry_delay)
 
-    async def _process_individually(
-        self,
-        texts: list[str]
-    ) -> list[list[float]]:
+    async def _process_individually(self, texts: list[str]) -> list[list[float]]:
         """
         Process texts individually as fallback.
-        
+
         Args:
             texts: List of texts to embed
-        
+
         Returns:
             List of embedding vectors
         """
@@ -204,17 +195,15 @@ class EmbeddingGenerator:
         return embeddings
 
     async def embed_chunks(
-        self,
-        chunks: list[DocumentChunk],
-        progress_callback: callable | None = None
+        self, chunks: list[DocumentChunk], progress_callback: callable | None = None
     ) -> list[DocumentChunk]:
         """
         Generate embeddings for document chunks.
-        
+
         Args:
             chunks: List of document chunks
             progress_callback: Optional callback for progress updates
-        
+
         Returns:
             Chunks with embeddings added
         """
@@ -228,7 +217,7 @@ class EmbeddingGenerator:
         total_batches = (len(chunks) + self.batch_size - 1) // self.batch_size
 
         for i in range(0, len(chunks), self.batch_size):
-            batch_chunks = chunks[i:i + self.batch_size]
+            batch_chunks = chunks[i : i + self.batch_size]
             batch_texts = [chunk.content for chunk in batch_chunks]
 
             try:
@@ -246,9 +235,9 @@ class EmbeddingGenerator:
                         metadata={
                             **chunk.metadata,
                             "embedding_model": self.model,
-                            "embedding_generated_at": datetime.now().isoformat()
+                            "embedding_generated_at": datetime.now().isoformat(),
                         },
-                        token_count=chunk.token_count
+                        token_count=chunk.token_count,
                     )
 
                     # Add embedding as a separate attribute
@@ -263,14 +252,16 @@ class EmbeddingGenerator:
                 logger.info(f"Processed batch {current_batch}/{total_batches}")
 
             except Exception as e:
-                logger.error(f"Failed to process batch {i//self.batch_size + 1}: {e}")
+                logger.error(f"Failed to process batch {i // self.batch_size + 1}: {e}")
 
                 # Add chunks without embeddings as fallback
                 for chunk in batch_chunks:
-                    chunk.metadata.update({
-                        "embedding_error": str(e),
-                        "embedding_generated_at": datetime.now().isoformat()
-                    })
+                    chunk.metadata.update(
+                        {
+                            "embedding_error": str(e),
+                            "embedding_generated_at": datetime.now().isoformat(),
+                        }
+                    )
                     chunk.embedding = [0.0] * self.config["dimensions"]
                     embedded_chunks.append(chunk)
 
@@ -280,10 +271,10 @@ class EmbeddingGenerator:
     async def embed_query(self, query: str) -> list[float]:
         """
         Generate embedding for a search query.
-        
+
         Args:
             query: Search query
-        
+
         Returns:
             Query embedding
         """
@@ -328,23 +319,22 @@ class EmbeddingCache:
     def _hash_text(self, text: str) -> str:
         """Generate hash for text."""
         import hashlib
+
         return hashlib.md5(text.encode()).hexdigest()
 
 
 # Factory function
 def create_embedder(
-    model: str = EMBEDDING_MODEL,
-    use_cache: bool = True,
-    **kwargs
+    model: str = EMBEDDING_MODEL, use_cache: bool = True, **kwargs
 ) -> EmbeddingGenerator:
     """
     Create embedding generator with optional caching.
-    
+
     Args:
         model: Embedding model to use
         use_cache: Whether to use caching
         **kwargs: Additional arguments for EmbeddingGenerator
-    
+
     Returns:
         EmbeddingGenerator instance
     """
@@ -391,9 +381,7 @@ async def main():
 
     # Chunk the document
     chunks = chunker.chunk_document(
-        content=sample_text,
-        title="AI Initiatives",
-        source="example.md"
+        content=sample_text, title="AI Initiatives", source="example.md"
     )
 
     print(f"Created {len(chunks)} chunks")

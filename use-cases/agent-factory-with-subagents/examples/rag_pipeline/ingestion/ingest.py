@@ -24,6 +24,7 @@ except ImportError:
     # For direct execution or testing
     import os
     import sys
+
     sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     from utils.db_utils import close_database, db_pool, initialize_database
     from utils.models import IngestionConfig, IngestionResult
@@ -41,11 +42,11 @@ class DocumentIngestionPipeline:
         self,
         config: IngestionConfig,
         documents_folder: str = "documents",
-        clean_before_ingest: bool = False
+        clean_before_ingest: bool = False,
     ):
         """
         Initialize ingestion pipeline.
-        
+
         Args:
             config: Ingestion configuration
             documents_folder: Folder containing markdown documents
@@ -60,7 +61,7 @@ class DocumentIngestionPipeline:
             chunk_size=config.chunk_size,
             chunk_overlap=config.chunk_overlap,
             max_chunk_size=config.max_chunk_size,
-            use_semantic_splitting=config.use_semantic_chunking
+            use_semantic_splitting=config.use_semantic_chunking,
         )
 
         self.chunker = create_chunker(self.chunker_config)
@@ -88,15 +89,14 @@ class DocumentIngestionPipeline:
             self._initialized = False
 
     async def ingest_documents(
-        self,
-        progress_callback: callable | None = None
+        self, progress_callback: callable | None = None
     ) -> list[IngestionResult]:
         """
         Ingest all documents from the documents folder.
-        
+
         Args:
             progress_callback: Optional callback for progress updates
-        
+
         Returns:
             List of ingestion results
         """
@@ -120,7 +120,7 @@ class DocumentIngestionPipeline:
 
         for i, file_path in enumerate(markdown_files):
             try:
-                logger.info(f"Processing file {i+1}/{len(markdown_files)}: {file_path}")
+                logger.info(f"Processing file {i + 1}/{len(markdown_files)}: {file_path}")
 
                 result = await self._ingest_single_document(file_path)
                 results.append(result)
@@ -130,31 +130,35 @@ class DocumentIngestionPipeline:
 
             except Exception as e:
                 logger.error(f"Failed to process {file_path}: {e}")
-                results.append(IngestionResult(
-                    document_id="",
-                    title=os.path.basename(file_path),
-                    chunks_created=0,
-                    entities_extracted=0,
-                    relationships_created=0,
-                    processing_time_ms=0,
-                    errors=[str(e)]
-                ))
+                results.append(
+                    IngestionResult(
+                        document_id="",
+                        title=os.path.basename(file_path),
+                        chunks_created=0,
+                        entities_extracted=0,
+                        relationships_created=0,
+                        processing_time_ms=0,
+                        errors=[str(e)],
+                    )
+                )
 
         # Log summary
         total_chunks = sum(r.chunks_created for r in results)
         total_errors = sum(len(r.errors) for r in results)
 
-        logger.info(f"Ingestion complete: {len(results)} documents, {total_chunks} chunks, {total_errors} errors")
+        logger.info(
+            f"Ingestion complete: {len(results)} documents, {total_chunks} chunks, {total_errors} errors"
+        )
 
         return results
 
     async def _ingest_single_document(self, file_path: str) -> IngestionResult:
         """
         Ingest a single document.
-        
+
         Args:
             file_path: Path to the document file
-        
+
         Returns:
             Ingestion result
         """
@@ -175,7 +179,7 @@ class DocumentIngestionPipeline:
             content=document_content,
             title=document_title,
             source=document_source,
-            metadata=document_metadata
+            metadata=document_metadata,
         )
 
         if not chunks:
@@ -187,7 +191,7 @@ class DocumentIngestionPipeline:
                 entities_extracted=0,
                 relationships_created=0,
                 processing_time_ms=(datetime.now() - start_time).total_seconds() * 1000,
-                errors=["No chunks created"]
+                errors=["No chunks created"],
             )
 
         logger.info(f"Created {len(chunks)} chunks")
@@ -201,11 +205,7 @@ class DocumentIngestionPipeline:
 
         # Save to PostgreSQL
         document_id = await self._save_to_postgres(
-            document_title,
-            document_source,
-            document_content,
-            embedded_chunks,
-            document_metadata
+            document_title, document_source, document_content, embedded_chunks, document_metadata
         )
 
         logger.info(f"Saved document to PostgreSQL with ID: {document_id}")
@@ -224,7 +224,7 @@ class DocumentIngestionPipeline:
             entities_extracted=entities_extracted,
             relationships_created=relationships_created,
             processing_time_ms=processing_time,
-            errors=graph_errors
+            errors=graph_errors,
         )
 
     def _find_markdown_files(self) -> list[str]:
@@ -237,27 +237,29 @@ class DocumentIngestionPipeline:
         files = []
 
         for pattern in patterns:
-            files.extend(glob.glob(os.path.join(self.documents_folder, "**", pattern), recursive=True))
+            files.extend(
+                glob.glob(os.path.join(self.documents_folder, "**", pattern), recursive=True)
+            )
 
         return sorted(files)
 
     def _read_document(self, file_path: str) -> str:
         """Read document content from file."""
         try:
-            with open(file_path, encoding='utf-8') as f:
+            with open(file_path, encoding="utf-8") as f:
                 return f.read()
         except UnicodeDecodeError:
             # Try with different encoding
-            with open(file_path, encoding='latin-1') as f:
+            with open(file_path, encoding="latin-1") as f:
                 return f.read()
 
     def _extract_title(self, content: str, file_path: str) -> str:
         """Extract title from document content or filename."""
         # Try to find markdown title
-        lines = content.split('\n')
+        lines = content.split("\n")
         for line in lines[:10]:  # Check first 10 lines
             line = line.strip()
-            if line.startswith('# '):
+            if line.startswith("# "):
                 return line[2:].strip()
 
         # Fallback to filename
@@ -268,14 +270,15 @@ class DocumentIngestionPipeline:
         metadata = {
             "file_path": file_path,
             "file_size": len(content),
-            "ingestion_date": datetime.now().isoformat()
+            "ingestion_date": datetime.now().isoformat(),
         }
 
         # Try to extract YAML frontmatter
-        if content.startswith('---'):
+        if content.startswith("---"):
             try:
                 import yaml
-                end_marker = content.find('\n---\n', 4)
+
+                end_marker = content.find("\n---\n", 4)
                 if end_marker != -1:
                     frontmatter = content[4:end_marker]
                     yaml_metadata = yaml.safe_load(frontmatter)
@@ -287,9 +290,9 @@ class DocumentIngestionPipeline:
                 logger.warning(f"Failed to parse frontmatter: {e}")
 
         # Extract some basic metadata from content
-        lines = content.split('\n')
-        metadata['line_count'] = len(lines)
-        metadata['word_count'] = len(content.split())
+        lines = content.split("\n")
+        metadata["line_count"] = len(lines)
+        metadata["word_count"] = len(content.split())
 
         return metadata
 
@@ -299,7 +302,7 @@ class DocumentIngestionPipeline:
         source: str,
         content: str,
         chunks: list[DocumentChunk],
-        metadata: dict[str, Any]
+        metadata: dict[str, Any],
     ) -> str:
         """Save document and chunks to PostgreSQL."""
         async with db_pool.acquire() as conn:
@@ -314,7 +317,7 @@ class DocumentIngestionPipeline:
                     title,
                     source,
                     content,
-                    json.dumps(metadata)
+                    json.dumps(metadata),
                 )
 
                 document_id = document_result["id"]
@@ -323,9 +326,9 @@ class DocumentIngestionPipeline:
                 for chunk in chunks:
                     # Convert embedding to PostgreSQL vector string format
                     embedding_data = None
-                    if hasattr(chunk, 'embedding') and chunk.embedding:
+                    if hasattr(chunk, "embedding") and chunk.embedding:
                         # PostgreSQL vector format: '[1.0,2.0,3.0]' (no spaces after commas)
-                        embedding_data = '[' + ','.join(map(str, chunk.embedding)) + ']'
+                        embedding_data = "[" + ",".join(map(str, chunk.embedding)) + "]"
 
                     await conn.execute(
                         """
@@ -337,7 +340,7 @@ class DocumentIngestionPipeline:
                         embedding_data,
                         chunk.index,
                         json.dumps(chunk.metadata),
-                        chunk.token_count
+                        chunk.token_count,
                     )
 
                 return document_id
@@ -353,12 +356,17 @@ class DocumentIngestionPipeline:
 
         logger.info("Cleaned PostgreSQL database")
 
+
 async def main():
     """Main function for running ingestion."""
     parser = argparse.ArgumentParser(description="Ingest documents into vector DB")
     parser.add_argument("--documents", "-d", default="documents", help="Documents folder path")
-    parser.add_argument("--clean", "-c", action="store_true", help="Clean existing data before ingestion")
-    parser.add_argument("--chunk-size", type=int, default=1000, help="Chunk size for splitting documents")
+    parser.add_argument(
+        "--clean", "-c", action="store_true", help="Clean existing data before ingestion"
+    )
+    parser.add_argument(
+        "--chunk-size", type=int, default=1000, help="Chunk size for splitting documents"
+    )
     parser.add_argument("--chunk-overlap", type=int, default=200, help="Chunk overlap size")
     parser.add_argument("--no-semantic", action="store_true", help="Disable semantic chunking")
     # Graph-related arguments removed
@@ -369,22 +377,19 @@ async def main():
     # Configure logging
     log_level = logging.DEBUG if args.verbose else logging.INFO
     logging.basicConfig(
-        level=log_level,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
     # Create ingestion configuration
     config = IngestionConfig(
         chunk_size=args.chunk_size,
         chunk_overlap=args.chunk_overlap,
-        use_semantic_chunking=not args.no_semantic
+        use_semantic_chunking=not args.no_semantic,
     )
 
     # Create and run pipeline
     pipeline = DocumentIngestionPipeline(
-        config=config,
-        documents_folder=args.documents,
-        clean_before_ingest=args.clean
+        config=config, documents_folder=args.documents, clean_before_ingest=args.clean
     )
 
     def progress_callback(current: int, total: int):
@@ -399,9 +404,9 @@ async def main():
         total_time = (end_time - start_time).total_seconds()
 
         # Print summary
-        print("\n" + "="*50)
+        print("\n" + "=" * 50)
         print("INGESTION SUMMARY")
-        print("="*50)
+        print("=" * 50)
         print(f"Documents processed: {len(results)}")
         print(f"Total chunks created: {sum(r.chunks_created for r in results)}")
         # Graph-related stats removed

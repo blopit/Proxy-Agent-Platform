@@ -42,26 +42,22 @@ def get_llm_model() -> OpenAIModel:
     """Get configured LLM model from environment settings."""
     try:
         settings = Settings()
-        provider = OpenAIProvider(
-            base_url=settings.llm_base_url,
-            api_key=settings.llm_api_key
-        )
+        provider = OpenAIProvider(base_url=settings.llm_base_url, api_key=settings.llm_api_key)
         return OpenAIModel(settings.llm_model, provider=provider)
     except Exception:
         # For testing without env vars
         import os
+
         os.environ.setdefault("LLM_API_KEY", "test-key")
         settings = Settings()
-        provider = OpenAIProvider(
-            base_url=settings.llm_base_url,
-            api_key="test-key"
-        )
+        provider = OpenAIProvider(base_url=settings.llm_base_url, api_key="test-key")
         return OpenAIModel(settings.llm_model, provider=provider)
 
 
 @dataclass
 class ConversationContext:
     """Simple context for conversation state management."""
+
     user_name: str | None = None
     conversation_count: int = 0
     preferred_language: str = "English"
@@ -87,11 +83,7 @@ Guidelines:
 
 
 # Create the basic chat agent - note: no result_type, defaults to string
-chat_agent = Agent(
-    get_llm_model(),
-    deps_type=ConversationContext,
-    system_prompt=SYSTEM_PROMPT
-)
+chat_agent = Agent(get_llm_model(), deps_type=ConversationContext, system_prompt=SYSTEM_PROMPT)
 
 
 @chat_agent.system_prompt
@@ -103,7 +95,9 @@ def dynamic_context_prompt(ctx) -> str:
         prompt_parts.append(f"The user's name is {ctx.deps.user_name}.")
 
     if ctx.deps.conversation_count > 0:
-        prompt_parts.append(f"This is message #{ctx.deps.conversation_count + 1} in your conversation.")
+        prompt_parts.append(
+            f"This is message #{ctx.deps.conversation_count + 1} in your conversation."
+        )
 
     if ctx.deps.preferred_language != "English":
         prompt_parts.append(f"The user prefers to communicate in {ctx.deps.preferred_language}.")
@@ -114,11 +108,11 @@ def dynamic_context_prompt(ctx) -> str:
 async def chat_with_agent(message: str, context: ConversationContext | None = None) -> str:
     """
     Main function to chat with the agent.
-    
+
     Args:
         message: User's message to the agent
         context: Optional conversation context for memory
-    
+
     Returns:
         String response from the agent
     """
@@ -137,11 +131,11 @@ async def chat_with_agent(message: str, context: ConversationContext | None = No
 def chat_with_agent_sync(message: str, context: ConversationContext | None = None) -> str:
     """
     Synchronous version of chat_with_agent for simple use cases.
-    
+
     Args:
         message: User's message to the agent
         context: Optional conversation context for memory
-    
+
     Returns:
         String response from the agent
     """
@@ -166,17 +160,14 @@ if __name__ == "__main__":
         print("=== Basic Chat Agent Demo ===\n")
 
         # Create conversation context
-        context = ConversationContext(
-            user_name="Alex",
-            preferred_language="English"
-        )
+        context = ConversationContext(user_name="Alex", preferred_language="English")
 
         # Sample conversation
         messages = [
             "Hello! My name is Alex, nice to meet you.",
             "Can you help me understand what PydanticAI is?",
             "That's interesting! What makes it different from other AI frameworks?",
-            "Thanks for the explanation. Can you recommend some good resources to learn more?"
+            "Thanks for the explanation. Can you recommend some good resources to learn more?",
         ]
 
         for message in messages:

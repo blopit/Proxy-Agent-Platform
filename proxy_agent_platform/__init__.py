@@ -11,48 +11,31 @@ __author__ = "Proxy Agent Platform Team"
 __email__ = "support@proxyagent.dev"
 
 from .agents import (
-    EmailProxy,
+    ContextEngineeringProxy,
     EnergyProxy,
     FocusProxy,
     ProgressProxy,
-    ResearchProxy,
     TaskProxy,
 )
 from .models import (
-    Achievement,
-    EnergyLevel,
-    FocusSession,
-    ProgressMetrics,
     Task,
-    User,
-)
-from .services import (
-    AgentRegistry,
-    GamificationEngine,
-    MobileIntegration,
-    TaskQueue,
+    TaskCategory,
+    TaskPriority,
+    TaskStatus,
 )
 
+# Services will be added in future epics
+
 __all__ = [
-    # Agents
+    # Agents (Epic 1 - Core Agents Complete)
     "TaskProxy",
     "FocusProxy",
     "EnergyProxy",
     "ProgressProxy",
-    "ResearchProxy",
-    "EmailProxy",
-
-    # Models
+    "ContextEngineeringProxy",
+    # Models (only existing ones)
     "Task",
-    "FocusSession",
-    "EnergyLevel",
-    "ProgressMetrics",
-    "User",
-    "Achievement",
-
-    # Services
-    "AgentRegistry",
-    "TaskQueue",
-    "GamificationEngine",
-    "MobileIntegration",
+    "TaskCategory",
+    "TaskPriority",
+    "TaskStatus",
 ]

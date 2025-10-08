@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 # Add project paths
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'agent'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "agent"))
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 
@@ -46,7 +46,7 @@ def sample_user_data():
         "total_xp": 150,
         "current_level": 2,
         "current_streak": 5,
-        "is_active": True
+        "is_active": True,
     }
 
 
@@ -62,17 +62,14 @@ def sample_task_data():
         "priority": "medium",
         "estimated_duration": 30,
         "xp_reward": 50,
-        "ai_suggested": True
+        "ai_suggested": True,
     }
 
 
 @pytest.fixture
 def cli_test_args():
     """Common CLI test arguments."""
-    return {
-        "base_url": "http://localhost:8000",
-        "user_id": 1
-    }
+    return {"base_url": "http://localhost:8000", "user_id": 1}
 
 
 # Test data factories
@@ -87,8 +84,8 @@ class TestDataFactory:
             "task_data": {
                 "title": "Test Task",
                 "description": "Test description",
-                "priority": "medium"
-            }
+                "priority": "medium",
+            },
         }
 
         if kwargs:
@@ -105,7 +102,7 @@ class TestDataFactory:
             "success": success,
             "message": "Test response",
             "data": {"test": "data"},
-            "suggestions": ["Test suggestion"]
+            "suggestions": ["Test suggestion"],
         }
 
         base_response.update(kwargs)

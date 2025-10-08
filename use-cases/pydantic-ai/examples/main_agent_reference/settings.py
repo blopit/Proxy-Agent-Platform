@@ -15,11 +15,7 @@ load_dotenv()
 class Settings(BaseSettings):
     """Application settings with environment variable support."""
 
-    model_config = ConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False
-    )
+    model_config = ConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=False)
 
     # LLM Configuration
     llm_provider: str = Field(default="openai")
@@ -29,9 +25,7 @@ class Settings(BaseSettings):
 
     # Brave Search Configuration
     brave_api_key: str = Field(...)
-    brave_search_url: str = Field(
-        default="https://api.search.brave.com/res/v1/web/search"
-    )
+    brave_search_url: str = Field(default="https://api.search.brave.com/res/v1/web/search")
 
     # Application Configuration
     app_env: str = Field(default="development")
@@ -53,6 +47,7 @@ try:
 except Exception:
     # For testing, create settings with dummy values
     import os
+
     os.environ.setdefault("LLM_API_KEY", "test_key")
     os.environ.setdefault("BRAVE_API_KEY", "test_key")
     settings = Settings()

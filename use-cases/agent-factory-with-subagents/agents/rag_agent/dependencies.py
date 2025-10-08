@@ -32,14 +32,13 @@ class AgentDependencies:
             self.db_pool = await asyncpg.create_pool(
                 self.settings.database_url,
                 min_size=self.settings.db_pool_min_size,
-                max_size=self.settings.db_pool_max_size
+                max_size=self.settings.db_pool_max_size,
             )
 
         # Initialize OpenAI client (or compatible provider)
         if not self.openai_client:
             self.openai_client = openai.AsyncOpenAI(
-                api_key=self.settings.llm_api_key,
-                base_url=self.settings.llm_base_url
+                api_key=self.settings.llm_api_key, base_url=self.settings.llm_base_url
             )
 
     async def cleanup(self):
@@ -54,8 +53,7 @@ class AgentDependencies:
             await self.initialize()
 
         response = await self.openai_client.embeddings.create(
-            model=self.settings.embedding_model,
-            input=text
+            model=self.settings.embedding_model, input=text
         )
         # Return as list of floats - asyncpg will handle conversion
         return response.data[0].embedding

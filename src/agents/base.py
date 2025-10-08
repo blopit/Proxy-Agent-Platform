@@ -18,14 +18,16 @@ class BaseProxyAgent:
         self.agent_type = agent_type
         self.db = db
 
-    async def store_message(self, session_id: str, message_type: str, content: str, metadata: dict = None) -> str:
+    async def store_message(
+        self, session_id: str, message_type: str, content: str, metadata: dict = None
+    ) -> str:
         """Store a message using the database adapter"""
         message = Message(
             session_id=session_id,
             message_type=message_type,
             content=content,
             agent_type=self.agent_type,
-            metadata=metadata or {}
+            metadata=metadata or {},
         )
         return await self.db.store_message(message)
 
@@ -40,10 +42,7 @@ class BaseProxyAgent:
         try:
             # Store user message
             await self.store_message(
-                request.session_id,
-                "user",
-                request.query,
-                {"request_id": request.request_id}
+                request.session_id, "user", request.query, {"request_id": request.request_id}
             )
 
             # Get conversation context
@@ -57,7 +56,7 @@ class BaseProxyAgent:
                 request.session_id,
                 "agent",
                 response_text,
-                {"xp_earned": xp_earned, "request_id": request.request_id}
+                {"xp_earned": xp_earned, "request_id": request.request_id},
             )
 
             # Calculate processing time
@@ -70,16 +69,13 @@ class BaseProxyAgent:
                 session_id=request.session_id,
                 agent_type=self.agent_type,
                 xp_earned=xp_earned,
-                processing_time_ms=processing_time
+                processing_time_ms=processing_time,
             )
 
         except Exception as e:
             # Store error
             await self.store_message(
-                request.session_id,
-                "error",
-                str(e),
-                {"request_id": request.request_id}
+                request.session_id, "error", str(e), {"request_id": request.request_id}
             )
 
             processing_time = int((datetime.utcnow() - start_time).total_seconds() * 1000)
@@ -90,10 +86,12 @@ class BaseProxyAgent:
                 request_id=request.request_id,
                 session_id=request.session_id,
                 agent_type=self.agent_type,
-                processing_time_ms=processing_time
+                processing_time_ms=processing_time,
             )
 
-    async def _handle_request(self, request: AgentRequest, history: list[Message]) -> tuple[str, int]:
+    async def _handle_request(
+        self, request: AgentRequest, history: list[Message]
+    ) -> tuple[str, int]:
         """
         Handle specific agent logic - override in subclasses
         Returns: (response_text, xp_earned)

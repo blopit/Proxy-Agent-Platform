@@ -13,12 +13,10 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'agent'))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "agent"))
 
-from agents.base_agent import AgentResponse
-
-from agents.task_agent import TaskAgent
-from database import Task, TaskPriority, TaskStatus, User
+from proxy_agent_platform.agents.task_proxy import TaskProxy, TaskProxyDependencies
+from proxy_agent_platform.models import Task, TaskPriority, TaskStatus
 
 
 class TestTaskAgent:
@@ -32,18 +30,13 @@ class TestTaskAgent:
     @pytest.fixture
     def task_agent(self):
         """Task agent instance for testing."""
-        return TaskAgent()
+        return TaskProxy()
 
     @pytest.fixture
-    def sample_user(self):
-        """Sample user for testing."""
-        return User(
-            id=1,
-            username="testuser",
-            email="test@example.com",
-            total_xp=100,
-            current_level=1,
-            current_streak=3
+    def sample_deps(self):
+        """Sample dependencies for testing."""
+        return TaskProxyDependencies(
+            user_id="test_user_123", task_storage=Mock(), session_id="test_session"
         )
 
     @pytest.fixture
@@ -57,7 +50,7 @@ class TestTaskAgent:
             status=TaskStatus.PENDING,
             priority=TaskPriority.MEDIUM,
             estimated_duration=30,
-            xp_reward=50
+            xp_reward=50,
         )
 
     # Test 1: Task Creation (TDD)
@@ -75,24 +68,26 @@ class TestTaskAgent:
         mock_db.refresh = AsyncMock()
 
         # Mock AI agent response
-        task_agent.agent.run = AsyncMock(return_value=AgentResponse(
-            success=True,
-            message="Task analyzed",
-            data={
-                "estimated_duration": 45,
-                "priority_score": 7.5,
-                "tags": ["productivity", "important"],
-                "suggestions": ["Break into smaller tasks"]
-            }
-        ))
+        task_agent.agent.run = AsyncMock(
+            return_value=AgentResponse(
+                success=True,
+                message="Task analyzed",
+                data={
+                    "estimated_duration": 45,
+                    "priority_score": 7.5,
+                    "tags": ["productivity", "important"],
+                    "suggestions": ["Break into smaller tasks"],
+                },
+            )
+        )
 
         request = {
             "action": "create",
             "task_data": {
                 "title": "Write documentation",
                 "description": "Write API documentation",
-                "priority": "high"
-            }
+                "priority": "high",
+            },
         }
 
         # Act
@@ -122,11 +117,7 @@ class TestTaskAgent:
         task_agent.award_xp = AsyncMock()
         task_agent.log_activity = AsyncMock()
 
-        request = {
-            "action": "complete",
-            "task_id": 1,
-            "task_data": {"actual_duration": 25}
-        }
+        request = {"action": "complete", "task_id": 1, "task_data": {"actual_duration": 25}}
 
         # Act
         result = await task_agent.process_request(mock_db, 1, request)
@@ -151,7 +142,7 @@ class TestTaskAgent:
         mock_tasks = [
             Task(id=1, title="Urgent bug fix", priority=TaskPriority.HIGH, user_id=1),
             Task(id=2, title="Code review", priority=TaskPriority.MEDIUM, user_id=1),
-            Task(id=3, title="Documentation", priority=TaskPriority.LOW, user_id=1)
+            Task(id=3, title="Documentation", priority=TaskPriority.LOW, user_id=1),
         ]
 
         # Mock database query
@@ -160,15 +151,17 @@ class TestTaskAgent:
         mock_db.execute = AsyncMock(return_value=mock_result)
 
         # Mock AI prioritization
-        task_agent.agent.run = AsyncMock(return_value=AgentResponse(
-            success=True,
-            message="Tasks prioritized",
-            data={
-                "prioritized_order": [1, 2, 3],
-                "reasoning": "Bug fixes first, then code review"
-            },
-            suggestions=["Focus on urgent items first"]
-        ))
+        task_agent.agent.run = AsyncMock(
+            return_value=AgentResponse(
+                success=True,
+                message="Tasks prioritized",
+                data={
+                    "prioritized_order": [1, 2, 3],
+                    "reasoning": "Bug fixes first, then code review",
+                },
+                suggestions=["Focus on urgent items first"],
+            )
+        )
 
         task_agent.log_activity = AsyncMock()
 
@@ -212,26 +205,30 @@ class TestTaskAgent:
         This test drives recommendation system implementation.
         """
         # Arrange
-        task_agent._get_task_context = AsyncMock(return_value={
-            "pending_tasks_count": 2,
-            "completed_tasks_count": 5,
-            "completion_rate": 0.7
-        })
-
-        task_agent.agent.run = AsyncMock(return_value=AgentResponse(
-            success=True,
-            message="Recommendations generated",
-            data={
-                "recommendations": [
-                    {
-                        "title": "Review quarterly goals",
-                        "description": "Time for quarterly review",
-                        "estimated_duration": 60,
-                        "priority": "high"
-                    }
-                ]
+        task_agent._get_task_context = AsyncMock(
+            return_value={
+                "pending_tasks_count": 2,
+                "completed_tasks_count": 5,
+                "completion_rate": 0.7,
             }
-        ))
+        )
+
+        task_agent.agent.run = AsyncMock(
+            return_value=AgentResponse(
+                success=True,
+                message="Recommendations generated",
+                data={
+                    "recommendations": [
+                        {
+                            "title": "Review quarterly goals",
+                            "description": "Time for quarterly review",
+                            "estimated_duration": 60,
+                            "priority": "high",
+                        }
+                    ]
+                },
+            )
+        )
 
         request = {"action": "recommend"}
 

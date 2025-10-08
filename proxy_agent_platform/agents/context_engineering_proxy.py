@@ -16,6 +16,7 @@ from .base import BaseProxyAgent
 @dataclass
 class ContextEngineeringProxyDependencies:
     """Dependencies for the Context Engineering Proxy agent."""
+
     user_id: str
     repository_access: Any  # GitHub integration
     mcp_server_client: Any | None = None  # Client for Context Engineering MCP server
@@ -72,7 +73,7 @@ When executing PRPs:
             agent_type="context_engineering_proxy",
             system_prompt=system_prompt,
             deps_type=ContextEngineeringProxyDependencies,
-            description="AI development workflow automation using Context Engineering methodologies"
+            description="AI development workflow automation using Context Engineering methodologies",
         )
 
     def _register_agent_tools(self) -> None:
@@ -84,7 +85,7 @@ When executing PRPs:
             feature_description: str,
             repository_path: str = ".",
             research_depth: str = "comprehensive",
-            include_examples: bool = True
+            include_examples: bool = True,
         ) -> dict[str, Any]:
             """
             Generate a Product Requirements Prompt from a feature description.
@@ -121,8 +122,8 @@ Include relevant documentation URLs and API references.
                             "output_directory": "PRPs",
                             "research_depth": research_depth,
                             "include_examples": include_examples,
-                            "include_validation_gates": True
-                        }
+                            "include_validation_gates": True,
+                        },
                     )
                 else:
                     # Mock result when MCP server not available
@@ -132,7 +133,7 @@ Include relevant documentation URLs and API references.
                         "research_sources": [
                             "Repository analysis",
                             "Existing code patterns",
-                            "Documentation review"
+                            "Documentation review",
                         ],
                         "validation_gates": ["ruff check", "mypy", "pytest"],
                         "estimated_complexity": "medium",
@@ -142,8 +143,8 @@ Include relevant documentation URLs and API references.
                             "Feature implemented according to specification",
                             "All tests passing",
                             "Documentation updated",
-                            "Code review approved"
-                        ]
+                            "Code review approved",
+                        ],
                     }
 
                 return {
@@ -155,8 +156,8 @@ Include relevant documentation URLs and API references.
                     "next_steps": [
                         "Review the generated PRP for accuracy",
                         "Execute the PRP to implement the feature",
-                        "Monitor validation gates during implementation"
-                    ]
+                        "Monitor validation gates during implementation",
+                    ],
                 }
 
             except Exception as e:
@@ -167,8 +168,8 @@ Include relevant documentation URLs and API references.
                     "suggestions": [
                         "Check repository access permissions",
                         "Ensure feature description is clear and specific",
-                        "Verify Context Engineering MCP server is available"
-                    ]
+                        "Verify Context Engineering MCP server is available",
+                    ],
                 }
 
         @self.agent.tool
@@ -177,7 +178,7 @@ Include relevant documentation URLs and API references.
             prp_file_path: str,
             dry_run: bool = False,
             skip_tests: bool = False,
-            parallel_execution: bool = False
+            parallel_execution: bool = False,
         ) -> dict[str, Any]:
             """
             Execute a Product Requirements Prompt to implement a feature.
@@ -197,8 +198,8 @@ Include relevant documentation URLs and API references.
                             "prp_file": prp_file_path,
                             "dry_run": dry_run,
                             "skip_tests": skip_tests,
-                            "parallel_execution": parallel_execution
-                        }
+                            "parallel_execution": parallel_execution,
+                        },
                     )
                 else:
                     # Mock execution result
@@ -208,30 +209,23 @@ Include relevant documentation URLs and API references.
                             "Created core implementation files",
                             "Added comprehensive tests",
                             "Updated documentation",
-                            "Configured CI/CD integration"
+                            "Configured CI/CD integration",
                         ],
                         "failed_tasks": [],
                         "validation_results": {
                             "syntax_check": True,
                             "type_check": True,
                             "tests_passed": True,
-                            "linting_passed": True
+                            "linting_passed": True,
                         },
-                        "files_modified": [
-                            "src/main.py",
-                            "tests/test_main.py",
-                            "README.md"
-                        ],
-                        "files_created": [
-                            "src/new_feature.py",
-                            "tests/test_new_feature.py"
-                        ],
+                        "files_modified": ["src/main.py", "tests/test_main.py", "README.md"],
+                        "files_created": ["src/new_feature.py", "tests/test_new_feature.py"],
                         "execution_time": "45.2s",
                         "next_steps": [
                             "Review generated code for quality",
                             "Run manual testing",
-                            "Create pull request for code review"
-                        ]
+                            "Create pull request for code review",
+                        ],
                     }
 
                 # Calculate XP based on execution success
@@ -252,8 +246,8 @@ Include relevant documentation URLs and API references.
                         "tasks_completed": len(execution_result["completed_tasks"]),
                         "files_modified": len(execution_result["files_modified"]),
                         "files_created": len(execution_result["files_created"]),
-                        "validation_passed": all(execution_result["validation_results"].values())
-                    }
+                        "validation_passed": all(execution_result["validation_results"].values()),
+                    },
                 }
 
             except Exception as e:
@@ -265,8 +259,8 @@ Include relevant documentation URLs and API references.
                         "Check that PRP file exists and is valid",
                         "Ensure development environment is properly configured",
                         "Verify all prerequisites are met",
-                        "Try running with dry_run: true first"
-                    ]
+                        "Try running with dry_run: true first",
+                    ],
                 }
 
         @self.agent.tool
@@ -275,7 +269,7 @@ Include relevant documentation URLs and API references.
             repository_path: str = ".",
             include_dependencies: bool = True,
             include_documentation: bool = True,
-            max_file_size: int = 100000
+            max_file_size: int = 100000,
         ) -> dict[str, Any]:
             """
             Analyze repository structure and provide comprehensive context.
@@ -295,8 +289,8 @@ Include relevant documentation URLs and API references.
                             "repository_path": repository_path,
                             "include_dependencies": include_dependencies,
                             "include_documentation": include_documentation,
-                            "max_file_size": max_file_size
-                        }
+                            "max_file_size": max_file_size,
+                        },
                     )
                 else:
                     # Mock analysis result
@@ -304,24 +298,24 @@ Include relevant documentation URLs and API references.
                         "structure": {
                             "directories": ["src", "tests", "docs", "scripts"],
                             "files": ["README.md", "pyproject.toml", "src/main.py"],
-                            "totalSize": 1024000
+                            "totalSize": 1024000,
                         },
                         "technologies": {
                             "languages": {"python": 85, "yaml": 10, "markdown": 5},
                             "frameworks": ["FastAPI", "PydanticAI", "pytest"],
-                            "packageManagers": ["pip", "uv"]
+                            "packageManagers": ["pip", "uv"],
                         },
                         "documentation": {
                             "readme": "README.md",
                             "changelog": None,
                             "contributing": None,
-                            "license": "LICENSE"
+                            "license": "LICENSE",
                         },
                         "configuration": {
                             "buildTools": ["uv"],
                             "testFrameworks": ["pytest"],
                             "linting": ["ruff", "mypy"],
-                            "cicd": ["GitHub Actions"]
+                            "cicd": ["GitHub Actions"],
                         },
                         "insights": {
                             "complexity": "medium",
@@ -330,9 +324,9 @@ Include relevant documentation URLs and API references.
                             "recommendations": [
                                 "Consider adding changelog documentation",
                                 "Add contributing guidelines",
-                                "Consider adding code coverage reporting"
-                            ]
-                        }
+                                "Consider adding code coverage reporting",
+                            ],
+                        },
                     }
 
                 return {
@@ -340,13 +334,15 @@ Include relevant documentation URLs and API references.
                     "analysis": analysis_result,
                     "summary": {
                         "total_files": len(analysis_result["structure"]["files"]),
-                        "primary_language": max(analysis_result["technologies"]["languages"].items(), key=lambda x: x[1])[0],
+                        "primary_language": max(
+                            analysis_result["technologies"]["languages"].items(), key=lambda x: x[1]
+                        )[0],
                         "framework_count": len(analysis_result["technologies"]["frameworks"]),
                         "complexity_level": analysis_result["insights"]["complexity"],
-                        "quality_score": analysis_result["insights"]["maintainability"]
+                        "quality_score": analysis_result["insights"]["maintainability"],
                     },
                     "message": "Repository analysis completed successfully",
-                    "actionable_insights": analysis_result["insights"]["recommendations"]
+                    "actionable_insights": analysis_result["insights"]["recommendations"],
                 }
 
             except Exception as e:
@@ -357,8 +353,8 @@ Include relevant documentation URLs and API references.
                     "suggestions": [
                         "Check repository path and permissions",
                         "Ensure repository contains source code files",
-                        "Verify Context Engineering MCP server connectivity"
-                    ]
+                        "Verify Context Engineering MCP server connectivity",
+                    ],
                 }
 
         @self.agent.tool
@@ -367,7 +363,7 @@ Include relevant documentation URLs and API references.
             file_paths: list[str] = None,
             run_tests: bool = True,
             run_linting: bool = True,
-            run_type_checking: bool = True
+            run_type_checking: bool = True,
         ) -> dict[str, Any]:
             """
             Run comprehensive code quality validation.
@@ -384,7 +380,7 @@ Include relevant documentation URLs and API references.
                     "linting_passed": True,
                     "type_check_passed": True,
                     "tests_passed": True,
-                    "coverage_percentage": 85.5
+                    "coverage_percentage": 85.5,
                 }
 
                 issues_found = []
@@ -413,11 +409,13 @@ Include relevant documentation URLs and API references.
                     "suggestions": suggestions,
                     "message": f"Code quality validation {overall_status}",
                     "quality_score": 95 if overall_status == "passed" else 70,
-                    "next_steps": suggestions if suggestions else [
+                    "next_steps": suggestions
+                    if suggestions
+                    else [
                         "Code quality looks good!",
                         "Consider adding more tests for edge cases",
-                        "Review documentation for completeness"
-                    ]
+                        "Review documentation for completeness",
+                    ],
                 }
 
             except Exception as e:
@@ -428,6 +426,6 @@ Include relevant documentation URLs and API references.
                     "suggestions": [
                         "Check that validation tools are installed",
                         "Ensure project structure is correct",
-                        "Verify development environment setup"
-                    ]
+                        "Verify development environment setup",
+                    ],
                 }
