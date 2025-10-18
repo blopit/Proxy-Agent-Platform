@@ -10,6 +10,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.agents.registry import AgentRegistry
 from src.api.auth import router as auth_router
 from src.api.basic_tasks import router as basic_task_router
+from src.api.energy import router as energy_router
+from src.api.focus import router as focus_router
 from src.api.simple_tasks import router as simple_task_router
 from src.api.tasks import router as comprehensive_task_router
 from src.api.websocket import (
@@ -40,7 +42,9 @@ registry = AgentRegistry()
 # Include routers - All routers now working with fixed service layer
 # Note: Comprehensive router MUST come first to avoid route conflicts
 app.include_router(comprehensive_task_router)  # Dependency-injected task service
-app.include_router(auth_router)
+app.include_router(auth_router)  # Authentication endpoints
+app.include_router(focus_router)  # Focus & Pomodoro endpoints (Epic 2.2)
+app.include_router(energy_router)  # Energy management endpoints (Epic 2.2)
 app.include_router(simple_task_router)  # Legacy simple tasks
 app.include_router(basic_task_router)  # Legacy basic tasks
 

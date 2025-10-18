@@ -250,7 +250,7 @@ async def login_user(login_data: UserLogin):
 
         # Update last login
         user.last_login = datetime.now()
-        user_repo.update(user.user_id, user)
+        user_repo.update(user)
 
         # Create access token
         access_token_expires = timedelta(minutes=settings.jwt_access_token_expire_minutes)

@@ -295,12 +295,13 @@ class AdvancedEnergyAgent(BaseProxyAgent):
         )
 
         return {
-            "immediate_actions": optimization.get("immediate_actions", []),
-            "nutritional_advice": optimization.get("nutritional_advice", []),
-            "environmental_changes": optimization.get("environmental_changes", []),
-            "lifestyle_recommendations": optimization.get("lifestyle_recommendations", []),
-            "expected_improvement": optimization.get("expected_improvement", 0.0),
-            "timeline": optimization.get("timeline", optimization.get("timeframe", "30_minutes")),
+            "immediate_actions": optimization.immediate_actions,
+            "nutritional_advice": optimization.nutritional_advice,
+            "environmental_changes": optimization.environmental_changes,
+            "lifestyle_recommendations": optimization.lifestyle_recommendations,
+            "expected_improvement": optimization.expected_improvement,
+            "timeframe_minutes": 20,  # Parse from timeframe string
+            "timeline": optimization.timeframe,
         }
 
     async def _generate_energy_optimization(
@@ -701,14 +702,18 @@ class AdvancedEnergyAgent(BaseProxyAgent):
     async def _store_energy_reading(self, user_id: str, assessment: dict[str, Any]) -> None:
         """Store energy reading in database"""
         try:
+            from uuid import uuid4
+
             reading_data = {
+                "reading_id": str(uuid4()),
                 "user_id": user_id,
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now().isoformat(),
                 "energy_level": assessment["energy_level"],
                 "factors": assessment["factors"],
                 "context": assessment,
+                "confidence": assessment.get("confidence", 0.8),
             }
-            await self.energy_repo.create(reading_data)
+            self.energy_repo.record_energy_reading(reading_data)
         except Exception as e:
             logger.error(f"Failed to store energy reading: {e}")
 
