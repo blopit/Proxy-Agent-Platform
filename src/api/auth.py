@@ -2,8 +2,6 @@
 Authentication API endpoints - JWT-based user authentication
 """
 
-import hashlib
-import secrets
 import time
 from datetime import datetime, timedelta
 from uuid import uuid4
@@ -11,8 +9,10 @@ from uuid import uuid4
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 
+from src.core.settings import get_settings
 from src.core.task_models import User
 from src.repositories.enhanced_repositories import UserRepository
 
@@ -21,10 +21,11 @@ router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
 # Security scheme
 security = HTTPBearer()
 
-# JWT Configuration
-JWT_SECRET_KEY = "proxy-agent-platform-secret-key"  # TODO: Move to environment variable
-JWT_ALGORITHM = "HS256"
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES = 30
+# Password hashing context using bcrypt
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# Get settings instance
+settings = get_settings()
 
 
 class UserRegister(BaseModel):
@@ -56,41 +57,94 @@ class UserProfile(BaseModel):
 
 
 def hash_password(password: str) -> str:
-    """Hash password using SHA256 with salt"""
-    salt = secrets.token_hex(16)
-    password_hash = hashlib.sha256((password + salt).encode()).hexdigest()
-    return f"{salt}:{password_hash}"
+    """
+    Hash password using bcrypt.
+
+    Args:
+        password: Plain text password to hash
+
+    Returns:
+        Hashed password string
+
+    Example:
+        >>> hashed = hash_password("my_password")
+        >>> print(len(hashed))  # bcrypt hashes are 60 chars
+        60
+    """
+    return pwd_context.hash(password)
 
 
 def verify_password(password: str, hashed_password: str) -> bool:
-    """Verify password against hash"""
+    """
+    Verify password against bcrypt hash.
+
+    Args:
+        password: Plain text password to verify
+        hashed_password: Hashed password from database
+
+    Returns:
+        True if password matches, False otherwise
+
+    Example:
+        >>> hashed = hash_password("test123")
+        >>> verify_password("test123", hashed)
+        True
+        >>> verify_password("wrong", hashed)
+        False
+    """
     try:
-        salt, password_hash = hashed_password.split(":")
-        return hashlib.sha256((password + salt).encode()).hexdigest() == password_hash
-    except ValueError:
+        return pwd_context.verify(password, hashed_password)
+    except Exception:
+        # Malformed hash or other errors return False
         return False
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
-    """Create JWT access token"""
+    """
+    Create JWT access token using configured secret key.
+
+    Args:
+        data: Dictionary of claims to encode in token
+        expires_delta: Optional custom expiration time
+
+    Returns:
+        Encoded JWT token string
+
+    Example:
+        >>> token = create_access_token({"sub": "username"})
+        >>> len(token) > 0
+        True
+    """
     to_encode = data.copy()
     if expires_delta:
         # Use time.time() for consistency with PyJWT internals
         expire = time.time() + expires_delta.total_seconds()
     else:
-        expire = time.time() + (15 * 60)  # 15 minutes in seconds
+        # Use settings for default expiry
+        expire = time.time() + (settings.jwt_access_token_expire_minutes * 60)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
     return encoded_jwt
 
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Verify JWT token and return user info"""
+    """
+    Verify JWT token and return username.
+
+    Args:
+        credentials: HTTP Bearer token from request
+
+    Returns:
+        Username from token subject claim
+
+    Raises:
+        HTTPException: If token is invalid or expired
+    """
     try:
         payload = jwt.decode(
             credentials.credentials,
-            JWT_SECRET_KEY,
-            algorithms=[JWT_ALGORITHM],
+            settings.jwt_secret_key,
+            algorithms=[settings.jwt_algorithm],
             # Force expiry verification for security
             options={"require": ["exp"], "verify_exp": True}
         )
@@ -156,7 +210,7 @@ async def register_user(user_data: UserRegister):
         created_user = user_repo.create(new_user)
 
         # Create access token
-        access_token_expires = timedelta(minutes=JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token_expires = timedelta(minutes=settings.jwt_access_token_expire_minutes)
         access_token = create_access_token(
             data={"sub": created_user.username}, expires_delta=access_token_expires
         )
@@ -164,7 +218,7 @@ async def register_user(user_data: UserRegister):
         return TokenResponse(
             access_token=access_token,
             token_type="bearer",
-            expires_in=JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            expires_in=settings.jwt_access_token_expire_minutes * 60,
             user={
                 "user_id": created_user.user_id,
                 "username": created_user.username,
@@ -199,7 +253,7 @@ async def login_user(login_data: UserLogin):
         user_repo.update(user.user_id, user)
 
         # Create access token
-        access_token_expires = timedelta(minutes=JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token_expires = timedelta(minutes=settings.jwt_access_token_expire_minutes)
         access_token = create_access_token(
             data={"sub": user.username}, expires_delta=access_token_expires
         )
@@ -207,7 +261,7 @@ async def login_user(login_data: UserLogin):
         return TokenResponse(
             access_token=access_token,
             token_type="bearer",
-            expires_in=JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+            expires_in=settings.jwt_access_token_expire_minutes * 60,
             user={
                 "user_id": user.user_id,
                 "username": user.username,
