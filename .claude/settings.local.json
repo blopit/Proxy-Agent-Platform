@@ -99,7 +99,14 @@
       "Bash(.venv/bin/pip install:*)",
       "Bash(UV_HTTP_TIMEOUT=120 uv sync)",
       "Bash(python3:*)",
-      "SlashCommand(/implement Epic 2 Gamification System - XP tracking, achievements, leaderboards, and progress visualization for user engagement and motivation)"
+      "SlashCommand(/implement Epic 2 Gamification System - XP tracking, achievements, leaderboards, and progress visualization for user engagement and motivation)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(sudo chown:*)",
+      "Bash(open:*)",
+      "Bash(./start.sh:*)",
+      "Bash(bash:*)",
+      "Bash(/bashes)",
+      "Bash(pkill:*)"
     ],
     "deny": []
   }

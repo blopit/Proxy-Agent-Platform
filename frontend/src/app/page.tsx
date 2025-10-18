@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import Link from 'next/link'
 import {
   Activity,
   Target,
@@ -10,13 +10,13 @@ import {
   Award,
   Calendar,
   Clock,
-  BarChart3
+  BarChart3,
+  CheckSquare
 } from 'lucide-react'
 import { StatsCard } from '@/components/dashboard/StatsCard'
 import { AgentCard } from '@/components/dashboard/AgentCard'
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed'
 import { ProductivityChart } from '@/components/dashboard/ProductivityChart'
-import { useCopilotAction } from '@copilotkit/react-core'
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -26,31 +26,7 @@ export default function Dashboard() {
     focusTime: 6.5
   })
 
-  // CopilotKit actions for AI interaction
-  useCopilotAction({
-    name: "getProductivityStats",
-    description: "Get current productivity statistics and metrics",
-    handler: async () => {
-      return stats
-    }
-  })
-
-  useCopilotAction({
-    name: "setFocusGoal",
-    description: "Set a focus time goal for today",
-    parameters: [
-      {
-        name: "hours",
-        type: "number",
-        description: "Target focus hours for today"
-      }
-    ],
-    handler: async ({ hours }) => {
-      // This would integrate with the backend agent
-      console.log(`Setting focus goal to ${hours} hours`)
-      return `Focus goal set to ${hours} hours for today`
-    }
-  })
+  // Future: CopilotKit integration for AI interactions
 
   const agents = [
     {
@@ -95,21 +71,26 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center space-y-4"
-        >
+        <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Your Productivity Dashboard
           </h1>
           <p className="text-gray-600 text-lg">
             Powered by AI proxy agents working for you 24/7
           </p>
-        </motion.div>
+          <div className="flex justify-center">
+            <Link
+              href="/tasks"
+              className="inline-flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <CheckSquare className="w-5 h-5" />
+              <span>Manage Tasks</span>
+            </Link>
+          </div>
+        </div>
 
         {/* Stats Grid */}
-        <motion.div
+        <div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -143,10 +124,10 @@ export default function Dashboard() {
             color="purple"
             change="2.5h remaining"
           />
-        </motion.div>
+        </div>
 
         {/* Agents Grid */}
-        <motion.div
+        <div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -158,20 +139,20 @@ export default function Dashboard() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {agents.map((agent, index) => (
-              <motion.div
+              <div
                 key={agent.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3 + index * 0.1 }}
               >
                 <AgentCard {...agent} />
-              </motion.div>
+              </div>
             ))}
           </div>
-        </motion.div>
+        </div>
 
         {/* Main Content Grid */}
-        <motion.div
+        <div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
@@ -186,7 +167,7 @@ export default function Dashboard() {
           <div className="lg:col-span-1">
             <ActivityFeed />
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   )
