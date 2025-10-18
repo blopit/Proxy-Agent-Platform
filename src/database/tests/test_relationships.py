@@ -666,3 +666,148 @@ class TestDataIntegrityConstraints:
         assert self.project_repo.get_by_id(created_project.project_id) is None
         assert self.task_repo.get_by_id(created_parent.task_id) is None
         assert self.task_repo.get_by_id(created_subtask.task_id) is None
+
+
+class TestCascadeSetNullBehavior:
+    """Test ON DELETE SET NULL cascade behavior for optional foreign keys"""
+
+    def setup_method(self):
+        """Setup test database and repositories"""
+        self.db = get_enhanced_database()
+        self.user_repo = UserRepository()
+        self.project_repo = EnhancedProjectRepository()
+        self.task_repo = EnhancedTaskRepository()
+
+    def test_delete_assignee_sets_task_assignee_to_null(self):
+        """Test that deleting a user sets task assignee_id to NULL (not cascade delete task)"""
+        # Create two users
+        owner = User(
+            user_id=str(uuid4()),
+            username=generate_unique_username(),
+            email=generate_unique_email(),
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        created_owner = self.user_repo.create(owner)
+
+        assignee = User(
+            user_id=str(uuid4()),
+            username=generate_unique_username(),
+            email=generate_unique_email(),
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        created_assignee = self.user_repo.create(assignee)
+
+        # Create project owned by first user
+        project = Project(
+            project_id=str(uuid4()),
+            name="Test Project",
+            description="Test Description",
+            owner_id=created_owner.user_id,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        created_project = self.project_repo.create(project)
+
+        # Create task assigned to second user
+        task = Task(
+            task_id=str(uuid4()),
+            title="Test Task",
+            description="Test Description",
+            project_id=created_project.project_id,
+            assignee_id=created_assignee.user_id,  # Assigned to different user than owner
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        created_task = self.task_repo.create(task)
+
+        # Delete the assignee user
+        self.user_repo.delete(created_assignee.user_id)
+
+        # Task should still exist (not cascade deleted)
+        remaining_task = self.task_repo.get_by_id(created_task.task_id)
+        assert remaining_task is not None
+
+        # But assignee_id should be set to NULL
+        assert remaining_task.assignee_id is None
+
+    def test_delete_parent_task_cascades_to_subtasks(self):
+        """Test that deleting parent task cascades to delete all subtasks"""
+        # Create user and project
+        user = User(
+            user_id=str(uuid4()),
+            username=generate_unique_username(),
+            email=generate_unique_email(),
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        created_user = self.user_repo.create(user)
+
+        project = Project(
+            project_id=str(uuid4()),
+            name="Test Project",
+            description="Test Description",
+            owner_id=created_user.user_id,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        created_project = self.project_repo.create(project)
+
+        # Create parent task
+        parent = Task(
+            task_id=str(uuid4()),
+            title="Parent Task",
+            description="Parent Description",
+            project_id=created_project.project_id,
+            assignee_id=created_user.user_id,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        created_parent = self.task_repo.create(parent)
+
+        # Create multiple levels of subtasks
+        subtask1 = Task(
+            task_id=str(uuid4()),
+            title="Subtask 1",
+            description="Subtask 1 Description",
+            project_id=created_project.project_id,
+            parent_id=created_parent.task_id,
+            assignee_id=created_user.user_id,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        created_subtask1 = self.task_repo.create(subtask1)
+
+        subtask2 = Task(
+            task_id=str(uuid4()),
+            title="Subtask 2",
+            description="Subtask 2 Description",
+            project_id=created_project.project_id,
+            parent_id=created_parent.task_id,
+            assignee_id=created_user.user_id,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        created_subtask2 = self.task_repo.create(subtask2)
+
+        # Create sub-subtask
+        sub_subtask = Task(
+            task_id=str(uuid4()),
+            title="Sub-subtask",
+            description="Sub-subtask Description",
+            project_id=created_project.project_id,
+            parent_id=created_subtask1.task_id,
+            assignee_id=created_user.user_id,
+            created_at=datetime.now(),
+            updated_at=datetime.now()
+        )
+        created_sub_subtask = self.task_repo.create(sub_subtask)
+
+        # Delete parent task
+        self.task_repo.delete(created_parent.task_id)
+
+        # All subtasks should be cascade deleted
+        assert self.task_repo.get_by_id(created_subtask1.task_id) is None
+        assert self.task_repo.get_by_id(created_subtask2.task_id) is None
+        assert self.task_repo.get_by_id(created_sub_subtask.task_id) is None
