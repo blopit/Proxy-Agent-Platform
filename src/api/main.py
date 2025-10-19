@@ -12,6 +12,8 @@ from src.api.auth import router as auth_router
 from src.api.basic_tasks import router as basic_task_router
 from src.api.energy import router as energy_router
 from src.api.focus import router as focus_router
+from src.api.gamification import router as gamification_router
+from src.api.progress import router as progress_router
 from src.api.simple_tasks import router as simple_task_router
 from src.api.tasks import router as comprehensive_task_router
 from src.api.websocket import (
@@ -45,6 +47,8 @@ app.include_router(comprehensive_task_router)  # Dependency-injected task servic
 app.include_router(auth_router)  # Authentication endpoints
 app.include_router(focus_router)  # Focus & Pomodoro endpoints (Epic 2.2)
 app.include_router(energy_router)  # Energy management endpoints (Epic 2.2)
+app.include_router(progress_router)  # Progress tracking endpoints (Epic 2.3)
+app.include_router(gamification_router)  # Gamification endpoints (Epic 2.3)
 app.include_router(simple_task_router)  # Legacy simple tasks
 app.include_router(basic_task_router)  # Legacy basic tasks
 
