@@ -43,6 +43,7 @@ coverage.xml
 .venv
 env/
 ENV/
+.env.bak
 env.bak/
 venv.bak/
 
@@ -78,6 +79,11 @@ yarn-error.log*
 # Database
 *.db
 *.sqlite3
+
+# Memory/Vector DB
+memory_db/
+test_memory_db/
+*.qdrant
 
 # Logs
 *.log
