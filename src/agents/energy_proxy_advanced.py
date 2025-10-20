@@ -294,6 +294,18 @@ class AdvancedEnergyAgent(BaseProxyAgent):
             user_id, current_energy, upcoming_tasks
         )
 
+        # Handle both dict and dataclass returns (for testing flexibility)
+        if isinstance(optimization, dict):
+            return {
+                "immediate_actions": optimization.get("immediate_actions", []),
+                "nutritional_advice": optimization.get("nutritional_advice", []),
+                "environmental_changes": optimization.get("environmental_changes", []),
+                "lifestyle_recommendations": optimization.get("lifestyle_recommendations", []),
+                "expected_improvement": optimization.get("expected_improvement", 0.0),
+                "timeframe_minutes": 20,
+                "timeline": optimization.get("timeline", "15-30 minutes"),
+            }
+
         return {
             "immediate_actions": optimization.immediate_actions,
             "nutritional_advice": optimization.nutritional_advice,
