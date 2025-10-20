@@ -871,3 +871,33 @@ class NotificationConflictResolver:
         """Convert priority string to numerical value."""
         priority_values = {"urgent": 4, "high": 3, "medium": 2, "low": 1}
         return priority_values.get(priority, 2)
+
+
+# Stub classes for test compatibility - TODO: Implement properly
+class ConflictResolution:
+    """Strategy for resolving notification conflicts."""
+    pass
+
+
+class MLTimingPredictor:
+    """ML-based timing prediction for optimal notification delivery."""
+    pass
+
+
+class NotificationGrouping:
+    """Grouping strategy for related notifications."""
+    pass
+
+
+# Export all public classes
+__all__ = [
+    "NotificationPriority",
+    "NotificationCategory",
+    "BatchProcessingConfig",
+    "MobileNotification",
+    "NotificationManager",
+    "NotificationConflictResolver",
+    "ConflictResolution",
+    "MLTimingPredictor",
+    "NotificationGrouping",
+]

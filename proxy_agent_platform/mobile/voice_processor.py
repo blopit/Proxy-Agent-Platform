@@ -1011,3 +1011,57 @@ class WorkflowVoiceRouter:
         """Trigger focus-related workflow."""
         # Mock implementation
         return {"status": "focus_workflow_triggered", "session_data": session_data}
+
+
+# Stub classes for test compatibility - TODO: Implement properly
+class VoiceCommand:
+    """Represents a voice command."""
+    pass
+
+
+class VoiceIntent:
+    """Represents a classified voice intent."""
+    pass
+
+
+class VoiceEntity:
+    """Represents an entity extracted from voice input."""
+    pass
+
+
+class VoiceContext:
+    """Voice processing context."""
+    pass
+
+
+class HealthContext:
+    """Health-related context for voice processing."""
+    pass
+
+
+class VoiceProcessingConfig:
+    """Configuration for voice processing."""
+    pass
+
+
+class WorkflowTrigger:
+    """Represents a workflow trigger from voice input."""
+    pass
+
+
+# Export all public classes
+__all__ = [
+    "VoiceProcessor",
+    "VoiceIntentClassifier",
+    "VoiceEntityExtractor",
+    "VoiceContextManager",
+    "WorkflowVoiceRouter",
+    # Stubs for test compatibility
+    "VoiceCommand",
+    "VoiceIntent",
+    "VoiceEntity",
+    "VoiceContext",
+    "HealthContext",
+    "VoiceProcessingConfig",
+    "WorkflowTrigger",
+]

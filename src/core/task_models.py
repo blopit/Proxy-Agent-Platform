@@ -59,7 +59,12 @@ class Task(BaseModel):
 
     # Organization
     tags: list[str] = Field(default_factory=list)
-    assignee_id: str | None = Field(None, description="User ID of assigned person")
+    assignee: str | None = Field(
+        None,
+        description="User ID of assigned person",
+        validation_alias="assignee_id",  # Accept 'assignee_id' when parsing
+        serialization_alias="assignee_id"  # Output as 'assignee_id' when serializing
+    )
 
     # Dates
     due_date: datetime | None = None
@@ -122,6 +127,7 @@ class Task(BaseModel):
     model_config = ConfigDict(
         use_enum_values=True,
         populate_by_name=True,
+        by_alias=True,  # Use serialization aliases when converting to dict/JSON
     )
 
 
@@ -242,7 +248,12 @@ class TaskComment(BaseModel):
 
     comment_id: str = Field(default_factory=lambda: str(uuid4()))
     task_id: str = Field(..., description="The task this comment belongs to")
-    author_id: str = Field(..., description="User ID of comment author")
+    author: str = Field(
+        ...,
+        description="User ID of comment author",
+        validation_alias="author_id",
+        serialization_alias="author_id"
+    )
     content: str = Field(..., min_length=1, max_length=2000)
 
     # Metadata
@@ -269,6 +280,7 @@ class TaskComment(BaseModel):
     model_config = ConfigDict(
         use_enum_values=True,
         populate_by_name=True,
+        by_alias=True,  # Use serialization aliases when converting to dict/JSON
     )
 
 
