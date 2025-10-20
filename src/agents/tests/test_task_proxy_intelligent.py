@@ -884,7 +884,7 @@ class TestLearningAndPersonalization:
     async def test_update_user_patterns(self):
         """Test updating of user-specific patterns"""
         task = generate_test_task("Test task", "Pattern learning test")
-        task.assignee_id = "test-user"
+        task.assignee = "test-user"  # Use 'assignee' field, not 'assignee_id' alias
         context = {"energy_level": "high", "location": "office"}
 
         await self.agent._update_user_patterns(task, context)
