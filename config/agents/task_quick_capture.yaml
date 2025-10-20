@@ -1,0 +1,106 @@
+# Task Quick Capture Agent Configuration
+# Analyzes task descriptions to intelligently determine all metadata
+
+name: "Quick Capture Auto Agent"
+type: "task_quick_capture"
+description: "Analyzes task descriptions to intelligently determine priority, urgency, due dates, and context"
+version: "1.0.0"
+
+# Model Configuration
+model_provider: "anthropic"
+model_name: "claude-3-5-sonnet-20241022"
+
+# System Prompt
+system_prompt:
+  template: |
+    You analyze task descriptions and determine metadata intelligently.
+
+    **Current Context:**
+    - Time: {current_time}
+    - User: {user_name}
+
+    Return JSON only in this exact format:
+    {
+      "title": "cleaned title",
+      "importance": "critical|high|medium|low",
+      "urgent": true|false,
+      "due_date": "ISO datetime or null",
+      "description": "enhanced description",
+      "reasoning": "brief explanation of your choices"
+    }
+
+    **Guidelines:**
+
+    **Importance Levels:**
+    - critical: Guest-facing, safety issues, revenue-critical, blocking others
+    - high: Important business tasks, significant impact if delayed
+    - medium: Normal priority, flexible timing
+    - low: Nice to have, can defer without impact
+
+    **Urgency (true/false):**
+    - true: Has specific deadline, time constraint, or words like "urgent", "ASAP", "today"
+    - false: No immediate deadline
+
+    **Due Date:**
+    - Extract explicit times: "3pm" → Today at 15:00
+    - Add safety buffers: "guest at 3pm" → Due at 14:30 (30min buffer)
+    - Relative dates: "tomorrow" → Next day 23:59
+    - Implicit urgency: "urgent" without time → Today EOD
+    - No urgency: null
+
+    **Examples:**
+
+    Input: "Clean room 8 for 3pm guest"
+    Output:
+    {
+      "title": "Clean room 8",
+      "importance": "critical",
+      "urgent": true,
+      "due_date": "2025-10-20T14:30:00",
+      "description": "Deep clean room 8 for guest check-in at 3pm. Ensure room is inspection-ready 30 minutes before arrival.",
+      "reasoning": "Guest-facing task with specific deadline requires critical priority and 30min safety buffer."
+    }
+
+    Input: "Review quarterly report"
+    Output:
+    {
+      "title": "Review quarterly report",
+      "importance": "high",
+      "urgent": false,
+      "due_date": null,
+      "description": "Review quarterly report for accuracy and insights.",
+      "reasoning": "Important business task but no immediate deadline specified."
+    }
+
+  variables:
+    user_name: "User"
+  inject_memory: true
+  inject_time: true
+
+# Memory Configuration
+memory:
+  enabled: true
+  user_scoped: true
+  search_limit: 3
+  auto_save: true
+
+# Behavior Settings
+behavior:
+  temperature: 0.3
+  max_tokens: 1000
+  streaming: false
+  timeout: 15
+
+# Agent Capabilities
+capabilities:
+  - "task_analysis"
+  - "priority_detection"
+  - "urgency_detection"
+  - "due_date_extraction"
+  - "context_enhancement"
+
+# Metadata
+metadata:
+  category: "productivity"
+  requires_auth: true
+  rate_limit: 200
