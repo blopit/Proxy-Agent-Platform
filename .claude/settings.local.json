@@ -108,7 +108,18 @@
       "Bash(/bashes)",
       "Bash(pkill:*)",
       "WebSearch",
-      "Read(//Users/shrenilpatel/Github/**)"
+      "Read(//Users/shrenilpatel/Github/**)",
+      "Bash(./venv_linux/bin/pytest src/ tests/ --tb=no -q --co)",
+      "Bash(./venv_linux/bin/pytest --version)",
+      "Bash(lsof -i :3000)",
+      "Bash(lsof -i :8000 -i :3000)",
+      "Bash(ipconfig getifaddr en0)",
+      "Bash(ipconfig getifaddr en1)",
+      "Bash(lsof -ti:3000)",
+      "Bash(xargs kill -9)",
+      "Bash(lsof -ti:8000)",
+      "Bash(lsof -i :8000)",
+      "Bash(./venv_linux/bin/uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000)"
     ],
     "deny": []
   }

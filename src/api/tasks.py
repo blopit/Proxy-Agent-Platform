@@ -108,7 +108,7 @@ class TaskResponse(BaseModel):
             actual_hours=float(task.actual_hours),
             progress_percentage=task.progress_percentage,
             tags=task.tags,
-            assignee=task.assignee_id,  # Fixed: Task model uses assignee_id
+            assignee=task.assignee,  # Task model uses assignee field
             due_date=task.due_date,
             is_overdue=task.is_overdue,
             created_at=task.created_at,
@@ -302,7 +302,7 @@ async def list_tasks(
     if any([project_id, assignee, status, priority, search_text, parent_id]):
         filter_obj = TaskFilter(
             project_id=project_id,
-            assignee_id=assignee,  # Fixed: TaskFilter uses assignee_id
+            assignee_id=assignee,  # TaskFilter uses assignee_id field
             status=status,
             priority=priority,
             search_text=search_text,

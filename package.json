@@ -12,7 +12,7 @@
     "dev": "concurrently \"npm run dev:ui\" \"npm run dev:agent\"",
     "dev:debug": "concurrently \"npm run dev:ui\" \"npm run dev:agent -- --debug\"",
     "dev:ui": "cd frontend && npm run dev",
-    "dev:agent": "cd agent && python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000",
+    "dev:agent": "uv run uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000",
     "dev:proxy-platform": "npm run dev",
     "build": "cd frontend && npm run build",
     "start": "concurrently \"cd frontend && npm start\" \"cd agent && python -m uvicorn main:app --host 0.0.0.0 --port 8000\"",

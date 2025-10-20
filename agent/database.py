@@ -21,6 +21,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    text,
 )
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -371,7 +372,7 @@ async def create_default_achievements():
         for achievement_data in default_achievements:
             # Check if achievement exists
             existing = await session.execute(
-                "SELECT id FROM achievements WHERE name = :name", {"name": achievement_data["name"]}
+                text("SELECT id FROM achievements WHERE name = :name"), {"name": achievement_data["name"]}
             )
             if not existing.first():
                 achievement = Achievement(**achievement_data)

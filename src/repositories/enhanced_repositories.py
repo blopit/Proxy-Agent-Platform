@@ -84,7 +84,8 @@ class BaseEnhancedRepository:
 
     def _model_to_dict(self, model) -> dict[str, Any]:
         """Convert model instance to dictionary for database storage"""
-        data = model.model_dump()
+        # Use by_alias=True to respect serialization_alias (e.g., assignee -> assignee_id)
+        data = model.model_dump(by_alias=True)
 
         # Convert lists and dicts to JSON strings
         for key, value in data.items():

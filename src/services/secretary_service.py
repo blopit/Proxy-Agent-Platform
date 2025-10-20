@@ -3,8 +3,11 @@ Secretary Service - Intelligent task organization and prioritization logic
 """
 
 import logging
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, timedelta, timezone
 from typing import Any
+
+# Python 3.10 compatibility
+UTC = timezone.utc
 
 from src.core.task_models import TaskPriority, TaskStatus
 from src.repositories.enhanced_repositories import EnhancedTaskRepository

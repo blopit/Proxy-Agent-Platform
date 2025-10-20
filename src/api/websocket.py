@@ -11,8 +11,11 @@ Implements WebSocket server for:
 import asyncio
 import json
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from typing import Any
+
+# Python 3.10 compatibility
+UTC = timezone.utc
 
 from fastapi import WebSocket
 from pydantic import BaseModel

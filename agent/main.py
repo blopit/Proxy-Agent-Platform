@@ -14,8 +14,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
-from routers import router as agents_router
 
+import sys
+sys.path.append(os.path.dirname(__file__))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from routers import router as agents_router
+from src.api.tasks import router as tasks_router
 from database import close_db, init_db
 
 # Load environment variables
@@ -75,6 +79,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(agents_router)
+app.include_router(tasks_router)
 
 
 @app.get("/")
