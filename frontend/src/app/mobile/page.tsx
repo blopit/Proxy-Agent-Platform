@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import './mobile.css';
 import RewardCelebration, { QuickCelebration, MysteryBoxCelebration } from '../../components/mobile/RewardCelebration';
 import SwipeableTaskCard from '../../components/mobile/SwipeableTaskCard';
-import BiologicalTabs from '../../components/mobile/BiologicalTabs';
+import SwipeableModeHeader from '../../components/mobile/SwipeableModeHeader';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -1068,18 +1068,13 @@ export default function ADHDTaskManager() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Biological Tabs Header */}
-      <div className="sticky top-0 z-20 bg-white shadow-sm border-b">
-        <div className="p-4">
-          <BiologicalTabs
-            activeTab={biologicalMode}
-            onTabChange={setBiologicalMode}
-            energy={energy}
-            timeOfDay={timeOfDay}
-          />
-        </div>
-      </div>
+    <div className="min-h-screen bg-[#002b36]">
+      {/* Minimal Swipeable Mode Header */}
+      <SwipeableModeHeader
+        currentMode={biologicalMode}
+        onModeChange={setBiologicalMode}
+        energy={energy}
+      />
 
       {/* Main Task Card Area */}
       <div className="flex-1 relative">

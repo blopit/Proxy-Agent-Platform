@@ -54,8 +54,8 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
       isOptimal: timeOfDay === 'morning' || (energy > 70)
     },
     {
-      id: 'healer',
-      name: 'Healer',
+      id: 'mender',
+      name: 'Mender',
       icon: '🌱',
       description: 'Herd / Parasympathetic',
       purpose: 'Recover energy & rebuild cognitive tissue',
@@ -101,7 +101,7 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
     if (timeOfDay === 'morning') {
       return 'Scout → Hunter heavy (optimal dopamine window)';
     } else if (timeOfDay === 'afternoon') {
-      return 'Healer micro-bursts recommended';
+      return 'Mender micro-bursts recommended';
     } else if (timeOfDay === 'evening') {
       return 'Mapper reflections (consolidation time)';
     } else {
@@ -208,7 +208,7 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
           <span>→</span>
           <span className={activeTab === 'hunter' ? 'text-red-600 font-medium' : ''}>Hunter</span>
           <span>→</span>
-          <span className={activeTab === 'healer' ? 'text-blue-600 font-medium' : ''}>Healer</span>
+          <span className={activeTab === 'mender' ? 'text-blue-600 font-medium' : ''}>Mender</span>
           <span>→</span>
           <span className={activeTab === 'mapper' ? 'text-purple-600 font-medium' : ''}>Mapper</span>
           <span>↺</span>
