@@ -42,6 +42,73 @@ class DependencyType(str, Enum):
     RELATED = "related"  # Tasks are related but not blocking
 
 
+class TaskScope(str, Enum):
+    """Task complexity scope for Epic 7 task splitting"""
+
+    SIMPLE = "simple"  # < 10 minutes, no splitting needed
+    MULTI = "multi"  # 10-60 minutes, needs micro-steps
+    PROJECT = "project"  # > 60 minutes, major project with phases
+
+
+class DelegationMode(str, Enum):
+    """4D Delegation system for task execution strategy"""
+
+    DO = "do"  # Do it yourself
+    DO_WITH_ME = "do_with_me"  # Do with assistance/collaboration
+    DELEGATE = "delegate"  # Fully delegate to someone/something else
+    DELETE = "delete"  # Eliminate this task (not needed)
+
+
+class MicroStep(BaseModel):
+    """Micro-step model for Epic 7 - 2-5 minute actionable steps"""
+
+    step_id: str = Field(default_factory=lambda: str(uuid4()))
+    parent_task_id: str = Field(..., description="ID of the parent task")
+    step_number: int = Field(..., ge=1, description="Order in sequence")
+    description: str = Field(..., min_length=1, max_length=500)
+    estimated_minutes: int = Field(..., ge=1, le=10, description="1-10 minutes (target 2-5)")
+
+    # Delegation
+    delegation_mode: DelegationMode = Field(default=DelegationMode.DO)
+
+    # Status
+    status: TaskStatus = Field(default=TaskStatus.TODO)
+
+    # Time tracking
+    actual_minutes: int | None = Field(None, ge=0)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    completed_at: datetime | None = None
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Description cannot be empty")
+        return v.strip()
+
+    @field_validator("estimated_minutes")
+    @classmethod
+    def validate_estimated_minutes(cls, v: int) -> int:
+        if v < 1 or v > 10:
+            raise ValueError("Estimated minutes must be between 1 and 10")
+        return v
+
+    def mark_completed(self) -> None:
+        """Mark micro-step as completed"""
+        self.status = TaskStatus.COMPLETED
+        self.completed_at = datetime.utcnow()
+
+        # Auto-calculate actual time if not set
+        if self.actual_minutes is None and self.created_at:
+            duration = datetime.utcnow() - self.created_at
+            self.actual_minutes = max(1, int(duration.total_seconds() / 60))
+
+    model_config = ConfigDict(
+        use_enum_values=True,
+        populate_by_name=True,
+    )
+
+
 class Task(BaseModel):
     """Enhanced Task model with hierarchy, dependencies, and advanced features"""
 
@@ -77,6 +144,12 @@ class Task(BaseModel):
 
     # Metadata
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+    # Epic 7: Task Splitting Support
+    scope: TaskScope = Field(default=TaskScope.SIMPLE, description="Task complexity scope")
+    micro_steps: list[MicroStep] = Field(default_factory=list, description="Micro-steps (2-5 min each)")
+    is_micro_step: bool = Field(default=False, description="Is this task itself a micro-step")
+    delegation_mode: DelegationMode = Field(default=DelegationMode.DO, description="4D delegation strategy")
 
     @field_validator("title")
     @classmethod
@@ -125,6 +198,56 @@ class Task(BaseModel):
         self.status = TaskStatus.COMPLETED
         self.completed_at = datetime.utcnow()
         self.updated_at = datetime.utcnow()
+
+    # Epic 7: Task Splitting Methods
+
+    def determine_scope(self) -> TaskScope:
+        """
+        Determine task scope based on estimated hours.
+
+        Returns:
+            TaskScope: SIMPLE (<10 min), MULTI (10-60 min), or PROJECT (>60 min)
+        """
+        if not self.estimated_hours:
+            # No estimate - could analyze description length/complexity
+            # For now, default to SIMPLE
+            return TaskScope.SIMPLE
+
+        hours = float(self.estimated_hours)
+        minutes = hours * 60
+
+        if minutes < 10:
+            return TaskScope.SIMPLE
+        elif minutes <= 60:
+            return TaskScope.MULTI
+        else:
+            return TaskScope.PROJECT
+
+    def calculate_micro_steps_duration(self) -> int:
+        """
+        Calculate total estimated duration from all micro-steps.
+
+        Returns:
+            int: Total minutes from all micro-steps
+        """
+        return sum(step.estimated_minutes for step in self.micro_steps)
+
+    @property
+    def micro_steps_progress_percentage(self) -> float:
+        """
+        Calculate progress percentage based on completed micro-steps.
+
+        Returns:
+            float: Percentage of micro-steps completed (0-100)
+        """
+        if not self.micro_steps or len(self.micro_steps) == 0:
+            return 0.0
+
+        completed_count = sum(
+            1 for step in self.micro_steps if step.status == TaskStatus.COMPLETED
+        )
+
+        return (completed_count / len(self.micro_steps)) * 100.0
 
     model_config = ConfigDict(
         use_enum_values=True,
