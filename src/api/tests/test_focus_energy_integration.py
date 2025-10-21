@@ -9,15 +9,26 @@ from fastapi.testclient import TestClient
 from src.api.main import app
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module")
 def test_client():
-    """FastAPI test client"""
+    """FastAPI test client - module scoped for better performance"""
     return TestClient(app)
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module")
 def auth_token(test_client):
-    """Get authentication token for tests"""
+    """
+    Get authentication token for tests.
+
+    Module-scoped to avoid database locking issues when multiple tests
+    try to register/login the same user concurrently.
+    """
+    import time
+    import random
+
+    # Add small random delay to avoid race conditions
+    time.sleep(random.uniform(0.01, 0.05))
+
     # Register a test user
     register_response = test_client.post(
         "/api/v1/auth/register",
@@ -355,7 +366,9 @@ class TestEnergyAPIIntegration:
 
         assert matching_response.status_code == 200
         recommended_task = matching_response.json()["recommended_task"]
-        assert "id" in recommended_task
+        # The recommended_task has structure: {task: {...}, match_score: ..., reason: ...}
+        assert "task" in recommended_task
+        assert "id" in recommended_task["task"]
 
 
 class TestFocusEnergyIntegrationWorkflow:
