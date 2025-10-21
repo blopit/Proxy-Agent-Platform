@@ -11,6 +11,7 @@ This agent provides sophisticated focus session management including:
 """
 
 import logging
+import os
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -21,6 +22,15 @@ from src.repositories.enhanced_repositories import EnhancedTaskRepository
 from src.repositories.enhanced_repositories_extensions import EnhancedFocusSessionRepository
 
 logger = logging.getLogger(__name__)
+
+# AI Integration (with fallbacks)
+try:
+    import openai
+
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    logging.warning("OpenAI not available for Focus agent, using heuristics")
 
 
 @dataclass
@@ -55,6 +65,23 @@ class AdvancedFocusAgent(BaseProxyAgent):
         # Repository dependencies
         self.session_repo = session_repo or EnhancedFocusSessionRepository()
         self.task_repo = task_repo or EnhancedTaskRepository()
+
+        # AI client configuration
+        self.openai_client = None
+        self.ai_provider = os.getenv("LLM_PROVIDER", "openai")
+        self.ai_model = os.getenv("LLM_MODEL", "gpt-4")
+
+        # Initialize AI client if available and configured
+        if OPENAI_AVAILABLE and self.ai_provider == "openai":
+            try:
+                api_key = os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY")
+                if api_key and not api_key.startswith("sk-your-"):
+                    self.openai_client = openai.AsyncOpenAI(api_key=api_key)
+                    logging.info("OpenAI client initialized for Focus agent")
+                else:
+                    logging.warning("OpenAI API key not configured for Focus agent")
+            except Exception as e:
+                logging.warning(f"OpenAI client initialization failed: {e}")
 
         # Session tracking
         self.active_sessions = {}
@@ -214,11 +241,77 @@ class AdvancedFocusAgent(BaseProxyAgent):
         }
 
     async def _analyze_optimal_duration(self, user_id: str, context: str) -> dict[str, Any]:
-        """Analyze optimal session duration"""
+        """Analyze optimal session duration with AI-powered insights"""
         # Get user historical data
         user_sessions = await self._get_user_session_history(user_id)
 
-        # Analyze task complexity
+        # Try AI-powered analysis first
+        if self.openai_client:
+            try:
+                # Prepare user history summary for AI
+                history_summary = ""
+                if user_sessions:
+                    successful_sessions = [
+                        s for s in user_sessions if s.get("completion_rate", 0) > 0.8
+                    ]
+                    if successful_sessions:
+                        avg_duration = sum(
+                            s.get("actual_duration", 25) for s in successful_sessions
+                        ) / len(successful_sessions)
+                        history_summary = (
+                            f"\nUser History: Average successful session: {avg_duration:.0f} "
+                            f"minutes (based on {len(successful_sessions)} sessions)"
+                        )
+
+                prompt = f"""Recommend optimal focus session duration for this task.
+
+Task Context: {context}{history_summary}
+
+Consider:
+- Task complexity and cognitive load
+- Typical attention span (20-90 minutes)
+- User's historical success patterns if available
+- Balance between productivity and sustainability
+
+Return JSON with:
+- duration: integer minutes (20-90)
+- confidence: 0.0-1.0
+- reasoning: brief explanation
+- alternatives: array of 2 alternative durations
+
+Example: {{"duration": 45, "confidence": 0.8, "reasoning": "Medium complexity task with proven 40-50min success", "alternatives": [30, 60]}}"""
+
+                response = await self.openai_client.chat.completions.create(
+                    model=self.ai_model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a focus optimization AI. Return ONLY valid JSON.",
+                        },
+                        {"role": "user", "content": prompt},
+                    ],
+                    temperature=0.3,
+                    max_tokens=200,
+                )
+
+                import json
+
+                ai_result = json.loads(response.choices[0].message.content.strip())
+                if (
+                    isinstance(ai_result, dict)
+                    and "duration" in ai_result
+                    and "confidence" in ai_result
+                ):
+                    return {
+                        "duration": int(ai_result["duration"]),
+                        "confidence": float(ai_result["confidence"]),
+                        "reasoning": ai_result.get("reasoning", "AI-powered recommendation"),
+                        "alternatives": ai_result.get("alternatives", [25, 45]),
+                    }
+            except Exception as ai_error:
+                logging.debug(f"AI duration analysis failed, using fallback: {ai_error}")
+
+        # Fallback to heuristic analysis
         complexity = await self._analyze_task_complexity_from_context(context)
 
         # Calculate base duration
@@ -271,7 +364,7 @@ class AdvancedFocusAgent(BaseProxyAgent):
     async def _analyze_focus_quality(
         self, session_id: str, activity_data: dict[str, Any]
     ) -> dict[str, Any]:
-        """Analyze focus quality based on activity patterns"""
+        """Analyze focus quality with AI-powered pattern recognition"""
         distraction_indicators = {
             "app_switches": activity_data.get("app_switches", 0),
             "typing_pattern": activity_data.get("typing_pattern", "regular"),
@@ -279,7 +372,61 @@ class AdvancedFocusAgent(BaseProxyAgent):
             "notification_interactions": activity_data.get("notifications", 0),
         }
 
-        # Calculate distraction level
+        # Try AI-powered analysis for deeper insights
+        if self.openai_client:
+            try:
+                prompt = f"""Analyze focus quality from activity data and provide distraction insights.
+
+Activity Data:
+- App switches: {distraction_indicators['app_switches']}
+- Typing pattern: {distraction_indicators['typing_pattern']}
+- Mouse movement: {distraction_indicators['mouse_movement']}
+- Notification interactions: {distraction_indicators['notification_interactions']}
+
+Return JSON with:
+- distraction_level: 0.0-1.0 (0=fully focused, 1=highly distracted)
+- primary_distractors: array of distraction types (e.g., ["application_switching", "notifications"])
+- intervention_needed: boolean
+- recommendations: array of 2-3 specific actionable interventions
+
+Example: {{"distraction_level": 0.6, "primary_distractors": ["notifications", "web_browsing"], "intervention_needed": true, "recommendations": ["Enable do not disturb mode", "Close browser tabs"]}}"""
+
+                response = await self.openai_client.chat.completions.create(
+                    model=self.ai_model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a focus analysis AI. Return ONLY valid JSON.",
+                        },
+                        {"role": "user", "content": prompt},
+                    ],
+                    temperature=0.3,
+                    max_tokens=300,
+                )
+
+                import json
+
+                ai_result = json.loads(response.choices[0].message.content.strip())
+                if (
+                    isinstance(ai_result, dict)
+                    and "distraction_level" in ai_result
+                    and "primary_distractors" in ai_result
+                ):
+                    return {
+                        "distraction_level": float(ai_result["distraction_level"]),
+                        "primary_distractors": ai_result["primary_distractors"],
+                        "intervention_needed": ai_result.get("intervention_needed", False),
+                        "recommendations": ai_result.get(
+                            "recommendations",
+                            self._generate_distraction_interventions(
+                                ai_result["primary_distractors"]
+                            ),
+                        ),
+                    }
+            except Exception as ai_error:
+                logging.debug(f"AI focus quality analysis failed, using fallback: {ai_error}")
+
+        # Fallback to heuristic analysis
         distraction_score = 0.0
         primary_distractors = []
 

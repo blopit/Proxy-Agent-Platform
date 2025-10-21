@@ -11,6 +11,7 @@ This agent provides sophisticated energy management including:
 """
 
 import logging
+import os
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -23,6 +24,15 @@ from src.repositories.enhanced_repositories_extensions import (
 )
 
 logger = logging.getLogger(__name__)
+
+# AI Integration (with fallbacks)
+try:
+    import openai
+
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    logging.warning("OpenAI not available for Energy agent, using heuristics")
 
 
 @dataclass
@@ -68,6 +78,23 @@ class AdvancedEnergyAgent(BaseProxyAgent):
         # Repository dependencies
         self.energy_repo = energy_repo or EnhancedEnergyRepository()
         self.metrics_repo = metrics_repo or EnhancedMetricsRepository()
+
+        # AI client configuration
+        self.openai_client = None
+        self.ai_provider = os.getenv("LLM_PROVIDER", "openai")
+        self.ai_model = os.getenv("LLM_MODEL", "gpt-4")
+
+        # Initialize AI client if available and configured
+        if OPENAI_AVAILABLE and self.ai_provider == "openai":
+            try:
+                api_key = os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY")
+                if api_key and not api_key.startswith("sk-your-"):
+                    self.openai_client = openai.AsyncOpenAI(api_key=api_key)
+                    logging.info("OpenAI client initialized for Energy agent")
+                else:
+                    logging.warning("OpenAI API key not configured for Energy agent")
+            except Exception as e:
+                logging.warning(f"OpenAI client initialization failed: {e}")
 
         # Energy tracking
         self.user_energy_profiles = {}
@@ -256,8 +283,68 @@ class AdvancedEnergyAgent(BaseProxyAgent):
     async def _predict_energy_trend(
         self, user_id: str, current_energy: float, indicators: dict[str, Any]
     ) -> dict[str, Any]:
-        """Predict energy trend for next hour"""
+        """Predict energy trend with AI-powered analysis"""
         hour = datetime.now().hour
+
+        # Try AI-powered prediction first
+        if self.openai_client:
+            try:
+                # Format indicators for AI
+                factors_str = ", ".join(indicators["primary_factors"])
+                inds = indicators["indicators"]
+
+                prompt = f"""Predict energy level trend for the next hour.
+
+Current State:
+- Current energy: {current_energy:.1f}/10
+- Time: {hour}:00
+- Primary factors: {factors_str}
+- Sleep quality: {inds['sleep_quality']}/10
+- Stress level: {inds['stress_level']}/10
+- Recent activity: {inds['recent_activity']}
+
+Consider:
+- Natural circadian rhythms (morning rise, post-lunch dip, evening decline)
+- Impact of current factors on energy trajectory
+- Typical energy patterns
+
+Return JSON with:
+- direction: "increasing", "declining", or "stable"
+- predicted_level: 0.0-10.0 (energy in 1 hour)
+- confidence: 0.0-1.0
+
+Example: {{"direction": "declining", "predicted_level": 6.2, "confidence": 0.8}}"""
+
+                response = await self.openai_client.chat.completions.create(
+                    model=self.ai_model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are an energy prediction AI. Return ONLY valid JSON.",
+                        },
+                        {"role": "user", "content": prompt},
+                    ],
+                    temperature=0.3,
+                    max_tokens=150,
+                )
+
+                import json
+
+                ai_result = json.loads(response.choices[0].message.content.strip())
+                if (
+                    isinstance(ai_result, dict)
+                    and "direction" in ai_result
+                    and "predicted_level" in ai_result
+                ):
+                    return {
+                        "direction": ai_result["direction"],
+                        "predicted_level": float(ai_result["predicted_level"]),
+                        "confidence": float(ai_result.get("confidence", 0.75)),
+                    }
+            except Exception as ai_error:
+                logging.debug(f"AI energy prediction failed, using fallback: {ai_error}")
+
+        # Fallback to heuristic prediction
         predicted_change = 0.0
 
         # Natural circadian changes
@@ -776,7 +863,54 @@ class AdvancedEnergyAgent(BaseProxyAgent):
     async def _generate_immediate_recommendations(
         self, energy_level: float, indicators: dict[str, Any]
     ) -> list[str]:
-        """Generate immediate energy recommendations"""
+        """Generate personalized immediate energy recommendations with AI"""
+        # Try AI-powered recommendations first
+        if self.openai_client:
+            try:
+                factors_str = ", ".join(indicators.get("primary_factors", []))
+                inds = indicators.get("indicators", {})
+
+                prompt = f"""Generate 3 immediate, actionable recommendations to optimize energy.
+
+Current State:
+- Energy level: {energy_level:.1f}/10
+- Primary factors: {factors_str}
+- Sleep quality: {inds.get('sleep_quality', 7)}/10
+- Stress: {inds.get('stress_level', 5)}/10
+- Hydration: {inds.get('hydration', 5)}/10
+- Recent activity: {inds.get('recent_activity', 'unknown')}
+
+Requirements:
+- 3 specific, actionable recommendations
+- Can be done immediately (0-10 minutes)
+- Address current energy state and factors
+- Practical and realistic
+
+Return JSON array of 3 strings.
+Example: ["Take a 5-minute walk outside", "Drink 16oz of water", "Practice 2 minutes of deep breathing"]"""
+
+                response = await self.openai_client.chat.completions.create(
+                    model=self.ai_model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are an energy optimization AI. Return ONLY a JSON array of 3 strings.",
+                        },
+                        {"role": "user", "content": prompt},
+                    ],
+                    temperature=0.5,
+                    max_tokens=200,
+                )
+
+                import json
+
+                ai_recommendations = json.loads(response.choices[0].message.content.strip())
+                if isinstance(ai_recommendations, list) and len(ai_recommendations) == 3:
+                    return ai_recommendations
+            except Exception as ai_error:
+                logging.debug(f"AI recommendation generation failed, using fallback: {ai_error}")
+
+        # Fallback to heuristic recommendations
         recommendations = []
 
         if energy_level < 4.0:
