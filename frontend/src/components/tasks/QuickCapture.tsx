@@ -74,7 +74,7 @@ export function QuickCapture({ userId, onTaskCreated, className = '' }: QuickCap
       recognition.interimResults = false
       recognition.lang = 'en-US'
 
-      recognition.addEventListener('result', (event: SpeechRecognitionEvent) => {
+      recognition.addEventListener('result', (event: any) => {
         const transcript = event.results[0][0].transcript
         setText(transcript)
         setIsListening(false)

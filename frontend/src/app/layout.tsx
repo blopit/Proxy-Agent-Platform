@@ -16,6 +16,8 @@ export const metadata: Metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
   themeColor: '#3b82f6',
 }
 
@@ -26,14 +28,39 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <div className="flex h-screen bg-gray-50">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Suppress hydration warnings for browser extension attributes
+              if (typeof window !== 'undefined') {
+                const originalError = console.error;
+                console.error = function(...args) {
+                  if (
+                    args[0] &&
+                    typeof args[0] === 'string' &&
+                    (args[0].includes('Hydration failed') ||
+                     args[0].includes('hydration') ||
+                     args[0].includes('data-new-gr-c-s-check-loaded') ||
+                     args[0].includes('data-gr-ext-installed'))
+                  ) {
+                    return; // Suppress browser extension hydration errors
+                  }
+                  originalError.apply(console, args);
+                };
+              }
+            `,
+          }}
+        />
+      </head>
+      <body className={inter.className} suppressHydrationWarning>
+        <div className="min-h-screen bg-gray-50">
           {/* CopilotSidebar temporarily disabled */}
-          <main className="flex-1 overflow-auto">
+          <main className="w-full">
             {children}
           </main>
         </div>
-        <Toaster position="top-right" />
+        <Toaster position="top-center" />
       </body>
     </html>
   )

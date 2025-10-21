@@ -23,22 +23,41 @@ interface Task {
   created_at?: string;
 }
 
-const Gauge = ({ value = 72, label = "Energy" }) => {
+const Gauge = ({ value = 0, label = "Energy" }) => {
   const radius = 60;
   const stroke = 12;
-  const norm = 2 * Math.PI * radius;
+  // Calculate half circle (semi-circle) length
+  const circumference = Math.PI * radius;
   const percent = Math.max(0, Math.min(100, value)) / 100;
-  const dash = norm * percent;
+  const dashLength = circumference * percent;
+  const dashOffset = circumference * (1 - percent);
+
   return (
     <div className="flex flex-col items-center justify-center">
       <svg width="160" height="100" viewBox="0 0 160 100">
         <g transform="translate(80,90)">
-          <path d={`M ${-radius} 0 A ${radius} ${radius} 0 1 1 ${radius} 0`} fill="none" stroke="#e5e7eb" strokeWidth={stroke} strokeLinecap="round"/>
-          <path d={`M ${-radius} 0 A ${radius} ${radius} 0 1 1 ${radius} 0`} fill="none" stroke="#111827" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={`${dash} ${norm}`} />
+          {/* Background gray semi-circle */}
+          <path
+            d={`M ${-radius} 0 A ${radius} ${radius} 0 0 1 ${radius} 0`}
+            fill="none"
+            stroke="#e5e7eb"
+            strokeWidth={stroke}
+            strokeLinecap="round"
+          />
+          {/* Foreground colored semi-circle (percentage fill) */}
+          <path
+            d={`M ${-radius} 0 A ${radius} ${radius} 0 0 1 ${radius} 0`}
+            fill="none"
+            stroke={value >= 70 ? "#10b981" : value >= 40 ? "#f59e0b" : "#ef4444"}
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={`${dashLength} ${circumference}`}
+            strokeDashoffset={0}
+          />
         </g>
-        <text x="80" y="60" textAnchor="middle" className="fill-gray-900 font-semibold text-xl">{value}%</text>
+        <text x="80" y="73" textAnchor="middle" className="fill-gray-900 font-semibold text-2xl">{value}%</text>
+        <text x="80" y="90" textAnchor="middle" className="fill-gray-600 text-xs">Est. {label}</text>
       </svg>
-      <div className="text-sm text-gray-600 -mt-2">{label}</div>
     </div>
   );
 };
@@ -434,8 +453,8 @@ export default function MissionControl() {
   const [adhdMode, setAdhdMode] = useState(true);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [xp, setXp] = useState(0);
-  const [level, setLevel] = useState(1);
-  const [energy, setEnergy] = useState(72);
+  const [level, setLevel] = useState(0);
+  const [energy, setEnergy] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [microStep, setMicroStep] = useState("");
   const [bodyDouble, setBodyDouble] = useState(false);
@@ -446,11 +465,7 @@ export default function MissionControl() {
   const [autoMode, setAutoMode] = useState(true);
   const [askForClarity, setAskForClarity] = useState(false);
   const expandedOptionsRef = useRef<HTMLDivElement>(null);
-  const [delegations, setDelegations] = useState([
-    { id: 1, task: "Email triage → Reply drafts", status: "Queued" },
-    { id: 2, task: "Calendar clean-up → propose blocks", status: "Running" },
-    { id: 3, task: "Web research → 3‑bullet brief", status: "Spec needed" },
-  ]);
+  const [delegations, setDelegations] = useState<any[]>([]);
 
   // QuickCapture intelligence state
   const [showAnalysisPreview, setShowAnalysisPreview] = useState(false);
@@ -468,13 +483,16 @@ export default function MissionControl() {
   } | null>(null);
   const [quickCelebrationMsg, setQuickCelebrationMsg] = useState<string | null>(null);
   const [mysteryBox, setMysteryBox] = useState<any>(null);
-  const [streakDays, setStreakDays] = useState(3);
-  const [sessionMultiplier, setSessionMultiplier] = useState(1.0);
+  const [streakDays, setStreakDays] = useState(0);
+  const [sessionMultiplier, setSessionMultiplier] = useState(0);
+  const [timelineEvents, setTimelineEvents] = useState<any[]>([]);
 
   useEffect(() => {
     fetchTasks();
     fetchGameStats();
     fetchEnergy();
+    fetchDelegations();
+    fetchTimeline();
   }, []);
 
   // Simplified scroll detection
@@ -482,7 +500,7 @@ export default function MissionControl() {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       const nowScrolled = scrollTop > 50;
-      
+
       if (nowScrolled !== isScrolled) {
         setIsScrolled(nowScrolled);
         if (nowScrolled) {
@@ -495,39 +513,157 @@ export default function MissionControl() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isScrolled]);
 
+  // ✅ CONNECTED: WebSocket for real-time updates
+  useEffect(() => {
+    const wsUrl = API_URL.replace(/^http/, 'ws');
+    const ws = new WebSocket(`${wsUrl}/ws/mobile-user`);
+
+    ws.onopen = () => {
+      console.log('✅ WebSocket connected for real-time updates');
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'task_created' || data.type === 'task_updated') {
+          fetchTasks(); // Refresh task list
+        } else if (data.type === 'xp_earned') {
+          setXp(data.new_xp || data.xp || 0);
+          setQuickCelebrationMsg(`+${data.xp || 0} XP!`);
+        } else if (data.type === 'achievement_unlocked') {
+          setQuickCelebrationMsg(`🏆 ${data.achievement_name || 'Achievement Unlocked'}!`);
+        } else if (data.type === 'level_up') {
+          setLevel(data.new_level || 1);
+          setQuickCelebrationMsg(`🎉 LEVEL UP! Now Level ${data.new_level}`);
+        } else if (data.type === 'streak_updated') {
+          setStreakDays(data.new_streak || 0);
+        }
+      } catch (err) {
+        console.error('WebSocket message error:', err);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.warn('WebSocket error (non-critical):', error);
+    };
+
+    ws.onclose = () => {
+      console.log('❌ WebSocket disconnected');
+    };
+
+    return () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  }, []);
+
   const fetchTasks = async () => {
     try {
-      // ✅ FIXED: Use real comprehensive tasks endpoint, not simple-tasks!
-      const response = await fetch(`${API_URL}/api/v1/tasks?limit=20`);
-      if (!response.ok) throw new Error('Failed to fetch');
+      // ✅ CONNECTED: Real comprehensive tasks API with filters
+      const response = await fetch(`${API_URL}/api/v1/tasks?limit=50&user_id=mobile-user`);
+      if (!response.ok) {
+        console.warn('Tasks API not available, trying simple-tasks fallback');
+        // Fallback to simple-tasks endpoint
+        const fallbackResponse = await fetch(`${API_URL}/api/v1/simple-tasks`);
+        if (!fallbackResponse.ok) throw new Error('Both tasks endpoints failed');
+        const fallbackData = await fallbackResponse.json();
+        setTasks(fallbackData.tasks || []);
+        return;
+      }
       const data = await response.json();
-      setTasks(data.tasks || []);
+      setTasks(data.tasks || data || []);
     } catch (err) {
       console.error('Fetch error:', err);
+      setTasks([]); // Clear tasks on error
     }
   };
 
   const fetchGameStats = async () => {
     try {
-      // 🚨 TODO: Replace with real Progress API
-      // const response = await fetch(`${API_URL}/api/v1/progress/level-progression?user_id=mobile-user`);
-      // For now, calculate from tasks (TEMPORARY)
-      const completedCount = tasks.filter(t => t.status === 'completed').length;
-      setXp(completedCount * 25);
-      setLevel(Math.floor(completedCount / 4) + 1);
+      // ✅ CONNECTED: Real Progress API call
+      const progressRes = await fetch(`${API_URL}/api/v1/progress/level-progression?user_id=mobile-user`);
+      if (progressRes.ok) {
+        const progressData = await progressRes.json();
+        setXp(progressData.current_xp || 0);
+        setLevel(progressData.current_level || 1);
+      } else {
+        console.warn('Progress API not available, using fallback');
+        // Fallback to calculating from tasks
+        const completedCount = tasks.filter(t => t.status === 'completed').length;
+        setXp(completedCount * 25);
+        setLevel(Math.floor(completedCount / 4) + 1);
+      }
+
+      // ✅ CONNECTED: Real Gamification API call for streaks
+      const gamificationRes = await fetch(`${API_URL}/api/v1/gamification/user-stats?user_id=mobile-user`);
+      if (gamificationRes.ok) {
+        const gamificationData = await gamificationRes.json();
+        setStreakDays(gamificationData.current_streak || 0);
+        if (gamificationData.session_multiplier) {
+          setSessionMultiplier(gamificationData.session_multiplier);
+        }
+      }
     } catch (err) {
       console.error('Stats fetch error:', err);
+      // Fallback values
+      setXp(0);
+      setLevel(1);
     }
   };
 
   const fetchEnergy = async () => {
     try {
-      // 🚨 TODO: Replace with real Energy API
-      // const response = await fetch(`${API_URL}/api/v1/energy/current-level?user_id=mobile-user`);
-      // For now, hardcoded (TEMPORARY)
-      setEnergy(72);
+      // ✅ CONNECTED: Real Energy API call
+      const response = await fetch(`${API_URL}/api/v1/energy/current-level?user_id=mobile-user`);
+      if (!response.ok) {
+        console.warn('Energy API not available, using fallback');
+        setEnergy(72); // Fallback to 72%
+        return;
+      }
+      const data = await response.json();
+      // Convert 0-10 scale to 0-100 percentage
+      const energyPercent = Math.round((data.energy_level || 7.2) * 10);
+      setEnergy(energyPercent);
     } catch (err) {
       console.error('Energy fetch error:', err);
+      setEnergy(72); // Fallback to 72% on error
+    }
+  };
+
+  const fetchDelegations = async () => {
+    try {
+      // ✅ CONNECTED: Real Secretary API for delegations
+      const response = await fetch(`${API_URL}/api/v1/secretary/delegations?user_id=mobile-user`);
+      if (!response.ok) {
+        console.warn('Delegations API not available, using empty list');
+        setDelegations([]);
+        return;
+      }
+      const data = await response.json();
+      setDelegations(data.delegations || []);
+    } catch (err) {
+      console.error('Delegations fetch error:', err);
+      setDelegations([]);
+    }
+  };
+
+  const fetchTimeline = async () => {
+    try {
+      // ✅ CONNECTED: Real Secretary API for timeline
+      const today = new Date().toISOString().split('T')[0];
+      const response = await fetch(`${API_URL}/api/v1/secretary/timeline?user_id=mobile-user&date=${today}`);
+      if (!response.ok) {
+        console.warn('Timeline API not available, using empty list');
+        setTimelineEvents([]);
+        return;
+      }
+      const data = await response.json();
+      setTimelineEvents(data.events || []);
+    } catch (err) {
+      console.error('Timeline fetch error:', err);
+      setTimelineEvents([]);
     }
   };
 
@@ -564,7 +700,7 @@ export default function MissionControl() {
       }
 
       setTasks([result.task, ...tasks]);
-      setXp(prev => prev + 10);
+      setXp(prev => prev + 0);
     } catch (err) {
       console.error('Add task error:', err);
     } finally {
@@ -623,16 +759,26 @@ export default function MissionControl() {
       const reward = await response.json();
 
       // Update XP and level
-      setXp(reward.new_total_xp);
-      setLevel(reward.new_level);
+      setXp(reward.new_total_xp || reward.total_xp || 0);
+      setLevel(reward.new_level || reward.level || 1);
+
+      // Update streak if changed
+      if (reward.new_streak !== undefined) {
+        setStreakDays(reward.new_streak);
+      }
+
+      // Update session multiplier if changed
+      if (reward.new_multiplier !== undefined || reward.multiplier !== undefined) {
+        setSessionMultiplier(reward.new_multiplier || reward.multiplier || 0);
+      }
 
       // Show celebration animation
       setCelebration({
         show: true,
         tier: reward.tier,
         xp: reward.total_xp,
-        multiplier: reward.multiplier,
-        bonusReason: reward.bonus_reason
+        multiplier: reward.multiplier || 1.0,
+        bonusReason: reward.bonus_reason || ''
       });
 
       // Open mystery box if unlocked
@@ -645,14 +791,14 @@ export default function MissionControl() {
       // Level up celebration
       if (reward.level_up) {
         setTimeout(() => {
-          setQuickCelebrationMsg(`🎉 LEVEL UP! Now Level ${reward.new_level}`);
+          setQuickCelebrationMsg(`🎉 LEVEL UP! Now Level ${reward.new_level || reward.level}`);
         }, 3000);
       }
 
     } catch (err) {
       console.error('Reward claim error:', err);
       // Fallback to simple XP increase
-      setXp(prev => prev + 25);
+      setXp(prev => prev + 0);
     }
   };
 
@@ -718,7 +864,7 @@ export default function MissionControl() {
       }
 
       setTasks([result.task, ...tasks]);
-      setXp(prev => prev + 10);
+      setXp(prev => prev + 0);
       setQuickCaptureText("");
 
       // Collapse expanded state after successful submission
@@ -750,7 +896,7 @@ export default function MissionControl() {
 
       const result = await response.json();
       setTasks([result.task, ...tasks]);
-      setXp(prev => prev + 10);
+      setXp(prev => prev + 0);
       setQuickCaptureText("");
       setShowClarityForm(false);
       setClarityQuestions([]);
@@ -841,8 +987,8 @@ export default function MissionControl() {
                 {/* Auto/Manual toggle */}
                 <button
                   onClick={() => setAutoMode(!autoMode)}
-                  className={`px-3 py-2 rounded text-sm ${
-                    autoMode ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'
+                  className={`px-3 py-2 rounded text-sm border ${
+                    autoMode ? 'border-indigo-300 text-indigo-700' : 'border-gray-300 text-gray-600'
                   }`}
                 >
                   {autoMode ? 'Auto' : 'Manual'}
@@ -851,8 +997,8 @@ export default function MissionControl() {
                 {/* Ask for clarity checkbox */}
                 <button
                   onClick={() => setAskForClarity(!askForClarity)}
-                  className={`px-3 py-2 rounded text-sm ${
-                    askForClarity ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'
+                  className={`px-3 py-2 rounded text-sm border ${
+                    askForClarity ? 'border-indigo-300 text-indigo-700' : 'border-gray-300 text-gray-600'
                   }`}
                 >
                   Clarity
@@ -901,12 +1047,6 @@ export default function MissionControl() {
                 onDelegate={() => delegateTask(t)}
               />
             ))}
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Chip>Deep Work</Chip>
-            <Chip>No-Scroll</Chip>
-            <Chip>Noise Cancel</Chip>
-            <Chip>Novelty Burst</Chip>
           </div>
           {microStep && (
             <div className="mt-3 p-3 rounded-xl border bg-amber-50 text-sm">
@@ -971,11 +1111,20 @@ export default function MissionControl() {
         {/* Timeline - Mobile Optimized */}
         <Card title="Timeline — Today" right={<Pill text="Auto-schedule" />}>
           <div className="space-y-3">
-            <TimelineItem time="08:30" title="Hydrate + 10m mobility" meta="Energy warm-up" />
-            <TimelineItem time="09:00" title="Deep work block" meta="Top 3 tasks" />
-            <TimelineItem time="11:00" title="Errands & admin" meta="Quick wins" />
-            <TimelineItem time="14:00" title="Workout" meta="Zone 2 + stretch" />
-            <TimelineItem time="20:30" title="Review + plan tomorrow" meta="3 lines • gratitude" />
+            {timelineEvents.length > 0 ? (
+              timelineEvents.map((event, idx) => (
+                <TimelineItem
+                  key={idx}
+                  time={event.time}
+                  title={event.title}
+                  meta={event.description || event.meta || ''}
+                />
+              ))
+            ) : (
+              <div className="text-sm text-gray-500 py-4 text-center">
+                No timeline events scheduled for today
+              </div>
+            )}
           </div>
         </Card>
 
@@ -1023,32 +1172,15 @@ export default function MissionControl() {
             <Pill text={`+${xp % 100}/100`} />
           </div>
           <div className="text-xs text-gray-600 mb-2">Rewards queue</div>
-          <div className="flex flex-wrap gap-2">
-            <Chip>New runners</Chip>
-            <Chip>Book hour</Chip>
-            <Chip>Day hike</Chip>
+          <div className="text-sm text-gray-500">
+            Complete tasks to unlock rewards!
           </div>
         </Card>
 
         {/* Rituals - Mobile Optimized */}
         <Card title="Rituals" right={null}>
-          <div className="grid grid-cols-1 gap-3 text-sm">
-            <div className="p-3 rounded-xl border">
-              <div className="font-medium text-gray-900">Launch (AM)</div>
-              <ul className="mt-1 list-disc list-inside text-gray-600">
-                <li>Water → move → sunlight</li>
-                <li>Top 3 commit</li>
-                <li>Start focus block</li>
-              </ul>
-            </div>
-            <div className="p-3 rounded-xl border">
-              <div className="font-medium text-gray-900">Shutdown (PM)</div>
-              <ul className="mt-1 list-disc list-inside text-gray-600">
-                <li>Archive/reschedule</li>
-                <li>3-line log</li>
-                <li>Phone to charge bay</li>
-              </ul>
-            </div>
+          <div className="text-sm text-gray-500 text-center py-4">
+            Set up your daily rituals in Settings
           </div>
         </Card>
       </main>

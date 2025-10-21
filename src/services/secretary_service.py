@@ -2,6 +2,8 @@
 Secretary Service - Intelligent task organization and prioritization logic
 """
 
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -22,6 +24,14 @@ class SecretaryService:
         """Initialize secretary service with task repository"""
         self.task_repo = EnhancedTaskRepository()
 
+    def _ensure_timezone_aware(self, dt: datetime | None) -> datetime | None:
+        """Ensure datetime has timezone info"""
+        if dt is None:
+            return None
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=UTC)
+        return dt
+
     def get_secretary_dashboard(self, user_id: str | None = None) -> dict[str, Any]:
         """
         Get secretary dashboard with organized task categories
@@ -34,7 +44,7 @@ class SecretaryService:
         """
         try:
             # Get all active tasks
-            all_tasks = self.task_repo.list()
+            all_tasks = self.task_repo.list_tasks().items
 
             # Filter by user if provided
             if user_id:
@@ -55,8 +65,11 @@ class SecretaryService:
                 if task.status == TaskStatus.COMPLETED:
                     continue
 
+                # Ensure task.due_date is timezone-aware for comparison
+                due_date = self._ensure_timezone_aware(task.due_date)
+
                 # Check if task is urgent (due within 48 hours)
-                is_urgent = task.due_date and task.due_date <= two_days if task.due_date else False
+                is_urgent = due_date and due_date <= two_days if due_date else False
 
                 # Check if task is important (high priority)
                 is_important = task.priority in [TaskPriority.HIGH, TaskPriority.CRITICAL]
@@ -68,12 +81,12 @@ class SecretaryService:
                     urgent_tasks.append(self._task_to_dict(task))
                 elif is_important:
                     important_tasks.append(self._task_to_dict(task))
-                elif task.due_date and task.due_date <= one_week:
+                elif due_date and due_date <= one_week:
                     this_week.append(self._task_to_dict(task))
 
             # Calculate statistics
             completed_count = len([t for t in all_tasks if t.status == TaskStatus.COMPLETED])
-            overdue_count = len([t for t in all_tasks if t.due_date and t.due_date < now and t.status != TaskStatus.COMPLETED])
+            overdue_count = len([t for t in all_tasks if t.due_date and self._ensure_timezone_aware(t.due_date) < now and t.status != TaskStatus.COMPLETED])
 
             stats = {
                 "total_tasks": len(all_tasks),
@@ -88,13 +101,14 @@ class SecretaryService:
             # Get upcoming deadlines (next 7 days)
             upcoming_deadlines = []
             for task in all_tasks:
-                if task.due_date and now <= task.due_date <= one_week and task.status != TaskStatus.COMPLETED:
+                due_date = self._ensure_timezone_aware(task.due_date)
+                if due_date and now <= due_date <= one_week and task.status != TaskStatus.COMPLETED:
                     upcoming_deadlines.append({
-                        "task_id": task.id,
+                        "task_id": task.task_id,
                         "title": task.title,
-                        "due_date": task.due_date.isoformat(),
-                        "priority": task.priority.value,
-                        "days_until_due": (task.due_date - now).days,
+                        "due_date": due_date.isoformat(),
+                        "priority": task.priority if isinstance(task.priority, str) else task.priority.value,
+                        "days_until_due": (due_date - now).days,
                     })
 
             # Sort upcoming deadlines by date
@@ -128,7 +142,7 @@ class SecretaryService:
         """
         try:
             # Get all active tasks
-            all_tasks = self.task_repo.list()
+            all_tasks = self.task_repo.list_tasks().items
 
             # Filter by user if provided
             if user_id:
@@ -202,7 +216,7 @@ class SecretaryService:
         """
         try:
             # Get all tasks
-            all_tasks = self.task_repo.list()
+            all_tasks = self.task_repo.list_tasks().items
 
             # Filter by user if provided
             if user_id:
@@ -293,7 +307,7 @@ class SecretaryService:
         """
         try:
             # Get all active tasks
-            all_tasks = self.task_repo.list()
+            all_tasks = self.task_repo.list_tasks().items
 
             # Filter by user if provided
             if user_id:
@@ -311,9 +325,9 @@ class SecretaryService:
                 if task.due_date and task.due_date <= two_days:
                     if task.priority in [TaskPriority.LOW, TaskPriority.MEDIUM]:
                         suggestions.append({
-                            "task_id": task.id,
+                            "task_id": task.task_id,
                             "title": task.title,
-                            "current_priority": task.priority.value,
+                            "current_priority": task.priority if isinstance(task.priority, str) else task.priority.value,
                             "suggested_priority": TaskPriority.HIGH.value,
                             "reason": f"Task is due in {(task.due_date - now).days} day(s)",
                             "confidence": 0.85,
@@ -322,9 +336,9 @@ class SecretaryService:
                 # Suggest priority decrease for low-importance tasks with no deadline
                 if not task.due_date and task.priority == TaskPriority.HIGH:
                     suggestions.append({
-                        "task_id": task.id,
+                        "task_id": task.task_id,
                         "title": task.title,
-                        "current_priority": task.priority.value,
+                        "current_priority": task.priority if isinstance(task.priority, str) else task.priority.value,
                         "suggested_priority": TaskPriority.MEDIUM.value,
                         "reason": "High priority task with no deadline set",
                         "confidence": 0.70,
@@ -350,11 +364,11 @@ class SecretaryService:
             Dictionary representation of task
         """
         return {
-            "id": task.id,
+            "id": task.task_id,
             "title": task.title,
             "description": task.description,
-            "status": task.status.value,
-            "priority": task.priority.value,
+            "status": task.status if isinstance(task.status, str) else task.status.value,
+            "priority": task.priority if isinstance(task.priority, str) else task.priority.value,
             "due_date": task.due_date.isoformat() if task.due_date else None,
             "project_id": task.project_id,
             "estimated_hours": float(task.estimated_hours) if task.estimated_hours else None,

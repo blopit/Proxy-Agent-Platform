@@ -2,6 +2,8 @@
 Enhanced Repository Layer - Database operations for all models using the enhanced database adapter
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
 import sqlite3

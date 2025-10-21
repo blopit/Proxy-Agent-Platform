@@ -2,6 +2,8 @@
 Enhanced Database Adapter - Comprehensive schema for the Proxy Agent Platform
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
 import sqlite3

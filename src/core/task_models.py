@@ -2,6 +2,8 @@
 Enhanced Task Models - Comprehensive task management with hierarchy, dependencies, and advanced features
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum

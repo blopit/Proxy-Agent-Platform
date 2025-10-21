@@ -10,17 +10,45 @@
 | **Epic 4: Real-time Dashboard** | Medium | Not Started | 0% | 2-3 weeks | Epic 2 |
 | **Epic 5: Learning & Optimization** | Low | Not Started | 0% | 4-6 weeks | All previous |
 | **Epic 6: Testing & Quality** | Continuous | Not Started | 0% | 2-3 weeks | Parallel |
+| **🧩 Epic 7: ADHD Task Splitting** | **HIGH** | **READY** | **0%** | **8 weeks** | **Epic 1** |
 
 **Overall Project Progress**: 0% Complete
 
 ---
 
-## 🎯 Current Priority: Epic 1 - Core Proxy Agents
+## 🎯 Current Priority: Epic 7 - ADHD Task Splitting (NEW!)
 
-### ✅ Next Immediate Tasks
+### 🧩 Epic 7: ADHD-First Task Splitting System
+**Status**: Ready to implement | **Priority**: HIGH | **Effort**: 8 weeks
+
+The Auto-Chunker system that breaks large tasks into 2-5 minute micro-steps with intelligent delegation.
+
+### ✅ Next Immediate Tasks (Epic 7 - Phase 7.1)
+1. **T7.1.1** - Extend Task model with micro-step support
+2. **T7.1.2** - Create MicroStep and TaskScope models
+3. **T7.1.3** - Add database migrations for new fields
+4. **T7.1.4** - Create Split Proxy Agent skeleton
+
+### 📋 Epic 7 Phase Breakdown
+
+| Phase | Tasks | Status | Estimated Effort |
+|-------|-------|--------|------------------|
+| **7.1: Backend Foundation** | 8 tasks | Ready | 2 weeks |
+| **7.2: Frontend Integration** | 8 tasks | Ready | 2 weeks |
+| **7.3: AI Enhancement** | 8 tasks | Ready | 2 weeks |
+| **7.4: Mobile Optimization** | 5 tasks | Ready | 1 week |
+| **7.5: Testing & Polish** | 5 tasks | Ready | 1 week |
+
+**Epic 7 Total**: 34 tasks, 8 weeks estimated effort
+
+---
+
+## 🎯 Alternative Priority: Epic 1 - Core Proxy Agents
+
+### ✅ Next Immediate Tasks (Epic 1)
 1. **T1.1.1** - Create base proxy agent class with PydanticAI integration
 2. **T1.1.2** - Implement agent registry and discovery system
-3. **T1.1.3** - Create agent communication protocol
+3. **T1.3** - Create agent communication protocol
 
 ### 📋 Epic 1 Phase Breakdown
 
@@ -134,6 +162,14 @@ Proxy-Agent-Platform/
 
 ## 📋 Task List Files
 
+### 🧩 Epic 7: ADHD Task Splitting (PRIORITY)
+- **[📁 Task-Splitting Documentation](task-splitting/README.md)** - Complete documentation hub
+- **[🚀 Action Plan](task-splitting/ACTION_PLAN.md)** - Immediate next steps and implementation guide
+- **[🗺️ Master Roadmap](task-splitting/master-roadmap.md)** - 8-week implementation plan
+- **[🏗️ System Design](task-splitting/design.md)** - Technical architecture and PRD
+- **[🔗 Integration Report](task-splitting/integration-report.md)** - Integration with existing platform
+
+### Other Epics
 Detailed task breakdowns available in:
 - [Epic 1: Core Proxy Agents](../tasks/epics/epic-1-core-proxy-agents/tasks.md)
 - [Epic 2: Gamification System](../tasks/epics/epic-2-gamification-system/tasks.md)

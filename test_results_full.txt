@@ -1,0 +1,148 @@
+FF...................................................................... [ 16%]
+....................................E.EEEEEE.EEEEEEEEEEEEEEEEEEEF..EE.EE [ 32%]
+EEEEEEEE.EEF.FFFFFFFFFFFFFFF............................................ [ 49%]
+.............................................................F.......... [ 65%]
+........F.F.....F.F.F.F.FFFF...............F............................ [ 82%]
+..........................FFFEE.EEEEEEEFFEFEE..EEEE...............F..... [ 98%]
+....F                                                                    [100%]
+=============================== warnings summary ===============================
+.venv/lib/python3.11/site-packages/passlib/utils/__init__.py:854
+  /Users/shrenilpatel/Github/Proxy-Agent-Platform/.venv/lib/python3.11/site-packages/passlib/utils/__init__.py:854: DeprecationWarning: 'crypt' is deprecated and slated for removal in Python 3.13
+    from crypt import crypt as _crypt
+
+.venv/lib/python3.11/site-packages/pydantic/fields.py:1062
+  /Users/shrenilpatel/Github/Proxy-Agent-Platform/.venv/lib/python3.11/site-packages/pydantic/fields.py:1062: PydanticDeprecatedSince20: `min_items` is deprecated and will be removed, use `min_length` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    warn('`min_items` is deprecated and will be removed, use `min_length` instead', DeprecationWarning)
+
+src/api/main.py:56
+  /Users/shrenilpatel/Github/Proxy-Agent-Platform/src/api/main.py:56: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+.venv/lib/python3.11/site-packages/fastapi/applications.py:4574
+.venv/lib/python3.11/site-packages/fastapi/applications.py:4574
+  /Users/shrenilpatel/Github/Proxy-Agent-Platform/.venv/lib/python3.11/site-packages/fastapi/applications.py:4574: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+src/api/main.py:63
+  /Users/shrenilpatel/Github/Proxy-Agent-Platform/src/api/main.py:63: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("shutdown")
+
+src/memory/test_memory_basic.py::test_memory_basic
+  /Users/shrenilpatel/Github/Proxy-Agent-Platform/.venv/lib/python3.11/site-packages/_pytest/python.py:161: PytestReturnNotNoneWarning: Test functions should return None, but src/memory/test_memory_basic.py::test_memory_basic returned <class 'bool'>.
+  Did you mean to use `assert` instead of `return`?
+  See https://docs.pytest.org/en/stable/how-to/assert.html#return-not-none for more information.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED src/agents/test_unified_basic.py::test_configuration_loading - Failed:...
+FAILED src/agents/test_unified_basic.py::test_component_integration - Failed:...
+FAILED src/api/tests/test_performance_scalability.py::TestPerformanceIntegration::test_end_to_end_performance_benchmark
+FAILED src/api/tests/test_task_endpoints.py::TestTaskEndpoints::test_create_task_success
+FAILED src/api/tests/test_task_endpoints.py::TestTaskEndpoints::test_get_task_success
+FAILED src/api/tests/test_task_endpoints.py::TestTaskEndpoints::test_get_task_not_found
+FAILED src/api/tests/test_task_endpoints.py::TestTaskEndpoints::test_update_task_success
+FAILED src/api/tests/test_task_endpoints.py::TestTaskEndpoints::test_delete_task_success
+FAILED src/api/tests/test_task_endpoints.py::TestTaskEndpoints::test_list_tasks_success
+FAILED src/api/tests/test_task_endpoints.py::TestTaskEndpoints::test_list_tasks_with_filters
+FAILED src/api/tests/test_task_endpoints.py::TestTaskEndpoints::test_get_task_hierarchy
+FAILED src/api/tests/test_task_endpoints.py::TestTaskEndpoints::test_bulk_update_tasks
+FAILED src/api/tests/test_task_endpoints.py::TestTaskEndpoints::test_estimate_task_duration
+FAILED src/api/tests/test_task_endpoints.py::TestTaskEndpoints::test_break_down_task
+FAILED src/api/tests/test_task_endpoints.py::TestTaskEndpoints::test_create_task_from_template
+FAILED src/api/tests/test_task_endpoints.py::TestProjectEndpoints::test_create_project_success
+FAILED src/api/tests/test_task_endpoints.py::TestProjectEndpoints::test_get_project_analytics
+FAILED src/api/tests/test_task_endpoints.py::TestProjectEndpoints::test_smart_prioritize_tasks
+FAILED src/api/tests/test_task_endpoints.py::TestMobileEndpoints::test_quick_capture_enhanced
+FAILED src/database/tests/test_enhanced_adapter.py::TestEnhancedDatabaseSingleton::test_database_schema_structure
+FAILED src/database/tests/test_relationships.py::TestCascadeSetNullBehavior::test_delete_assignee_sets_task_assignee_to_null
+FAILED src/mcp/test_mcp_basic.py::test_mcp_filesystem - Failed: async def fun...
+FAILED src/mcp/tests/test_mcp_client.py::TestMCPClient::test_start_servers_success
+FAILED src/mcp/tests/test_mcp_client.py::TestMCPClient::test_cleanup_with_servers
+FAILED src/mcp/tests/test_mcp_client.py::TestMCPServer::test_server_initialize_and_cleanup
+FAILED src/mcp/tests/test_mcp_client.py::TestMCPServer::test_create_pydantic_ai_tools
+FAILED src/mcp/tests/test_mcp_client.py::TestMCPIntegration::test_full_workflow
+FAILED src/mcp/tests/test_mcp_client.py::TestMCPIntegration::test_multiple_server_configuration
+FAILED src/mcp/tests/test_mcp_client.py::TestMCPPerformance::test_startup_time
+FAILED src/mcp/tests/test_mcp_client.py::TestMCPPerformance::test_cleanup_is_fast
+FAILED src/mcp/tests/test_mcp_server.py::TestProjectMCPTools::test_create_project_tool
+FAILED src/repositories/tests/test_enhanced_repositories.py::TestEnhancedProjectRepository::test_create_project_with_owner
+FAILED src/repositories/tests/test_enhanced_repositories.py::TestEnhancedProjectRepository::test_soft_delete_project
+FAILED src/repositories/tests/test_enhanced_repositories.py::TestIntegratedWorkflows::test_complete_productivity_workflow
+FAILED src/repositories/tests/test_task_repository.py::TestTaskRepository::test_get_tasks_by_project
+FAILED src/repositories/tests/test_task_repository.py::TestProjectRepository::test_create_project
+FAILED src/repositories/tests/test_task_repository.py::TestProjectRepository::test_list_projects
+FAILED src/services/tests/test_task_service.py::TestProjectService::test_create_project_success
+FAILED src/tests/test_agents.py::test_conversation_flow - AssertionError: ass...
+ERROR src/api/tests/test_focus_energy_integration.py::TestFocusAPIIntegration::test_start_focus_session_authenticated
+ERROR src/api/tests/test_focus_energy_integration.py::TestFocusAPIIntegration::test_get_session_status
+ERROR src/api/tests/test_focus_energy_integration.py::TestFocusAPIIntegration::test_complete_focus_session
+ERROR src/api/tests/test_focus_energy_integration.py::TestFocusAPIIntegration::test_report_distraction
+ERROR src/api/tests/test_focus_energy_integration.py::TestFocusAPIIntegration::test_get_break_recommendation
+ERROR src/api/tests/test_focus_energy_integration.py::TestFocusAPIIntegration::test_complete_focus_workflow
+ERROR src/api/tests/test_focus_energy_integration.py::TestEnergyAPIIntegration::test_track_energy_level_authenticated
+ERROR src/api/tests/test_focus_energy_integration.py::TestEnergyAPIIntegration::test_optimize_energy
+ERROR src/api/tests/test_focus_energy_integration.py::TestEnergyAPIIntegration::test_circadian_analysis
+ERROR src/api/tests/test_focus_energy_integration.py::TestEnergyAPIIntegration::test_task_energy_matching
+ERROR src/api/tests/test_focus_energy_integration.py::TestEnergyAPIIntegration::test_energy_recovery_plan
+ERROR src/api/tests/test_focus_energy_integration.py::TestEnergyAPIIntegration::test_complete_energy_workflow
+ERROR src/api/tests/test_focus_energy_integration.py::TestFocusEnergyIntegrationWorkflow::test_energy_informed_focus_session
+ERROR src/api/tests/test_focus_energy_integration.py::TestFocusEnergyIntegrationWorkflow::test_coordinated_break_planning
+ERROR src/api/tests/test_performance_scalability.py::TestRedisCaching::test_cache_performance_improvement
+ERROR src/api/tests/test_performance_scalability.py::TestRedisCaching::test_cache_hit_ratio_tracking
+ERROR src/api/tests/test_performance_scalability.py::TestRedisCaching::test_cache_invalidation_strategies
+ERROR src/api/tests/test_performance_scalability.py::TestRedisCaching::test_cache_memory_efficiency
+ERROR src/api/tests/test_performance_scalability.py::TestBackgroundTaskQueue::test_task_queue_throughput
+ERROR src/api/tests/test_performance_scalability.py::TestBackgroundTaskQueue::test_task_priority_queue
+ERROR src/api/tests/test_performance_scalability.py::TestBackgroundTaskQueue::test_task_retry_mechanism
+ERROR src/api/tests/test_performance_scalability.py::TestBackgroundTaskQueue::test_task_queue_monitoring
+ERROR src/api/tests/test_performance_scalability.py::TestDatabaseOptimization::test_query_performance_benchmarks
+ERROR src/api/tests/test_performance_scalability.py::TestDatabaseOptimization::test_connection_pooling_performance
+ERROR src/api/tests/test_performance_scalability.py::TestDatabaseOptimization::test_query_optimization_suggestions
+ERROR src/api/tests/test_performance_scalability.py::TestDatabaseOptimization::test_database_health_monitoring
+ERROR src/api/tests/test_progress_gamification_integration.py::TestProgressAPI::test_calculate_task_xp_basic
+ERROR src/api/tests/test_progress_gamification_integration.py::TestProgressAPI::test_calculate_task_xp_expert_critical
+ERROR src/api/tests/test_progress_gamification_integration.py::TestProgressAPI::test_get_user_streak
+ERROR src/api/tests/test_progress_gamification_integration.py::TestProgressAPI::test_get_level_progression
+ERROR src/api/tests/test_progress_gamification_integration.py::TestProgressAPI::test_get_progress_visualization
+ERROR src/api/tests/test_progress_gamification_integration.py::TestProgressAPI::test_analyze_performance_trends
+ERROR src/api/tests/test_progress_gamification_integration.py::TestGamificationAPI::test_check_achievements
+ERROR src/api/tests/test_progress_gamification_integration.py::TestGamificationAPI::test_get_leaderboard
+ERROR src/api/tests/test_progress_gamification_integration.py::TestGamificationAPI::test_get_leaderboard_weekly
+ERROR src/api/tests/test_progress_gamification_integration.py::TestGamificationAPI::test_get_motivation_recommendations
+ERROR src/api/tests/test_progress_gamification_integration.py::TestGamificationAPI::test_get_rewards
+ERROR src/api/tests/test_progress_gamification_integration.py::TestGamificationAPI::test_get_engagement_analytics
+ERROR src/api/tests/test_progress_gamification_integration.py::TestProgressGamificationIntegration::test_complete_task_workflow
+ERROR src/api/tests/test_progress_gamification_integration.py::TestProgressGamificationIntegration::test_engagement_tracking_workflow
+ERROR src/repositories/tests/test_task_repository.py::TestTaskRepository::test_create_task
+ERROR src/repositories/tests/test_task_repository.py::TestTaskRepository::test_get_task_by_id
+ERROR src/repositories/tests/test_task_repository.py::TestTaskRepository::test_update_task
+ERROR src/repositories/tests/test_task_repository.py::TestTaskRepository::test_delete_task
+ERROR src/repositories/tests/test_task_repository.py::TestTaskRepository::test_list_tasks_basic
+ERROR src/repositories/tests/test_task_repository.py::TestTaskRepository::test_list_tasks_with_filter
+ERROR src/repositories/tests/test_task_repository.py::TestTaskRepository::test_list_tasks_with_pagination
+ERROR src/repositories/tests/test_task_repository.py::TestTaskRepository::test_list_tasks_with_sorting
+ERROR src/repositories/tests/test_task_repository.py::TestTaskRepository::test_search_tasks
+ERROR src/repositories/tests/test_task_repository.py::TestProjectRepository::test_get_project_by_id
+ERROR src/repositories/tests/test_task_repository.py::TestProjectRepository::test_update_project
+ERROR src/repositories/tests/test_task_repository.py::TestProjectRepository::test_delete_project
+ERROR src/repositories/tests/test_task_repository.py::TestTaskDependencyRepository::test_create_dependency
+ERROR src/repositories/tests/test_task_repository.py::TestTaskDependencyRepository::test_get_task_dependencies
+ERROR src/repositories/tests/test_task_repository.py::TestTaskCommentRepository::test_create_comment
+ERROR src/repositories/tests/test_task_repository.py::TestTaskCommentRepository::test_get_task_comments
+39 failed, 342 passed, 7 warnings, 56 errors in 34.53s

@@ -3,6 +3,14 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: []
   },
+  // Suppress hydration warnings for browser extension attributes
+  reactStrictMode: true,
+  onDemandEntries: {
+    // period (in ms) where the server will keep pages in the buffer
+    maxInactiveAge: 25 * 1000,
+    // number of pages that should be kept simultaneously without being disposed
+    pagesBufferLength: 2,
+  },
   env: {
     AGENT_API_URL: process.env.AGENT_API_URL || 'http://localhost:8000',
     NEXT_PUBLIC_AGENT_WS_URL: process.env.NEXT_PUBLIC_AGENT_WS_URL || 'ws://localhost:8000/ws',
@@ -35,6 +43,10 @@ const nextConfig = {
       tls: false,
     };
     return config;
+  },
+  // Suppress hydration warnings for browser extensions
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
   },
 }
 

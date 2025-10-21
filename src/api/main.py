@@ -3,6 +3,7 @@ FastAPI App - Simple API for proxy agents
 """
 
 import json
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,6 +15,8 @@ from src.api.energy import router as energy_router
 from src.api.focus import router as focus_router
 from src.api.gamification import router as gamification_router
 from src.api.progress import router as progress_router
+from src.api.rewards import router as rewards_router
+from src.api.secretary import router as secretary_router
 from src.api.simple_tasks import router as simple_task_router
 from src.api.tasks import router as comprehensive_task_router
 from src.api.websocket import (
@@ -22,11 +25,31 @@ from src.api.websocket import (
 from src.core.models import AgentRequest, AgentResponse
 from src.database.enhanced_adapter import close_enhanced_database, get_enhanced_database
 
-# Create FastAPI app
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager for startup and shutdown events.
+
+    Replaces deprecated @app.on_event decorators.
+    """
+    # Startup
+    get_enhanced_database()  # Initialize the enhanced SQLite database
+    print("🚀 Proxy Agent Platform started with Enhanced SQLite")
+
+    yield
+
+    # Shutdown
+    close_enhanced_database()
+    print("✨ Proxy Agent Platform shutdown")
+
+
+# Create FastAPI app with lifespan handler
 app = FastAPI(
     title="Proxy Agent Platform",
     description="Personal productivity platform with AI proxy agents",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 # Add CORS middleware
@@ -49,22 +72,10 @@ app.include_router(focus_router)  # Focus & Pomodoro endpoints (Epic 2.2)
 app.include_router(energy_router)  # Energy management endpoints (Epic 2.2)
 app.include_router(progress_router)  # Progress tracking endpoints (Epic 2.3)
 app.include_router(gamification_router)  # Gamification endpoints (Epic 2.3)
+app.include_router(rewards_router)  # Dopamine reward system (HABIT.md)
+app.include_router(secretary_router)  # Secretary intelligent organization
 app.include_router(simple_task_router)  # Legacy simple tasks
 app.include_router(basic_task_router)  # Legacy basic tasks
-
-
-@app.on_event("startup")
-async def startup():
-    """Initialize database on startup"""
-    get_enhanced_database()  # This initializes the enhanced SQLite database
-    print("🚀 Proxy Agent Platform started with Enhanced SQLite")
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    """Clean up on shutdown"""
-    close_enhanced_database()
-    print("✨ Proxy Agent Platform shutdown")
 
 
 @app.get("/")

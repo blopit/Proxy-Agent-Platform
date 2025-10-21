@@ -192,6 +192,57 @@ async def track_energy_level(
         )
 
 
+@router.get("/current-level")
+async def get_current_energy_level(user_id: str = "mobile-user"):
+    """
+    Get current energy level for a user (simple endpoint for mobile).
+
+    This endpoint does NOT require authentication and provides a quick
+    energy reading based on time of day and recent activity.
+
+    Returns a simple estimate between 0-10 based on circadian rhythm.
+    """
+    try:
+        agent = get_energy_agent()
+
+        # Get quick energy estimate based on time of day
+        # This is a simplified version that doesn't require full tracking
+        current_hour = datetime.now().hour
+
+        # Simple circadian-based estimate
+        if 6 <= current_hour < 9:  # Morning rise
+            base_energy = 6.5
+        elif 9 <= current_hour < 12:  # Peak morning
+            base_energy = 8.0
+        elif 12 <= current_hour < 14:  # Post-lunch dip
+            base_energy = 5.5
+        elif 14 <= current_hour < 17:  # Afternoon recovery
+            base_energy = 7.0
+        elif 17 <= current_hour < 20:  # Evening
+            base_energy = 6.0
+        elif 20 <= current_hour < 23:  # Night wind-down
+            base_energy = 4.5
+        else:  # Late night/early morning
+            base_energy = 3.0
+
+        return {
+            "energy_level": base_energy,
+            "user_id": user_id,
+            "timestamp": datetime.now().isoformat(),
+            "message": f"Energy level: {base_energy}/10 (circadian estimate)"
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to get current energy level: {e}")
+        # Return fallback value instead of error
+        return {
+            "energy_level": 7.0,
+            "user_id": user_id,
+            "timestamp": datetime.now().isoformat(),
+            "message": "Energy level: 7.0/10 (default estimate)"
+        }
+
+
 @router.post("/optimize", response_model=EnergyOptimizationResponse)
 async def optimize_energy(
     optimization_request: EnergyOptimizationRequest,

@@ -34,36 +34,36 @@ export default function Dashboard() {
       name: 'Task Agent',
       description: 'Manages your tasks and priorities',
       icon: Target,
-      status: 'active',
+      status: 'active' as const,
       lastAction: 'Created 3 tasks from your meeting notes',
-      color: 'blue'
+      color: 'blue' as const
     },
     {
       id: 'focus-agent',
       name: 'Focus Agent',
       description: 'Optimizes your focus and deep work',
       icon: Zap,
-      status: 'active',
+      status: 'active' as const,
       lastAction: 'Suggested 25-min focus session',
-      color: 'purple'
+      color: 'purple' as const
     },
     {
       id: 'energy-agent',
       name: 'Energy Agent',
       description: 'Tracks and optimizes your energy levels',
       icon: Activity,
-      status: 'idle',
+      status: 'idle' as const,
       lastAction: 'Recommended a 10-min break',
-      color: 'green'
+      color: 'green' as const
     },
     {
       id: 'progress-agent',
       name: 'Progress Agent',
       description: 'Monitors goals and celebrates wins',
       icon: TrendingUp,
-      status: 'active',
+      status: 'active' as const,
       lastAction: 'You completed your weekly goal!',
-      color: 'orange'
+      color: 'orange' as const
     }
   ]
 
@@ -90,12 +90,7 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-        >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatsCard
             title="Total XP"
             value={stats.totalXP.toLocaleString()}
@@ -127,24 +122,14 @@ export default function Dashboard() {
         </div>
 
         {/* Agents Grid */}
-        <div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="space-y-4"
-        >
+        <div className="space-y-4">
           <h2 className="text-2xl font-semibold flex items-center gap-2">
             <BarChart3 className="w-6 h-6" />
             Your AI Proxy Agents
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {agents.map((agent, index) => (
-              <div
-                key={agent.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
-              >
+              <div key={agent.id}>
                 <AgentCard {...agent} />
               </div>
             ))}
@@ -152,12 +137,7 @@ export default function Dashboard() {
         </div>
 
         {/* Main Content Grid */}
-        <div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-8"
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Productivity Chart */}
           <div className="lg:col-span-2">
             <ProductivityChart />

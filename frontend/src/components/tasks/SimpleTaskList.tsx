@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import {
   Filter,
-  Sort,
+  ArrowUpDown,
   MoreVertical,
   CheckCircle2,
   Circle,

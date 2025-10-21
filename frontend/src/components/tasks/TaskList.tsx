@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   Filter,
-  Sort,
+  ArrowUpDown,
   MoreVertical,
   CheckCircle2,
   Circle,
@@ -266,9 +267,8 @@ export function TaskList({ projectId, onTaskSelect, onTaskUpdate, className = ''
                   >
                     Low
                   </button>
-                </motion.div>
+                </div>
               )}
-            </AnimatePresence>
           </div>
 
           {/* Sort Menu */}
@@ -277,7 +277,7 @@ export function TaskList({ projectId, onTaskSelect, onTaskUpdate, className = ''
               onClick={() => setShowSortMenu(!showSortMenu)}
               className="flex items-center space-x-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200"
             >
-              <Sort className="w-4 h-4" />
+              <ArrowUpDown className="w-4 h-4" />
               <span>Sort</span>
               <ChevronDown className="w-3 h-3" />
             </button>

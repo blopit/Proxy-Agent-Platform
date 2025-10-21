@@ -1,0 +1,90 @@
+/* Mobile-specific styles for enhanced touch interactions */
+
+/* Prevent zoom on input focus */
+input, textarea, select {
+  font-size: 16px;
+}
+
+/* Enhanced touch targets */
+button, input[type="checkbox"], input[type="radio"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Smooth scrolling for mobile */
+html {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent text selection on buttons */
+button {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Enhanced focus states for accessibility */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Mobile-optimized animations */
+@media (prefers-reduced-motion: no-preference) {
+  .transition-colors {
+    transition-duration: 150ms;
+  }
+}
+
+/* Safe area handling for notched devices */
+@supports (padding: max(0px)) {
+  .mobile-safe-area {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}
+
+/* Improved touch feedback */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* Mobile-specific spacing */
+@media (max-width: 640px) {
+  .mobile-spacing {
+    padding: 0.75rem;
+  }
+  
+  .mobile-text {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+}
+
+/* Prevent horizontal scroll on mobile */
+body {
+  overflow-x: hidden;
+}
+
+/* Enhanced mobile cards */
+@media (max-width: 640px) {
+  .mobile-card {
+    margin-bottom: 1rem;
+    border-radius: 0.75rem;
+  }
+}
+
+/* Quick capture header styles */
+.quick-capture-input {
+  font-size: 16px; /* Prevents zoom on iOS */
+  line-height: 1.5;
+}
+
+.quick-capture-input:focus {
+  outline: none;
+  box-shadow: none;
+}
