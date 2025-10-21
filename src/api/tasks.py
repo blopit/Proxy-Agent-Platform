@@ -171,7 +171,7 @@ class ProjectResponse(BaseModel):
 class BulkUpdateRequest(BaseModel):
     """Request model for bulk updates"""
 
-    task_ids: list[str] = Field(..., min_items=1)
+    task_ids: list[str] = Field(..., min_length=1)
     updates: TaskUpdateRequest
 
 
@@ -190,6 +190,8 @@ class QuickCaptureRequest(BaseModel):
     user_id: str
     location: dict[str, float] | None = None
     voice_input: bool = False
+    auto_mode: bool = True  # AI extrapolation mode
+    ask_for_clarity: bool = False  # Generate clarifying questions
 
 
 class VoiceProcessingRequest(BaseModel):
@@ -509,21 +511,46 @@ async def smart_prioritize_tasks(
 async def mobile_quick_capture(
     request: QuickCaptureRequest, task_service: TaskService = Depends(get_task_service)
 ):
-    """Enhanced quick capture for mobile with 2-second target"""
+    """Enhanced quick capture for mobile with AI analysis"""
+    from src.services.quick_capture_service import QuickCaptureService
+
     start_time = datetime.utcnow()
 
     try:
-        # Process the text to extract task information
-        processed = await process_mobile_input(request.text, request.user_id, request.voice_input)
+        quick_capture = QuickCaptureService()
 
-        # Create task data with smart defaults
+        # Check if user wants clarifying questions
+        if request.ask_for_clarity:
+            # Generate questions instead of creating task
+            questions = await quick_capture.generate_clarifying_questions(
+                request.text, request.user_id
+            )
+
+            processing_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+
+            return {
+                "needs_clarification": True,
+                "questions": questions,
+                "partial_data": {
+                    "original_text": request.text,
+                    "voice_input": request.voice_input,
+                },
+                "processing_time_ms": int(processing_time),
+            }
+
+        # Otherwise, analyze and create task
+        analysis = await quick_capture.analyze_capture(
+            request.text, request.user_id, request.voice_input
+        )
+
+        # Create task data with AI analysis
         task_data = TaskCreationData(
-            title=processed.get("title", request.text[:100]),
-            description=processed.get("description", request.text),
-            project_id=processed.get("project_id", "default-project"),
-            priority=TaskPriority(processed.get("priority", "medium")),
-            due_date=processed.get("due_date"),
-            tags=processed.get("tags", ["mobile", "quick-capture"]),
+            title=analysis.get("title", request.text[:100]),
+            description=analysis.get("description", request.text),
+            project_id="default-project",
+            priority=TaskPriority(analysis.get("priority", "medium")),
+            due_date=analysis.get("due_date"),
+            tags=analysis.get("tags", ["mobile", "quick-capture"]),
         )
 
         task = task_service.create_task(task_data)
@@ -532,6 +559,13 @@ async def mobile_quick_capture(
 
         return {
             "task": TaskResponse.from_task(task),
+            "analysis": {
+                "category": analysis.get("category"),
+                "confidence": analysis.get("confidence"),
+                "should_delegate": analysis.get("should_delegate"),
+                "delegation_type": analysis.get("delegation_type"),
+                "reasoning": analysis.get("reasoning"),
+            },
             "processing_time_ms": int(processing_time),
             "voice_processed": request.voice_input,
             "location_captured": bool(request.location),
@@ -545,59 +579,61 @@ async def mobile_quick_capture(
 @router.get("/mobile/dashboard/{user_id}")
 async def get_mobile_dashboard_data(user_id: str):
     """Get mobile-optimized dashboard data"""
-    # This would integrate with your analytics service
-    # For now, return mock data matching the test
+    # 🚨 WARNING: ALL DATA BELOW IS FAKE MOCK DATA - REPLACE WITH REAL APIS 🚨
     return {
-        "total_tasks": 15,
-        "completed_today": 5,
-        "focus_time_today": 3.5,
-        "current_streak": 12,
-        "xp_earned_today": 120,
-        "active_focus_session": None,
-        "next_due_task": None,
-        "energy_level": "high",
+        "total_tasks": 999999,  # 🚨 FAKE - Use /api/v1/secretary/dashboard
+        "completed_today": 42069,  # 🚨 FAKE - Use /api/v1/progress/...
+        "focus_time_today": 420.69,  # 🚨 FAKE - Use /api/v1/focus/...
+        "current_streak": 1337,  # 🚨 FAKE - Use /api/v1/progress/...
+        "xp_earned_today": 80085,  # 🚨 FAKE - Use /api/v1/progress/...
+        "active_focus_session": "MOCK_DATA_NOT_REAL",
+        "next_due_task": "OBVIOUSLY_FAKE_REPLACE_ME",
+        "energy_level": "GIBBERISH_MOCK_DATA",
+        "_warning": "🚨 THIS IS ALL FAKE MOCK DATA - INTEGRATE REAL APIS 🚨"
     }
 
 
 @router.get("/mobile/tasks/{user_id}")
 async def get_mobile_optimized_tasks(user_id: str, limit: int = Query(20, ge=1, le=50)):
     """Get mobile-optimized task list"""
-    # This would filter and optimize tasks for mobile display
+    # 🚨 WARNING: FAKE MOCK DATA - Use /api/v1/tasks instead 🚨
     return {
         "tasks": [
             {
-                "task_id": "task-1",
-                "title": "Short Task 1",
-                "priority": "high",
-                "due_soon": True,
-                "estimated_minutes": 30,
+                "task_id": "FAKE-MOCK-ID-12345",
+                "title": "🚨 MOCK DATA - Buy unicorn food",
+                "priority": "OBVIOUSLY_FAKE",
+                "due_soon": "THIS_IS_NOT_REAL",
+                "estimated_minutes": 696969,
             },
             {
-                "task_id": "task-2",
-                "title": "Short Task 2",
-                "priority": "medium",
-                "due_soon": False,
-                "estimated_minutes": 15,
+                "task_id": "FAKE-MOCK-ID-67890",
+                "title": "🚨 MOCK DATA - Ride flying carpet to work",
+                "priority": "GIBBERISH_PRIORITY",
+                "due_soon": "REPLACE_WITH_REAL_DATA",
+                "estimated_minutes": 42069,
             },
         ],
-        "has_more": False,
+        "has_more": "FAKE_BOOLEAN",
         "user_id": user_id,
+        "_warning": "🚨 ALL FAKE - USE /api/v1/tasks FOR REAL DATA 🚨"
     }
 
 
 @router.post("/mobile/voice-process")
 async def process_voice_input(request: VoiceProcessingRequest):
     """Process voice input and extract task information"""
-    # This would integrate with speech processing and NLP
+    # 🚨 WARNING: FAKE VOICE PROCESSING - No real speech-to-text integrated 🚨
     return {
-        "intent": "create_task",
+        "intent": "FAKE_MOCK_INTENT",
         "extracted_data": {
-            "title": "Call dentist",
-            "due_date": "2024-01-15T09:00:00Z",
-            "priority": "medium",
+            "title": "🚨 GIBBERISH - Teach penguins to code Python",
+            "due_date": "1999-12-31T23:59:59Z",  # Y2K party!
+            "priority": "OBVIOUSLY_FAKE_PRIORITY",
         },
-        "confidence": 0.95,
+        "confidence": 0.00001,  # Almost no confidence because it's FAKE!
         "original_text": request.audio_text,
+        "_warning": "🚨 MOCK VOICE DATA - INTEGRATE REAL SPEECH API 🚨"
     }
 
 
