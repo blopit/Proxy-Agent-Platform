@@ -38,6 +38,15 @@ coverage.xml
 *.py,cover
 .hypothesis/
 
+# Test outputs
+test_results*.txt
+test_output*.txt
+
+# Temporary scripts
+fix_*.py
+temp_*.py
+scratch_*.py
+
 # Environments
 .env
 .venv
