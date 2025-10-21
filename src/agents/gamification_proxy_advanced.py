@@ -11,6 +11,7 @@ This agent provides sophisticated gamification features including:
 """
 
 import logging
+import os
 import random
 from dataclasses import dataclass
 from datetime import datetime
@@ -21,6 +22,15 @@ from src.core.models import AgentRequest
 from src.repositories.enhanced_repositories import AchievementRepository, UserAchievementRepository
 
 logger = logging.getLogger(__name__)
+
+# AI Integration (with fallbacks)
+try:
+    import openai
+
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    logging.warning("OpenAI not available for Gamification agent, using heuristics")
 
 
 @dataclass
@@ -70,6 +80,23 @@ class AdvancedGamificationAgent(BaseProxyAgent):
         # Repository dependencies
         self.achievement_repo = achievement_repo or AchievementRepository()
         self.user_achievement_repo = user_achievement_repo or UserAchievementRepository()
+
+        # AI client configuration
+        self.openai_client = None
+        self.ai_provider = os.getenv("LLM_PROVIDER", "openai")
+        self.ai_model = os.getenv("LLM_MODEL", "gpt-4")
+
+        # Initialize AI client if available and configured
+        if OPENAI_AVAILABLE and self.ai_provider == "openai":
+            try:
+                api_key = os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY")
+                if api_key and not api_key.startswith("sk-your-"):
+                    self.openai_client = openai.AsyncOpenAI(api_key=api_key)
+                    logging.info("OpenAI client initialized for Gamification agent")
+                else:
+                    logging.warning("OpenAI API key not configured for Gamification agent")
+            except Exception as e:
+                logging.warning(f"OpenAI client initialization failed: {e}")
 
         # Gamification configuration
         self.achievement_cache = {}
@@ -237,6 +264,12 @@ class AdvancedGamificationAgent(BaseProxyAgent):
     async def check_achievement_triggers(self, user_activity: dict[str, Any]) -> dict[str, Any]:
         """Check for triggered achievements and progress updates"""
         triggered_achievements = await self._detect_achievement_triggers(user_activity)
+
+        # Generate AI-powered celebration messages for triggered achievements
+        if self.openai_client and triggered_achievements.get("triggered_achievements"):
+            for achievement in triggered_achievements["triggered_achievements"]:
+                celebration_message = await self._generate_celebration_message(achievement, user_activity)
+                achievement["celebration_message"] = celebration_message
 
         return {
             "triggered_achievements": triggered_achievements.get("triggered_achievements", []),
@@ -407,12 +440,64 @@ class AdvancedGamificationAgent(BaseProxyAgent):
         }
 
     async def _generate_motivation_strategy(self, user_profile: dict[str, Any]) -> dict[str, Any]:
-        """Generate detailed motivation strategy based on user profile"""
+        """Generate personalized motivation strategy with AI insights"""
         engagement_level = user_profile.get("engagement_level", "moderate")
         completion_rate = user_profile.get("completion_rate_last_week", 0.8)
         recent_activity_drop = user_profile.get("recent_activity_drop", False)
 
-        # Determine motivation type
+        # Try AI-powered motivation strategy first
+        if self.openai_client:
+            try:
+                preferred_motivators = user_profile.get("preferred_motivators", [])
+                motivators_str = ", ".join(preferred_motivators) if preferred_motivators else "none specified"
+
+                prompt = f"""Generate a personalized motivation and re-engagement strategy.
+
+User Profile:
+- Engagement level: {engagement_level}
+- Completion rate (last week): {completion_rate:.1%}
+- Recent activity drop: {recent_activity_drop}
+- Preferred motivators: {motivators_str}
+
+Analyze the user's situation and provide:
+- motivation_type: "re_engagement", "maintenance", or "acceleration"
+- primary_strategy: main approach (e.g., "achievable_goals", "confidence_building", "advanced_features")
+- recommendations: array of 3-4 specific, actionable recommendations
+- gamification_adjustments: object with boolean flags (reduce_daily_target, increase_achievement_frequency, enable_social_encouragement)
+- expected_improvement: decimal 0.0-1.0 (realistic improvement estimate)
+
+Return JSON only.
+Example: {{"motivation_type": "re_engagement", "primary_strategy": "achievable_goals", "recommendations": ["Set smaller daily goals", "Join peer challenge", "Enable celebrations"], "gamification_adjustments": {{"reduce_daily_target": true, "increase_achievement_frequency": true, "enable_social_encouragement": true}}, "expected_improvement": 0.25}}"""
+
+                response = await self.openai_client.chat.completions.create(
+                    model=self.ai_model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a gamification and motivation expert AI. Return ONLY valid JSON.",
+                        },
+                        {"role": "user", "content": prompt},
+                    ],
+                    temperature=0.5,
+                    max_tokens=400,
+                )
+
+                import json
+
+                ai_strategy = json.loads(response.choices[0].message.content.strip())
+                if isinstance(ai_strategy, dict) and "motivation_type" in ai_strategy:
+                    return {
+                        "motivation_type": ai_strategy["motivation_type"],
+                        "primary_strategy": ai_strategy.get("primary_strategy", "balanced_approach"),
+                        "recommendations": ai_strategy.get("recommendations", []),
+                        "gamification_adjustments": ai_strategy.get("gamification_adjustments", {}),
+                        "expected_improvement": float(ai_strategy.get("expected_improvement", 0.15)),
+                        "timeline": "1-2 weeks",
+                    }
+            except Exception as ai_error:
+                logging.debug(f"AI motivation strategy generation failed, using fallback: {ai_error}")
+
+        # Fallback to heuristic strategy
         if recent_activity_drop or completion_rate < 0.7:
             strategy_type = "re_engagement"
         elif completion_rate > 0.9 and engagement_level == "high":
@@ -609,3 +694,58 @@ class AdvancedGamificationAgent(BaseProxyAgent):
             ),
             "status": "fully_operational",
         }
+
+    async def _generate_celebration_message(
+        self, achievement: dict[str, Any], user_context: dict[str, Any]
+    ) -> str:
+        """Generate AI-powered personalized celebration message"""
+        if not self.openai_client:
+            return f"Congratulations! You've unlocked {achievement['name']}!"
+
+        try:
+            prompt = f"""Generate an enthusiastic, personalized celebration message for an achievement.
+
+Achievement Unlocked:
+- Name: {achievement['name']}
+- Description: {achievement['description']}
+- XP Reward: {achievement['xp_reward']}
+- Badge Tier: {achievement['badge_tier']}
+- Category: {achievement.get('category', 'general')}
+
+User Context:
+- Total XP: {user_context.get('total_xp', 'unknown')}
+- Tasks completed today: {user_context.get('tasks_completed_today', 0)}
+- Current streak: {user_context.get('consecutive_days', 0)} days
+
+Requirements:
+- 1-2 sentences maximum
+- Enthusiastic and encouraging tone
+- Reference the specific achievement
+- Include relevant emoji(s)
+- Personalize based on tier (gold/platinum = more exciting)
+
+Return ONLY the celebration message text (no JSON, no quotes).
+
+Example: "🎉 Incredible! You've earned Productivity Master by crushing 10 tasks in a single day! Your dedication is inspiring! +100 XP 💪" """
+
+            response = await self.openai_client.chat.completions.create(
+                model=self.ai_model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are an enthusiastic gamification coach. Write short, exciting celebration messages.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+                temperature=0.7,
+                max_tokens=100,
+            )
+
+            celebration_message = response.choices[0].message.content.strip()
+            # Remove any quotes that might have been added
+            celebration_message = celebration_message.strip('"\'')
+            return celebration_message
+
+        except Exception as ai_error:
+            logging.debug(f"AI celebration message generation failed, using fallback: {ai_error}")
+            return f"🎉 Congratulations! You've unlocked {achievement['name']}! +{achievement['xp_reward']} XP!"
