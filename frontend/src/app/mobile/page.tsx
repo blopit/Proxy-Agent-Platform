@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import './mobile.css';
-import MobileNavigation from '../../components/MobileNavigation';
 import RewardCelebration, { QuickCelebration, MysteryBoxCelebration } from '../../components/mobile/RewardCelebration';
+import SwipeableTaskCard from '../../components/mobile/SwipeableTaskCard';
+import BiologicalTabs from '../../components/mobile/BiologicalTabs';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -21,77 +22,21 @@ interface Task {
   tone?: string;
   done?: boolean;
   created_at?: string;
+  estimated_hours?: number;
+  tags?: string[];
+  is_digital?: boolean;
 }
 
-const Gauge = ({ value = 0, label = "Energy" }) => {
-  const radius = 60;
-  const stroke = 12;
-  // Calculate half circle (semi-circle) length
-  const circumference = Math.PI * radius;
-  const percent = Math.max(0, Math.min(100, value)) / 100;
-  const dashLength = circumference * percent;
-  const dashOffset = circumference * (1 - percent);
-
-  return (
-    <div className="flex flex-col items-center justify-center">
-      <svg width="160" height="100" viewBox="0 0 160 100">
-        <g transform="translate(80,90)">
-          {/* Background gray semi-circle */}
-          <path
-            d={`M ${-radius} 0 A ${radius} ${radius} 0 0 1 ${radius} 0`}
-            fill="none"
-            stroke="#e5e7eb"
-            strokeWidth={stroke}
-            strokeLinecap="round"
-          />
-          {/* Foreground colored semi-circle (percentage fill) */}
-          <path
-            d={`M ${-radius} 0 A ${radius} ${radius} 0 0 1 ${radius} 0`}
-            fill="none"
-            stroke={value >= 70 ? "#10b981" : value >= 40 ? "#f59e0b" : "#ef4444"}
-            strokeWidth={stroke}
-            strokeLinecap="round"
-            strokeDasharray={`${dashLength} ${circumference}`}
-            strokeDashoffset={0}
-          />
-        </g>
-        <text x="80" y="73" textAnchor="middle" className="fill-gray-900 font-semibold text-2xl">{value}%</text>
-        <text x="80" y="90" textAnchor="middle" className="fill-gray-600 text-xs">Est. {label}</text>
-      </svg>
-    </div>
-  );
-};
-
-interface ChipProps {
-  children: React.ReactNode;
-}
-
-interface CardProps {
-  title: string;
-  right?: React.ReactNode;
-  children: React.ReactNode;
-}
+// ADHD Task Management System with Biological Circuits
 
 interface PillProps {
   text: string;
   tone?: "neutral" | "good" | "warn" | "bad";
 }
 
-const Chip = ({ children }: ChipProps) => (
-  <span className="px-2 py-0.5 rounded-full text-xs border border-gray-300 bg-white/70 mr-1 mb-1 inline-flex items-center gap-1">
-    {children}
-  </span>
-);
-
-const Card = ({ title, right, children }: CardProps) => (
-  <div className="bg-[#073642] rounded-xl shadow-sm border border-[#586e75] p-3 sm:p-4 mobile-card">
-    <div className="flex items-center justify-between mb-3">
-      <h3 className="font-semibold text-[#93a1a1] text-sm sm:text-base">{title}</h3>
-      {right}
-    </div>
-    {children}
-  </div>
-);
+interface ChipProps {
+  children: React.ReactNode;
+}
 
 const Pill = ({ text, tone = "neutral" }: PillProps) => {
   const tones = {
@@ -103,6 +48,12 @@ const Pill = ({ text, tone = "neutral" }: PillProps) => {
   return <span className={`px-2 py-1 rounded-full text-xs ${tones[tone]}`}>{text}</span>;
 };
 
+const Chip = ({ children }: ChipProps) => (
+  <span className="px-2 py-0.5 rounded-full text-xs border border-gray-300 bg-gray-100 text-gray-700 mr-1 mb-1 inline-flex items-center gap-1">
+    {children}
+  </span>
+);
+
 interface TaskRowProps {
   t: Task;
   onToggle: () => void;
@@ -113,30 +64,30 @@ interface TaskRowProps {
 const TaskRow = ({ t, onToggle, onSlice, onDelegate }: TaskRowProps) => {
   const isDone = t.done ?? (t.status === 'completed');
   return (
-    <div className="py-3 border-b last:border-b-0">
+    <div className="py-3 border-b border-[#586e75] last:border-b-0">
       <label className="flex items-start gap-3 cursor-pointer">
         <input
           type="checkbox"
           checked={isDone}
           onChange={onToggle}
-          className="mt-1 h-5 w-5 rounded border-gray-300 focus:ring-2 focus:ring-indigo-500"
+          className="mt-1 h-5 w-5 rounded border-[#586e75] focus:ring-2 focus:ring-[#268bd2] bg-[#073642]"
         />
-        <div className={`flex-1 ${isDone ? "line-through text-gray-400" : "text-gray-800"}`}>
+        <div className={`flex-1 ${isDone ? "line-through text-[#586e75]" : "text-[#93a1a1]"}`}>
           <div className="text-sm font-medium leading-tight">{t.title}</div>
-          {(t.desc || t.description) && <div className="text-xs text-gray-500 mt-1">{t.desc || t.description}</div>}
+          {(t.desc || t.description) && <div className="text-xs text-[#586e75] mt-1">{t.desc || t.description}</div>}
         </div>
         <Pill text={t.context || t.priority || "medium"} tone={(t.tone as "neutral" | "good" | "warn" | "bad") || "neutral"} />
       </label>
       <div className="ml-8 mt-3 flex flex-wrap gap-2">
-        <button 
-          onClick={onSlice} 
-          className="px-3 py-2 rounded-lg border text-xs bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation"
+        <button
+          onClick={onSlice}
+          className="px-3 py-2 rounded-lg border border-[#586e75] text-xs bg-[#073642] text-[#93a1a1] hover:bg-[#002b36] active:bg-[#002b36] transition-colors touch-manipulation"
         >
           Slice → 2–5m
         </button>
-        <button 
-          onClick={onDelegate} 
-          className="px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs hover:bg-indigo-700 active:bg-indigo-800 transition-colors touch-manipulation"
+        <button
+          onClick={onDelegate}
+          className="px-3 py-2 rounded-lg bg-[#268bd2] text-[#fdf6e3] text-xs hover:bg-[#2aa198] active:bg-[#859900] transition-colors touch-manipulation"
         >
           Delegate → Agent
         </button>
@@ -177,16 +128,16 @@ const Pomodoro = ({ onStart }: PomodoroProps) => {
 
   return (
     <div className="flex items-center gap-2 sm:gap-3">
-      <div className="text-2xl sm:text-3xl font-semibold tabular-nums">{mm}:{ss}</div>
-      <button 
-        onClick={handleStart} 
-        className="px-3 py-2 rounded-lg bg-gray-900 text-white text-sm hover:bg-gray-800 active:bg-gray-700 transition-colors touch-manipulation"
+      <div className="text-2xl sm:text-3xl font-semibold tabular-nums text-[#93a1a1]">{mm}:{ss}</div>
+      <button
+        onClick={handleStart}
+        className="px-3 py-2 rounded-lg bg-[#268bd2] text-[#fdf6e3] text-sm hover:bg-[#2aa198] active:bg-[#859900] transition-colors touch-manipulation"
       >
         {running ? "Pause" : "Start"}
       </button>
-      <button 
-        onClick={() => { setSecs(25 * 60); setRunning(false); }} 
-        className="px-3 py-2 rounded-lg border text-sm bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation"
+      <button
+        onClick={() => { setSecs(25 * 60); setRunning(false); }}
+        className="px-3 py-2 rounded-lg border border-[#586e75] text-sm bg-[#073642] text-[#93a1a1] hover:bg-[#002b36] active:bg-[#002b36] transition-colors touch-manipulation"
       >
         Reset
       </button>
@@ -201,10 +152,10 @@ interface AgentStatusProps {
 }
 
 const AgentStatus = ({ name, status, tags = [] }: AgentStatusProps) => (
-  <div className="bg-gray-50 rounded-xl p-3 border border-gray-200 flex items-center justify-between">
+  <div className="bg-[#002b36] rounded-xl p-3 border border-[#586e75] flex items-center justify-between">
     <div>
-      <div className="font-medium text-gray-900">{name}</div>
-      <div className="text-xs text-gray-500">{status}</div>
+      <div className="font-medium text-[#93a1a1]">{name}</div>
+      <div className="text-xs text-[#586e75]">{status}</div>
     </div>
     <div className="flex flex-wrap gap-1">
       {tags.map((t, i) => (
@@ -222,11 +173,11 @@ interface TimelineItemProps {
 
 const TimelineItem = ({ time, title, meta }: TimelineItemProps) => (
   <div className="flex gap-3 items-start">
-    <div className="w-16 text-xs text-gray-500 pt-1">{time}</div>
+    <div className="w-16 text-xs text-[#586e75] pt-1">{time}</div>
     <div className="relative pl-4">
-      <div className="absolute left-0 top-2 w-2 h-2 bg-gray-900 rounded-full" />
-      <div className="font-medium text-gray-900 text-sm">{title}</div>
-      <div className="text-xs text-gray-500">{meta}</div>
+      <div className="absolute left-0 top-2 w-2 h-2 bg-[#268bd2] rounded-full" />
+      <div className="font-medium text-[#93a1a1] text-sm">{title}</div>
+      <div className="text-xs text-[#586e75]">{meta}</div>
     </div>
   </div>
 );
@@ -243,13 +194,13 @@ interface AnalysisPreviewProps {
 
 const AnalysisPreview = ({ analysis, onClose }: AnalysisPreviewProps) => {
   const confidencePercent = Math.round((analysis.confidence || 0) * 100);
-  const confidenceColor = confidencePercent >= 80 ? 'text-green-600' : confidencePercent >= 50 ? 'text-amber-600' : 'text-gray-600';
+  const confidenceColor = confidencePercent >= 80 ? 'text-[#859900]' : confidencePercent >= 50 ? 'text-[#b58900]' : 'text-[#586e75]';
 
   return (
-    <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-200 mb-3">
+    <div className="bg-gradient-to-r from-[#073642] to-[#002b36] rounded-xl p-4 border border-[#268bd2] mb-3">
       <div className="flex items-start justify-between mb-2">
-        <h4 className="font-semibold text-gray-900 text-sm">AI Analysis</h4>
-        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+        <h4 className="font-semibold text-[#93a1a1] text-sm">AI Analysis</h4>
+        <button onClick={onClose} className="text-[#586e75] hover:text-[#93a1a1]">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -259,26 +210,26 @@ const AnalysisPreview = ({ analysis, onClose }: AnalysisPreviewProps) => {
       <div className="space-y-2 text-sm">
         {analysis.category && (
           <div className="flex items-center gap-2">
-            <span className="text-gray-600">Category:</span>
+            <span className="text-[#586e75]">Category:</span>
             <Pill text={analysis.category} tone="neutral" />
           </div>
         )}
 
         {analysis.confidence !== undefined && (
           <div className="flex items-center gap-2">
-            <span className="text-gray-600">Confidence:</span>
+            <span className="text-[#586e75]">Confidence:</span>
             <span className={`font-semibold ${confidenceColor}`}>{confidencePercent}%</span>
           </div>
         )}
 
         {analysis.should_delegate && (
           <div className="flex items-center gap-2">
-            <span className="text-amber-600 font-medium">⚡ Delegation suggested</span>
+            <span className="text-[#b58900] font-medium">⚡ Delegation suggested</span>
           </div>
         )}
 
         {analysis.reasoning && (
-          <div className="text-gray-700 text-xs mt-2 p-2 bg-white/60 rounded">
+          <div className="text-[#93a1a1] text-xs mt-2 p-2 bg-[#002b36]/60 rounded border border-[#586e75]">
             {analysis.reasoning}
           </div>
         )}
@@ -305,10 +256,10 @@ const ClarityForm = ({ questions, onSubmit, onCancel }: ClarityFormProps) => {
   };
 
   return (
-    <div className="bg-blue-50 rounded-xl p-4 border border-blue-200 mb-3">
+    <div className="bg-[#073642] rounded-xl p-4 border border-[#268bd2] mb-3">
       <div className="flex items-start justify-between mb-3">
-        <h4 className="font-semibold text-gray-900">A few quick questions...</h4>
-        <button onClick={onCancel} className="text-gray-500 hover:text-gray-700">
+        <h4 className="font-semibold text-[#93a1a1]">A few quick questions...</h4>
+        <button onClick={onCancel} className="text-[#586e75] hover:text-[#93a1a1]">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -317,8 +268,8 @@ const ClarityForm = ({ questions, onSubmit, onCancel }: ClarityFormProps) => {
 
       <div className="space-y-3">
         {questions.map((q, idx) => (
-          <div key={idx} className="bg-white rounded-lg p-3">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          <div key={idx} className="bg-[#002b36] rounded-lg p-3 border border-[#586e75]">
+            <label className="block text-sm font-medium text-[#93a1a1] mb-2">
               {q.question}
             </label>
 
@@ -327,7 +278,7 @@ const ClarityForm = ({ questions, onSubmit, onCancel }: ClarityFormProps) => {
                 <button
                   onClick={() => setAnswers({ ...answers, [idx]: true })}
                   className={`flex-1 px-3 py-2 rounded text-sm ${
-                    answers[idx] === true ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700'
+                    answers[idx] === true ? 'bg-[#859900] text-[#fdf6e3]' : 'bg-[#073642] text-[#93a1a1] border border-[#586e75]'
                   }`}
                 >
                   Yes
@@ -335,7 +286,7 @@ const ClarityForm = ({ questions, onSubmit, onCancel }: ClarityFormProps) => {
                 <button
                   onClick={() => setAnswers({ ...answers, [idx]: false })}
                   className={`flex-1 px-3 py-2 rounded text-sm ${
-                    answers[idx] === false ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-700'
+                    answers[idx] === false ? 'bg-[#dc322f] text-[#fdf6e3]' : 'bg-[#073642] text-[#93a1a1] border border-[#586e75]'
                   }`}
                 >
                   No
@@ -347,7 +298,7 @@ const ClarityForm = ({ questions, onSubmit, onCancel }: ClarityFormProps) => {
               <select
                 value={answers[idx] || ''}
                 onChange={(e) => setAnswers({ ...answers, [idx]: e.target.value })}
-                className="w-full px-3 py-2 rounded border border-gray-300 text-sm"
+                className="w-full px-3 py-2 rounded border border-[#586e75] text-sm bg-[#002b36] text-[#93a1a1]"
               >
                 <option value="">Select...</option>
                 {q.options.map((opt, optIdx) => (
@@ -361,7 +312,7 @@ const ClarityForm = ({ questions, onSubmit, onCancel }: ClarityFormProps) => {
                 type="date"
                 value={answers[idx] || ''}
                 onChange={(e) => setAnswers({ ...answers, [idx]: e.target.value })}
-                className="w-full px-3 py-2 rounded border border-gray-300 text-sm"
+                className="w-full px-3 py-2 rounded border border-[#586e75] text-sm bg-[#002b36] text-[#93a1a1]"
               />
             )}
 
@@ -371,7 +322,7 @@ const ClarityForm = ({ questions, onSubmit, onCancel }: ClarityFormProps) => {
                 value={answers[idx] || ''}
                 onChange={(e) => setAnswers({ ...answers, [idx]: e.target.value })}
                 placeholder="Type your answer..."
-                className="w-full px-3 py-2 rounded border border-gray-300 text-sm"
+                className="w-full px-3 py-2 rounded border border-[#586e75] text-sm bg-[#002b36] text-[#93a1a1] placeholder-[#586e75]"
               />
             )}
           </div>
@@ -381,13 +332,13 @@ const ClarityForm = ({ questions, onSubmit, onCancel }: ClarityFormProps) => {
       <div className="flex gap-2 mt-4">
         <button
           onClick={handleSubmit}
-          className="flex-1 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700"
+          className="flex-1 px-4 py-2 rounded-lg bg-[#268bd2] text-[#fdf6e3] text-sm hover:bg-[#2aa198]"
         >
           Create Task
         </button>
         <button
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg border text-sm bg-white hover:bg-gray-50"
+          className="px-4 py-2 rounded-lg border border-[#586e75] text-sm bg-[#073642] text-[#93a1a1] hover:bg-[#002b36]"
         >
           Cancel
         </button>
@@ -419,14 +370,14 @@ const QuickCapture = ({ onAdd, isLoading }: QuickCaptureProps) => {
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && e.metaKey && handleAdd()}
         placeholder="Quick capture (⌘⏎ to add)"
-        className="w-full rounded-xl border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+        className="w-full rounded-xl border border-[#586e75] px-3 py-3 text-sm bg-[#002b36] text-[#93a1a1] placeholder-[#586e75] focus:ring-2 focus:ring-[#268bd2] focus:border-[#268bd2]"
         disabled={isLoading}
       />
       <textarea
         value={desc}
         onChange={(e) => setDesc(e.target.value)}
         placeholder="Optional description"
-        className="w-full rounded-xl border border-gray-300 px-3 py-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+        className="w-full rounded-xl border border-[#586e75] px-3 py-3 text-sm bg-[#002b36] text-[#93a1a1] placeholder-[#586e75] focus:ring-2 focus:ring-[#268bd2] focus:border-[#268bd2] resize-none"
         rows={2}
         disabled={isLoading}
       />
@@ -434,13 +385,13 @@ const QuickCapture = ({ onAdd, isLoading }: QuickCaptureProps) => {
         <button
           onClick={handleAdd}
           disabled={isLoading}
-          className="flex-1 px-4 py-3 rounded-lg bg-gray-900 text-white text-sm disabled:opacity-50 hover:bg-gray-800 active:bg-gray-700 transition-colors touch-manipulation"
+          className="flex-1 px-4 py-3 rounded-lg bg-[#268bd2] text-[#fdf6e3] text-sm disabled:opacity-50 hover:bg-[#2aa198] active:bg-[#859900] transition-colors touch-manipulation"
         >
           {isLoading ? 'Adding...' : 'Add Task'}
         </button>
-        <button 
-          onClick={() => { setTitle(""); setDesc(""); }} 
-          className="px-4 py-3 rounded-lg border text-sm bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation"
+        <button
+          onClick={() => { setTitle(""); setDesc(""); }}
+          className="px-4 py-3 rounded-lg border border-[#586e75] text-sm bg-[#073642] text-[#93a1a1] hover:bg-[#002b36] active:bg-[#002b36] transition-colors touch-manipulation"
         >
           Clear
         </button>
@@ -449,43 +400,51 @@ const QuickCapture = ({ onAdd, isLoading }: QuickCaptureProps) => {
   );
 };
 
-export default function MissionControl() {
-  const [adhdMode, setAdhdMode] = useState(true);
+export default function ADHDTaskManager() {
+  // Core state
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [xp, setXp] = useState(0);
-  const [level, setLevel] = useState(0);
-  const [energy, setEnergy] = useState(0);
+  const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
+  const [biologicalMode, setBiologicalMode] = useState('scout');
+  const [energy, setEnergy] = useState(72);
+  const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening' | 'night'>('morning');
+
+  // UI state
   const [isLoading, setIsLoading] = useState(false);
-  const [microStep, setMicroStep] = useState("");
-  const [bodyDouble, setBodyDouble] = useState(false);
-  const [currentSection, setCurrentSection] = useState('tasks');
+  const [showTaskDetails, setShowTaskDetails] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  // Gamification state
+  const [xp, setXp] = useState(0);
+  const [level, setLevel] = useState(1);
+  const [streakDays, setStreakDays] = useState(0);
+
+  // Celebration state
+  const [celebration, setCelebration] = useState<any>(null);
+  const [quickCelebrationMsg, setQuickCelebrationMsg] = useState<string | null>(null);
+  const [mysteryBox, setMysteryBox] = useState<any>(null);
+
+  // Additional state for ADHD features
+  const [sessionMultiplier, setSessionMultiplier] = useState(0);
+  const [timelineEvents, setTimelineEvents] = useState<any[]>([]);
+  const [delegations, setDelegations] = useState<any[]>([]);
+
+  // Legacy state for compatibility (will be removed)
   const [isScrolled, setIsScrolled] = useState(false);
-  const [quickCaptureText, setQuickCaptureText] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [autoMode, setAutoMode] = useState(true);
   const [askForClarity, setAskForClarity] = useState(false);
+  const [quickCaptureText, setQuickCaptureText] = useState("");
+  const [microStep, setMicroStep] = useState("");
+  const [bodyDouble, setBodyDouble] = useState(false);
+  const [currentSection, setCurrentSection] = useState('tasks');
+  const [adhdMode, setAdhdMode] = useState(true);
   const expandedOptionsRef = useRef<HTMLDivElement>(null);
-  const [delegations, setDelegations] = useState<any[]>([]);
 
-  // QuickCapture intelligence state
+  // Task analysis state
   const [showAnalysisPreview, setShowAnalysisPreview] = useState(false);
   const [taskAnalysis, setTaskAnalysis] = useState<any>(null);
   const [showClarityForm, setShowClarityForm] = useState(false);
   const [clarityQuestions, setClarityQuestions] = useState<any[]>([]);
-
-  // Celebration state (HABIT.md dopamine engineering)
-  const [celebration, setCelebration] = useState<{
-    show: boolean;
-    tier: string;
-    xp: number;
-    multiplier: number;
-    bonusReason: string;
-  } | null>(null);
-  const [quickCelebrationMsg, setQuickCelebrationMsg] = useState<string | null>(null);
-  const [mysteryBox, setMysteryBox] = useState<any>(null);
-  const [streakDays, setStreakDays] = useState(0);
-  const [sessionMultiplier, setSessionMultiplier] = useState(0);
-  const [timelineEvents, setTimelineEvents] = useState<any[]>([]);
 
   useEffect(() => {
     fetchTasks();
@@ -989,21 +948,118 @@ export default function MissionControl() {
     setIsLoading(false);
   };
 
+  // Time of day detection for biological circuits
+  useEffect(() => {
+    const updateTimeOfDay = () => {
+      const hour = new Date().getHours();
+      if (hour >= 6 && hour < 12) {
+        setTimeOfDay('morning');
+      } else if (hour >= 12 && hour < 17) {
+        setTimeOfDay('afternoon');
+      } else if (hour >= 17 && hour < 22) {
+        setTimeOfDay('evening');
+      } else {
+        setTimeOfDay('night');
+      }
+    };
+
+    updateTimeOfDay();
+    const interval = setInterval(updateTimeOfDay, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
+
+  // ADHD-specific functions
+  const handleSwipeLeft = async (task: Task) => {
+    // Dismiss task
+    try {
+      const taskId = task.task_id || task.id;
+      await fetch(`${API_URL}/api/v1/tasks/${taskId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'dismissed' })
+      });
+
+      // Move to next task
+      setCurrentTaskIndex(prev => Math.min(prev + 1, tasks.length - 1));
+      setQuickCelebrationMsg("Task dismissed");
+    } catch (err) {
+      console.error('Dismiss error:', err);
+    }
+  };
+
+  const handleSwipeRight = async (task: Task) => {
+    // Do Now or Delegate based on task type
+    const isDigital = task.is_digital ||
+      task.tags?.some(tag => ['digital', 'online', 'email', 'research', 'coding'].includes(tag.toLowerCase())) ||
+      task.title.toLowerCase().includes('email') ||
+      task.title.toLowerCase().includes('research') ||
+      task.title.toLowerCase().includes('code');
+
+    if (isDigital) {
+      // Delegate to agents workflow system
+      try {
+        const response = await fetch(`${API_URL}/api/v1/secretary/delegate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            task_id: task.task_id || task.id,
+            user_id: 'mobile-user',
+            delegation_type: 'agent_workflow'
+          })
+        });
+
+        if (response.ok) {
+          setQuickCelebrationMsg("🤖 Delegated to agents!");
+          setCurrentTaskIndex(prev => Math.min(prev + 1, tasks.length - 1));
+        }
+      } catch (err) {
+        console.error('Delegation error:', err);
+      }
+    } else {
+      // Mark as "Do Now" and start focus session
+      try {
+        const taskId = task.task_id || task.id;
+        await fetch(`${API_URL}/api/v1/tasks/${taskId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'in_progress' })
+        });
+
+        setQuickCelebrationMsg("⚡ Starting focus session!");
+        setCurrentTaskIndex(prev => Math.min(prev + 1, tasks.length - 1));
+
+        // Start focus session
+        startFocusSession(25);
+      } catch (err) {
+        console.error('Do now error:', err);
+      }
+    }
+  };
+
+  const handleTaskTap = (task: Task) => {
+    setSelectedTask(task);
+    setShowTaskDetails(true);
+  };
+
+  const getCurrentTask = () => {
+    return tasks[currentTaskIndex] || null;
+  };
+
   const top3 = tasks.slice(0, 3);
 
   const DoWithMe = () => (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
       <Pill text={bodyDouble ? "Body‑Double: ON" : "Body‑Double: OFF"} tone={bodyDouble ? "good" : "neutral"} />
       <div className="flex gap-2">
-        <button 
-          onClick={toggleBodyDouble} 
-          className="px-3 py-2 rounded-lg border text-sm bg-white hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation"
+        <button
+          onClick={toggleBodyDouble}
+          className="px-3 py-2 rounded-lg border border-[#586e75] text-sm bg-[#073642] text-[#93a1a1] hover:bg-[#002b36] active:bg-[#002b36] transition-colors touch-manipulation"
         >
           {bodyDouble ? "Stop" : "Start"} Do‑With‑Me
         </button>
         <button
           onClick={() => setMicroStep("Start 5‑min Rescue Timer")}
-          className="px-3 py-2 rounded-lg bg-gray-900 text-white text-sm hover:bg-gray-800 active:bg-gray-700 transition-colors touch-manipulation"
+          className="px-3 py-2 rounded-lg bg-[#268bd2] text-[#fdf6e3] text-sm hover:bg-[#2aa198] active:bg-[#859900] transition-colors touch-manipulation"
         >
           5‑min Rescue
         </button>
@@ -1012,265 +1068,108 @@ export default function MissionControl() {
   );
 
   return (
-    <div className="min-h-screen bg-[#002b36] mobile-safe-area">
-      {/* Quick Capture Header - Solarized Dark */}
-      <header className="sticky top-0 z-10 bg-[#073642] backdrop-blur-sm border-b border-[#586e75] shadow-sm">
-        <div className="w-full px-3 py-3">
-          {/* Main input row */}
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-[#268bd2] text-[#fdf6e3] flex items-center justify-center font-bold text-sm flex-shrink-0">PA</div>
-            <div className="flex-1">
-              <input
-                type="text"
-                value={quickCaptureText}
-                onChange={(e) => setQuickCaptureText(e.target.value)}
-                onFocus={() => setIsExpanded(true)}
-                onBlur={(e) => {
-                  // Don't collapse if clicking on expanded options
-                  if (e.relatedTarget && expandedOptionsRef.current && expandedOptionsRef.current.contains(e.relatedTarget as Node)) {
-                    return;
-                  }
-                  setTimeout(() => setIsExpanded(false), 200);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleQuickCapture();
-                  }
-                }}
-                placeholder="Quick capture..."
-                className="w-full bg-transparent border-none outline-none text-[#93a1a1] placeholder-[#586e75] quick-capture-input resize-none"
-                disabled={isLoading}
-                autoComplete="off"
-              />
-            </div>
-            {quickCaptureText.trim() && (
-              <button
-                onClick={handleQuickCapture}
-                disabled={isLoading}
-                className="px-3 py-1.5 rounded-lg bg-[#268bd2] text-[#fdf6e3] text-sm hover:bg-[#2aa198] active:bg-[#859900] transition-colors touch-manipulation disabled:opacity-50"
-              >
-                {isLoading ? '...' : 'Add'}
-              </button>
-            )}
-          </div>
-          
-          {/* Simplified expanded options - Solarized Dark */}
-          {isExpanded && (
-            <div ref={expandedOptionsRef} className="mt-3 pt-3 border-t border-[#586e75] expanded-options">
-              <div className="flex items-center gap-4">
-                {/* Auto/Manual toggle */}
-                <button
-                  onClick={() => setAutoMode(!autoMode)}
-                  className={`px-3 py-2 rounded text-sm border ${
-                    autoMode ? 'border-[#268bd2] text-[#268bd2] bg-[#073642]' : 'border-[#586e75] text-[#93a1a1] bg-[#073642]'
-                  }`}
-                >
-                  {autoMode ? 'Auto' : 'Manual'}
-                </button>
-
-                {/* Ask for clarity checkbox */}
-                <button
-                  onClick={() => setAskForClarity(!askForClarity)}
-                  className={`px-3 py-2 rounded text-sm border ${
-                    askForClarity ? 'border-[#268bd2] text-[#268bd2] bg-[#073642]' : 'border-[#586e75] text-[#93a1a1] bg-[#073642]'
-                  }`}
-                >
-                  Clarity
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* Analysis Preview */}
-      {showAnalysisPreview && taskAnalysis && (
-        <div className="w-full px-3 pt-3">
-          <AnalysisPreview
-            analysis={taskAnalysis}
-            onClose={() => {
-              setShowAnalysisPreview(false);
-              setTaskAnalysis(null);
-            }}
+    <div className="min-h-screen bg-gray-50">
+      {/* Biological Tabs Header */}
+      <div className="sticky top-0 z-20 bg-white shadow-sm border-b">
+        <div className="p-4">
+          <BiologicalTabs
+            activeTab={biologicalMode}
+            onTabChange={setBiologicalMode}
+            energy={energy}
+            timeOfDay={timeOfDay}
           />
         </div>
-      )}
-
-      {/* Clarity Form */}
-      {showClarityForm && clarityQuestions.length > 0 && (
-        <div className="w-full px-3 pt-3">
-          <ClarityForm
-            questions={clarityQuestions}
-            onSubmit={handleClaritySubmit}
-            onCancel={handleCancelClarity}
-          />
-        </div>
-      )}
-
-      {/* Mobile-optimized main content */}
-      <main className="w-full px-3 py-4 space-y-4">
-        {/* Primary Tasks Section */}
-        <Card title={adhdMode ? "Do Now (low friction)" : "Top 3 — Today"} right={<Pomodoro onStart={startFocusSession} />}>
-          <div>
-            {top3.map((t) => (
-              <TaskRow
-                key={t.task_id || t.id}
-                t={t}
-                onToggle={() => toggleTask(t)}
-                onSlice={() => sliceIntoMicroStep(t)}
-                onDelegate={() => delegateTask(t)}
-              />
-            ))}
-          </div>
-          {microStep && (
-            <div className="mt-3 p-3 rounded-xl border bg-amber-50 text-sm">
-              <div className="font-medium text-amber-900">Next tiny step:</div>
-              <div className="text-amber-900/80">{microStep}</div>
-              <div className="mt-2"><DoWithMe /></div>
-            </div>
-          )}
-        </Card>
-
-
-        {/* Energy & Focus - Mobile Optimized */}
-        <Card title="Energy & Focus" right={null}>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <Gauge value={energy} label="Energy" />
-            </div>
-            <div className="flex flex-col justify-center">
-              <div className="text-sm text-gray-600">Focus mode</div>
-              <div className="text-2xl font-semibold">Ready</div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                <Pill text="Do Not Disturb" />
-                <Pill text="Ambient" />
-              </div>
-            </div>
-          </div>
-        </Card>
-
-        {/* Agent Status - Mobile Grid */}
-        <Card title="Agent Status" right={null}>
-          <div className="grid grid-cols-1 gap-3">
-            <AgentStatus name="Task Proxy" status="2s capture ready" tags={["priority", "NLP"]} />
-            <AgentStatus name="Focus Proxy" status="Pomodoro ready" tags={["blocks", "ambient"]} />
-            <AgentStatus name="Energy Proxy" status={`${energy}% stable`} tags={["tracking", "predict"]} />
-            <AgentStatus name="Progress Proxy" status={`${tasks.filter(t => t.status === 'completed').length} done`} tags={["streak", "review"]} />
-            <AgentStatus name="Gamification" status={`Lv.${level}`} tags={[`${xp} XP`, "badges"]} />
-          </div>
-        </Card>
-
-        {/* ADHD Triage - Mobile Optimized */}
-        <Card title="ADHD Triage (4D Router)" right={null}>
-          <div className="text-xs text-gray-600 mb-3">Do • Do‑with‑me • Delegate • Delete</div>
-          <div className="grid grid-cols-2 gap-3">
-            <button className="p-4 rounded-xl border hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation text-sm">
-              Do now (≤5m)
-            </button>
-            <button 
-              onClick={() => setBodyDouble(true)} 
-              className="p-4 rounded-xl border hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation text-sm"
-            >
-              Do‑with‑me (timer)
-            </button>
-            <button className="p-4 rounded-xl border hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation text-sm">
-              Delegate to Agent
-            </button>
-            <button className="p-4 rounded-xl border hover:bg-gray-50 active:bg-gray-100 transition-colors touch-manipulation text-sm">
-              Delete/Archive
-            </button>
-          </div>
-        </Card>
-
-        {/* Timeline - Mobile Optimized */}
-        <Card title="Timeline — Today" right={<Pill text="Auto-schedule" />}>
-          <div className="space-y-3">
-            {timelineEvents.length > 0 ? (
-              timelineEvents.map((event, idx) => (
-                <TimelineItem
-                  key={idx}
-                  time={event.time}
-                  title={event.title}
-                  meta={event.description || event.meta || ''}
-                />
-              ))
-            ) : (
-              <div className="text-sm text-gray-500 py-4 text-center">
-                No timeline events scheduled for today
-              </div>
-            )}
-          </div>
-        </Card>
-
-        {/* Recent Captures */}
-        <Card title="Inbox → Classifier" right={<Pill text="AI ready" />}>
-          <div className="text-sm text-gray-600 mb-3">Recent captures</div>
-          <div className="space-y-2">
-            {tasks.slice(0,4).map(t => (
-              <div key={t.task_id || t.id} className="p-3 rounded-xl border flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-gray-900 text-sm truncate">{t.title}</div>
-                  <div className="text-xs text-gray-500 truncate">{t.description || t.desc || "—"}</div>
-                </div>
-                <div className="flex gap-1 ml-2">
-                  <Chip>{t.context || t.priority}</Chip>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        {/* Delegation Board */}
-        <Card title="Delegation Bounty Board" right={null}>
-          <div className="text-xs text-gray-600 mb-3">Digital tasks agents will handle</div>
-          <ul className="space-y-2 text-sm">
-            {delegations.map(d => (
-              <li key={d.id} className="p-3 border rounded-xl flex items-center justify-between">
-                <span className="truncate flex-1">{d.task}</span>
-                <Pill text={d.status} tone={d.status === "Running" ? "good" : d.status === "Queued" ? "neutral" : "warn"} />
-              </li>
-            ))}
-          </ul>
-        </Card>
-
-        {/* Rewards & Leveling */}
-        <Card title="Rewards & Leveling" right={null}>
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <div className="text-sm text-gray-600">Level</div>
-              <div className="text-2xl font-semibold">{level}</div>
-            </div>
-            <div className="flex-1 mx-3 h-3 rounded-full bg-gray-100">
-              <div className="h-3 rounded-full bg-gray-900" style={{ width: `${(xp % 100)}%` }} />
-            </div>
-            <Pill text={`+${xp % 100}/100`} />
-          </div>
-          <div className="text-xs text-gray-600 mb-2">Rewards queue</div>
-          <div className="text-sm text-gray-500">
-            Complete tasks to unlock rewards!
-          </div>
-        </Card>
-
-        {/* Rituals - Mobile Optimized */}
-        <Card title="Rituals" right={null}>
-          <div className="text-sm text-gray-500 text-center py-4">
-            Set up your daily rituals in Settings
-          </div>
-        </Card>
-      </main>
-
-      <div className="text-center text-sm text-[#586e75] pb-20 sm:pb-6">
-        Connected to {API_URL} • Proxy Agent Platform v0.1
       </div>
 
-      {/* Mobile Navigation */}
-      <MobileNavigation
-        currentSection={currentSection}
-        onSectionChange={setCurrentSection}
-      />
+      {/* Main Task Card Area */}
+      <div className="flex-1 relative">
+        {tasks.length > 0 ? (
+          <div className="h-screen flex items-center justify-center p-4">
+            <div className="w-full max-w-md h-96">
+              <SwipeableTaskCard
+                task={getCurrentTask()!}
+                onSwipeLeft={handleSwipeLeft}
+                onSwipeRight={handleSwipeRight}
+                onTap={handleTaskTap}
+                isActive={true}
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="h-screen flex items-center justify-center p-4">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🎯</div>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">All caught up!</h2>
+              <p className="text-gray-600">No tasks in your current biological mode.</p>
+            </div>
+          </div>
+        )}
 
-      {/* Celebration Overlays (HABIT.md dopamine engineering) */}
+        {/* Task Progress Indicator */}
+        {tasks.length > 0 && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+            <div className="bg-white rounded-full px-4 py-2 shadow-lg">
+              <span className="text-sm font-medium text-gray-700">
+                {currentTaskIndex + 1} of {tasks.length}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Task Details Modal */}
+      {showTaskDetails && selectedTask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-30 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full max-h-96 overflow-y-auto">
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Task Details</h3>
+              <button
+                onClick={() => setShowTaskDetails(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-gray-900">{selectedTask.title}</h4>
+                {selectedTask.description && (
+                  <p className="text-gray-600 mt-2">{selectedTask.description}</p>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">Priority</span>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  selectedTask.priority === 'high' ? 'bg-red-100 text-red-800' :
+                  selectedTask.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-green-100 text-green-800'
+                }`}>
+                  {selectedTask.priority || 'medium'}
+                </span>
+              </div>
+
+              {selectedTask.tags && selectedTask.tags.length > 0 && (
+                <div>
+                  <span className="text-sm text-gray-500 block mb-2">Tags</span>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedTask.tags.map((tag, index) => (
+                      <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Celebration Overlays */}
       {celebration?.show && (
         <RewardCelebration
           tier={celebration.tier as any}
@@ -1284,9 +1183,6 @@ export default function MissionControl() {
       {quickCelebrationMsg && (
         <QuickCelebration message={quickCelebrationMsg} />
       )}
-
-      {/* Auto-clear quick celebration after showing */}
-      {quickCelebrationMsg && setTimeout(() => setQuickCelebrationMsg(null), 1000) && null}
 
       {mysteryBox && (
         <MysteryBoxCelebration
