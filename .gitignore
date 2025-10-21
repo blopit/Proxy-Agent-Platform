@@ -97,3 +97,7 @@ test_memory_db/
 # Logs
 *.log
 logs/
+
+# Process IDs
+*.pid
+backend.pid

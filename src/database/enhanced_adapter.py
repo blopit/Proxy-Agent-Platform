@@ -87,7 +87,7 @@ class EnhancedDatabaseAdapter:
             )
         """)
 
-        # Tasks table
+        # Tasks table (with Epic 7 task splitting fields)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS tasks (
                 task_id TEXT PRIMARY KEY,
@@ -107,6 +107,9 @@ class EnhancedDatabaseAdapter:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 metadata TEXT DEFAULT '{}',
+                scope TEXT DEFAULT 'simple',
+                delegation_mode TEXT DEFAULT 'do',
+                is_micro_step BOOLEAN DEFAULT 0,
                 FOREIGN KEY (project_id) REFERENCES projects(project_id) ON DELETE CASCADE,
                 FOREIGN KEY (parent_id) REFERENCES tasks(task_id) ON DELETE CASCADE,
                 FOREIGN KEY (assignee_id) REFERENCES users(user_id) ON DELETE SET NULL
@@ -157,6 +160,23 @@ class EnhancedDatabaseAdapter:
                 is_edited BOOLEAN DEFAULT 0,
                 FOREIGN KEY (task_id) REFERENCES tasks(task_id) ON DELETE CASCADE,
                 FOREIGN KEY (author_id) REFERENCES users(user_id) ON DELETE CASCADE
+            )
+        """)
+
+        # Micro-steps table (Epic 7: ADHD Task Splitting)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS micro_steps (
+                step_id TEXT PRIMARY KEY,
+                parent_task_id TEXT NOT NULL,
+                step_number INTEGER NOT NULL,
+                description TEXT NOT NULL,
+                estimated_minutes INTEGER NOT NULL CHECK(estimated_minutes >= 1 AND estimated_minutes <= 10),
+                delegation_mode TEXT DEFAULT 'do',
+                status TEXT DEFAULT 'todo',
+                actual_minutes INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                completed_at TIMESTAMP,
+                FOREIGN KEY (parent_task_id) REFERENCES tasks(task_id) ON DELETE CASCADE
             )
         """)
 

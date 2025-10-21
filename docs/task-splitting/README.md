@@ -12,9 +12,19 @@ The ADHD-First Task Splitting System (Auto-Chunker) breaks down large, overwhelm
 - **[integration-report.md](integration-report.md)** - Integration strategy with existing platform
 
 ### Implementation Guides
+- **[tasks.json](tasks.json)** - Tagged task list with 10 parent tasks and 57 subtasks (claude-task-master inspired)
+- **[../TASK_CARD_BREAKDOWN.md](../TASK_CARD_BREAKDOWN.md)** - Visual task card documentation with full breakdown
 - **[api-specification.md](api-specification.md)** - API endpoints and data models *(Coming Soon)*
 - **[ui-mockups.md](ui-mockups.md)** - UI/UX designs and mobile interface *(Coming Soon)*
 - **[testing-plan.md](testing-plan.md)** - Testing strategy and ADHD user validation *(Coming Soon)*
+
+### Task Card System (NEW)
+- **Inspired by**: [claude-task-master](https://github.com/eyaltoledano/claude-task-master)
+- **TypeScript Types**: `frontend/src/types/task-card.ts` - Complete type definitions
+- **Tagged Tasks**: Support for multi-context development (master, feature-x, etc.)
+- **Complexity Analysis**: AI-powered task breakdown recommendations
+- **Smart 'Next' Task**: Intelligent task suggestions based on dependencies
+- **Dependency Validation**: Circular reference detection with DFS algorithm
 
 ## 🎯 Quick Start
 
