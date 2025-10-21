@@ -535,7 +535,7 @@ class TestEnhancedProjectRepository:
         project = Project(
             name="Owned Project",
             description="Project with owner",
-            owner=sample_user.user_id,
+            owner_id=sample_user.user_id,  # Changed from owner to owner_id
             team_members=[sample_user.user_id],
             settings={"auto_assign": True, "notifications": False},
         )
@@ -543,7 +543,7 @@ class TestEnhancedProjectRepository:
         created_project = project_repo.create(project)
 
         assert created_project.name == "Owned Project"
-        assert created_project.owner == sample_user.user_id
+        assert created_project.owner_id == sample_user.user_id  # Changed from owner to owner_id
         assert sample_user.user_id in created_project.team_members
         assert created_project.settings["auto_assign"] is True
 
@@ -552,8 +552,8 @@ class TestEnhancedProjectRepository:
         project = Project(name="To Be Deleted", description="This project will be soft deleted")
         created_project = project_repo.create(project)
 
-        # Soft delete
-        result = project_repo.delete(created_project.project_id)
+        # Soft delete (use soft_delete method, not delete)
+        result = project_repo.soft_delete(created_project.project_id)
         assert result is True
 
         # Should not appear in active projects list
@@ -584,7 +584,7 @@ class TestIntegratedWorkflows:
         project = Project(
             name="Productivity Project",
             description="A project for productivity testing",
-            owner=created_user.user_id,
+            owner_id=created_user.user_id,  # Changed from owner to owner_id
         )
         created_project = project_repo.create(project)
 
@@ -639,7 +639,7 @@ class TestIntegratedWorkflows:
         final_metrics = metrics_repo.get_metrics_for_date(created_user.user_id, today)
 
         assert final_user is not None
-        assert final_project.owner == created_user.user_id
+        assert final_project.owner_id == created_user.user_id  # Changed from owner to owner_id
         assert final_task.status == TaskStatus.COMPLETED
         assert final_session.was_completed is True
         assert final_session.productivity_score == 90.0

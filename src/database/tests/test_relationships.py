@@ -729,8 +729,8 @@ class TestCascadeSetNullBehavior:
         remaining_task = self.task_repo.get_by_id(created_task.task_id)
         assert remaining_task is not None
 
-        # But assignee_id should be set to NULL
-        assert remaining_task.assignee_id is None
+        # But assignee should be set to NULL (field name is 'assignee', not 'assignee_id')
+        assert remaining_task.assignee is None
 
     def test_delete_parent_task_cascades_to_subtasks(self):
         """Test that deleting parent task cascades to delete all subtasks"""

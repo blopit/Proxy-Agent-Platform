@@ -282,7 +282,7 @@ class TestEnhancedDatabaseSingleton:
             "estimated_hours",
             "actual_hours",
             "tags",
-            "assignee",
+            "assignee_id",  # Updated to match database schema
             "due_date",
             "started_at",
             "completed_at",

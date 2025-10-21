@@ -276,7 +276,7 @@ class TestProjectRepository:
         project = Project(
             name="Test Project",
             description="A test project",
-            owner="user123",
+            owner_id="user123",  # Changed from owner to owner_id
             settings={"auto_assign": True},
         )
 
@@ -284,7 +284,7 @@ class TestProjectRepository:
 
         assert created_project.project_id == project.project_id
         assert created_project.name == "Test Project"
-        assert created_project.owner == "user123"
+        assert created_project.owner_id == "user123"  # Changed from owner to owner_id
         assert created_project.settings["auto_assign"] is True
 
     def test_get_project_by_id(self, project_repo, sample_project):

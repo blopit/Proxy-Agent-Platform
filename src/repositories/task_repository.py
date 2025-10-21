@@ -98,7 +98,8 @@ class BaseRepository:
 
     def _model_to_dict(self, model: PydanticModel) -> dict[str, Any]:
         """Convert model instance to dictionary for database storage"""
-        data = model.model_dump()
+        # Use by_alias=True to respect serialization aliases (e.g., assignee -> assignee_id)
+        data = model.model_dump(by_alias=True)
 
         # Convert lists and dicts to JSON strings
         for key, value in data.items():
@@ -136,7 +137,7 @@ class TaskRepository(BaseRepository):
                 estimated_hours TEXT,
                 actual_hours TEXT DEFAULT '0.0',
                 tags TEXT DEFAULT '[]',
-                assignee TEXT,
+                assignee_id TEXT,
                 due_date TEXT,
                 started_at TEXT,
                 completed_at TEXT,
@@ -290,7 +291,7 @@ class ProjectRepository(BaseRepository):
                 project_id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
                 description TEXT NOT NULL,
-                owner TEXT,
+                owner_id TEXT,
                 team_members TEXT DEFAULT '[]',
                 is_active BOOLEAN DEFAULT 1,
                 start_date TEXT,
@@ -505,7 +506,7 @@ class TaskCommentRepository(BaseRepository):
             CREATE TABLE IF NOT EXISTS task_comments (
                 comment_id TEXT PRIMARY KEY,
                 task_id TEXT NOT NULL,
-                author TEXT NOT NULL,
+                author_id TEXT NOT NULL,
                 content TEXT NOT NULL,
                 created_at TEXT NOT NULL,
                 updated_at TEXT,
