@@ -11,6 +11,7 @@ This agent provides intelligent task processing including:
 """
 
 import logging
+import os
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -70,14 +71,35 @@ class IntelligentTaskAgent(BaseProxyAgent):
         # AI client configuration
         self.openai_client = None
         self.anthropic_client = None
+        self.ai_provider = os.getenv("LLM_PROVIDER", "openai")
+        self.ai_model = os.getenv("LLM_MODEL", "gpt-4")
 
-        # Initialize AI clients if available
-        if OPENAI_AVAILABLE:
+        # Initialize AI clients if available and configured
+        if OPENAI_AVAILABLE and self.ai_provider == "openai":
             try:
-                # For demo, use a mock key - in production this would come from environment
-                self.openai_client = openai.AsyncOpenAI(api_key="demo-key-for-testing")
+                api_key = os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY")
+                if api_key and not api_key.startswith("sk-your-"):
+                    self.openai_client = openai.AsyncOpenAI(api_key=api_key)
+                    logging.info("OpenAI client initialized successfully")
+                else:
+                    logging.warning(
+                        "OpenAI API key not configured, using fallback heuristics"
+                    )
             except Exception as e:
                 logging.warning(f"OpenAI client initialization failed: {e}")
+
+        if ANTHROPIC_AVAILABLE and self.ai_provider == "anthropic":
+            try:
+                api_key = os.getenv("LLM_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+                if api_key and not api_key.startswith("sk-your-"):
+                    self.anthropic_client = anthropic.AsyncAnthropic(api_key=api_key)
+                    logging.info("Anthropic client initialized successfully")
+                else:
+                    logging.warning(
+                        "Anthropic API key not configured, using fallback heuristics"
+                    )
+            except Exception as e:
+                logging.warning(f"Anthropic client initialization failed: {e}")
 
         # Learning and context storage
         self.learning_data = {}
@@ -226,11 +248,48 @@ class IntelligentTaskAgent(BaseProxyAgent):
     async def _analyze_task_urgency(self, task: Task) -> float:
         """Analyze task urgency using AI (with fallback)"""
         try:
+            # Try AI analysis first if client is available
             if self.openai_client:
-                # Real AI analysis would go here
-                pass
+                try:
+                    prompt = f"""Analyze the urgency of this task and return ONLY a single number between 0.0 and 1.0.
 
-            # Fallback heuristic analysis
+Task Title: {task.title}
+Description: {task.description or 'No description'}
+Priority: {task.priority}
+
+Consider:
+- Keywords indicating urgency (bug, critical, urgent, etc.)
+- Impact and consequences
+- Time sensitivity
+
+Return ONLY a decimal number (e.g., 0.85)"""
+
+                    response = await self.openai_client.chat.completions.create(
+                        model=self.ai_model,
+                        messages=[
+                            {
+                                "role": "system",
+                                "content": "You are a task analysis AI. Respond with ONLY a single decimal number.",
+                            },
+                            {"role": "user", "content": prompt},
+                        ],
+                        temperature=0.3,
+                        max_tokens=10,
+                    )
+
+                    # Extract urgency score from AI response
+                    ai_score_text = response.choices[0].message.content.strip()
+                    ai_score = float(ai_score_text)
+
+                    # Validate score is in valid range
+                    if 0.0 <= ai_score <= 1.0:
+                        logging.debug(f"AI urgency score for '{task.title}': {ai_score}")
+                        return ai_score
+
+                except Exception as ai_error:
+                    logging.debug(f"AI urgency analysis failed, using fallback: {ai_error}")
+
+            # Fallback heuristic analysis (when AI unavailable or fails)
             urgency_keywords = {
                 "critical": 0.9,
                 "urgent": 0.8,
@@ -385,8 +444,53 @@ class IntelligentTaskAgent(BaseProxyAgent):
         """Use AI to break down a task into subtasks"""
         try:
             if self.openai_client:
-                # Real OpenAI integration would go here
-                pass
+                try:
+                    prompt = f"""Break down this task into specific, actionable subtasks.
+
+Task Title: {task.title}
+Description: {task.description or 'No description'}
+Priority: {task.priority}
+
+Return a JSON array of subtask strings. Each subtask should be:
+- Specific and actionable
+- In logical sequential order
+- 3-7 subtasks total
+- Clear and concise
+
+Example format:
+["Research requirements", "Design solution", "Implement core feature", "Add tests", "Deploy"]
+
+Return ONLY the JSON array, no other text."""
+
+                    response = await self.openai_client.chat.completions.create(
+                        model=self.ai_model,
+                        messages=[
+                            {
+                                "role": "system",
+                                "content": "You are a task breakdown AI. Respond with ONLY a JSON array of strings.",
+                            },
+                            {"role": "user", "content": prompt},
+                        ],
+                        temperature=0.5,
+                        max_tokens=500,
+                    )
+
+                    # Extract subtasks from AI response
+                    ai_response = response.choices[0].message.content.strip()
+
+                    # Try to parse as JSON
+                    import json
+
+                    subtasks = json.loads(ai_response)
+
+                    if isinstance(subtasks, list) and len(subtasks) > 0:
+                        logging.debug(
+                            f"AI breakdown for '{task.title}': {len(subtasks)} subtasks"
+                        )
+                        return subtasks
+
+                except Exception as ai_error:
+                    logging.debug(f"AI task breakdown failed, using fallback: {ai_error}")
 
             # Fallback rule-based breakdown
             return self._rule_based_breakdown(task)
@@ -489,8 +593,69 @@ class IntelligentTaskAgent(BaseProxyAgent):
         """AI-powered duration estimation"""
         try:
             if self.openai_client:
-                # Real AI estimation would go here
-                pass
+                try:
+                    prompt = f"""Estimate the duration to complete this task.
+
+Task Title: {task.title}
+Description: {task.description or 'No description'}
+Priority: {task.priority}
+
+Return a JSON object with:
+- hours: estimated hours (decimal number, e.g. 2.5)
+- confidence: confidence level 0.0-1.0
+
+Consider:
+- Task complexity and scope
+- Typical development time for similar tasks
+- Testing and documentation time
+- Buffer for unexpected issues
+
+Example response:
+{{"hours": 4.5, "confidence": 0.75}}
+
+Return ONLY the JSON object, no other text."""
+
+                    response = await self.openai_client.chat.completions.create(
+                        model=self.ai_model,
+                        messages=[
+                            {
+                                "role": "system",
+                                "content": "You are a task estimation AI. Respond with ONLY a JSON object.",
+                            },
+                            {"role": "user", "content": prompt},
+                        ],
+                        temperature=0.3,
+                        max_tokens=100,
+                    )
+
+                    # Extract estimation from AI response
+                    ai_response = response.choices[0].message.content.strip()
+
+                    # Try to parse as JSON
+                    import json
+
+                    estimation = json.loads(ai_response)
+
+                    if (
+                        isinstance(estimation, dict)
+                        and "hours" in estimation
+                        and "confidence" in estimation
+                    ):
+                        # Validate ranges
+                        hours = float(estimation["hours"])
+                        confidence = float(estimation["confidence"])
+
+                        if hours > 0 and 0.0 <= confidence <= 1.0:
+                            logging.debug(
+                                f"AI estimation for '{task.title}': {hours}h @ {confidence:.0%} confidence"
+                            )
+                            return {
+                                "hours": round(hours, 1),
+                                "confidence": round(confidence, 2),
+                            }
+
+                except Exception as ai_error:
+                    logging.debug(f"AI duration estimation failed, using fallback: {ai_error}")
 
             # Fallback heuristic estimation
             return self._heuristic_estimation(task)
