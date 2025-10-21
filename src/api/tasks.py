@@ -11,10 +11,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 
 from src.core.task_models import (
+    MicroStep,
     Project,
     Task,
     TaskFilter,
     TaskPriority,
+    TaskScope,
     TaskSort,
     TaskStatus,
 )
@@ -73,6 +75,33 @@ class TaskUpdateRequest(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
 
+class MicroStepResponse(BaseModel):
+    """Response model for micro-steps"""
+
+    step_id: str
+    step_number: int
+    description: str
+    estimated_minutes: int
+    delegation_mode: str
+    status: str
+    actual_minutes: int | None = None
+    completed_at: datetime | None = None
+
+    @classmethod
+    def from_micro_step(cls, step: MicroStep) -> "MicroStepResponse":
+        """Create response from micro-step model"""
+        return cls(
+            step_id=step.step_id,
+            step_number=step.step_number,
+            description=step.description,
+            estimated_minutes=step.estimated_minutes,
+            delegation_mode=step.delegation_mode,
+            status=step.status,
+            actual_minutes=step.actual_minutes,
+            completed_at=step.completed_at,
+        )
+
+
 class TaskResponse(BaseModel):
     """Response model for tasks"""
 
@@ -92,9 +121,10 @@ class TaskResponse(BaseModel):
     is_overdue: bool
     created_at: datetime
     updated_at: datetime
+    micro_steps: list[MicroStepResponse] = Field(default_factory=list)
 
     @classmethod
-    def from_task(cls, task: Task) -> "TaskResponse":
+    def from_task(cls, task: Task, micro_steps: list[MicroStep] | None = None) -> "TaskResponse":
         """Create response from task model"""
         return cls(
             task_id=task.task_id,
@@ -113,6 +143,7 @@ class TaskResponse(BaseModel):
             is_overdue=task.is_overdue,
             created_at=task.created_at,
             updated_at=task.updated_at,
+            micro_steps=[MicroStepResponse.from_micro_step(s) for s in (micro_steps or [])],
         )
 
 
@@ -201,6 +232,18 @@ class VoiceProcessingRequest(BaseModel):
     user_id: str
 
 
+class SplitTaskRequest(BaseModel):
+    """Request model for task splitting"""
+
+    user_id: str
+
+
+class CompleteMicroStepRequest(BaseModel):
+    """Request model for completing a micro-step"""
+
+    actual_minutes: int | None = None
+
+
 # Task Endpoints
 
 
@@ -241,7 +284,35 @@ async def get_task(
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    return TaskResponse.from_task(task)
+    # Query micro-steps for this task
+    db = task_service.get_db()
+    conn = db.get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT step_id, parent_task_id, step_number, description, estimated_minutes,
+               delegation_mode, status, actual_minutes, created_at, completed_at
+        FROM micro_steps
+        WHERE parent_task_id = ?
+        ORDER BY step_number
+    """, (task_id,))
+
+    micro_steps = []
+    for row in cursor.fetchall():
+        step = MicroStep(
+            step_id=row[0],
+            parent_task_id=row[1],
+            step_number=row[2],
+            description=row[3],
+            estimated_minutes=row[4],
+            delegation_mode=row[5],
+            status=row[6],
+            actual_minutes=row[7],
+            created_at=datetime.fromisoformat(row[8]) if row[8] else datetime.utcnow(),
+            completed_at=datetime.fromisoformat(row[9]) if row[9] else None,
+        )
+        micro_steps.append(step)
+
+    return TaskResponse.from_task(task, micro_steps)
 
 
 @router.put("/tasks/{task_id}", response_model=TaskResponse)
@@ -420,6 +491,182 @@ async def create_task_from_template(
 
     except TaskServiceError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# Epic 7: ADHD Task Splitting Endpoints
+
+
+@router.post("/tasks/{task_id}/split")
+async def split_task(
+    task_id: str,
+    request: SplitTaskRequest,
+    task_service: TaskService = Depends(get_task_service)
+):
+    """Split a task into ADHD-optimized micro-steps using AI"""
+    from src.agents.split_proxy_agent import SplitProxyAgent
+
+    # Get task
+    task = task_service.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    # Check if task already has micro-steps
+    db = task_service.get_db()
+    conn = db.get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT step_id, parent_task_id, step_number, description, estimated_minutes,
+               delegation_mode, status, actual_minutes, created_at, completed_at
+        FROM micro_steps
+        WHERE parent_task_id = ?
+        ORDER BY step_number
+    """, (task_id,))
+
+    existing_steps = cursor.fetchall()
+
+    if existing_steps:
+        # Return existing micro-steps
+        micro_steps = []
+        for row in existing_steps:
+            micro_steps.append({
+                "step_id": row[0],
+                "step_number": row[2],
+                "description": row[3],
+                "estimated_minutes": row[4],
+                "delegation_mode": row[5],
+                "status": row[6]
+            })
+
+        return {
+            "task_id": task_id,
+            "scope": task.scope if hasattr(task, "scope") else "multi",
+            "micro_steps": micro_steps,
+            "next_action": micro_steps[0] if micro_steps else None,
+            "total_estimated_minutes": sum(s["estimated_minutes"] for s in micro_steps)
+        }
+
+    # Use Split Proxy Agent to generate micro-steps
+    agent = SplitProxyAgent()
+    result = await agent.split_task(task, request.user_id)
+
+    # Save micro-steps to database if generated
+    if result.get("micro_steps"):
+        for step_data in result["micro_steps"]:
+            cursor.execute("""
+                INSERT INTO micro_steps
+                (step_id, parent_task_id, step_number, description, estimated_minutes,
+                 delegation_mode, status, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                step_data["step_id"],
+                task_id,
+                step_data["step_number"],
+                step_data["description"],
+                step_data["estimated_minutes"],
+                step_data["delegation_mode"],
+                step_data["status"],
+                datetime.utcnow().isoformat()
+            ))
+        conn.commit()
+
+    return result
+
+
+@router.patch("/micro-steps/{step_id}/complete")
+async def complete_micro_step(
+    step_id: str,
+    request: CompleteMicroStepRequest,
+    task_service: TaskService = Depends(get_task_service)
+):
+    """Complete a micro-step and award XP (dopamine hit!)"""
+    db = task_service.get_db()
+    conn = db.get_connection()
+    cursor = conn.cursor()
+
+    # Get micro-step
+    cursor.execute("""
+        SELECT step_id, parent_task_id, step_number, description, estimated_minutes,
+               delegation_mode, status, created_at
+        FROM micro_steps
+        WHERE step_id = ?
+    """, (step_id,))
+
+    row = cursor.fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Micro-step not found")
+
+    # Calculate actual minutes if not provided
+    actual_minutes = request.actual_minutes
+    if actual_minutes is None:
+        # Calculate from created_at to now
+        created_at = datetime.fromisoformat(row[7])
+        duration = datetime.utcnow() - created_at
+        actual_minutes = max(1, int(duration.total_seconds() / 60))
+
+    # Update micro-step
+    completed_at = datetime.utcnow()
+    cursor.execute("""
+        UPDATE micro_steps
+        SET status = 'completed',
+            actual_minutes = ?,
+            completed_at = ?
+        WHERE step_id = ?
+    """, (actual_minutes, completed_at.isoformat(), step_id))
+    conn.commit()
+
+    # Calculate XP reward (ADHD dopamine hit!)
+    # Base XP: 10 points per step
+    # Bonus: +5 if completed faster than estimated
+    # Bonus: +10 if first step of the day
+    base_xp = 10
+    speed_bonus = 5 if actual_minutes <= row[4] else 0  # row[4] = estimated_minutes
+    xp_earned = base_xp + speed_bonus
+
+    return {
+        "step_id": step_id,
+        "status": "completed",
+        "actual_minutes": actual_minutes,
+        "completed_at": completed_at,
+        "xp_earned": xp_earned,
+        "message": "Great job! Keep the momentum going!" if speed_bonus > 0 else "Step completed!"
+    }
+
+
+@router.get("/tasks/{task_id}/progress")
+async def get_task_progress(
+    task_id: str,
+    task_service: TaskService = Depends(get_task_service)
+):
+    """Get task progress based on micro-step completion"""
+    # Verify task exists
+    task = task_service.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    # Query micro-steps
+    db = task_service.get_db()
+    conn = db.get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT COUNT(*) as total,
+               SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed
+        FROM micro_steps
+        WHERE parent_task_id = ?
+    """, (task_id,))
+
+    row = cursor.fetchone()
+    total_steps = row[0] or 0
+    completed_steps = row[1] or 0
+
+    progress_percentage = (completed_steps / total_steps * 100.0) if total_steps > 0 else 0.0
+
+    return {
+        "task_id": task_id,
+        "total_steps": total_steps,
+        "completed_steps": completed_steps,
+        "progress_percentage": progress_percentage
+    }
 
 
 # Project Endpoints

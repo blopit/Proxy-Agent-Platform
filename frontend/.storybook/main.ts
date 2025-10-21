@@ -22,8 +22,16 @@ const config: StorybookConfig = {
       propFilter: (prop) => (prop.parent ? !/node_modules/.test(prop.parent.fileName) : true),
     },
   },
-  features: {
-    interactionsDebugger: true,
+  webpackFinal: async (config) => {
+    // Ensure proper module resolution
+    config.resolve = config.resolve || {};
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      path: false,
+      os: false,
+    };
+    return config;
   },
 };
 

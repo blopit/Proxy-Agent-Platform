@@ -84,9 +84,9 @@ const Chip = ({ children }: ChipProps) => (
 );
 
 const Card = ({ title, right, children }: CardProps) => (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 sm:p-4 mobile-card">
+  <div className="bg-[#073642] rounded-xl shadow-sm border border-[#586e75] p-3 sm:p-4 mobile-card">
     <div className="flex items-center justify-between mb-3">
-      <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{title}</h3>
+      <h3 className="font-semibold text-[#93a1a1] text-sm sm:text-base">{title}</h3>
       {right}
     </div>
     {children}
@@ -95,10 +95,10 @@ const Card = ({ title, right, children }: CardProps) => (
 
 const Pill = ({ text, tone = "neutral" }: PillProps) => {
   const tones = {
-    neutral: "bg-gray-100 text-gray-800",
-    good: "bg-green-100 text-green-800",
-    warn: "bg-amber-100 text-amber-900",
-    bad: "bg-rose-100 text-rose-800",
+    neutral: "bg-[#073642] text-[#93a1a1] border border-[#586e75]",
+    good: "bg-[#073642] text-[#859900] border border-[#859900]",
+    warn: "bg-[#073642] text-[#b58900] border border-[#b58900]",
+    bad: "bg-[#073642] text-[#dc322f] border border-[#dc322f]",
   };
   return <span className={`px-2 py-1 rounded-full text-xs ${tones[tone]}`}>{text}</span>;
 };
@@ -626,6 +626,26 @@ export default function MissionControl() {
       // Convert 0-10 scale to 0-100 percentage
       const energyPercent = Math.round((data.energy_level || 7.2) * 10);
       setEnergy(energyPercent);
+
+      // 🤖 Epic 2.2: Get AI energy predictions and recommendations
+      try {
+        const trackResponse = await fetch(`${API_URL}/api/v1/energy/track`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: `Current energy level: ${energyPercent}%` })
+        });
+
+        if (trackResponse.ok) {
+          const trackData = await trackResponse.json();
+          console.log('🤖 AI Energy Analysis:');
+          console.log('  Trend:', trackData.trend);
+          console.log('  Predicted next hour:', trackData.predicted_next_hour);
+          console.log('  Confidence:', (trackData.confidence * 100).toFixed(0) + '%');
+          console.log('  💡 Recommendations:', trackData.immediate_recommendations);
+        }
+      } catch (err) {
+        console.log('AI Energy tracking not available');
+      }
     } catch (err) {
       console.error('Energy fetch error:', err);
       setEnergy(72); // Fallback to 72% on error
@@ -758,6 +778,34 @@ export default function MissionControl() {
 
       const reward = await response.json();
 
+      // 🤖 Epic 2.3: Get AI-powered celebration message
+      try {
+        const completedCount = tasks.filter(t => t.status === 'completed').length + 1;
+        const gamificationResponse = await fetch(`${API_URL}/api/v1/gamification/achievements`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tasks_completed_today: completedCount,
+            consecutive_days: streakDays,
+            total_xp: xp + (reward.total_xp || 0),
+            focus_sessions_completed: 5,
+            average_task_quality: 0.85
+          })
+        });
+
+        if (gamificationResponse.ok) {
+          const achievements = await gamificationResponse.json();
+          if (achievements.triggered_achievements?.length > 0) {
+            achievements.triggered_achievements.forEach((ach: any) => {
+              console.log('🎉 AI Celebration:', ach.celebration_message);
+              setQuickCelebrationMsg(ach.celebration_message || `+${reward.total_xp} XP!`);
+            });
+          }
+        }
+      } catch (err) {
+        console.log('AI Gamification not available, using standard celebration');
+      }
+
       // Update XP and level
       setXp(reward.new_total_xp || reward.total_xp || 0);
       setLevel(reward.new_level || reward.level || 1);
@@ -820,7 +868,34 @@ export default function MissionControl() {
 
   const startFocusSession = async (durationMinutes: number) => {
     try {
-      console.log(`Starting ${durationMinutes}-minute focus session`);
+      // Epic 2.2: AI-powered focus session with real OpenAI GPT-4 integration
+      const response = await fetch(`${API_URL}/api/v1/focus/sessions/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          task_context: `Focus session for current tasks`,
+          duration_minutes: durationMinutes,
+          technique: 'pomodoro'
+        })
+      });
+
+      if (!response.ok) {
+        console.warn('AI Focus API not available, using basic timer');
+        return;
+      }
+
+      const sessionData = await response.json();
+      console.log('🤖 AI Focus Session started:', sessionData);
+      setQuickCelebrationMsg(`🎯 AI Focus: ${durationMinutes}min session started!`);
+
+      // Get AI duration recommendation for next time
+      const recResponse = await fetch(`${API_URL}/api/v1/focus/recommend-duration?task_context=current%20work`);
+      if (recResponse.ok) {
+        const recommendation = await recResponse.json();
+        console.log('💡 AI recommends:', recommendation.recommended_duration, 'minutes');
+        console.log('📊 Confidence:', (recommendation.confidence * 100).toFixed(0) + '%');
+        console.log('🧠 Reasoning:', recommendation.reasoning);
+      }
     } catch (err) {
       console.error('Focus session error:', err);
     }
@@ -937,13 +1012,13 @@ export default function MissionControl() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white mobile-safe-area">
-      {/* Quick Capture Header */}
-      <header className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+    <div className="min-h-screen bg-[#002b36] mobile-safe-area">
+      {/* Quick Capture Header - Solarized Dark */}
+      <header className="sticky top-0 z-10 bg-[#073642] backdrop-blur-sm border-b border-[#586e75] shadow-sm">
         <div className="w-full px-3 py-3">
           {/* Main input row */}
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-gray-900 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">PA</div>
+            <div className="h-8 w-8 rounded-lg bg-[#268bd2] text-[#fdf6e3] flex items-center justify-center font-bold text-sm flex-shrink-0">PA</div>
             <div className="flex-1">
               <input
                 type="text"
@@ -964,7 +1039,7 @@ export default function MissionControl() {
                   }
                 }}
                 placeholder="Quick capture..."
-                className="w-full bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 quick-capture-input resize-none"
+                className="w-full bg-transparent border-none outline-none text-[#93a1a1] placeholder-[#586e75] quick-capture-input resize-none"
                 disabled={isLoading}
                 autoComplete="off"
               />
@@ -973,32 +1048,32 @@ export default function MissionControl() {
               <button
                 onClick={handleQuickCapture}
                 disabled={isLoading}
-                className="px-3 py-1.5 rounded-lg bg-gray-900 text-white text-sm hover:bg-gray-800 active:bg-gray-700 transition-colors touch-manipulation disabled:opacity-50"
+                className="px-3 py-1.5 rounded-lg bg-[#268bd2] text-[#fdf6e3] text-sm hover:bg-[#2aa198] active:bg-[#859900] transition-colors touch-manipulation disabled:opacity-50"
               >
                 {isLoading ? '...' : 'Add'}
               </button>
             )}
           </div>
           
-          {/* Simplified expanded options */}
+          {/* Simplified expanded options - Solarized Dark */}
           {isExpanded && (
-            <div ref={expandedOptionsRef} className="mt-3 pt-3 border-t border-gray-200 expanded-options">
+            <div ref={expandedOptionsRef} className="mt-3 pt-3 border-t border-[#586e75] expanded-options">
               <div className="flex items-center gap-4">
                 {/* Auto/Manual toggle */}
                 <button
                   onClick={() => setAutoMode(!autoMode)}
                   className={`px-3 py-2 rounded text-sm border ${
-                    autoMode ? 'border-indigo-300 text-indigo-700' : 'border-gray-300 text-gray-600'
+                    autoMode ? 'border-[#268bd2] text-[#268bd2] bg-[#073642]' : 'border-[#586e75] text-[#93a1a1] bg-[#073642]'
                   }`}
                 >
                   {autoMode ? 'Auto' : 'Manual'}
                 </button>
-                
+
                 {/* Ask for clarity checkbox */}
                 <button
                   onClick={() => setAskForClarity(!askForClarity)}
                   className={`px-3 py-2 rounded text-sm border ${
-                    askForClarity ? 'border-indigo-300 text-indigo-700' : 'border-gray-300 text-gray-600'
+                    askForClarity ? 'border-[#268bd2] text-[#268bd2] bg-[#073642]' : 'border-[#586e75] text-[#93a1a1] bg-[#073642]'
                   }`}
                 >
                   Clarity
@@ -1185,7 +1260,7 @@ export default function MissionControl() {
         </Card>
       </main>
 
-      <div className="text-center text-sm text-gray-500 pb-20 sm:pb-6">
+      <div className="text-center text-sm text-[#586e75] pb-20 sm:pb-6">
         Connected to {API_URL} • Proxy Agent Platform v0.1
       </div>
 

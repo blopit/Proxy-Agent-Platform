@@ -1,10 +1,3 @@
-import { expect } from '@storybook/jest';
-import { userEvent, within } from '@storybook/testing-library';
-import { fn } from '@storybook/test';
-
-// Global test utilities
-export { expect, userEvent, within, fn };
-
 // Mock global objects that might be used in components
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

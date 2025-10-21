@@ -18,7 +18,7 @@ const MobileNavigation = ({ currentSection = 'tasks', onSectionChange }: MobileN
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 sm:hidden">
+    <div className="fixed bottom-0 left-0 right-0 bg-[#073642] border-t border-[#586e75] z-50 sm:hidden">
       <div className="flex justify-around py-2">
         {sections.map((section) => (
           <button
@@ -29,8 +29,8 @@ const MobileNavigation = ({ currentSection = 'tasks', onSectionChange }: MobileN
             }}
             className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors touch-manipulation ${
               currentSection === section.id
-                ? 'bg-gray-100 text-gray-900'
-                : 'text-gray-600 hover:bg-gray-50'
+                ? 'bg-[#002b36] text-[#268bd2]'
+                : 'text-[#93a1a1] hover:bg-[#002b36]'
             }`}
           >
             <span className="text-lg mb-1">{section.icon}</span>

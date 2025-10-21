@@ -138,6 +138,10 @@ class TaskService:
         self.dependency_repo = TaskDependencyRepository(db_path)
         self.comment_repo = TaskCommentRepository(db_path)
 
+    def get_db(self):
+        """Get database adapter from repository"""
+        return self.task_repo.db
+
     # Task CRUD Operations
 
     def create_task(self, task_data: TaskCreationData) -> Task:
