@@ -1,7 +1,9 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
+import { Search, Flame, Zap, Target, Calendar, Bot, Moon, Gift, ChevronDown } from 'lucide-react';
 import CategoryRow from '../../../components/mobile/CategoryRow';
+import { spacing, fontSize, borderRadius, iconSize, semanticColors } from '@/lib/design-system';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -28,13 +30,14 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showMysteryTask, setShowMysteryTask] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'digital' | 'human' | 'urgent'>('all');
 
   useEffect(() => {
     fetchTasks();
   }, [refreshTrigger]);
 
   useEffect(() => {
-    // 15% chance to show mystery task (HABIT.md: unpredictable rewards)
+    // 15% chance to show mystery task (ADHD: unpredictable rewards)
     const shouldShowMystery = Math.random() < 0.15;
     setShowMysteryTask(shouldShowMystery);
   }, [tasks]);
@@ -44,7 +47,6 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
     try {
       const response = await fetch(`${API_URL}/api/v1/tasks?limit=100&user_id=mobile-user`);
       if (!response.ok) {
-        // Fallback to simple-tasks
         const fallbackResponse = await fetch(`${API_URL}/api/v1/simple-tasks`);
         if (!fallbackResponse.ok) throw new Error('Both tasks endpoints failed');
         const fallbackData = await fallbackResponse.json();
@@ -55,7 +57,7 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
       setTasks(data.tasks || data || []);
     } catch (err) {
       console.warn('API not available, using empty task list:', err);
-      setTasks([]); // Graceful degradation
+      setTasks([]);
     } finally {
       setIsLoading(false);
     }
@@ -63,14 +65,12 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
 
   // Filter tasks by category
   const getMainFocus = () => {
-    // Top 3 high priority incomplete tasks
     return tasks
       .filter(t => t.status !== 'completed' && t.priority === 'high')
       .slice(0, 3);
   };
 
   const getUrgentToday = () => {
-    // Tasks due today or overdue
     const today = new Date().toISOString().split('T')[0];
     return tasks.filter(t => {
       if (t.status === 'completed') return false;
@@ -80,7 +80,6 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
   };
 
   const getQuickWins = () => {
-    // Tasks under 15 minutes (0.25 hours)
     return tasks.filter(t =>
       t.status !== 'completed' &&
       (t.estimated_hours || 0) <= 0.25
@@ -88,7 +87,6 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
   };
 
   const getThisWeek = () => {
-    // Tasks due within next 7 days
     const today = new Date();
     const nextWeek = new Date(today);
     nextWeek.setDate(today.getDate() + 7);
@@ -103,7 +101,6 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
   };
 
   const getSomedayMaybe = () => {
-    // Low priority or no due date
     return tasks.filter(t =>
       t.status !== 'completed' &&
       (t.priority === 'low' || !t.due_date)
@@ -111,7 +108,6 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
   };
 
   const getCanDelegate = () => {
-    // Digital tasks that can be delegated
     return tasks.filter(t =>
       t.status !== 'completed' &&
       (t.is_digital ||
@@ -120,48 +116,79 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
   };
 
   const getMysteryTask = () => {
-    // Random task from incomplete tasks with bonus XP promise
     const incompleteTasks = tasks.filter(t => t.status !== 'completed');
     if (incompleteTasks.length === 0) return [];
-
     const randomIndex = Math.floor(Math.random() * incompleteTasks.length);
     return [incompleteTasks[randomIndex]];
   };
 
   if (isLoading && tasks.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center h-full" style={{ backgroundColor: semanticColors.bg.primary }}>
         <div className="text-center">
-          <div className="text-4xl mb-4">🔍</div>
-          <p className="text-[#586e75]">Scouting for tasks...</p>
+          <Search size={iconSize['2xl']} className="mx-auto mb-4" style={{ color: semanticColors.accent.primary }} />
+          <p style={{ fontSize: fontSize.sm, color: semanticColors.text.secondary }}>
+            Scouting for tasks...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full overflow-y-auto snap-y snap-mandatory">
-      {/* Section 1: Header + High Priority Tasks - Snap Section */}
-      <div className="min-h-screen snap-start flex flex-col px-4 py-3">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-2xl">🔍</span>
+    <div className="h-full overflow-y-auto snap-y snap-mandatory" style={{ backgroundColor: semanticColors.bg.primary }}>
+      {/* Section 1: Header + High Priority Tasks - 4px grid */}
+      <div className="min-h-screen snap-start flex flex-col" style={{ padding: spacing[4] }}>
+        {/* Header with icon - 4px grid */}
+        <div className="flex items-center" style={{ gap: spacing[3], marginBottom: spacing[3] }}>
+          <Search size={iconSize.lg} style={{ color: semanticColors.accent.primary }} />
           <div>
-            <h2 className="text-lg font-bold text-[#93a1a1]">Scout Mode</h2>
-            <p className="text-xs text-[#586e75]">
+            <h2 style={{ fontSize: fontSize.lg, fontWeight: 'bold', color: semanticColors.text.primary }}>
+              Scout Mode
+            </h2>
+            <p style={{ fontSize: fontSize.xs, color: semanticColors.text.secondary }}>
               Seek novelty & identify doable targets
             </p>
           </div>
         </div>
 
-        {/* Scout Badge Progress - Compact */}
-        <div className="mb-2 p-2 bg-[#073642] rounded-lg border border-[#586e75]">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-[#586e75]">Progress</span>
-            <span className="text-xs text-[#93a1a1] font-bold">
+        {/* Filter Pills - 4px grid */}
+        <div className="flex" style={{ gap: spacing[2], marginBottom: spacing[3], overflowX: 'auto' }}>
+          {[
+            { key: 'all', label: 'All', icon: Search },
+            { key: 'digital', label: 'Digital', icon: Bot },
+            { key: 'urgent', label: 'Urgent', icon: Zap }
+          ].map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setActiveFilter(key as any)}
+              className="flex items-center transition-all"
+              style={{
+                gap: spacing[1],
+                padding: `${spacing[1]} ${spacing[3]}`,
+                borderRadius: borderRadius.full,
+                fontSize: fontSize.xs,
+                backgroundColor: activeFilter === key ? semanticColors.accent.primary : semanticColors.bg.secondary,
+                color: activeFilter === key ? semanticColors.text.inverse : semanticColors.text.primary,
+                border: `1px solid ${activeFilter === key ? semanticColors.accent.primary : semanticColors.border.default}`,
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <Icon size={12} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Progress Bar - 4px grid */}
+        <div style={{ marginBottom: spacing[3], padding: spacing[2], backgroundColor: semanticColors.bg.secondary, borderRadius: borderRadius.base, border: `1px solid ${semanticColors.border.default}` }}>
+          <div className="flex items-center justify-between" style={{ marginBottom: spacing[1] }}>
+            <span style={{ fontSize: fontSize.xs, color: semanticColors.text.secondary }}>Progress</span>
+            <span style={{ fontSize: fontSize.xs, color: semanticColors.text.primary, fontWeight: 'bold' }}>
               {tasks.filter(t => t.status !== 'completed').length} tasks
             </span>
           </div>
-          <div className="w-full h-1.5 bg-[#002b36] rounded-full overflow-hidden">
+          <div className="w-full rounded-full overflow-hidden" style={{ height: spacing[1], backgroundColor: semanticColors.bg.primary }}>
             <div
               className="h-full bg-gradient-to-r from-[#859900] to-[#268bd2] transition-all duration-500"
               style={{ width: `${Math.min((tasks.length / 50) * 100, 100)}%` }}
@@ -169,12 +196,12 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
           </div>
         </div>
 
-        {/* Mystery Task (15% chance) */}
+        {/* Mystery Task (15% chance) - 4px grid */}
         {showMysteryTask && getMysteryTask().length > 0 && (
-          <div className="mb-2">
+          <div style={{ marginBottom: spacing[2] }}>
             <CategoryRow
               title="Mystery Task Bonus"
-              icon="🎁"
+              icon={<Gift size={iconSize.sm} style={{ color: semanticColors.accent.warning }} />}
               tasks={getMysteryTask()}
               onTaskTap={onTaskTap}
               isMystery={true}
@@ -182,102 +209,105 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
           </div>
         )}
 
-        {/* Main Focus */}
+        {/* Main Focus - 4px grid */}
         {getMainFocus().length > 0 && (
-          <div className="mb-2">
+          <div style={{ marginBottom: spacing[2] }}>
             <CategoryRow
               title="Main Focus"
-              icon="🔥"
+              icon={<Flame size={iconSize.sm} style={{ color: semanticColors.accent.error }} />}
               tasks={getMainFocus()}
               onTaskTap={onTaskTap}
             />
           </div>
         )}
 
-        {/* Urgent Today */}
+        {/* Urgent Today - 4px grid */}
         {getUrgentToday().length > 0 && (
-          <div className="mb-2">
+          <div style={{ marginBottom: spacing[2] }}>
             <CategoryRow
               title="Urgent Today"
-              icon="⚡"
+              icon={<Zap size={iconSize.sm} style={{ color: semanticColors.accent.warning }} />}
               tasks={getUrgentToday()}
               onTaskTap={onTaskTap}
             />
           </div>
         )}
 
-        {/* Scroll hint */}
-        <div className="flex-1 flex items-end justify-center pb-2 mt-2">
-          <div className="text-[#586e75] text-xs animate-bounce">
-            ↓ Swipe for more categories
+        {/* Scroll hint - 4px grid */}
+        <div className="flex-1 flex items-end justify-center" style={{ paddingBottom: spacing[2], marginTop: spacing[2] }}>
+          <div className="flex items-center animate-bounce" style={{ fontSize: fontSize.xs, color: semanticColors.text.secondary, gap: spacing[1] }}>
+            <span>Swipe for more</span>
+            <ChevronDown size={12} />
           </div>
         </div>
       </div>
 
-      {/* Section 2: Medium Priority Tasks - Snap Section */}
-      <div className="min-h-screen snap-start flex flex-col px-4 py-3">
-        {/* Quick Wins */}
+      {/* Section 2: Medium Priority Tasks - 4px grid */}
+      <div className="min-h-screen snap-start flex flex-col" style={{ padding: spacing[4] }}>
+        {/* Quick Wins - 4px grid */}
         {getQuickWins().length > 0 && (
-          <div className="mb-2">
+          <div style={{ marginBottom: spacing[2] }}>
             <CategoryRow
               title="Quick Wins"
-              icon="🎯"
+              icon={<Target size={iconSize.sm} style={{ color: semanticColors.accent.success }} />}
               tasks={getQuickWins()}
               onTaskTap={onTaskTap}
             />
           </div>
         )}
 
-        {/* This Week */}
+        {/* This Week - 4px grid */}
         {getThisWeek().length > 0 && (
-          <div className="mb-2">
+          <div style={{ marginBottom: spacing[2] }}>
             <CategoryRow
               title="This Week"
-              icon="📅"
+              icon={<Calendar size={iconSize.sm} style={{ color: semanticColors.accent.secondary }} />}
               tasks={getThisWeek()}
               onTaskTap={onTaskTap}
             />
           </div>
         )}
 
-        {/* Can Delegate */}
+        {/* Can Delegate - 4px grid */}
         {getCanDelegate().length > 0 && (
-          <div className="mb-2">
+          <div style={{ marginBottom: spacing[2] }}>
             <CategoryRow
               title="Can Delegate"
-              icon="🤖"
+              icon={<Bot size={iconSize.sm} style={{ color: semanticColors.accent.primary }} />}
               tasks={getCanDelegate()}
               onTaskTap={onTaskTap}
             />
           </div>
         )}
 
-        {/* Someday/Maybe */}
+        {/* Someday/Maybe - 4px grid */}
         {getSomedayMaybe().length > 0 && (
-          <div className="mb-2">
+          <div style={{ marginBottom: spacing[2] }}>
             <CategoryRow
               title="Someday/Maybe"
-              icon="💤"
+              icon={<Moon size={iconSize.sm} style={{ color: semanticColors.text.secondary }} />}
               tasks={getSomedayMaybe()}
               onTaskTap={onTaskTap}
             />
           </div>
         )}
 
-        {/* End indicator */}
-        <div className="flex-1 flex items-end justify-center pb-2 mt-2">
-          <div className="text-[#586e75] text-xs">End of tasks</div>
+        {/* End indicator - 4px grid */}
+        <div className="flex-1 flex items-end justify-center" style={{ paddingBottom: spacing[2], marginTop: spacing[2] }}>
+          <div style={{ fontSize: fontSize.xs, color: semanticColors.text.secondary }}>
+            End of tasks
+          </div>
         </div>
       </div>
 
-      {/* Empty State */}
+      {/* Empty State - 4px grid */}
       {tasks.length === 0 && (
-        <div className="min-h-screen snap-start flex flex-col items-center justify-center px-4">
-          <div className="text-6xl mb-4">🔍</div>
-          <h3 className="text-xl font-bold text-[#93a1a1] mb-2">
+        <div className="min-h-screen snap-start flex flex-col items-center justify-center" style={{ padding: spacing[4] }}>
+          <Search size={64} className="mb-4" style={{ color: semanticColors.text.secondary }} />
+          <h3 style={{ fontSize: fontSize.xl, fontWeight: 'bold', color: semanticColors.text.primary, marginBottom: spacing[2] }}>
             No tasks to scout
           </h3>
-          <p className="text-[#586e75] text-center">
+          <p className="text-center" style={{ fontSize: fontSize.sm, color: semanticColors.text.secondary }}>
             Switch to Capture mode to add your first task!
           </p>
         </div>
