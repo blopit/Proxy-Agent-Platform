@@ -74,8 +74,8 @@ const HunterPage: React.FC<HunterPageProps> = ({
 
       setTasks(sortedTasks);
     } catch (err) {
-      console.error('Fetch error:', err);
-      setTasks([]);
+      console.warn('API not available, using empty task list:', err);
+      setTasks([]); // Graceful degradation
     } finally {
       setIsLoading(false);
     }
@@ -122,9 +122,9 @@ const HunterPage: React.FC<HunterPageProps> = ({
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col overflow-hidden">
       {/* Hunter Mode Header */}
-      <div className="flex-shrink-0 px-4 py-3 border-b border-[#073642]">
+      <div className="flex-shrink-0 px-4 py-3 border-b border-[#073642] snap-start">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl">🎯</span>

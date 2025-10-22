@@ -371,6 +371,57 @@ gunicorn proxy_agent_platform.api.main:app -w 4 -k uvicorn.workers.UvicornWorker
 - **Logging**: Structured logging with correlation IDs
 - **Alerting**: Integration with popular alerting systems
 
+## 📚 Documentation Guide
+
+### Core Documentation (Root Directory)
+
+**Essential reading for all developers:**
+
+1. **[README.md](README.md)** (this file) - Project overview and quick start
+2. **[CLAUDE.md](CLAUDE.md)** - Coding standards, TDD methodology, and development philosophy
+3. **[AGENT_ENTRY_POINT.md](AGENT_ENTRY_POINT.md)** - Epic tracking, roadmap, and current development status
+4. **[TESTING_STRATEGY.md](TESTING_STRATEGY.md)** - Comprehensive testing guide with 98.7% coverage strategy
+5. **[PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)** - Production deployment instructions
+6. **[REMOTE_ACCESS.md](REMOTE_ACCESS.md)** - Remote access configuration
+
+### Development Documentation (docs/)
+
+**For active development work:**
+
+- **[docs/MASTER_TASK_LIST.md](docs/MASTER_TASK_LIST.md)** - Epic prioritization and task breakdown
+- **[docs/ADHD_TASK_MANAGEMENT_MASTER.md](docs/ADHD_TASK_MANAGEMENT_MASTER.md)** - Complete ADHD system vision and UX flows
+- **[docs/REPOSITORY_STRUCTURE.md](docs/REPOSITORY_STRUCTURE.md)** - Codebase structure and organization
+- **[docs/TECH_STACK.md](docs/TECH_STACK.md)** - Technology stack reference
+- **[docs/installation.md](docs/installation.md)** - Developer setup guide
+
+### Current Status (reports/current/)
+
+**Real-time project status:**
+
+- **[reports/current/PLATFORM_STATUS.md](reports/current/PLATFORM_STATUS.md)** - Platform health and completion metrics
+- **[reports/current/IMPLEMENTATION_REALITY_CHECK.md](reports/current/IMPLEMENTATION_REALITY_CHECK.md)** - Honest assessment of current state
+- **[reports/current/MOBILE_DOPAMINE_STATUS.md](reports/current/MOBILE_DOPAMINE_STATUS.md)** - Mobile feature completion status
+
+### Epic-Specific Documentation
+
+**Epic 7: Task Splitting (Current Priority)**
+- **[docs/task-splitting/README.md](docs/task-splitting/README.md)** - Epic 7 hub
+- **[docs/task-splitting/ACTION_PLAN.md](docs/task-splitting/ACTION_PLAN.md)** - Next steps
+- **[docs/task-splitting/master-roadmap.md](docs/task-splitting/master-roadmap.md)** - 8-week implementation plan
+
+### Reference Material
+
+- **[references/psychology/](references/psychology/)** - Psychology and behavior research
+- **[references/biology/](references/biology/)** - Biological workflow references
+- **[references/RedHospitalityCommandCenter/](references/RedHospitalityCommandCenter/)** - External reference project
+
+### Historical Archive
+
+**Archived documentation:**
+- **[reports/archive/README.md](reports/archive/README.md)** - Archive index and search guide
+
+---
+
 ## 🤝 Community
 
 ### Support

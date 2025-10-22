@@ -280,13 +280,43 @@ async def get_task(
     task_id: str, task_service: TaskService = Depends(get_task_service)
 ) -> TaskResponse:
     """Get a task by ID"""
+    from src.core.task_models import MicroStep, DelegationMode, TaskStatus
+    from datetime import datetime
+
     task = task_service.get_task(task_id)
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    # Epic 7 Phase 7.1: micro_steps are stored in the task object as JSON
-    # Phase 7.2 will move them to a separate table
-    micro_steps = task.micro_steps if hasattr(task, 'micro_steps') else []
+    # Epic 7 Phase 7.2: Query micro_steps from separate table
+    db = task_service.get_db()
+    conn = db.get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT step_id, step_number, description, estimated_minutes,
+               delegation_mode, status, actual_minutes, created_at, completed_at
+        FROM micro_steps
+        WHERE parent_task_id = ?
+        ORDER BY step_number
+    """, (task_id,))
+
+    rows = cursor.fetchall()
+    micro_steps = []
+    for row in rows:
+        # Convert database row to MicroStep object
+        micro_step = MicroStep(
+            step_id=row[0],
+            parent_task_id=task_id,
+            step_number=row[1],
+            description=row[2],
+            estimated_minutes=row[3],
+            delegation_mode=DelegationMode(row[4]) if row[4] else DelegationMode.DO,
+            status=TaskStatus(row[5]) if row[5] else TaskStatus.TODO,
+            actual_minutes=row[6],
+            created_at=datetime.fromisoformat(row[7]) if row[7] else datetime.utcnow(),
+            completed_at=datetime.fromisoformat(row[8]) if row[8] else None
+        )
+        micro_steps.append(micro_step)
 
     return TaskResponse.from_task(task, micro_steps)
 

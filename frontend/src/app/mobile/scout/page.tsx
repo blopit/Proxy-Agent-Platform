@@ -54,8 +54,8 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
       const data = await response.json();
       setTasks(data.tasks || data || []);
     } catch (err) {
-      console.error('Fetch error:', err);
-      setTasks([]);
+      console.warn('API not available, using empty task list:', err);
+      setTasks([]); // Graceful degradation
     } finally {
       setIsLoading(false);
     }
@@ -140,110 +140,148 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
   }
 
   return (
-    <div className="h-full overflow-y-auto pb-4">
-      {/* Scout Mode Header */}
-      <div className="px-4 py-4 border-b border-[#073642]">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">🔍</span>
+    <div className="h-full overflow-y-auto snap-y snap-mandatory">
+      {/* Section 1: Header + High Priority Tasks - Snap Section */}
+      <div className="min-h-screen snap-start flex flex-col px-4 py-3">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-2xl">🔍</span>
           <div>
-            <h2 className="text-xl font-bold text-[#93a1a1]">Scout Mode</h2>
-            <p className="text-sm text-[#586e75]">
-              Seek novelty & identify doable micro-targets
+            <h2 className="text-lg font-bold text-[#93a1a1]">Scout Mode</h2>
+            <p className="text-xs text-[#586e75]">
+              Seek novelty & identify doable targets
             </p>
           </div>
         </div>
 
-        {/* Scout Badge Progress */}
-        <div className="mt-3 p-3 bg-[#073642] rounded-lg border border-[#586e75]">
+        {/* Scout Badge Progress - Compact */}
+        <div className="mb-2 p-2 bg-[#073642] rounded-lg border border-[#586e75]">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-[#586e75]">Scout Badge Progress</span>
+            <span className="text-xs text-[#586e75]">Progress</span>
             <span className="text-xs text-[#93a1a1] font-bold">
-              {tasks.filter(t => t.status !== 'completed').length} tasks discovered
+              {tasks.filter(t => t.status !== 'completed').length} tasks
             </span>
           </div>
-          <div className="w-full h-2 bg-[#002b36] rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-[#002b36] rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-[#859900] to-[#268bd2] transition-all duration-500"
               style={{ width: `${Math.min((tasks.length / 50) * 100, 100)}%` }}
             />
           </div>
         </div>
-      </div>
 
-      {/* Netflix-style Categories */}
-      <div className="py-4">
-        {/* Mystery Task (15% chance) - HABIT.md: unpredictable rewards */}
+        {/* Mystery Task (15% chance) */}
         {showMysteryTask && getMysteryTask().length > 0 && (
-          <CategoryRow
-            title="Mystery Task Bonus"
-            icon="🎁"
-            tasks={getMysteryTask()}
-            onTaskTap={onTaskTap}
-            isMystery={true}
-          />
+          <div className="mb-2">
+            <CategoryRow
+              title="Mystery Task Bonus"
+              icon="🎁"
+              tasks={getMysteryTask()}
+              onTaskTap={onTaskTap}
+              isMystery={true}
+            />
+          </div>
         )}
 
         {/* Main Focus */}
-        <CategoryRow
-          title="Main Focus"
-          icon="🔥"
-          tasks={getMainFocus()}
-          onTaskTap={onTaskTap}
-        />
-
-        {/* Urgent Today */}
-        <CategoryRow
-          title="Urgent Today"
-          icon="⚡"
-          tasks={getUrgentToday()}
-          onTaskTap={onTaskTap}
-        />
-
-        {/* Quick Wins */}
-        <CategoryRow
-          title="Quick Wins"
-          icon="🎯"
-          tasks={getQuickWins()}
-          onTaskTap={onTaskTap}
-        />
-
-        {/* This Week */}
-        <CategoryRow
-          title="This Week"
-          icon="📅"
-          tasks={getThisWeek()}
-          onTaskTap={onTaskTap}
-        />
-
-        {/* Can Delegate */}
-        <CategoryRow
-          title="Can Delegate"
-          icon="🤖"
-          tasks={getCanDelegate()}
-          onTaskTap={onTaskTap}
-        />
-
-        {/* Someday/Maybe */}
-        <CategoryRow
-          title="Someday/Maybe"
-          icon="💤"
-          tasks={getSomedayMaybe()}
-          onTaskTap={onTaskTap}
-        />
-
-        {/* Empty State */}
-        {tasks.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 px-4">
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-bold text-[#93a1a1] mb-2">
-              No tasks to scout
-            </h3>
-            <p className="text-[#586e75] text-center">
-              Use the Quick Capture pill above to add your first task!
-            </p>
+        {getMainFocus().length > 0 && (
+          <div className="mb-2">
+            <CategoryRow
+              title="Main Focus"
+              icon="🔥"
+              tasks={getMainFocus()}
+              onTaskTap={onTaskTap}
+            />
           </div>
         )}
+
+        {/* Urgent Today */}
+        {getUrgentToday().length > 0 && (
+          <div className="mb-2">
+            <CategoryRow
+              title="Urgent Today"
+              icon="⚡"
+              tasks={getUrgentToday()}
+              onTaskTap={onTaskTap}
+            />
+          </div>
+        )}
+
+        {/* Scroll hint */}
+        <div className="flex-1 flex items-end justify-center pb-2 mt-2">
+          <div className="text-[#586e75] text-xs animate-bounce">
+            ↓ Swipe for more categories
+          </div>
+        </div>
       </div>
+
+      {/* Section 2: Medium Priority Tasks - Snap Section */}
+      <div className="min-h-screen snap-start flex flex-col px-4 py-3">
+        {/* Quick Wins */}
+        {getQuickWins().length > 0 && (
+          <div className="mb-2">
+            <CategoryRow
+              title="Quick Wins"
+              icon="🎯"
+              tasks={getQuickWins()}
+              onTaskTap={onTaskTap}
+            />
+          </div>
+        )}
+
+        {/* This Week */}
+        {getThisWeek().length > 0 && (
+          <div className="mb-2">
+            <CategoryRow
+              title="This Week"
+              icon="📅"
+              tasks={getThisWeek()}
+              onTaskTap={onTaskTap}
+            />
+          </div>
+        )}
+
+        {/* Can Delegate */}
+        {getCanDelegate().length > 0 && (
+          <div className="mb-2">
+            <CategoryRow
+              title="Can Delegate"
+              icon="🤖"
+              tasks={getCanDelegate()}
+              onTaskTap={onTaskTap}
+            />
+          </div>
+        )}
+
+        {/* Someday/Maybe */}
+        {getSomedayMaybe().length > 0 && (
+          <div className="mb-2">
+            <CategoryRow
+              title="Someday/Maybe"
+              icon="💤"
+              tasks={getSomedayMaybe()}
+              onTaskTap={onTaskTap}
+            />
+          </div>
+        )}
+
+        {/* End indicator */}
+        <div className="flex-1 flex items-end justify-center pb-2 mt-2">
+          <div className="text-[#586e75] text-xs">End of tasks</div>
+        </div>
+      </div>
+
+      {/* Empty State */}
+      {tasks.length === 0 && (
+        <div className="min-h-screen snap-start flex flex-col items-center justify-center px-4">
+          <div className="text-6xl mb-4">🔍</div>
+          <h3 className="text-xl font-bold text-[#93a1a1] mb-2">
+            No tasks to scout
+          </h3>
+          <p className="text-[#586e75] text-center">
+            Switch to Capture mode to add your first task!
+          </p>
+        </div>
+      )}
     </div>
   );
 };

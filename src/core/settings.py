@@ -88,6 +88,31 @@ class Settings(BaseSettings):
     streak_bonus_enabled: bool = Field(default=True, description="Enable streak bonuses")
     achievement_notifications: bool = Field(default=True, description="Enable achievement notifications")
 
+    # Knowledge Graph Configuration
+    kg_enabled: bool = Field(
+        default=True, description="Enable Knowledge Graph context for task capture"
+    )
+    kg_max_entities: int = Field(
+        default=10, description="Maximum entities to retrieve for context", ge=1, le=50
+    )
+    kg_max_depth: int = Field(
+        default=2, description="Maximum relationship traversal depth", ge=1, le=5
+    )
+    kg_auto_extract: bool = Field(
+        default=True, description="Auto-extract entities from task text"
+    )
+
+    # LLM Capture Configuration
+    llm_capture_enabled: bool = Field(
+        default=True, description="Use LLM for intelligent task parsing"
+    )
+    llm_capture_fallback: bool = Field(
+        default=True, description="Fallback to keyword parsing on LLM error"
+    )
+    llm_capture_max_tokens: int = Field(
+        default=1000, description="Maximum tokens for LLM parsing", ge=100, le=4000
+    )
+
     # FastAPI Configuration
     host: str = Field(default="0.0.0.0", description="FastAPI host")
     port: int = Field(default=8000, description="FastAPI port", ge=1, le=65535)

@@ -59,6 +59,51 @@ class DelegationMode(str, Enum):
     DELETE = "delete"  # Eliminate this task (not needed)
 
 
+class LeafType(str, Enum):
+    """Classification of leaf nodes (MicroSteps) for automation potential"""
+
+    DIGITAL = "digital"  # Automatable by agents/APIs
+    HUMAN = "human"  # Requires person/IRL action
+    UNKNOWN = "unknown"  # Needs clarification (transient state)
+
+
+class CaptureMode(str, Enum):
+    """Capture mode for user interaction strategy"""
+
+    AUTO = "auto"  # AI guesses all fields automatically
+    MANUAL = "manual"  # User sets all fields explicitly
+    CLARIFY = "clarify"  # AI asks minimal questions for missing info
+
+
+class AutomationStep(BaseModel):
+    """Single step in an automation plan"""
+
+    kind: str = Field(..., description="Step type (e.g., 'email.send', 'calendar.create')")
+    params: dict[str, Any] = Field(default_factory=dict, description="Step-specific parameters")
+
+    model_config = ConfigDict(use_enum_values=True, populate_by_name=True)
+
+
+class AutomationPlan(BaseModel):
+    """Structured plan for automated task execution"""
+
+    steps: list[AutomationStep] = Field(default_factory=list, description="Sequence of automation steps")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)")
+
+    model_config = ConfigDict(use_enum_values=True, populate_by_name=True)
+
+
+class ClarificationNeed(BaseModel):
+    """Represents missing information requiring user input"""
+
+    field: str = Field(..., description="Field name requiring clarification")
+    question: str = Field(..., description="Human-readable question to ask user")
+    options: list[str] | None = Field(None, description="Optional multiple choice options")
+    required: bool = Field(True, description="Whether this clarification blocks progress")
+
+    model_config = ConfigDict(use_enum_values=True, populate_by_name=True)
+
+
 class MicroStep(BaseModel):
     """Micro-step model for Epic 7 - 2-5 minute actionable steps"""
 
@@ -78,6 +123,13 @@ class MicroStep(BaseModel):
     actual_minutes: int | None = Field(None, ge=0)
     created_at: datetime = Field(default_factory=datetime.utcnow)
     completed_at: datetime | None = None
+
+    # Capture system fields (Epic: Capture Mode)
+    leaf_type: LeafType = Field(default=LeafType.UNKNOWN, description="Classification for automation")
+    automation_plan: AutomationPlan | None = Field(None, description="Structured automation plan if DIGITAL")
+    clarification_needs: list[ClarificationNeed] = Field(
+        default_factory=list, description="Questions requiring user input"
+    )
 
     @field_validator("description")
     @classmethod

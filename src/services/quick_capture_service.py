@@ -8,9 +8,12 @@ This service combines the UnifiedAgent system with Secretary intelligence to pro
 
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import Any, Optional
 
+from src.core.settings import get_settings
 from src.core.task_models import TaskPriority, TaskStatus
+from src.knowledge.models import KGContext
+from src.services.llm_capture_service import LLMCaptureService
 from src.services.secretary_service import SecretaryService
 
 # Python 3.10 compatibility
@@ -25,9 +28,15 @@ class QuickCaptureService:
     def __init__(self):
         """Initialize quick capture service"""
         self.secretary = SecretaryService()
+        self.llm_service = LLMCaptureService()
+        self.settings = get_settings()
 
     async def analyze_capture(
-        self, text: str, user_id: str, voice_input: bool = False
+        self,
+        text: str,
+        user_id: str,
+        voice_input: bool = False,
+        kg_context: Optional[KGContext] = None,
     ) -> dict[str, Any]:
         """
         Analyze captured text using AI and secretary intelligence.
@@ -36,6 +45,7 @@ class QuickCaptureService:
             text: Raw input text from user
             user_id: User ID for context
             voice_input: Whether input came from voice
+            kg_context: Knowledge Graph context (optional)
 
         Returns:
             Dictionary with analysis results including:
@@ -48,9 +58,26 @@ class QuickCaptureService:
             - tags: Suggested tags
         """
         try:
-            # For now, use smart keyword-based analysis
-            # TODO: Integrate with UnifiedAgent when async support is ready
-            analysis = self._analyze_with_keywords(text, user_id, voice_input)
+            # Try LLM parsing first (if enabled)
+            if self.settings.llm_capture_enabled:
+                try:
+                    llm_result = await self.llm_service.parse(
+                        text, user_id, kg_context=kg_context
+                    )
+                    # Convert LLM result to analysis format
+                    analysis = self._llm_result_to_analysis(
+                        llm_result, voice_input, kg_context is not None
+                    )
+                except Exception as e:
+                    logger.warning(f"LLM parsing failed: {e}")
+                    if self.settings.llm_capture_fallback:
+                        # Fallback to keyword-based analysis
+                        analysis = self._analyze_with_keywords(text, user_id, voice_input)
+                    else:
+                        raise
+            else:
+                # Use keyword-based analysis
+                analysis = self._analyze_with_keywords(text, user_id, voice_input)
 
             # Use secretary to categorize
             category = self._categorize_task(analysis)
@@ -82,6 +109,70 @@ class QuickCaptureService:
                 "reasoning": "Basic keyword analysis",
                 "tags": ["quick-capture"],
             }
+
+    def _llm_result_to_analysis(
+        self, llm_result, voice_input: bool, used_kg: bool
+    ) -> dict[str, Any]:
+        """
+        Convert LLMCaptureService result to QuickCaptureService analysis format.
+
+        Args:
+            llm_result: TaskParseResult from LLMCaptureService
+            voice_input: Whether input came from voice
+            used_kg: Whether Knowledge Graph context was used
+
+        Returns:
+            Analysis dict compatible with existing format
+        """
+        task = llm_result.task
+
+        # Convert confidence from 0-1 to 0-100
+        confidence = int(task.confidence * 100)
+
+        # Build tags
+        tags = list(task.tags)
+        if voice_input and "voice" not in tags:
+            tags.append("voice")
+        if used_kg and "kg-enhanced" not in tags:
+            tags.append("kg-enhanced")
+        if llm_result.provider and f"llm-{llm_result.provider}" not in tags:
+            tags.append(f"llm-{llm_result.provider}")
+
+        # Determine delegation
+        should_delegate = task.is_digital
+        delegation_type = task.automation_type
+
+        # Add delegation tag
+        if should_delegate and delegation_type:
+            tags.append(f"delegate-{delegation_type}")
+
+        # Parse due date to datetime if present
+        due_date = None
+        if task.due_date:
+            try:
+                due_date = datetime.fromisoformat(task.due_date)
+            except ValueError:
+                logger.warning(f"Invalid due date format: {task.due_date}")
+
+        # Build reasoning
+        reasoning_parts = [llm_result.reasoning]
+        if used_kg:
+            reasoning_parts.append("Enhanced with Knowledge Graph context")
+        if should_delegate:
+            reasoning_parts.append(f"Identified as {delegation_type} task")
+
+        return {
+            "title": task.title,
+            "priority": task.priority,
+            "confidence": confidence,
+            "should_delegate": should_delegate,
+            "delegation_type": delegation_type,
+            "reasoning": "; ".join(reasoning_parts),
+            "tags": tags,
+            "due_date": due_date,
+            "estimated_hours": task.estimated_hours,
+            "entities": task.entities,
+        }
 
     def _analyze_with_keywords(
         self, text: str, user_id: str, voice_input: bool

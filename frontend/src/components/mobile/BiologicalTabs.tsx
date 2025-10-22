@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Search, Target, Heart, Map } from 'lucide-react';
+import { Search, Target, Heart, Map, Sparkles } from 'lucide-react';
 
 interface BiologicalTabsProps {
   activeTab: string;
@@ -30,8 +30,19 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
 }) => {
   const [pulseAnimation, setPulseAnimation] = useState<string | null>(null);
 
-  // Define the 4 core biological circuits from bio_reference.md
+  // Define the 5 biological circuits (added Capture mode first)
   const circuits: BiologicalCircuit[] = [
+    {
+      id: 'capture',
+      name: 'Capture',
+      icon: Sparkles,
+      description: 'Quick Thought Capture',
+      purpose: 'Capture thoughts instantly with natural language',
+      color: 'text-cyan-400',
+      bgColor: 'bg-cyan-50',
+      borderColor: 'border-cyan-200',
+      isOptimal: true // Always available/optimal
+    },
     {
       id: 'scout',
       name: 'Scout',
@@ -134,8 +145,8 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
         </div>
       </div>
 
-      {/* Bottom Navigation Tabs */}
-      <div className="flex items-center justify-center gap-2 px-4">
+      {/* Bottom Navigation Tabs - Fill entire row with 5 tabs */}
+      <div className="flex items-center justify-center gap-1 px-2">
         {circuits.map((circuit) => {
           const IconComponent = circuit.icon;
           return (
@@ -143,27 +154,27 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
               key={circuit.id}
               onClick={() => onTabChange(circuit.id)}
               className={`
-                relative flex-1 py-3 px-2 rounded-xl transition-all duration-300
+                relative flex-1 py-3 px-1 rounded-xl transition-all duration-300
                 ${activeTab === circuit.id
                   ? 'bg-[#268bd2] text-[#fdf6e3] shadow-lg scale-105'
                   : 'bg-[#073642] text-[#586e75] border border-[#586e75]'
                 }
-                ${circuit.isOptimal ? 'ring-2 ring-[#b58900] ring-opacity-50' : ''}
+                ${circuit.isOptimal && circuit.id !== 'capture' ? 'ring-2 ring-[#b58900] ring-opacity-50' : ''}
                 ${pulseAnimation === circuit.id ? 'animate-pulse' : ''}
               `}
             >
-              {/* Optimal indicator */}
-              {circuit.isOptimal && (
+              {/* Optimal indicator (not for capture since it's always optimal) */}
+              {circuit.isOptimal && circuit.id !== 'capture' && (
                 <div className="absolute -top-1 -right-1 w-2 h-2 bg-[#b58900] rounded-full animate-ping" />
               )}
 
               {/* Circuit icon */}
               <div className="flex justify-center mb-1">
-                <IconComponent size={22} className="transition-transform duration-300" />
+                <IconComponent size={18} className="transition-transform duration-300" />
               </div>
 
               {/* Circuit name */}
-              <div className="text-xs font-medium text-center">
+              <div className="text-xs font-medium text-center whitespace-nowrap">
                 {circuit.name}
               </div>
             </button>

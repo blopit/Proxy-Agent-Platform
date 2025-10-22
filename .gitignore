@@ -101,3 +101,6 @@ logs/
 # Process IDs
 *.pid
 backend.pid
+
+# References (cloned repos for inspiration)
+references/

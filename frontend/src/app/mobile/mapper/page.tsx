@@ -120,9 +120,11 @@ const MapperPage: React.FC<MapperPageProps> = ({ xp, level, streakDays }) => {
   const xpProgress = (xp % xpForNextLevel) / xpForNextLevel * 100;
 
   return (
-    <div className="h-full overflow-y-auto pb-4">
-      {/* Mapper Mode Header */}
-      <div className="px-4 py-4 border-b border-[#073642] bg-gradient-to-r from-[#6c71c4]/20 to-[#d33682]/20">
+    <div className="h-full overflow-y-auto snap-y snap-mandatory">
+      {/* Header & Tab Navigation - Snap Section */}
+      <div className="min-h-screen snap-start flex flex-col">
+        {/* Mapper Mode Header */}
+        <div className="px-4 py-4 border-b border-[#073642] bg-gradient-to-r from-[#6c71c4]/20 to-[#d33682]/20">
         <div className="flex items-center gap-3 mb-3">
           <span className="text-3xl">🗺️</span>
           <div>
@@ -168,9 +170,13 @@ const MapperPage: React.FC<MapperPageProps> = ({ xp, level, streakDays }) => {
         </button>
       </div>
 
-      {/* Overview Tab */}
-      {activeTab === 'overview' && (
-        <div className="px-4 py-4 space-y-4">
+        {/* Tab Content Area */}
+        <div className="flex-1 overflow-hidden">
+          {/* Overview Tab */}
+          {activeTab === 'overview' && (
+            <div className="h-full overflow-y-auto snap-y snap-mandatory">
+              {/* Level & XP - Snap Section */}
+              <div className="min-h-screen snap-start flex flex-col px-4 py-6">
           {/* Level & XP Card */}
           <div className="p-4 bg-gradient-to-br from-[#268bd2]/20 to-[#2aa198]/20 rounded-xl border-2 border-[#268bd2]">
             <div className="flex items-center justify-between mb-3">
@@ -202,8 +208,18 @@ const MapperPage: React.FC<MapperPageProps> = ({ xp, level, streakDays }) => {
             </div>
           </div>
 
-          {/* Streak Card */}
-          <div className="p-4 bg-gradient-to-br from-[#cb4b16]/20 to-[#dc322f]/20 rounded-xl border-2 border-[#dc322f]">
+                {/* Scroll hint */}
+                <div className="flex-1 flex items-end justify-center pb-4 mt-4">
+                  <div className="text-[#586e75] text-xs animate-bounce">
+                    ↓ Swipe to see streak
+                  </div>
+                </div>
+              </div>
+
+              {/* Streak - Snap Section */}
+              <div className="min-h-screen snap-start flex flex-col px-4 py-6">
+                {/* Streak Card */}
+                <div className="p-4 bg-gradient-to-br from-[#cb4b16]/20 to-[#dc322f]/20 rounded-xl border-2 border-[#dc322f]">
             <div className="flex items-center gap-3">
               <span className="text-5xl">🔥</span>
               <div>
@@ -214,8 +230,18 @@ const MapperPage: React.FC<MapperPageProps> = ({ xp, level, streakDays }) => {
             </div>
           </div>
 
-          {/* Weekly Stats */}
-          <div className="p-4 bg-[#073642] rounded-xl border-2 border-[#586e75]">
+                {/* Scroll hint */}
+                <div className="flex-1 flex items-end justify-center pb-4 mt-4">
+                  <div className="text-[#586e75] text-xs animate-bounce">
+                    ↓ Swipe for weekly stats
+                  </div>
+                </div>
+              </div>
+
+              {/* Weekly Stats - Snap Section */}
+              <div className="min-h-screen snap-start flex flex-col px-4 py-6">
+                {/* Weekly Stats */}
+                <div className="p-4 bg-[#073642] rounded-xl border-2 border-[#586e75]">
             <h3 className="text-sm font-bold text-[#93a1a1] mb-3 flex items-center gap-2">
               <span>📈</span>
               <span>This Week</span>
@@ -243,9 +269,9 @@ const MapperPage: React.FC<MapperPageProps> = ({ xp, level, streakDays }) => {
             </div>
           </div>
 
-          {/* Category Breakdown */}
-          {Object.keys(weeklyStats.categoriesWorked).length > 0 && (
-            <div className="p-4 bg-[#073642] rounded-xl border-2 border-[#586e75]">
+                {/* Category Breakdown */}
+                {Object.keys(weeklyStats.categoriesWorked).length > 0 && (
+                  <div className="p-4 bg-[#073642] rounded-xl border-2 border-[#586e75] mt-4">
               <h3 className="text-sm font-bold text-[#93a1a1] mb-3">Category Breakdown</h3>
               {Object.entries(weeklyStats.categoriesWorked).map(([category, count]) => (
                 <div key={category} className="mb-2">
@@ -264,18 +290,22 @@ const MapperPage: React.FC<MapperPageProps> = ({ xp, level, streakDays }) => {
                 </div>
               ))}
             </div>
+                )}
+              </div>
+            </div>
           )}
-        </div>
-      )}
 
-      {/* Achievements Tab */}
-      {activeTab === 'achievements' && (
-        <AchievementGallery achievements={achievements} />
-      )}
+          {/* Achievements Tab */}
+          {activeTab === 'achievements' && (
+            <div className="h-full overflow-y-auto">
+              <AchievementGallery achievements={achievements} />
+            </div>
+          )}
 
-      {/* Reflection Tab */}
-      {activeTab === 'reflection' && (
-        <div className="px-4 py-4 space-y-4">
+          {/* Reflection Tab */}
+          {activeTab === 'reflection' && (
+            <div className="h-full overflow-y-auto snap-y snap-mandatory">
+              <div className="min-h-screen snap-start flex flex-col px-4 py-6">
           <div className="p-4 bg-[#073642] rounded-xl border-2 border-[#586e75]">
             <h3 className="text-sm font-bold text-[#93a1a1] mb-3 flex items-center gap-2">
               <span>💭</span>
@@ -322,8 +352,11 @@ const MapperPage: React.FC<MapperPageProps> = ({ xp, level, streakDays }) => {
               </button>
             </div>
           </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Weekly Treasure Modal */}
       {showWeeklyTreasure && (

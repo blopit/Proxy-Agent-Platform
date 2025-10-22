@@ -42,7 +42,6 @@ const MenderPage: React.FC<MenderPageProps> = ({
   }, [refreshTrigger]);
 
   useEffect(() => {
-    // Show mystery box after 3 mender sessions (HABIT.md: unpredictable rewards)
     if (menderSessions >= 3) {
       setShowMysteryBox(true);
     }
@@ -62,7 +61,7 @@ const MenderPage: React.FC<MenderPageProps> = ({
       const data = await response.json();
       setTasks(data.tasks || data || []);
     } catch (err) {
-      console.error('Fetch error:', err);
+      console.warn('API not available:', err);
       setTasks([]);
     } finally {
       setIsLoading(false);
@@ -71,12 +70,8 @@ const MenderPage: React.FC<MenderPageProps> = ({
 
   const fetchEnergyData = async () => {
     try {
-      // Fetch energy prediction from AI
       const response = await fetch(`${API_URL}/api/v1/energy/current-level?user_id=mobile-user`);
       if (response.ok) {
-        const data = await response.json();
-
-        // Try to get AI predictions
         try {
           const trackResponse = await fetch(`${API_URL}/api/v1/energy/track`, {
             method: 'POST',
@@ -90,17 +85,16 @@ const MenderPage: React.FC<MenderPageProps> = ({
             setPredictedEnergy(trackData.predicted_next_hour);
           }
         } catch (err) {
-          console.log('AI energy prediction not available');
+          console.warn('AI energy prediction not available');
         }
       }
     } catch (err) {
-      console.error('Energy fetch error:', err);
+      console.warn('Energy API not available:', err);
+      setEnergyTrend('stable');
     }
   };
 
-  // Filter tasks for mender mode
   const getFiveMinWins = () => {
-    // Ultra-short tasks (5 minutes or less, 0.08 hours)
     return tasks.filter(t =>
       t.status !== 'completed' &&
       (t.estimated_hours || 0) <= 0.08
@@ -108,7 +102,6 @@ const MenderPage: React.FC<MenderPageProps> = ({
   };
 
   const getMindfulBreaks = () => {
-    // Tasks tagged with relaxation, meditation, or break
     return tasks.filter(t =>
       t.status !== 'completed' &&
       t.tags?.some(tag => ['meditation', 'break', 'relaxation', 'breathing', 'mindful'].includes(tag.toLowerCase()))
@@ -116,7 +109,6 @@ const MenderPage: React.FC<MenderPageProps> = ({
   };
 
   const getReviewReflect = () => {
-    // Tasks related to planning, reviewing, or reflection
     return tasks.filter(t =>
       t.status !== 'completed' &&
       (t.tags?.some(tag => ['review', 'planning', 'reflection', 'weekly'].includes(tag.toLowerCase())) ||
@@ -126,7 +118,6 @@ const MenderPage: React.FC<MenderPageProps> = ({
   };
 
   const getAdministrative = () => {
-    // Low cognitive load tasks
     return tasks.filter(t =>
       t.status !== 'completed' &&
       t.priority === 'low' &&
@@ -134,139 +125,141 @@ const MenderPage: React.FC<MenderPageProps> = ({
     ).slice(0, 8);
   };
 
-  const handleTaskComplete = () => {
-    setMenderSessions(prev => prev + 1);
-  };
-
   if (isLoading && tasks.length === 0) {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="text-4xl mb-4">💙</div>
-          <p className="text-[#586e75]">Preparing recovery mode...</p>
+          <p className="text-[#586e75]">Preparing recovery...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-full overflow-y-auto pb-4">
-      {/* Mender Mode Header */}
-      <div className="px-4 py-4 border-b border-[#073642]">
-        <div className="flex items-center gap-3 mb-3">
-          <span className="text-3xl">💙</span>
-          <div>
-            <h2 className="text-xl font-bold text-[#93a1a1]">Mender Mode</h2>
-            <p className="text-sm text-[#586e75]">
-              Recover energy & rebuild cognitive tissue
+    <div className="h-full overflow-y-auto snap-y snap-mandatory">
+      {/* Section 1: Energy Gauge + Quick Wins - Snap Section */}
+      <div className="min-h-screen snap-start flex flex-col px-4 py-3">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-2xl">💙</span>
+          <div className="flex-1">
+            <h2 className="text-lg font-bold text-[#93a1a1]">Mender Mode</h2>
+            <p className="text-xs text-[#586e75]">
+              Recover energy & rebuild
             </p>
           </div>
+          {menderSessions > 0 && (
+            <div className="flex items-center gap-1">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    i < menderSessions ? 'bg-[#268bd2]' : 'bg-[#586e75]'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Mender Sessions Progress */}
-        {menderSessions > 0 && (
-          <div className="p-3 bg-[#073642] rounded-lg border border-[#268bd2]">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-[#586e75]">Mender Sessions Today</span>
-              <div className="flex items-center gap-1">
-                {[...Array(3)].map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-2 h-2 rounded-full ${
-                      i < menderSessions ? 'bg-[#268bd2]' : 'bg-[#073642] border border-[#586e75]'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-            {menderSessions >= 3 && (
-              <div className="text-xs text-[#b58900] font-bold flex items-center gap-1">
-                <span>🎁</span>
-                <span>Mystery box unlocked!</span>
-              </div>
-            )}
+        {/* Energy Gauge - Compact */}
+        <div className="mb-2 py-3 bg-[#073642] rounded-lg">
+          <EnergyGauge
+            energy={energy}
+            trend={energyTrend}
+            predictedNextHour={predictedEnergy}
+          />
+        </div>
+
+        {/* 5-Min Wins - Compact */}
+        {getFiveMinWins().length > 0 && (
+          <div className="mb-2">
+            <CategoryRow
+              title="5-Min Wins"
+              icon="🌱"
+              tasks={getFiveMinWins()}
+              onTaskTap={onTaskTap}
+            />
           </div>
         )}
-      </div>
-
-      {/* Energy Visualization */}
-      <div className="py-6 bg-[#073642] border-b border-[#586e75]">
-        <EnergyGauge
-          energy={energy}
-          trend={energyTrend}
-          predictedNextHour={predictedEnergy}
-        />
-      </div>
-
-      {/* Recovery Task Categories */}
-      <div className="py-4">
-        {/* 5-Min Wins */}
-        <CategoryRow
-          title="5-Min Wins"
-          icon="🌱"
-          tasks={getFiveMinWins()}
-          onTaskTap={onTaskTap}
-        />
 
         {/* Mindful Breaks */}
         {getMindfulBreaks().length > 0 && (
-          <CategoryRow
-            title="Mindful Breaks"
-            icon="🧘"
-            tasks={getMindfulBreaks()}
-            onTaskTap={onTaskTap}
-          />
+          <div className="mb-2">
+            <CategoryRow
+              title="Mindful Breaks"
+              icon="🧘"
+              tasks={getMindfulBreaks()}
+              onTaskTap={onTaskTap}
+            />
+          </div>
         )}
 
+        <div className="flex-1 flex items-end justify-center pb-2 mt-2">
+          <div className="text-[#586e75] text-xs animate-bounce">
+            ↓ Swipe for more recovery tasks
+          </div>
+        </div>
+      </div>
+
+      {/* Section 2: More Recovery Tasks - Snap Section */}
+      <div className="min-h-screen snap-start flex flex-col px-4 py-3">
         {/* Review & Reflect */}
         {getReviewReflect().length > 0 && (
-          <CategoryRow
-            title="Review & Reflect"
-            icon="📝"
-            tasks={getReviewReflect()}
-            onTaskTap={onTaskTap}
-          />
+          <div className="mb-2">
+            <CategoryRow
+              title="Review & Reflect"
+              icon="📝"
+              tasks={getReviewReflect()}
+              onTaskTap={onTaskTap}
+            />
+          </div>
         )}
 
         {/* Administrative */}
-        <CategoryRow
-          title="Administrative"
-          icon="☕"
-          tasks={getAdministrative()}
-          onTaskTap={onTaskTap}
-        />
+        {getAdministrative().length > 0 && (
+          <div className="mb-2">
+            <CategoryRow
+              title="Administrative"
+              icon="☕"
+              tasks={getAdministrative()}
+              onTaskTap={onTaskTap}
+            />
+          </div>
+        )}
+
+        {/* Recovery Tips - Compact */}
+        <div className="p-2 bg-[#073642] rounded-lg border border-[#268bd2]">
+          <div className="flex items-start gap-2">
+            <span className="text-lg">💡</span>
+            <div>
+              <h4 className="text-xs font-bold text-[#93a1a1] mb-1">
+                Recovery Tips
+              </h4>
+              <ul className="text-xs text-[#586e75] space-y-0.5">
+                <li>• Complete 3 micro-tasks → mystery box</li>
+                <li>• Deep breathing for 2min → 10-15% energy</li>
+                <li>• Short walks restore cognitive function</li>
+              </ul>
+            </div>
+          </div>
+        </div>
 
         {/* Empty State */}
         {tasks.filter(t => t.status !== 'completed').length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 px-4">
+          <div className="flex-1 flex flex-col items-center justify-center">
             <div className="text-6xl mb-4">💙</div>
             <h3 className="text-xl font-bold text-[#93a1a1] mb-2">
               Perfect time to rest
             </h3>
             <p className="text-[#586e75] text-center">
-              No recovery tasks available. Take a break and recharge!
+              No recovery tasks available. Recharge!
             </p>
           </div>
         )}
-      </div>
 
-      {/* Recovery Tips */}
-      <div className="px-4 pb-4">
-        <div className="p-4 bg-[#073642] rounded-xl border border-[#268bd2]">
-          <div className="flex items-start gap-3">
-            <span className="text-2xl">💡</span>
-            <div>
-              <h4 className="text-sm font-bold text-[#93a1a1] mb-2">
-                Energy Recovery Tips
-              </h4>
-              <ul className="text-xs text-[#586e75] space-y-1">
-                <li>• Complete 3 micro-tasks to unlock mystery box</li>
-                <li>• Deep breathing for 2 minutes can boost energy 10-15%</li>
-                <li>• Short walks restore cognitive function</li>
-                <li>• Hydration directly affects mental clarity</li>
-              </ul>
-            </div>
-          </div>
+        <div className="flex-1 flex items-end justify-center pb-2 mt-2">
+          <div className="text-[#586e75] text-xs">End of recovery mode</div>
         </div>
       </div>
 
@@ -277,10 +270,10 @@ const MenderPage: React.FC<MenderPageProps> = ({
             <div className="text-center">
               <div className="text-6xl mb-4">🎁</div>
               <h3 className="text-2xl font-bold text-[#fdf6e3] mb-2">
-                Mystery Box Unlocked!
+                Mystery Box!
               </h3>
               <p className="text-[#fdf6e3] mb-4">
-                You completed 3 mender sessions! Here's your reward:
+                3 mender sessions complete!
               </p>
               <div className="p-4 bg-[#fdf6e3] rounded-lg">
                 <div className="text-3xl mb-2">⚡</div>
@@ -288,12 +281,12 @@ const MenderPage: React.FC<MenderPageProps> = ({
                   +25% Energy Boost
                 </p>
                 <p className="text-[#586e75] text-sm mt-1">
-                  Applied to your next Hunter session
+                  Applied to next Hunter session
                 </p>
               </div>
               <button
                 onClick={() => setShowMysteryBox(false)}
-                className="mt-4 px-6 py-2 bg-[#fdf6e3] text-[#073642] font-bold rounded-lg hover:bg-[#eee8d5] transition-colors"
+                className="mt-4 px-6 py-2 bg-[#fdf6e3] text-[#073642] font-bold rounded-lg"
               >
                 Claim Reward
               </button>

@@ -651,6 +651,78 @@ class EnhancedTaskRepository(BaseEnhancedRepository):
         rows = cursor.fetchall()
         return [self._dict_to_model(dict(row), Task) for row in rows]
 
+    def save_micro_step(self, micro_step) -> str:
+        """
+        Save a MicroStep to the micro_steps table.
+
+        Args:
+            micro_step: MicroStep model instance
+
+        Returns:
+            step_id of the saved MicroStep
+        """
+        from src.core.task_models import MicroStep
+
+        # Convert MicroStep to dict for database storage
+        data = micro_step.model_dump()
+
+        # Convert automation_plan to JSON string if present
+        if data.get("automation_plan"):
+            data["automation_plan"] = json.dumps(data["automation_plan"])
+
+        # Convert clarification_needs to JSON string if present
+        if data.get("clarification_needs"):
+            data["clarification_needs"] = json.dumps(
+                [c if isinstance(c, dict) else c.model_dump() for c in data["clarification_needs"]]
+            )
+
+        # Convert enums to values
+        if data.get("delegation_mode"):
+            data["delegation_mode"] = (
+                data["delegation_mode"].value
+                if hasattr(data["delegation_mode"], "value")
+                else data["delegation_mode"]
+            )
+        if data.get("status"):
+            data["status"] = (
+                data["status"].value if hasattr(data["status"], "value") else data["status"]
+            )
+        if data.get("leaf_type"):
+            data["leaf_type"] = (
+                data["leaf_type"].value if hasattr(data["leaf_type"], "value") else data["leaf_type"]
+            )
+
+        # Convert timestamps to ISO strings
+        for field in ["created_at", "completed_at"]:
+            if data.get(field) and isinstance(data[field], datetime):
+                data[field] = data[field].isoformat()
+
+        # Build INSERT query
+        columns = [
+            "step_id",
+            "parent_task_id",
+            "step_number",
+            "description",
+            "estimated_minutes",
+            "delegation_mode",
+            "status",
+            "actual_minutes",
+            "created_at",
+            "completed_at",
+        ]
+
+        placeholders = ", ".join(["?" for _ in columns])
+        values = [data.get(col) for col in columns]
+
+        query = f"INSERT INTO micro_steps ({', '.join(columns)}) VALUES ({placeholders})"
+
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(query, values)
+        conn.commit()
+
+        return micro_step.step_id
+
 
 # Enhanced project repository
 class EnhancedProjectRepository(BaseEnhancedRepository):
