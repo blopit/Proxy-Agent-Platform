@@ -74,15 +74,16 @@ class BaseRepository:
                 "metadata",
                 "settings",
                 "default_tags",
+                "micro_steps",  # Epic 7: Task Splitting
             ] and isinstance(value, str):
                 try:
                     data[key] = (
                         json.loads(value)
                         if value
-                        else ([] if key in ["tags", "team_members", "default_tags"] else {})
+                        else ([] if key in ["tags", "team_members", "default_tags", "micro_steps"] else {})
                     )
                 except json.JSONDecodeError:
-                    data[key] = [] if key in ["tags", "team_members", "default_tags"] else {}
+                    data[key] = [] if key in ["tags", "team_members", "default_tags", "micro_steps"] else {}
             elif (
                 key in ["estimated_hours", "actual_hours", "default_estimated_hours"]
                 and value is not None
@@ -109,12 +110,15 @@ class BaseRepository:
                 "metadata",
                 "settings",
                 "default_tags",
+                "micro_steps",  # Epic 7: Task Splitting
             ] and isinstance(value, (list, dict)):
                 data[key] = json.dumps(value)
             elif isinstance(value, Decimal):
                 data[key] = str(value)
             elif isinstance(value, datetime):
                 data[key] = value.isoformat()
+            elif hasattr(value, 'value'):  # Handle enum values
+                data[key] = value.value
 
         return data
 
@@ -143,7 +147,11 @@ class TaskRepository(BaseRepository):
                 completed_at TEXT,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
-                metadata TEXT DEFAULT '{}'
+                metadata TEXT DEFAULT '{}',
+                scope TEXT DEFAULT 'simple',
+                micro_steps TEXT DEFAULT '[]',
+                is_micro_step INTEGER DEFAULT 0,
+                delegation_mode TEXT DEFAULT 'do'
             )
         """)
         conn.commit()

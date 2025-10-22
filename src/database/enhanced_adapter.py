@@ -110,6 +110,7 @@ class EnhancedDatabaseAdapter:
                 scope TEXT DEFAULT 'simple',
                 delegation_mode TEXT DEFAULT 'do',
                 is_micro_step BOOLEAN DEFAULT 0,
+                micro_steps TEXT DEFAULT '[]',
                 FOREIGN KEY (project_id) REFERENCES projects(project_id) ON DELETE CASCADE,
                 FOREIGN KEY (parent_id) REFERENCES tasks(task_id) ON DELETE CASCADE,
                 FOREIGN KEY (assignee_id) REFERENCES users(user_id) ON DELETE SET NULL

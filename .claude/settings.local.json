@@ -2,7 +2,28 @@
   "permissions": {
     "allow": [
       "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\n\" http://localhost:3000/mobile)",
-      "Bash(git commit -m \"$(cat <<''EOF''\ndocs: reorganize workflow documentation (Week 3 cleanup)\n\nFollowing DIRECTORY_CLEANUP_REPORT.md Week 3 plan:\n\n**Renamed directory**:\n- workflows/ → docs/workflow-templates/\n  * Contains only Markdown documentation, not executable code\n  * Misleading name implied code execution\n  * Now clearly categorized as documentation\n\n**Rationale**:\nThe workflows/ directory contained 100% Markdown files (templates,\nexamples, guides) and 0% Python code. Directory name was confusing\nas it suggested executable workflow code, when it was actually\ndocumentation about workflow patterns.\n\n**Final Root Directory Structure**:\n✅ config/           - YAML agent configs\n✅ docs/             - All documentation (including workflow-templates/)\n✅ frontend/         - Next.js frontend\n✅ src/              - Active Python development (4.4MB)\n✅ tests/            - Shared fixtures + integration tests\n✅ references/       - Reference materials + archived legacy code\n✅ reports/          - Status reports\n✅ tasks/            - Epic tracking\n✅ use-cases/        - Example implementations\n\n**Cleanup Complete** (3-week plan):\nWeek 1: ✅ Archived proxy_agent_platform/, deleted agent/ & mcp_servers/\nWeek 2: ✅ Deleted 27 legacy test files\nWeek 3: ✅ Reorganized workflow documentation\n\nSee DIRECTORY_CLEANUP_REPORT.md for full analysis.\nEOF\n)\")"
+      "Bash(git commit -m \"$(cat <<''EOF''\ndocs: reorganize workflow documentation (Week 3 cleanup)\n\nFollowing DIRECTORY_CLEANUP_REPORT.md Week 3 plan:\n\n**Renamed directory**:\n- workflows/ → docs/workflow-templates/\n  * Contains only Markdown documentation, not executable code\n  * Misleading name implied code execution\n  * Now clearly categorized as documentation\n\n**Rationale**:\nThe workflows/ directory contained 100% Markdown files (templates,\nexamples, guides) and 0% Python code. Directory name was confusing\nas it suggested executable workflow code, when it was actually\ndocumentation about workflow patterns.\n\n**Final Root Directory Structure**:\n✅ config/           - YAML agent configs\n✅ docs/             - All documentation (including workflow-templates/)\n✅ frontend/         - Next.js frontend\n✅ src/              - Active Python development (4.4MB)\n✅ tests/            - Shared fixtures + integration tests\n✅ references/       - Reference materials + archived legacy code\n✅ reports/          - Status reports\n✅ tasks/            - Epic tracking\n✅ use-cases/        - Example implementations\n\n**Cleanup Complete** (3-week plan):\nWeek 1: ✅ Archived proxy_agent_platform/, deleted agent/ & mcp_servers/\nWeek 2: ✅ Deleted 27 legacy test files\nWeek 3: ✅ Reorganized workflow documentation\n\nSee DIRECTORY_CLEANUP_REPORT.md for full analysis.\nEOF\n)\")",
+      "Bash(cat .venv/pyvenv.cfg)",
+      "Bash(cat venv_linux/pyvenv.cfg)",
+      "Bash(source .venv/bin/activate)",
+      "Bash(python -m pytest src/ --tb=no -q)",
+      "Bash(python -m pytest src/repositories/tests/test_task_repository.py::TestTaskRepository::test_get_task_by_id -v)",
+      "Bash(python -m pytest src/repositories/tests/test_task_repository.py -v)",
+      "Bash(python -m pytest src/repositories/tests/test_task_repository.py::TestTaskRepository::test_create_task -v)",
+      "Bash(curl -s http://localhost:4040/api/tunnels)",
+      "Bash(python -m pytest src/api/tests/test_task_endpoints_integration.py::TestTaskEndpointsIntegration::test_get_task_success -v)",
+      "Bash(lsof -ti:8001)",
+      "Bash(curl -s http://localhost:8001/api/v1/tasks?limit=5)",
+      "Bash(ngrok version)",
+      "Bash(curl -s http://127.0.0.1:4040/api/tunnels)",
+      "Bash(awk '{print $2}')",
+      "Bash(pkill -f \"uvicorn src.api.main\")",
+      "Bash(curl -s https://0ea8f81747ed.ngrok-free.app/health)",
+      "Bash(curl -s -H \"ngrok-skip-browser-warning: true\" https://0ea8f81747ed.ngrok-free.app/health)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(curl -s http://localhost:300)",
+      "Bash(python -m pytest src/ --tb=line -q)",
+      "Bash(git add -A)"
     ],
     "deny": [],
     "ask": []

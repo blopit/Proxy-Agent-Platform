@@ -438,14 +438,14 @@ Gamification Agent AI Features:
 ### **📋 TDD Session Checklist (Use This Every Time!)**
 
 Before starting work:
-- [ ] Run full test suite: `source venv_linux/bin/activate && python -m pytest src/ tests/ -q`
+- [ ] Run full test suite: `source .venv/bin/activate && python -m pytest src/ tests/ -q`
 - [ ] Identify RED tests (failing or erroring tests)
 - [ ] Pick ONE failing test to fix
 - [ ] Read the test code to understand expected behavior
 
 During implementation:
 - [ ] Write ONLY enough code to make the ONE test pass
-- [ ] Run that specific test frequently: `source venv_linux/bin/activate && python -m pytest path/to/test.py::TestClass::test_method -v`
+- [ ] Run that specific test frequently: `source .venv/bin/activate && python -m pytest path/to/test.py::TestClass::test_method -v`
 - [ ] Once test passes (GREEN), run full suite to ensure nothing broke
 - [ ] Refactor if needed, keeping test green
 
@@ -468,16 +468,16 @@ After each test fix:
 ### **Quality Gates for Each Epic**
 ```bash
 # Before moving to next epic, ensure:
-source venv_linux/bin/activate && python -m pytest src/ -x --cov=src --cov-report=term-missing
+source .venv/bin/activate && python -m pytest src/ -x --cov=src --cov-report=term-missing
 # Must achieve 95%+ test coverage
 
-source venv_linux/bin/activate && ruff check src/ --fix
+source .venv/bin/activate && ruff check src/ --fix
 # Must pass all linting checks
 
-source venv_linux/bin/activate && mypy src/
+source .venv/bin/activate && mypy src/
 # Must pass type checking
 
-source venv_linux/bin/activate && bandit -r src/ -f json
+source .venv/bin/activate && bandit -r src/ -f json
 # Must pass security audit
 ```
 
@@ -488,7 +488,7 @@ source venv_linux/bin/activate && bandit -r src/ -f json
 ### **Current State Analysis Command**
 ```bash
 # Run this to determine exact backend completion state
-source venv_linux/bin/activate && python -c "
+source .venv/bin/activate && python -c "
 import subprocess
 import sys
 from pathlib import Path
@@ -519,7 +519,7 @@ else:
 **Action**: Epic 1.1 - Stabilize existing working foundation
 ```bash
 # Run tests to identify issues
-source venv_linux/bin/activate && python -m pytest src/ tests/ -v
+source .venv/bin/activate && python -m pytest src/ tests/ -v
 ```
 
 #### **🔧 HIGH: Core Infrastructure Missing**
@@ -541,19 +541,19 @@ source venv_linux/bin/activate && python -m pytest src/ tests/ -v
 ### **Auto-Execute Next Backend Task**
 ```bash
 # Single command to continue backend development
-source venv_linux/bin/activate && python workflows/backend/auto_continue.py
+source .venv/bin/activate && python workflows/backend/auto_continue.py
 ```
 
 ### **Manual Testing**
 ```bash
 # Run all tests
-source venv_linux/bin/activate && python -m pytest src/ tests/ -v
+source .venv/bin/activate && python -m pytest src/ tests/ -v
 
 # Run specific test file
-source venv_linux/bin/activate && python -m pytest src/agents/tests/test_base_agent.py -v
+source .venv/bin/activate && python -m pytest src/agents/tests/test_base_agent.py -v
 
 # Run with coverage
-source venv_linux/bin/activate && python -m pytest src/ tests/ --cov=src --cov-report=html
+source .venv/bin/activate && python -m pytest src/ tests/ --cov=src --cov-report=html
 ```
 
 ---
@@ -596,19 +596,19 @@ source venv_linux/bin/activate && python -m pytest src/ tests/ --cov=src --cov-r
 ### **Single Command Auto-Execution**
 ```bash
 # Run this to automatically continue backend development
-source venv_linux/bin/activate && python workflows/backend/auto_continue.py
+source .venv/bin/activate && python workflows/backend/auto_continue.py
 ```
 
 ### **Manual State Check**
 ```bash
 # Check current backend completion state
-source venv_linux/bin/activate && python -m pytest src/ --tb=no -q && echo "TESTS OK" || echo "TESTS FAILING - Check failures"
+source .venv/bin/activate && python -m pytest src/ --tb=no -q && echo "TESTS OK" || echo "TESTS FAILING - Check failures"
 ```
 
 ### **TDD Development Session**
 ```bash
 # Run tests in watch mode during development
-source venv_linux/bin/activate && python -m pytest src/ tests/ -v --tb=short
+source .venv/bin/activate && python -m pytest src/ tests/ -v --tb=short
 ```
 
 ---

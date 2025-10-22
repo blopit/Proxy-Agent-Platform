@@ -18,7 +18,7 @@ Based on the 4 core biological circuits from bio_reference.md:
    - Purpose: Enter pursuit flow and harvest reward
    - Optimal: Morning or when energy > 70%
 
-3. **Healer** 🌱 - Herd/Parasympathetic mode
+3. **Mender** 🌱 - Herd/Parasympathetic mode
    - Purpose: Recover energy & rebuild cognitive tissue
    - Optimal: Afternoon or when energy < 40%
 
@@ -49,7 +49,7 @@ Digital tasks are automatically identified and can be delegated to the agent wor
 Automatic time-of-day detection that biases available biological states:
 
 - **Morning**: Scout → Hunter heavy (optimal dopamine window)
-- **Afternoon**: Healer micro-bursts recommended  
+- **Afternoon**: Mender micro-bursts recommended  
 - **Evening**: Mapper reflections (consolidation time)
 - **Night**: Rest mode - minimal cognitive load
 

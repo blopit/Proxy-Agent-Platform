@@ -55,15 +55,16 @@ class BaseEnhancedRepository:
                 "preferences",
                 "criteria",
                 "context",
+                "micro_steps",  # Epic 7: Task Splitting
             ] and isinstance(value, str):
                 try:
                     data[key] = (
                         json.loads(value)
                         if value
-                        else ([] if key in ["tags", "team_members", "default_tags"] else {})
+                        else ([] if key in ["tags", "team_members", "default_tags", "micro_steps"] else {})
                     )
                 except json.JSONDecodeError:
-                    data[key] = [] if key in ["tags", "team_members", "default_tags"] else {}
+                    data[key] = [] if key in ["tags", "team_members", "default_tags", "micro_steps"] else {}
             elif (
                 key
                 in [
@@ -100,12 +101,15 @@ class BaseEnhancedRepository:
                 "preferences",
                 "criteria",
                 "context",
+                "micro_steps",  # Epic 7: Task Splitting
             ] and isinstance(value, (list, dict)):
                 data[key] = json.dumps(value)
             elif isinstance(value, Decimal):
                 data[key] = str(value)
             elif isinstance(value, datetime):
                 data[key] = value.isoformat()
+            elif hasattr(value, 'value'):  # Handle enum values
+                data[key] = value.value
 
         return data
 
