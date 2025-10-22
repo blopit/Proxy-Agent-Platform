@@ -35,6 +35,7 @@ const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
   isActive
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [dragX, setDragX] = useState(0);
   const [holdProgress, setHoldProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
   const [holdPosition, setHoldPosition] = useState({ x: 0, y: 0 });
@@ -123,6 +124,7 @@ const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
       }
 
       currentXRef.current = limitedDrag;
+      setDragX(limitedDrag); // Update state for background indicators
 
       // Direct DOM manipulation for 60fps smooth dragging
       if (cardRef.current) {
@@ -187,6 +189,7 @@ const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
       }
 
       setIsDragging(false);
+      setDragX(0); // Reset drag position
       currentXRef.current = 0;
       velocityTrackerRef.current = [];
     }
@@ -308,8 +311,8 @@ const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
         </div>
       )}
 
-      {/* Background action indicators */}
-      <div className="absolute inset-0 flex rounded-2xl overflow-hidden">
+      {/* Fixed background action indicators - these don't move */}
+      <div className="absolute inset-0 flex rounded-2xl overflow-hidden pointer-events-none">
         {/* Left side - Dismiss */}
         <div className={`flex-1 flex items-center justify-start pl-6 bg-[#dc322f] transition-opacity duration-200 ${
           dragX < -20 ? 'opacity-100' : 'opacity-0'

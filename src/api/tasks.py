@@ -284,33 +284,9 @@ async def get_task(
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    # Query micro-steps for this task
-    db = task_service.get_db()
-    conn = db.get_connection()
-    cursor = conn.cursor()
-    cursor.execute("""
-        SELECT step_id, parent_task_id, step_number, description, estimated_minutes,
-               delegation_mode, status, actual_minutes, created_at, completed_at
-        FROM micro_steps
-        WHERE parent_task_id = ?
-        ORDER BY step_number
-    """, (task_id,))
-
-    micro_steps = []
-    for row in cursor.fetchall():
-        step = MicroStep(
-            step_id=row[0],
-            parent_task_id=row[1],
-            step_number=row[2],
-            description=row[3],
-            estimated_minutes=row[4],
-            delegation_mode=row[5],
-            status=row[6],
-            actual_minutes=row[7],
-            created_at=datetime.fromisoformat(row[8]) if row[8] else datetime.utcnow(),
-            completed_at=datetime.fromisoformat(row[9]) if row[9] else None,
-        )
-        micro_steps.append(step)
+    # Epic 7 Phase 7.1: micro_steps are stored in the task object as JSON
+    # Phase 7.2 will move them to a separate table
+    micro_steps = task.micro_steps if hasattr(task, 'micro_steps') else []
 
     return TaskResponse.from_task(task, micro_steps)
 

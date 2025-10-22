@@ -1068,7 +1068,7 @@ export default function ADHDTaskManager() {
   );
 
   return (
-    <div className="min-h-screen bg-[#002b36]">
+    <div className="h-screen bg-[#002b36] flex flex-col">
       {/* Minimal Swipeable Mode Header */}
       <SwipeableModeHeader
         currentMode={biologicalMode}
@@ -1079,7 +1079,7 @@ export default function ADHDTaskManager() {
       {/* Main Task Card Area */}
       <div className="flex-1 relative">
         {tasks.length > 0 ? (
-          <div className="h-screen flex items-center justify-center p-4">
+          <div className="h-full w-full flex items-center justify-center p-4">
             <div className="w-full max-w-md h-96">
               <SwipeableTaskCard
                 task={getCurrentTask()!}
@@ -1091,7 +1091,7 @@ export default function ADHDTaskManager() {
             </div>
           </div>
         ) : (
-          <div className="h-screen flex items-center justify-center p-4">
+          <div className="h-full flex items-center justify-center p-4">
             <div className="text-center">
               <div className="text-6xl mb-4">🎯</div>
               <h2 className="text-xl font-bold text-gray-800 mb-2">All caught up!</h2>
