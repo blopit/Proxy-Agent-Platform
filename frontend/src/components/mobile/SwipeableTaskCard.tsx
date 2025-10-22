@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react';
+import { Layer } from './Layer';
 
 interface Task {
   task_id?: string;
@@ -25,6 +26,8 @@ interface SwipeableTaskCardProps {
   onSwipeRight: (task: Task) => void; // Do Now / Delegate
   onTap: (task: Task) => void;        // View details (from hold gesture)
   isActive: boolean;
+  onDismissSwipeTutorial?: () => void;
+  onDismissHoldTutorial?: () => void;
 }
 
 const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
@@ -32,15 +35,16 @@ const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
   onSwipeLeft,
   onSwipeRight,
   onTap,
-  isActive
+  isActive,
+  onDismissSwipeTutorial,
+  onDismissHoldTutorial
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragX, setDragX] = useState(0);
+  const [dragY, setDragY] = useState(0);
   const [holdProgress, setHoldProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
   const [holdPosition, setHoldPosition] = useState({ x: 0, y: 0 });
-  const [showSwipeTutorial, setShowSwipeTutorial] = useState(true);
-  const [showHoldTutorial, setShowHoldTutorial] = useState(true);
 
   const cardRef = useRef<HTMLDivElement>(null);
   const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -50,6 +54,7 @@ const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
   const startXRef = useRef(0);
   const startYRef = useRef(0);
   const currentXRef = useRef(0);
+  const currentYRef = useRef(0);
   const velocityTrackerRef = useRef<Array<{x: number, time: number}>>([]);
 
   const SWIPE_THRESHOLD = 100;
@@ -82,7 +87,7 @@ const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
 
     holdTimerRef.current = setTimeout(() => {
       // Hold completed - show details
-      setShowHoldTutorial(false);
+      onDismissHoldTutorial?.();
       onTap(task);
       cancelHold();
     }, HOLD_DURATION);
@@ -93,10 +98,10 @@ const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
 
     const touch = e.touches[0];
     const diffX = touch.clientX - startXRef.current;
-    const diffY = Math.abs(touch.clientY - startYRef.current);
+    const diffY = touch.clientY - startYRef.current; // Track Y position (not absolute)
 
     // If moved more than 10px in any direction, cancel hold
-    if (Math.abs(diffX) > 10 || diffY > 10) {
+    if (Math.abs(diffX) > 10 || Math.abs(diffY) > 10) {
       cancelHold();
       if (!isDragging) {
         setIsDragging(true);
@@ -124,11 +129,19 @@ const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
       }
 
       currentXRef.current = limitedDrag;
+      currentYRef.current = diffY;
       setDragX(limitedDrag); // Update state for background indicators
+      setDragY(diffY);
+
+      // Calculate rotation based on vertical touch position
+      // Map Y position to rotation: -15deg (top) to +15deg (bottom)
+      const cardHeight = cardRef.current?.offsetHeight || 500;
+      const normalizedY = diffY / (cardHeight / 2); // Normalize to -1 to 1
+      const rotation = normalizedY * 15; // Max 15 degrees rotation
 
       // Direct DOM manipulation for 60fps smooth dragging
       if (cardRef.current) {
-        cardRef.current.style.transform = `translateX(${limitedDrag}px)`;
+        cardRef.current.style.transform = `translateX(${limitedDrag}px) rotate(${rotation}deg)`;
       }
     }
   };
@@ -163,14 +176,15 @@ const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
         Math.abs(velocity) > VELOCITY_THRESHOLD;
 
       if (shouldSwipe) {
-        setShowSwipeTutorial(false); // Dismiss tutorial after first swipe
+        onDismissSwipeTutorial?.(); // Dismiss tutorial after first swipe
 
         const direction = dragX > 0 || velocity > 0 ? 'right' : 'left';
 
-        // Animate card off screen
+        // Animate card off screen with final rotation
         if (cardRef.current) {
           const exitDistance = direction === 'right' ? 400 : -400;
-          cardRef.current.style.transform = `translateX(${exitDistance}px)`;
+          const finalRotation = direction === 'right' ? 20 : -20;
+          cardRef.current.style.transform = `translateX(${exitDistance}px) rotate(${finalRotation}deg)`;
         }
 
         // Call the appropriate handler after animation
@@ -182,15 +196,17 @@ const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
           }
         }, 300);
       } else {
-        // Snap back to center
+        // Snap back to center and reset rotation
         if (cardRef.current) {
-          cardRef.current.style.transform = 'translateX(0px)';
+          cardRef.current.style.transform = 'translateX(0px) rotate(0deg)';
         }
       }
 
       setIsDragging(false);
       setDragX(0); // Reset drag position
+      setDragY(0); // Reset Y position
       currentXRef.current = 0;
+      currentYRef.current = 0;
       velocityTrackerRef.current = [];
     }
   };
@@ -248,33 +264,7 @@ const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
     task.title.toLowerCase().includes('code');
 
   return (
-    <>
-      {/* Swipe tutorials - FIXED position, clearly outside card */}
-      {showSwipeTutorial && (
-        <>
-          <div className="fixed top-1/3 left-4 pointer-events-none z-40 animate-pulse">
-            <div className="bg-[#dc322f] text-[#fdf6e3] px-4 py-3 rounded-lg text-sm font-medium shadow-lg">
-              ← Swipe to dismiss
-            </div>
-          </div>
-          <div className="fixed top-1/3 right-4 pointer-events-none z-40 animate-pulse">
-            <div className={`${isDigital ? 'bg-[#268bd2]' : 'bg-[#859900]'} text-[#fdf6e3] px-4 py-3 rounded-lg text-sm font-medium shadow-lg`}>
-              Swipe to {isDigital ? 'delegate' : 'do'} →
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Hold tutorial - FIXED position at top of screen */}
-      {showHoldTutorial && !isHolding && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 pointer-events-none z-40 animate-pulse">
-          <div className="bg-[#6c71c4] text-[#fdf6e3] px-5 py-3 rounded-full text-sm font-medium shadow-lg whitespace-nowrap">
-            👆 Hold for details
-          </div>
-        </div>
-      )}
-
-      <div className="relative w-full h-full overflow-visible">
+    <div className="relative w-full h-full overflow-visible">
 
       {/* Hold ring animation */}
       {isHolding && (
@@ -353,73 +343,86 @@ const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Card content */}
-        <div className="p-6 h-full flex flex-col">
-          {/* Header */}
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <h2 className="text-xl font-bold text-[#93a1a1] leading-tight mb-2">
-                {task.title}
-              </h2>
-              {(task.description || task.desc) && (
-                <p className="text-[#586e75] text-sm leading-relaxed">
-                  {task.description || task.desc}
-                </p>
-              )}
-            </div>
-            <div className="ml-4 flex flex-col items-end">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                task.priority === 'high' ? 'bg-[#dc322f] text-[#fdf6e3]' :
-                task.priority === 'medium' ? 'bg-[#b58900] text-[#fdf6e3]' :
-                'bg-[#859900] text-[#fdf6e3]'
-              }`}>
-                {task.priority || 'medium'}
-              </span>
-              <span className="text-xs text-[#586e75] mt-1">
-                {getTimeDisplay()}
-              </span>
-            </div>
-          </div>
+        {/* Card content with 3D layers */}
+        <div className="p-6 h-full flex flex-col" style={{ transformStyle: 'preserve-3d' }}>
+          {/* Background layer - subtle gradient */}
+          <Layer depth={-15} shadow="none" className="absolute inset-0 opacity-30 pointer-events-none">
+            <div className="w-full h-full bg-gradient-to-br from-transparent to-black/5 rounded-2xl" />
+          </Layer>
 
-          {/* Tags */}
-          {task.tags && task.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {task.tags.slice(0, 3).map((tag, index) => (
-                <span
-                  key={index}
-                  className="px-2 py-1 bg-[#002b36] text-[#93a1a1] rounded-full text-xs border border-[#586e75]"
-                >
-                  {tag}
+          {/* Header - floating at top depth */}
+          <Layer depth={10} shadow="light" className="relative mb-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h2 className="text-xl font-bold text-[#93a1a1] leading-tight mb-2">
+                  {task.title}
+                </h2>
+                {(task.description || task.desc) && (
+                  <p className="text-[#586e75] text-sm leading-relaxed">
+                    {task.description || task.desc}
+                  </p>
+                )}
+              </div>
+              <div className="ml-4 flex flex-col items-end">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  task.priority === 'high' ? 'bg-[#dc322f] text-[#fdf6e3]' :
+                  task.priority === 'medium' ? 'bg-[#b58900] text-[#fdf6e3]' :
+                  'bg-[#859900] text-[#fdf6e3]'
+                }`}>
+                  {task.priority || 'medium'}
                 </span>
-              ))}
-              {task.tags.length > 3 && (
-                <span className="px-2 py-1 bg-[#002b36] text-[#586e75] rounded-full text-xs border border-[#586e75]">
-                  +{task.tags.length - 3} more
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Context/Environment */}
-          {task.context && (
-            <div className="mb-4">
-              <span className="text-xs text-[#586e75] uppercase tracking-wide">Context</span>
-              <div className="text-sm text-[#93a1a1] mt-1">{task.context}</div>
-            </div>
-          )}
-
-          {/* Bottom section */}
-          <div className="mt-auto">
-            {/* Digital task indicator */}
-            {isDigital && (
-              <div className="flex items-center p-2 bg-[#002b36] rounded-lg border border-[#268bd2]">
-                <span className="text-[#268bd2] mr-2">🤖</span>
-                <span className="text-[#268bd2] text-sm font-medium">
-                  Can be delegated to agents
+                <span className="text-xs text-[#586e75] mt-1">
+                  {getTimeDisplay()}
                 </span>
               </div>
-            )}
-          </div>
+            </div>
+          </Layer>
+
+          {/* Tags - mid depth */}
+          {task.tags && task.tags.length > 0 && (
+            <Layer depth={5} shadow="light" className="relative mb-4">
+              <div className="flex flex-wrap gap-2">
+                {task.tags.slice(0, 3).map((tag, index) => (
+                  <span
+                    key={index}
+                    className="px-2 py-1 bg-[#002b36] text-[#93a1a1] rounded-full text-xs border border-[#586e75]"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {task.tags.length > 3 && (
+                  <span className="px-2 py-1 bg-[#002b36] text-[#586e75] rounded-full text-xs border border-[#586e75]">
+                    +{task.tags.length - 3} more
+                  </span>
+                )}
+              </div>
+            </Layer>
+          )}
+
+          {/* Context/Environment - mid depth */}
+          {task.context && (
+            <Layer depth={5} shadow="light" className="relative mb-4">
+              <div>
+                <span className="text-xs text-[#586e75] uppercase tracking-wide">Context</span>
+                <div className="text-sm text-[#93a1a1] mt-1">{task.context}</div>
+              </div>
+            </Layer>
+          )}
+
+          {/* Bottom section - base depth */}
+          <Layer depth={0} shadow="medium" className="relative mt-auto">
+            <div>
+              {/* Digital task indicator */}
+              {isDigital && (
+                <div className="flex items-center p-2 bg-[#002b36] rounded-lg border border-[#268bd2]">
+                  <span className="text-[#268bd2] mr-2">🤖</span>
+                  <span className="text-[#268bd2] text-sm font-medium">
+                    Can be delegated to agents
+                  </span>
+                </div>
+              )}
+            </div>
+          </Layer>
         </div>
 
         {/* Drag indicator */}
@@ -434,7 +437,6 @@ const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
         )}
       </div>
     </div>
-    </>
   );
 };
 

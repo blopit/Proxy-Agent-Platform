@@ -27,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -42,7 +42,8 @@ export default function RootLayout({
                     (args[0].includes('Hydration failed') ||
                      args[0].includes('hydration') ||
                      args[0].includes('data-new-gr-c-s-check-loaded') ||
-                     args[0].includes('data-gr-ext-installed'))
+                     args[0].includes('data-gr-ext-installed') ||
+                     args[0].includes('__gchrome_remoteframetoken'))
                   ) {
                     return; // Suppress browser extension hydration errors
                   }

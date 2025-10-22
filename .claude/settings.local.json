@@ -2,7 +2,22 @@
   "permissions": {
     "allow": [
       "Bash(python -m pytest src/ --tb=no -q --lf)",
-      "Bash(python -m pytest src/api/tests/test_task_endpoints.py::TestTaskEndpoints::test_get_task_success -vv)"
+      "Bash(python -m pytest src/api/tests/test_task_endpoints.py::TestTaskEndpoints::test_get_task_success -vv)",
+      "Bash(git add src/api/tasks.py)",
+      "Bash(git commit -m \"fix(epic-7): simplify micro_steps retrieval in get_task endpoint\n\nPhase 7.1 stores micro_steps as JSON in tasks table.\nSeparate micro_steps table will be added in Phase 7.2.\n\nFixed:\n- Removed query to non-existent micro_steps table\n- Retrieve micro_steps directly from task object\n- Maintains backward compatibility with hasattr check\n\nTest status remains: 471 passing, 16 failed, 28 errors\nFailures are unrelated to Epic 7 (MCP and gamification tests)\")",
+      "Bash(python -m pytest src/api/tests/test_progress_gamification_integration.py::TestProgressAPI::test_calculate_task_xp_basic -vv)",
+      "Bash(cat package.json)",
+      "Bash(npm install --save @fortawesome/fontawesome-svg-core @fortawesome/free-solid-svg-icons @fortawesome/react-fontawesome)",
+      "Bash(sudo chown -R 501:20 \"/Users/shrenilpatel/.npm\")",
+      "Bash(python -m pytest src/ -v --tb=short)",
+      "Bash(python -m pytest src/services/tests/test_task_service.py::TestProjectService::test_create_project_success -vv)",
+      "Bash(npm run dev)",
+      "Bash(curl -LsSf https://astral.sh/uv/install.sh)",
+      "Bash(sh)",
+      "Bash(export PATH=\"$HOME/.local/bin:$PATH\")",
+      "Bash(lsof -ti:3000)",
+      "Bash(xargs kill -9)",
+      "Bash(lsof -ti:8000)"
     ],
     "deny": [],
     "ask": []

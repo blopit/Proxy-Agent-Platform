@@ -1,0 +1,15 @@
+[build]
+  command = "pnpm run build || exit 0"
+  publish = ".next"
+  
+[build.environment]
+  NODE_VERSION = "18"
+  NEXT_USE_NETLIFY_EDGE = "true"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

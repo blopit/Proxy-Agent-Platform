@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
+import { Search, Target, Heart, Map } from 'lucide-react';
 
 interface BiologicalTabsProps {
   activeTab: string;
@@ -12,7 +13,7 @@ interface BiologicalTabsProps {
 interface BiologicalCircuit {
   id: string;
   name: string;
-  icon: string;
+  icon: React.ComponentType<{ className?: string; size?: number }>;
   description: string;
   purpose: string;
   color: string;
@@ -34,7 +35,7 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
     {
       id: 'scout',
       name: 'Scout',
-      icon: '🔍',
+      icon: Search,
       description: 'Forager / Primate',
       purpose: 'Seek novelty & identify doable micro-targets',
       color: 'text-emerald-600',
@@ -45,7 +46,7 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
     {
       id: 'hunter',
       name: 'Hunter',
-      icon: '🎯',
+      icon: Target,
       description: 'Predator',
       purpose: 'Enter pursuit flow and harvest reward',
       color: 'text-red-600',
@@ -56,7 +57,7 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
     {
       id: 'mender',
       name: 'Mender',
-      icon: '🌱',
+      icon: Heart,
       description: 'Herd / Parasympathetic',
       purpose: 'Recover energy & rebuild cognitive tissue',
       color: 'text-blue-600',
@@ -67,7 +68,7 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
     {
       id: 'mapper',
       name: 'Mapper',
-      icon: '🗺️',
+      icon: Map,
       description: 'Elder / Hippocampal replay',
       purpose: 'Consolidate memory and recalibrate priorities',
       color: 'text-purple-600',
@@ -119,111 +120,55 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
 
   return (
     <div className="w-full">
-      {/* Neuro-Clock Header */}
-      <div className="mb-4 p-3 bg-gray-50 rounded-lg border">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-700">Neuro-Clock</span>
-          <span className="text-xs text-gray-500 capitalize">{timeOfDay}</span>
+      {/* Mode description bar */}
+      <div className="flex items-center justify-between px-4 mb-2">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-[#268bd2] animate-pulse" />
+          <span className="text-xs text-[#586e75]">
+            {circuits.find(c => c.id === activeTab)?.purpose || 'Select a circuit'}
+          </span>
         </div>
-        <p className="text-xs text-gray-600">{getNeuroClockRecommendation()}</p>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-[#586e75]">{energy}%</span>
+          <span className="text-xs text-[#586e75] capitalize">{timeOfDay}</span>
+        </div>
       </div>
 
-      {/* Biological Circuit Tabs */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        {circuits.map((circuit) => (
-          <button
-            key={circuit.id}
-            onClick={() => onTabChange(circuit.id)}
-            className={`
-              relative p-4 rounded-xl border-2 transition-all duration-300 text-left
-              ${activeTab === circuit.id 
-                ? `${circuit.bgColor} ${circuit.borderColor} ${circuit.color} shadow-lg scale-105` 
-                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
-              }
-              ${circuit.isOptimal ? 'ring-2 ring-yellow-300 ring-opacity-50' : ''}
-              ${pulseAnimation === circuit.id ? 'animate-pulse' : ''}
-            `}
-          >
-            {/* Optimal indicator */}
-            {circuit.isOptimal && (
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping" />
-            )}
+      {/* Bottom Navigation Tabs */}
+      <div className="flex items-center justify-center gap-2 px-4">
+        {circuits.map((circuit) => {
+          const IconComponent = circuit.icon;
+          return (
+            <button
+              key={circuit.id}
+              onClick={() => onTabChange(circuit.id)}
+              className={`
+                relative flex-1 py-3 px-2 rounded-xl transition-all duration-300
+                ${activeTab === circuit.id
+                  ? 'bg-[#268bd2] text-[#fdf6e3] shadow-lg scale-105'
+                  : 'bg-[#073642] text-[#586e75] border border-[#586e75]'
+                }
+                ${circuit.isOptimal ? 'ring-2 ring-[#b58900] ring-opacity-50' : ''}
+                ${pulseAnimation === circuit.id ? 'animate-pulse' : ''}
+              `}
+            >
+              {/* Optimal indicator */}
+              {circuit.isOptimal && (
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-[#b58900] rounded-full animate-ping" />
+              )}
 
-            {/* Circuit icon with breathing animation */}
-            <div className={`text-2xl mb-2 ${getBreathingAnimation(circuit.id)}`}>
-              {circuit.icon}
-            </div>
-
-            {/* Circuit name */}
-            <div className="font-semibold text-sm mb-1">
-              {circuit.name}
-            </div>
-
-            {/* Circuit description */}
-            <div className="text-xs opacity-75 mb-2">
-              {circuit.description}
-            </div>
-
-            {/* Purpose (shown only for active tab) */}
-            {activeTab === circuit.id && (
-              <div className="text-xs font-medium mt-2 p-2 bg-white bg-opacity-50 rounded">
-                {circuit.purpose}
+              {/* Circuit icon */}
+              <div className="flex justify-center mb-1">
+                <IconComponent size={22} className="transition-transform duration-300" />
               </div>
-            )}
 
-            {/* Metabolic flow indicator */}
-            {activeTab === circuit.id && (
-              <div className="absolute bottom-1 right-1">
-                <div className="w-2 h-2 bg-current rounded-full animate-pulse" />
+              {/* Circuit name */}
+              <div className="text-xs font-medium text-center">
+                {circuit.name}
               </div>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Mutation State (rare) */}
-      {showMutation && (
-        <div className="mb-4 p-3 bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg border border-purple-200">
-          <div className="flex items-center mb-2">
-            <span className="text-lg mr-2">🦋</span>
-            <span className="text-sm font-medium text-purple-700">Mutation State</span>
-          </div>
-          <p className="text-xs text-purple-600">
-            Metamorphic reset available - reflection, redesign of habits, symbolic shedding of old patterns
-          </p>
-          <button
-            onClick={() => onTabChange('mutation')}
-            className="mt-2 px-3 py-1 bg-purple-500 text-white text-xs rounded-full hover:bg-purple-600 transition-colors"
-          >
-            Enter Rebirth Mode
-          </button>
-        </div>
-      )}
-
-      {/* Metabolic Loop Visualization */}
-      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-        <div className="text-xs font-medium text-gray-700 mb-2">Attention Metabolism</div>
-        <div className="flex items-center justify-between text-xs text-gray-500">
-          <span className={activeTab === 'scout' ? 'text-emerald-600 font-medium' : ''}>Scout</span>
-          <span>→</span>
-          <span className={activeTab === 'hunter' ? 'text-red-600 font-medium' : ''}>Hunter</span>
-          <span>→</span>
-          <span className={activeTab === 'mender' ? 'text-blue-600 font-medium' : ''}>Mender</span>
-          <span>→</span>
-          <span className={activeTab === 'mapper' ? 'text-purple-600 font-medium' : ''}>Mapper</span>
-          <span>↺</span>
-        </div>
-        
-        {/* Current phase indicator */}
-        <div className="mt-2 text-xs text-gray-600">
-          <span className="font-medium">Current:</span> {circuits.find(c => c.id === activeTab)?.purpose || 'Select a circuit'}
-        </div>
-      </div>
-
-      {/* Energy Level Indicator */}
-      <div className="flex items-center justify-between text-xs text-gray-500">
-        <span>Energy: {energy}%</span>
-        <span>Optimal circuits highlighted</span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
