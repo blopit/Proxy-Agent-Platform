@@ -7,7 +7,11 @@
       "Bash(awk '{print $2}')",
       "Bash(npm run dev)",
       "Bash(lsof -i :3000)",
-      "Bash(kill -9 94960)"
+      "Bash(kill -9 94960)",
+      "Bash(curl -s http://localhost:8000/health)",
+      "Bash(curl -X POST http://localhost:8000/api/v1/mobile/quick-capture -H \"Content-Type: application/json\" -d '{\"\"\"\"text\"\"\"\": \"\"\"\"Test task\"\"\"\", \"\"\"\"user_id\"\"\"\": \"\"\"\"mobile-user\"\"\"\", \"\"\"\"voice_input\"\"\"\": false, \"\"\"\"auto_mode\"\"\"\": true, \"\"\"\"ask_for_clarity\"\"\"\": false}' -v)",
+      "Bash(curl -X POST \"http://localhost:8000/api/v1/mobile/quick-capture\" -H \"Content-Type: application/json\" -d \"{\"\"text\"\": \"\"Test task\"\", \"\"user_id\"\": \"\"mobile-user\"\", \"\"voice_input\"\": false, \"\"auto_mode\"\": true, \"\"ask_for_clarity\"\": false}\")",
+      "Bash(.venv/bin/python -c \"\nimport sys\nimport asyncio\nfrom src.api.tasks import mobile_quick_capture, QuickCaptureRequest, get_task_service\n\nasync def test():\n    request = QuickCaptureRequest(\n        text=''Test task'',\n        user_id=''mobile-user'',\n        voice_input=False,\n        auto_mode=True,\n        ask_for_clarity=False\n    )\n    task_service = get_task_service()\n    try:\n        result = await mobile_quick_capture(request, task_service)\n        print(''Success:'', result)\n    except Exception as e:\n        print(''Error:'', e)\n        import traceback\n        traceback.print_exc()\n\nasyncio.run(test())\n\")"
     ],
     "deny": [],
     "ask": []

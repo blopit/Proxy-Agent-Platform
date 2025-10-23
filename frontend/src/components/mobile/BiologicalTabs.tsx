@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search, Target, Heart, Map, Sparkles } from 'lucide-react';
+import PurposeTicker from './PurposeTicker';
 
 interface BiologicalTabsProps {
   activeTab: string;
@@ -131,17 +132,92 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
 
   return (
     <div className="w-full">
+      <style jsx>{`
+        @keyframes shine {
+          0% { 
+            opacity: 0; 
+            transform: translateX(-100%); 
+          }
+          50% { 
+            opacity: 1; 
+            transform: translateX(0%); 
+          }
+          100% { 
+            opacity: 0; 
+            transform: translateX(100%); 
+          }
+        }
+        .shine-effect {
+          animation: shine 3s ease-in-out infinite;
+        }
+      `}</style>
       {/* Mode description bar */}
       <div className="flex items-center justify-between px-4 mb-2">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-[#268bd2] animate-pulse" />
-          <span className="text-xs text-[#586e75]">
-            {circuits.find(c => c.id === activeTab)?.purpose || 'Select a circuit'}
-          </span>
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
+            <PurposeTicker 
+              activeTab={activeTab}
+              energy={energy}
+              timeOfDay={timeOfDay}
+              className="text-[#586e75]"
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-[#586e75]">{energy}%</span>
-          <span className="text-xs text-[#586e75] capitalize">{timeOfDay}</span>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* iPhone-style Battery Symbol */}
+          <div className="flex items-center gap-0.5">
+            {/* Battery body */}
+            <div
+              className="relative"
+              style={{
+                width: '26px',
+                height: '12px',
+                border: '1.5px solid rgba(147, 161, 161, 0.6)',
+                borderRadius: '3px',
+                backgroundColor: '#002b36',
+                padding: '1px'
+              }}
+            >
+              {/* Battery fill - colored energy (left-aligned with 1px margin and rounded) */}
+              <div
+                className="transition-all duration-300 ease-out"
+                style={{
+                  height: '100%',
+                  width: `${energy}%`,
+                  borderRadius: '1.5px',
+                  backgroundColor: energy < 20
+                    ? '#dc322f' // Red for low battery
+                    : energy < 50
+                    ? '#b58900' // Yellow for medium
+                    : '#859900', // Green for good
+                  opacity: energy < 10 ? 0.8 : 1
+                }}
+              />
+            </div>
+
+            {/* Battery terminal (positive tip) */}
+            <div
+              style={{
+                width: '2px',
+                height: '6px',
+                backgroundColor: 'rgba(147, 161, 161, 0.6)',
+                borderRadius: '0 1px 1px 0'
+              }}
+            />
+
+            {/* Energy percentage text */}
+            <span
+              style={{
+                color: '#93a1a1',
+                fontSize: '11px',
+                fontWeight: '600',
+                marginLeft: '4px',
+                fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif'
+              }}
+            >
+              {energy}%
+            </span>
+          </div>
         </div>
       </div>
 
