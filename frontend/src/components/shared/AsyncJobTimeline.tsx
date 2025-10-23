@@ -279,18 +279,8 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
 
       {/* Step icon badge (full size only) */}
       {size === 'full' && (
-        <div
-          className={`absolute -top-1 -left-1 w-6 h-6 rounded-full flex items-center justify-center z-10 shadow-md transition-all duration-300 ${
-            step.status === 'done'
-              ? 'bg-[#859900] border-2 border-[#859900]'
-              : step.status === 'active'
-              ? 'bg-[#268bd2] border-2 border-[#268bd2] animate-pulse'
-              : step.status === 'error'
-              ? 'bg-[#dc322f] border-2 border-[#dc322f]'
-              : 'bg-[#073642] border-2 border-[#586e75]'
-          }`}
-        >
-          <span className="text-xs">
+        <div className="absolute -top-1 -left-1 w-6 h-6 flex items-center justify-center z-10 transition-all duration-300">
+          <span className="text-base">
             {getIcon()}
           </span>
         </div>
