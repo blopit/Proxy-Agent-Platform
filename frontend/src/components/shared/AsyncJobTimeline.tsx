@@ -249,17 +249,17 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
       {size === 'full' && (
         <>
           {!isExpanded ? (
-            // Collapsed state - very compact
+            // Collapsed state - text only, icon floats above
             <div className="flex flex-col items-center justify-center w-full h-full overflow-hidden">
               <span className={`text-[10px] font-medium text-center line-clamp-1 px-0.5 w-full overflow-hidden ${textColors[step.status]}`}>
                 {getLabel()}
               </span>
               {step.status === 'pending' && (
-                <span className="text-[8px] text-[#586e75]">{getDurationText()}</span>
+                <span className="text-[7px] text-[#586e75]">{getDurationText()}</span>
               )}
             </div>
           ) : (
-            // Expanded state - show more detail but still controlled
+            // Expanded state - text only, icon floats above
             <div className="flex flex-col items-center gap-0.5 w-full h-full justify-center overflow-hidden px-1">
               <span className={`text-[10px] font-semibold text-center line-clamp-2 w-full overflow-hidden ${textColors[step.status]}`}>
                 {step.description}
@@ -277,13 +277,48 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
         </>
       )}
 
-      {/* Step icon badge (full size only) */}
+      {/* Icon badge floating above step - full size only */}
       {size === 'full' && (
-        <div className="absolute -top-1 -left-1 w-6 h-6 flex items-center justify-center z-10 transition-all duration-300">
-          <span className="text-base">
-            {getIcon()}
+        <div
+          className="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center justify-center z-10 transition-all duration-300 border-2 rounded-sm px-1.5 py-0.5"
+          style={{
+            borderColor: step.status === 'done' ? '#859900' :
+                         step.status === 'active' ? '#268bd2' :
+                         step.status === 'error' ? '#dc322f' :
+                         '#586e75',
+            backgroundColor: step.status === 'done' ? 'rgba(133, 153, 0, 0.15)' :
+                             step.status === 'active' ? 'rgba(38, 139, 210, 0.15)' :
+                             step.status === 'error' ? 'rgba(220, 50, 47, 0.15)' :
+                             'rgba(88, 110, 117, 0.1)'
+          }}
+        >
+          <span className="text-sm">{getIcon()}</span>
+        </div>
+      )}
+
+      {/* Step number badge */}
+      {size === 'full' && (
+        <div
+          className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center z-10 shadow-md transition-all duration-300 ${
+            step.status === 'done'
+              ? 'bg-[#859900] border-2 border-[#859900]'
+              : step.status === 'active'
+              ? 'bg-[#268bd2] border-2 border-[#268bd2] animate-pulse'
+              : step.status === 'error'
+              ? 'bg-[#dc322f] border-2 border-[#dc322f]'
+              : 'bg-[#073642] border-2 border-[#586e75]'
+          }`}
+        >
+          <span
+            className={`text-[10px] font-bold ${
+              step.status === 'pending' ? 'text-[#93a1a1]' : 'text-white'
+            }`}
+          >
+            {index + 1}
           </span>
         </div>
+      )}
+        </>
       )}
 
       {/* Pulsing glow and shimmer effect for active steps */}
