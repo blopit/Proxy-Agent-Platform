@@ -319,9 +319,17 @@ Focus on CLARITY and IMMEDIATE ACTION. Keep steps substantial - don't break triv
 
             result = json.loads(content.strip())
 
+            # Debug: Log first step to check icon
+            logger.info(f"🔍 Anthropic response result keys: {list(result.keys())}")
+
             if "steps" in result:
-                return result["steps"]
+                steps = result["steps"]
+                if steps and len(steps) > 0:
+                    logger.info(f"🔍 First step from Anthropic: icon={repr(steps[0].get('icon'))}, short_label={repr(steps[0].get('short_label'))}")
+                return steps
             elif isinstance(result, list):
+                if result and len(result) > 0:
+                    logger.info(f"🔍 First step from Anthropic (list format): icon={repr(result[0].get('icon'))}, short_label={repr(result[0].get('short_label'))}")
                 return result
             else:
                 return self._split_with_rules(task)
