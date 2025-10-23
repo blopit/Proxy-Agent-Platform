@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react';
+import { physics, animation as animationConfig, zIndex } from '@/lib/design-system';
 
 /**
  * RewardCelebration - Dopamine-engineered celebration component
@@ -70,12 +71,12 @@ export default function RewardCelebration({
             ...p,
             x: p.x + p.vx,
             y: p.y + p.vy,
-            vy: p.vy + 0.5, // Gravity
+            vy: p.vy + physics.gravity,
             life: p.life - 1
           }))
           .filter(p => p.life > 0 && p.y < window.innerHeight)
       );
-    }, 16); // ~60fps
+    }, animationConfig.frameRate);
 
     return () => clearInterval(interval);
   }, [particles.length]);
@@ -85,7 +86,7 @@ export default function RewardCelebration({
   const tierConfig = getTierConfig(tier);
 
   return (
-    <div className="fixed inset-0 z-50 pointer-events-none">
+    <div className="fixed inset-0 pointer-events-none" style={{ zIndex: zIndex.modal }}>
       {/* Particles */}
       {particles.map(p => (
         <div
@@ -193,7 +194,9 @@ function generateParticles(count: number, tier: string): Particle[] {
 
   for (let i = 0; i < count; i++) {
     const angle = (Math.PI * 2 * i) / count;
-    const speed = tier === 'critical_hit' ? 15 : tier === 'legendary' ? 10 : 5;
+    const speed = tier === 'critical_hit' ? physics.particleSpeed.fast :
+                  tier === 'legendary' ? physics.particleSpeed.medium :
+                  physics.particleSpeed.slow;
     const velocity = speed + Math.random() * speed;
 
     particles.push({
@@ -201,7 +204,7 @@ function generateParticles(count: number, tier: string): Particle[] {
       x: centerX,
       y: centerY,
       vx: Math.cos(angle) * velocity,
-      vy: Math.sin(angle) * velocity - 5,
+      vy: Math.sin(angle) * velocity - physics.particleSpeed.slow,
       color: colors[Math.floor(Math.random() * colors.length)],
       size: tier === 'critical_hit' ? 12 : tier === 'legendary' ? 8 : 6,
       life: 100
@@ -272,14 +275,14 @@ export function QuickCelebration({ message = "Nice!" }: { message?: string }) {
   const [show, setShow] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShow(false), 800);
+    const timer = setTimeout(() => setShow(false), animationConfig.celebration);
     return () => clearTimeout(timer);
   }, []);
 
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+    <div className="fixed inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: zIndex.modal }}>
       <div className="bg-green-500 text-white px-6 py-3 rounded-full shadow-lg animate-bounce">
         <div className="text-2xl font-bold">✓ {message}</div>
       </div>
@@ -316,7 +319,7 @@ export function MysteryBoxCelebration({
   }, [onComplete]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm" style={{ zIndex: zIndex.modal }}>
       <div className="text-center">
         {/* Mystery box */}
         {stage === 'shake' && (
