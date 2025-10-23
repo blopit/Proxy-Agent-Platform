@@ -811,9 +811,10 @@ async def mobile_quick_capture(
             micro_steps_display.append({
                 "step_id": step.step_id,
                 "description": step.description,
+                "short_label": step.short_label,
                 "estimated_minutes": step.estimated_minutes,
                 "leaf_type": leaf_type,  # "DIGITAL" or "HUMAN"
-                "icon": "🤖" if leaf_type == "DIGITAL" else "👤",
+                "icon": step.icon or ("🤖" if leaf_type == "DIGITAL" else "👤"),
                 "delegation_mode": delegation_mode,
             })
 
