@@ -318,7 +318,7 @@ const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
           isDigital ? 'bg-[#268bd2]' : 'bg-[#859900]'
         } ${dragX > 20 ? 'opacity-100' : 'opacity-0'}`}>
           <div className="text-[#fdf6e3] text-center">
-            <div className="text-2xl mb-1">{isDigital ? '🤖' : '⚡'}</div>
+            <div className="text-2xl mb-1">{isDigital ? '⚡' : '🎯'}</div>
             <div className="text-sm font-medium">{isDigital ? 'Delegate' : 'Do Now'}</div>
           </div>
         </div>
@@ -415,7 +415,7 @@ const SwipeableTaskCard: React.FC<SwipeableTaskCardProps> = ({
               {/* Digital task indicator */}
               {isDigital && (
                 <div className="flex items-center p-2 bg-[#002b36] rounded-lg border border-[#268bd2]">
-                  <span className="text-[#268bd2] mr-2">🤖</span>
+                  <span className="text-[#268bd2] mr-2">⚡</span>
                   <span className="text-[#268bd2] text-sm font-medium">
                     Can be delegated to agents
                   </span>

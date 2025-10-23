@@ -56,6 +56,8 @@ class MicroStepResponse(BaseModel):
     estimated_minutes: int
     delegation_mode: str
     leaf_type: str
+    icon: Optional[str] = None
+    short_label: Optional[str] = None
     automation_plan: Optional[AutomationPlan] = None
     clarification_needs: list[ClarificationNeed] = []
 

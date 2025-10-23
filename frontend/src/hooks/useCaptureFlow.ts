@@ -132,18 +132,10 @@ export function useCaptureFlow(options: UseCaptureFlowOptions = {}) {
         error: errorMessage,
       }));
 
-      // Error toast with retry button
-      toast.error(
-        (t) => (
-          <div>
-            <div className="font-semibold">Capture failed</div>
-            <div className="text-sm">{errorMessage}</div>
-          </div>
-        ),
-        {
-          duration: 5000,
-        }
-      );
+      // Error toast
+      toast.error(`Capture failed: ${errorMessage}`, {
+        duration: 5000,
+      });
 
       options.onError?.(error instanceof Error ? error : new Error(errorMessage));
     }

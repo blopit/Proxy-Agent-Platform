@@ -4,53 +4,100 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { spacing, fontSize, semanticColors } from '@/lib/design-system';
 
 interface TickerProps {
-  autoMode: boolean;
-  askForClarity: boolean;
+  autoMode?: boolean;
+  askForClarity?: boolean;
   className?: string;
   isPaused?: boolean;
+  mode?: 'capture' | 'scout' | 'hunter' | 'mender' | 'mapper';
+  messages?: string[];
+  intervalMin?: number; // Minimum interval in milliseconds
+  intervalMax?: number; // Maximum interval in milliseconds
 }
 
-const Ticker: React.FC<TickerProps> = ({ autoMode, askForClarity, className = '', isPaused = false }) => {
+const Ticker: React.FC<TickerProps> = ({
+  autoMode = true,
+  askForClarity = false,
+  className = '',
+  isPaused = false,
+  mode = 'capture',
+  messages: customMessages,
+  intervalMin = 4000,
+  intervalMax = 8000
+}) => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const tickerRef = useRef<HTMLDivElement>(null);
 
-  // Define ticker messages based on toggle states with habit-forming psychology
+  // Define ticker messages based on toggle states and mode
   const getTickerMessages = () => {
+    // Mode-specific agent messages
+    const agentMessages = {
+      capture: {
+        autoClarity: [
+          "Capture Agent: Drop your thoughts, I'll organize them...",
+          "I'll capture and ask clarifying questions",
+          "Brain dump mode - AI cleanup included",
+          "Your thoughts → Actionable tasks",
+          "Instant capture with smart follow-up"
+        ],
+        autoOnly: [
+          "Capture Agent: I'll handle the details automatically...",
+          "Just type it - I'll process it",
+          "Auto-capture mode active",
+          "Thoughts → Tasks (instantly)",
+          "AI-powered task creation"
+        ],
+        clarityOnly: [
+          "Capture Agent: I'll ask questions to clarify...",
+          "Interactive capture with follow-up",
+          "Let's refine your thoughts together",
+          "Clarity-first capture mode"
+        ],
+        manual: [
+          "Capture Agent: Ready for manual entry...",
+          "Direct task capture mode",
+          "Type your task as-is",
+          "Manual capture active"
+        ]
+      },
+      scout: {
+        autoClarity: [
+          "Scout Agent: Ask me anything about your tasks...",
+          "I'll search and ask for more details",
+          "Smart search with follow-up",
+          "Find tasks + get clarity",
+          "Discover and refine together"
+        ],
+        autoOnly: [
+          "Scout Agent: I'll find what you're looking for...",
+          "Auto-search mode active",
+          "Smart task discovery",
+          "Ask and I'll scout for answers",
+          "AI-powered task search"
+        ],
+        clarityOnly: [
+          "Scout Agent: Let's explore your tasks together...",
+          "Interactive search with questions",
+          "Discovery mode with clarification",
+          "I'll help you find what you need"
+        ],
+        manual: [
+          "Scout Agent: Manual search mode...",
+          "Direct task search",
+          "Find your tasks manually",
+          "Search mode active"
+        ]
+      }
+    };
+
+    const currentAgentMessages = agentMessages[mode] || agentMessages.capture;
+
     const baseMessages = {
-      autoClarity: [
-        "AI will process and ask clarifying questions...",
-        "Smart capture with follow-up questions",
-        "Auto-process with clarity checks",
-        "Intelligent task breakdown coming up",
-        "Your brain dump becomes actionable tasks",
-        "AI magic: turning thoughts into micro-steps"
-      ],
-      autoOnly: [
-        "AI will automatically process your task...",
-        "Smart auto-capture mode active",
-        "Automatic task processing enabled",
-        "AI will handle the details for you",
-        "Instant dopamine hit from task completion",
-        "Like a productivity game - AI does the work!"
-      ],
-      clarityOnly: [
-        "Manual mode with clarity questions...",
-        "You'll be asked clarifying questions",
-        "Manual processing with follow-up",
-        "Interactive clarification flow",
-        "Puzzle-solving mode: piece together your thoughts",
-        "Your personal task detective"
-      ],
-      manual: [
-        "Manual processing mode...",
-        "You'll handle task processing",
-        "Manual capture without AI assistance",
-        "Direct task entry mode",
-        "Full control - you're the captain",
-        "Building your own productivity system"
-      ]
+      autoClarity: currentAgentMessages.autoClarity,
+      autoOnly: currentAgentMessages.autoOnly,
+      clarityOnly: currentAgentMessages.clarityOnly,
+      manual: currentAgentMessages.manual
     };
 
     // Add variable rewards and unpredictable elements
@@ -98,7 +145,10 @@ const Ticker: React.FC<TickerProps> = ({ autoMode, askForClarity, className = ''
     return messages;
   };
 
-  const messages = useMemo(() => getTickerMessages(), [autoMode, askForClarity]);
+  const messages = useMemo(() => {
+    // Use custom messages if provided, otherwise generate based on mode/toggles
+    return customMessages || getTickerMessages();
+  }, [customMessages, autoMode, askForClarity, mode]);
 
   // Reset ticker when toggles change
   useEffect(() => {
@@ -114,8 +164,8 @@ const Ticker: React.FC<TickerProps> = ({ autoMode, askForClarity, className = ''
     let transitionTimeoutId: NodeJS.Timeout;
     let resetTimeoutId: NodeJS.Timeout;
     
-    // More reasonable timing: 4-8 seconds with some variation
-    const getRandomInterval = () => Math.random() * 4000 + 4000; // 4-8 seconds
+    // Configurable timing with variation
+    const getRandomInterval = () => Math.random() * (intervalMax - intervalMin) + intervalMin;
     
     const scheduleNext = () => {
       const interval = getRandomInterval();
@@ -145,7 +195,7 @@ const Ticker: React.FC<TickerProps> = ({ autoMode, askForClarity, className = ''
       if (transitionTimeoutId) clearTimeout(transitionTimeoutId);
       if (resetTimeoutId) clearTimeout(resetTimeoutId);
     };
-  }, [messages.length, isPaused]);
+  }, [messages.length, isPaused, intervalMin, intervalMax]);
 
   return (
     <div 

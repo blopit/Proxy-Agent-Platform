@@ -46,6 +46,11 @@ const nextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
+  // Handle browser extension conflicts
+  experimental: {
+    // Suppress extension-related warnings
+    suppressHydrationWarning: true,
+  },
 }
 
 module.exports = nextConfig;

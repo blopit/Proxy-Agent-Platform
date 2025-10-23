@@ -285,7 +285,12 @@ async def quick_capture(request: dict):
 
         # Format micro-steps for frontend
         micro_steps_display = []
-        for step in result["micro_steps"]:
+        for i, step in enumerate(result["micro_steps"]):
+            # Debug first step
+            if i == 0:
+                import sys
+                print(f"🔍 API serializing step: icon={repr(step.icon)}, short_label={repr(step.short_label)}", file=sys.stderr)
+
             micro_steps_display.append({
                 "step_id": step.step_id,
                 "description": step.description,
@@ -295,6 +300,10 @@ async def quick_capture(request: dict):
                 "icon": step.icon,
                 "delegation_mode": step.delegation_mode.value,
             })
+
+            # Debug serialized dict
+            if i == 0:
+                print(f"🔍 API serialized dict: icon={repr(micro_steps_display[0]['icon'])}, short_label={repr(micro_steps_display[0]['short_label'])}", file=sys.stderr)
 
         task_data = result["task"]
         processing_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)

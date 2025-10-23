@@ -1,8 +1,9 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Search, Target, Heart, Map, Sparkles } from 'lucide-react';
+import { Search, Target, Heart, Map, Camera } from 'lucide-react';
 import PurposeTicker from './PurposeTicker';
+import { getBatteryColor } from '../../utils/colorBlending';
 
 interface BiologicalTabsProps {
   activeTab: string;
@@ -36,7 +37,7 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
     {
       id: 'capture',
       name: 'Capture',
-      icon: Sparkles,
+      icon: Camera,
       description: 'Quick Thought Capture',
       purpose: 'Capture thoughts instantly with natural language',
       color: 'text-cyan-400',
@@ -45,8 +46,8 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
       isOptimal: true // Always available/optimal
     },
     {
-      id: 'scout',
-      name: 'Scout',
+      id: 'search',
+      name: 'Search',
       icon: Search,
       description: 'Forager / Primate',
       purpose: 'Seek novelty & identify doable micro-targets',
@@ -56,8 +57,8 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
       isOptimal: timeOfDay === 'morning' || (timeOfDay === 'afternoon' && energy > 60)
     },
     {
-      id: 'hunter',
-      name: 'Hunter',
+      id: 'hunt',
+      name: 'Hunt',
       icon: Target,
       description: 'Predator',
       purpose: 'Enter pursuit flow and harvest reward',
@@ -67,8 +68,8 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
       isOptimal: timeOfDay === 'morning' || (energy > 70)
     },
     {
-      id: 'mender',
-      name: 'Mender',
+      id: 'rest',
+      name: 'Rest',
       icon: Heart,
       description: 'Herd / Parasympathetic',
       purpose: 'Recover energy & rebuild cognitive tissue',
@@ -78,8 +79,8 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
       isOptimal: timeOfDay === 'afternoon' || energy < 40
     },
     {
-      id: 'mapper',
-      name: 'Mapper',
+      id: 'plan',
+      name: 'Plan',
       icon: Map,
       description: 'Elder / Hippocampal replay',
       purpose: 'Consolidate memory and recalibrate priorities',
@@ -185,11 +186,7 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
                   height: '100%',
                   width: `${energy}%`,
                   borderRadius: '1.5px',
-                  backgroundColor: energy < 20
-                    ? '#dc322f' // Red for low battery
-                    : energy < 50
-                    ? '#b58900' // Yellow for medium
-                    : '#859900', // Green for good
+                  backgroundColor: getBatteryColor(energy),
                   opacity: energy < 10 ? 0.8 : 1
                 }}
               />

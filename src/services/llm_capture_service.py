@@ -82,17 +82,15 @@ class LLMCaptureService:
         self.anthropic_client = None
 
         # Initialize OpenAI
-        if OPENAI_AVAILABLE and os.getenv("OPENAI_API_KEY"):
-            self.openai_client = openai.AsyncOpenAI(
-                api_key=os.getenv("OPENAI_API_KEY")
-            )
+        openai_key = os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY")
+        if OPENAI_AVAILABLE and openai_key:
+            self.openai_client = openai.AsyncOpenAI(api_key=openai_key)
             logger.info("OpenAI client initialized for LLM capture")
 
         # Initialize Anthropic
-        if ANTHROPIC_AVAILABLE and os.getenv("ANTHROPIC_API_KEY"):
-            self.anthropic_client = anthropic.AsyncAnthropic(
-                api_key=os.getenv("ANTHROPIC_API_KEY")
-            )
+        anthropic_key = os.getenv("LLM_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
+        if ANTHROPIC_AVAILABLE and anthropic_key:
+            self.anthropic_client = anthropic.AsyncAnthropic(api_key=anthropic_key)
             logger.info("Anthropic client initialized for LLM capture")
 
     async def parse(

@@ -44,7 +44,7 @@ const TaskTreeView: React.FC<TaskTreeViewProps> = ({ task, onSaveAndScout }) => 
 
     const labels = {
       digital: '🖥️ Digital',
-      human: '👤 Human',
+      human: '🎯 Human',
       needs_clarification: '❓ Needs Info'
     };
 

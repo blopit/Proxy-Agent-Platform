@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import EnergyGauge from '../../../components/mobile/EnergyGauge';
 import CategoryRow from '../../../components/mobile/CategoryRow';
+import ExpandableTile from '../../../components/mobile/ExpandableTile';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -162,12 +163,28 @@ const MenderPage: React.FC<MenderPageProps> = ({
           )}
         </div>
 
-        {/* Energy Gauge - Compact */}
-        <div className="mb-2 py-3 bg-[#073642] rounded-lg">
-          <EnergyGauge
-            energy={energy}
-            trend={energyTrend}
-            predictedNextHour={predictedEnergy}
+        {/* Energy Gauge - Expandable Tile */}
+        <div className="mb-2">
+          <ExpandableTile
+            microContent={
+              <EnergyGauge
+                energy={energy}
+                trend={energyTrend}
+                predictedNextHour={predictedEnergy}
+                variant="micro"
+              />
+            }
+            expandedContent={
+              <div className="py-3">
+                <EnergyGauge
+                  energy={energy}
+                  trend={energyTrend}
+                  predictedNextHour={predictedEnergy}
+                  variant="expanded"
+                />
+              </div>
+            }
+            defaultExpanded={false}
           />
         </div>
 

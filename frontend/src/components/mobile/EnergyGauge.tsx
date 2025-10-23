@@ -1,28 +1,29 @@
 'use client'
 
 import React from 'react';
+import { getBatteryColor } from '../../utils/colorBlending';
 
 interface EnergyGaugeProps {
   energy: number; // 0-100
   trend?: 'rising' | 'falling' | 'stable';
   predictedNextHour?: number;
+  variant?: 'micro' | 'expanded';
 }
 
 const EnergyGauge: React.FC<EnergyGaugeProps> = ({
   energy,
   trend = 'stable',
-  predictedNextHour
+  predictedNextHour,
+  variant = 'expanded'
 }) => {
   // Calculate stroke dash offset for circular progress
   const radius = 70;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (energy / 100) * circumference;
 
-  // Get color based on energy level
+  // Get color based on energy level using smooth blending
   const getEnergyColor = () => {
-    if (energy >= 70) return '#859900'; // Green (high energy)
-    if (energy >= 40) return '#b58900'; // Yellow (medium energy)
-    return '#dc322f'; // Red (low energy)
+    return getBatteryColor(energy);
   };
 
   // Get energy level text
@@ -44,6 +45,69 @@ const EnergyGauge: React.FC<EnergyGaugeProps> = ({
     }
   };
 
+  // Micro variant - compact horizontal display
+  if (variant === 'micro') {
+    return (
+      <div className="flex items-center justify-between h-full px-4 py-2">
+        {/* Compact circular gauge */}
+        <div className="relative w-16 h-16 flex-shrink-0">
+          <svg width="64" height="64" className="transform -rotate-90">
+            {/* Background circle */}
+            <circle
+              cx="32"
+              cy="32"
+              r="28"
+              fill="none"
+              stroke="#073642"
+              strokeWidth="6"
+            />
+            {/* Energy progress circle */}
+            <circle
+              cx="32"
+              cy="32"
+              r="28"
+              fill="none"
+              stroke={getEnergyColor()}
+              strokeWidth="6"
+              strokeDasharray={2 * Math.PI * 28}
+              strokeDashoffset={2 * Math.PI * 28 - (energy / 100) * 2 * Math.PI * 28}
+              strokeLinecap="round"
+              className="transition-all duration-1000 ease-out"
+            />
+          </svg>
+          {/* Center percentage */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-lg font-bold" style={{ color: getEnergyColor() }}>
+              {energy}%
+            </div>
+          </div>
+        </div>
+
+        {/* Info section */}
+        <div className="flex-1 ml-3 flex flex-col justify-center">
+          <div className="text-sm font-bold text-[#93a1a1]">
+            {getEnergyLevel()}
+          </div>
+          <div className="flex items-center gap-1 mt-0.5">
+            <span className="text-sm">{getTrendIcon()}</span>
+            <span className="text-xs text-[#586e75] capitalize">{trend}</span>
+          </div>
+        </div>
+
+        {/* Prediction badge */}
+        {predictedNextHour !== undefined && (
+          <div className="flex-shrink-0 px-2 py-1 bg-[#002b36] rounded border border-[#268bd2]">
+            <div className="text-xs text-[#586e75]">Next Hr</div>
+            <div className="text-sm font-bold text-[#268bd2]">
+              {predictedNextHour}%
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Expanded variant - full display
   return (
     <div className="flex flex-col items-center">
       {/* Circular Energy Gauge */}

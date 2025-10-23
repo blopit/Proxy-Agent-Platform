@@ -5,6 +5,43 @@
   ],
   "rules": {
     "react/no-unescaped-entities": "off",
-    "@next/next/no-page-custom-font": "off"
+    "@next/next/no-page-custom-font": "off",
+
+    // Design System Enforcement
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "Property[key.name='backgroundColor'] Literal[value=/#[0-9a-fA-F]{3,8}/]",
+        "message": "❌ Don't hardcode colors! Use semanticColors from @/lib/design-system instead. Example: semanticColors.bg.primary"
+      },
+      {
+        "selector": "Property[key.name='color'] Literal[value=/#[0-9a-fA-F]{3,8}/]",
+        "message": "❌ Don't hardcode colors! Use semanticColors from @/lib/design-system instead. Example: semanticColors.text.primary"
+      },
+      {
+        "selector": "Property[key.name='borderColor'] Literal[value=/#[0-9a-fA-F]{3,8}/]",
+        "message": "❌ Don't hardcode colors! Use semanticColors from @/lib/design-system instead. Example: semanticColors.border.default"
+      },
+      {
+        "selector": "Property[key.name='padding'] Literal[value=/^[0-9]+px$/]",
+        "message": "❌ Don't hardcode spacing! Use spacing tokens from @/lib/design-system instead. Example: spacing[4] for 16px"
+      },
+      {
+        "selector": "Property[key.name='margin'] Literal[value=/^[0-9]+px$/]",
+        "message": "❌ Don't hardcode spacing! Use spacing tokens from @/lib/design-system instead. Example: spacing[2] for 8px"
+      },
+      {
+        "selector": "Property[key.name='gap'] Literal[value=/^[0-9]+px$/]",
+        "message": "❌ Don't hardcode spacing! Use spacing tokens from @/lib/design-system instead. Example: spacing[2] for 8px"
+      },
+      {
+        "selector": "Property[key.name='borderRadius'] Literal[value=/^[0-9]+px$/]",
+        "message": "❌ Don't hardcode border radius! Use borderRadius from @/lib/design-system instead. Example: borderRadius.lg"
+      },
+      {
+        "selector": "Property[key.name='fontSize'] Literal[value=/^[0-9]+px$/]",
+        "message": "❌ Don't hardcode font sizes! Use fontSize from @/lib/design-system instead. Example: fontSize.base"
+      }
+    ]
   }
 }

@@ -211,21 +211,29 @@ async def get_current_energy_level(user_id: str = "mobile-user"):
         # This is a simplified version that doesn't require full tracking
         current_hour = datetime.now().hour
 
-        # Simple circadian-based estimate
+        # More granular circadian-based estimate with minute-level variation
+        current_minute = datetime.now().minute
+        minute_factor = current_minute / 60.0  # 0.0 to 0.99
+        
         if 6 <= current_hour < 9:  # Morning rise
-            base_energy = 6.5
+            base_energy = 6.5 + (minute_factor * 0.3)  # 6.5 to 6.8
         elif 9 <= current_hour < 12:  # Peak morning
-            base_energy = 8.0
+            base_energy = 8.0 - (minute_factor * 0.2)  # 8.0 to 7.8
         elif 12 <= current_hour < 14:  # Post-lunch dip
-            base_energy = 5.5
+            base_energy = 5.5 - (minute_factor * 0.3)  # 5.5 to 5.2
         elif 14 <= current_hour < 17:  # Afternoon recovery
-            base_energy = 7.0
+            base_energy = 7.0 + (minute_factor * 0.4)  # 7.0 to 7.4
         elif 17 <= current_hour < 20:  # Evening
-            base_energy = 6.0
+            base_energy = 6.0 - (minute_factor * 0.2)  # 6.0 to 5.8
         elif 20 <= current_hour < 23:  # Night wind-down
-            base_energy = 4.5
+            base_energy = 4.5 - (minute_factor * 0.3)  # 4.5 to 4.2
         else:  # Late night/early morning
-            base_energy = 3.0
+            base_energy = 3.0 + (minute_factor * 0.2)  # 3.0 to 3.2
+        
+        # Add some random variation for more realistic values (±0.1 to ±0.3)
+        import random
+        variation = random.uniform(-0.2, 0.2)
+        base_energy = max(0.0, min(10.0, base_energy + variation))
 
         return {
             "energy_level": base_energy,

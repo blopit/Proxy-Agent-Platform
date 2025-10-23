@@ -236,13 +236,9 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
         </span>
       )}
 
-      {/* Micro size - icon + short label */}
+      {/* Micro size - short label only */}
       {size === 'micro' && (
-        <div className="flex flex-col items-center justify-start w-full h-full">
-          <div className="relative mb-1 mt-0.5">
-            <span className="text-xs">{getIcon()}</span>
-            {getCheckmarkBadge()}
-          </div>
+        <div className="flex flex-col items-center justify-center w-full h-full">
           <span className={`text-[9px] font-medium text-center line-clamp-1 ${textColors[step.status]}`}>
             {getLabel()}
           </span>
@@ -254,11 +250,7 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
         <>
           {!isExpanded ? (
             // Collapsed state - very compact
-            <div className="flex flex-col items-center justify-start w-full h-full overflow-hidden">
-              <div className="relative mb-1 mt-0.5">
-                <span className="text-xs">{getIcon()}</span>
-                {getCheckmarkBadge()}
-              </div>
+            <div className="flex flex-col items-center justify-center w-full h-full overflow-hidden">
               <span className={`text-[10px] font-medium text-center line-clamp-1 px-0.5 w-full overflow-hidden ${textColors[step.status]}`}>
                 {getLabel()}
               </span>
@@ -269,15 +261,9 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
           ) : (
             // Expanded state - show more detail but still controlled
             <div className="flex flex-col items-center gap-0.5 w-full h-full justify-center overflow-hidden px-1">
-              <div className="flex items-center gap-1 w-full justify-center">
-                <div className="relative flex-shrink-0">
-                  <span className="text-base">{getIcon()}</span>
-                  {getCheckmarkBadge()}
-                </div>
-                <span className={`text-[10px] font-semibold text-center line-clamp-2 flex-1 overflow-hidden ${textColors[step.status]}`}>
-                  {step.description}
-                </span>
-              </div>
+              <span className={`text-[10px] font-semibold text-center line-clamp-2 w-full overflow-hidden ${textColors[step.status]}`}>
+                {step.description}
+              </span>
               {step.detail && (
                 <p className="text-[8px] text-[#93a1a1] text-center line-clamp-1 w-full overflow-hidden">
                   {step.detail}
@@ -291,10 +277,10 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
         </>
       )}
 
-      {/* Step number badge (full size only) */}
+      {/* Step icon badge (full size only) */}
       {size === 'full' && (
         <div
-          className={`absolute -top-1 -left-1 w-5 h-5 rounded-full flex items-center justify-center z-10 shadow-md transition-all duration-300 ${
+          className={`absolute -top-1 -left-1 w-6 h-6 rounded-full flex items-center justify-center z-10 shadow-md transition-all duration-300 ${
             step.status === 'done'
               ? 'bg-[#859900] border-2 border-[#859900]'
               : step.status === 'active'
@@ -304,12 +290,8 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
               : 'bg-[#073642] border-2 border-[#586e75]'
           }`}
         >
-          <span
-            className={`text-[10px] font-bold ${
-              step.status === 'pending' ? 'text-[#93a1a1]' : 'text-white'
-            }`}
-          >
-            {index + 1}
+          <span className="text-xs">
+            {getIcon()}
           </span>
         </div>
       )}
@@ -345,8 +327,8 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
         </div>
       )}
 
-      {/* Mini progress indicator for active steps */}
-      {step.status === 'active' && stepProgressPercent !== undefined && (
+      {/* Mini progress indicator for active steps - only when progress > 0 */}
+      {step.status === 'active' && stepProgressPercent !== undefined && stepProgressPercent > 0 && (
         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#586e75]/30 rounded-b-sm overflow-hidden">
           <div
             className="h-full bg-[#268bd2] transition-all duration-300"
@@ -354,6 +336,7 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
           />
         </div>
       )}
+
     </div>
   );
 }

@@ -233,7 +233,7 @@ const CategoryRow: React.FC<CategoryRowProps> = ({
               <div className="flex items-center gap-2">
                 {/* Digital task indicator */}
                 {task.is_digital && (
-                  <span className="text-xs">🤖</span>
+                  <span className="text-xs">⚡</span>
                 )}
 
                 {/* Priority badge */}
