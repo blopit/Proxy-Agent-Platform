@@ -1,8 +1,42 @@
 /**
- * Design System - 4px Grid
- * All spacing, sizing, and layout uses multiples of 4px for consistency
+ * Design System - Comprehensive Token System
+ *
+ * This file defines ALL design tokens for the application.
+ * ⚠️ DO NOT use hardcoded values in components - always import from here!
+ *
+ * Benefits:
+ * - Single source of truth for all design decisions
+ * - Easy theme switching (dark/light/custom)
+ * - Consistent spacing and sizing across app
+ * - Better TypeScript autocomplete
+ * - Maintainable and scalable
+ *
+ * Usage:
+ * ```typescript
+ * import { spacing, colors, semanticColors, fontSize, borderRadius } from '@/lib/design-system'
+ *
+ * // ✅ GOOD: Using design tokens
+ * <div style={{ padding: spacing[4], color: semanticColors.text.primary }} />
+ *
+ * // ❌ BAD: Hardcoded values
+ * <div style={{ padding: '16px', color: '#93a1a1' }} />
+ * ```
+ *
+ * @see https://docs.google.com/document/d/DESIGN_SYSTEM for full documentation
  */
 
+// ============================================================================
+// SPACING - 4px Grid System
+// ============================================================================
+/**
+ * Spacing scale based on 4px grid
+ * Use for padding, margin, gap, width, height
+ *
+ * @example
+ * padding: spacing[4]      // 16px
+ * gap: spacing[2]          // 8px
+ * marginBottom: spacing[6] // 24px
+ */
 export const spacing = {
   0: '0px',       // 0
   1: '4px',       // 4px
@@ -24,6 +58,21 @@ export const spacing = {
   32: '128px',    // 128px
 } as const;
 
+// TypeScript type for spacing keys (enables autocomplete)
+export type SpacingKey = keyof typeof spacing;
+
+// ============================================================================
+// TYPOGRAPHY - Font Sizes
+// ============================================================================
+/**
+ * Font size scale
+ * Use for consistent typography hierarchy
+ *
+ * @example
+ * fontSize: fontSize.base  // 16px - body text
+ * fontSize: fontSize.lg    // 18px - headings
+ * fontSize: fontSize.xs    // 12px - captions
+ */
 export const fontSize = {
   xs: '12px',     // 12px
   sm: '14px',     // 14px
@@ -35,6 +84,19 @@ export const fontSize = {
   '4xl': '36px',  // 36px
 } as const;
 
+export type FontSizeKey = keyof typeof fontSize;
+
+// ============================================================================
+// BORDER RADIUS - Rounding
+// ============================================================================
+/**
+ * Border radius scale for consistent rounding
+ *
+ * @example
+ * borderRadius: borderRadius.lg   // 16px - cards
+ * borderRadius: borderRadius.pill // 9999px - buttons
+ * borderRadius: borderRadius.base // 8px - inputs
+ */
 export const borderRadius = {
   none: '0px',
   sm: '4px',      // 4px
@@ -48,6 +110,19 @@ export const borderRadius = {
   full: '9999px', // Legacy alias for pill
 } as const;
 
+export type BorderRadiusKey = keyof typeof borderRadius;
+
+// ============================================================================
+// ICONS - Sizes
+// ============================================================================
+/**
+ * Icon size scale (in pixels, for lucide-react)
+ *
+ * @example
+ * <Search size={iconSize.sm} />   // 16px
+ * <Bot size={iconSize.base} />    // 20px
+ * <Zap size={iconSize.lg} />      // 24px
+ */
 export const iconSize = {
   xs: 12,   // 12px
   sm: 16,   // 16px
@@ -57,6 +132,22 @@ export const iconSize = {
   '2xl': 32, // 32px
 } as const;
 
+export type IconSizeKey = keyof typeof iconSize;
+
+// ============================================================================
+// COLORS - Solarized Palette
+// ============================================================================
+/**
+ * Base Solarized color palette
+ * ⚠️ Prefer using semanticColors for better theme switching!
+ *
+ * @example
+ * // ✅ GOOD: Semantic usage
+ * color: semanticColors.text.primary
+ *
+ * // ⚠️ USE SPARINGLY: Direct color
+ * color: colors.cyan  // Only for agent colors, accents, etc.
+ */
 export const colors = {
   // Solarized theme
   base03: '#002b36',
@@ -77,7 +168,25 @@ export const colors = {
   green: '#859900',
 } as const;
 
-// Semantic color mappings
+export type ColorKey = keyof typeof colors;
+
+// ============================================================================
+// SEMANTIC COLORS - Theme-Aware Color Mappings
+// ============================================================================
+/**
+ * Semantic color system for theme switching
+ * ALWAYS use these instead of direct colors for text, backgrounds, borders
+ *
+ * @example
+ * // ✅ CORRECT: Will adapt to theme changes
+ * backgroundColor: semanticColors.bg.primary
+ * color: semanticColors.text.primary
+ * borderColor: semanticColors.border.accent
+ *
+ * // ❌ WRONG: Hardcoded, won't adapt to themes
+ * backgroundColor: '#002b36'
+ * color: '#93a1a1'
+ */
 export const semanticColors = {
   bg: {
     primary: colors.base03,
@@ -104,7 +213,13 @@ export const semanticColors = {
   },
 } as const;
 
-// Common component styles
+// ============================================================================
+// COMPONENT STYLES - Reusable Tailwind Classes
+// ============================================================================
+/**
+ * Pre-built component style classes
+ * Use for common UI patterns
+ */
 export const buttonStyles = {
   sm: `px-3 py-1 text-sm`,   // 12px, 4px
   base: `px-4 py-2 text-base`, // 16px, 8px
@@ -115,7 +230,17 @@ export const inputStyles = {
   base: `px-3 py-2 text-sm rounded-lg border-2`, // 12px, 8px
 } as const;
 
-// Opacity scale (0-100)
+// ============================================================================
+// OPACITY - Transparency Scale
+// ============================================================================
+/**
+ * Opacity values (0-100)
+ * Use for transparency effects
+ *
+ * @example
+ * opacity: opacity[80]  // 0.8
+ * opacity: opacity[50]  // 0.5
+ */
 export const opacity = {
   0: '0',
   10: '0.1',
@@ -130,7 +255,20 @@ export const opacity = {
   100: '1',
 } as const;
 
-// Z-index layering system
+export type OpacityKey = keyof typeof opacity;
+
+// ============================================================================
+// Z-INDEX - Layering System
+// ============================================================================
+/**
+ * Z-index scale for consistent layering
+ * Prevents z-index wars and ensures proper stacking
+ *
+ * @example
+ * zIndex: zIndex.sticky  // 10 - sticky headers
+ * zIndex: zIndex.modal   // 50 - modals, dialogs
+ * zIndex: zIndex.toast   // 60 - notifications
+ */
 export const zIndex = {
   base: 0,
   sticky: 10,
@@ -140,7 +278,20 @@ export const zIndex = {
   toast: 60,
 } as const;
 
-// Shadow depths
+export type ZIndexKey = keyof typeof zIndex;
+
+// ============================================================================
+// SHADOWS - Depth & Elevation
+// ============================================================================
+/**
+ * Shadow scale for depth and elevation
+ * Creates visual hierarchy through depth
+ *
+ * @example
+ * boxShadow: shadow.sm  // Subtle card depth
+ * boxShadow: shadow.lg  // Prominent modal depth
+ * boxShadow: coloredShadow(colors.cyan, '30')  // Colored glow
+ */
 export const shadow = {
   none: 'none',
   sm: '0 1px 3px rgba(0, 0, 0, 0.2)',
@@ -149,11 +300,32 @@ export const shadow = {
   xl: '0 12px 32px rgba(0, 0, 0, 0.5)',
 } as const;
 
-// Helper function for colored shadows
+export type ShadowKey = keyof typeof shadow;
+
+/**
+ * Helper function for colored shadows (glows)
+ * Creates accent-colored shadows for emphasis
+ *
+ * @param color - Hex color code
+ * @param opacity - Hex opacity (default '40' = ~25%)
+ * @example
+ * boxShadow: coloredShadow(colors.cyan, '30')
+ * boxShadow: coloredShadow('#2aa198', '40')
+ */
 export const coloredShadow = (color: string, opacity = '40') =>
   `0 2px 8px ${color}${opacity}`;
 
-// Transition and animation durations
+// ============================================================================
+// ANIMATIONS - Timing & Durations
+// ============================================================================
+/**
+ * Animation duration scale
+ * Use for consistent transition timing
+ *
+ * @example
+ * transition: `all ${duration.normal}`  // 300ms
+ * transitionDuration: duration.fast     // 150ms
+ */
 export const duration = {
   instant: '0ms',
   fast: '150ms',
@@ -164,17 +336,36 @@ export const duration = {
   pause: '2000ms',
 } as const;
 
-// Animation timing constants
+export type DurationKey = keyof typeof duration;
+
+/**
+ * Animation timing constants
+ * Specific timing values for app animations
+ *
+ * @example
+ * setTimeout(() => {}, animation.celebration)  // 1500ms
+ * setInterval(() => {}, animation.frameRate)   // 16ms (60fps)
+ */
 export const animation = {
   tickerInterval: { min: 4000, max: 8000 },
   celebration: 1500,
   dropAnimation: 500,
   loadingStage: 2000,
   togglePause: 2000,
-  frameRate: 16, // 60fps
+  frameRate: 16, // 60fps (~60fps = 1000ms / 60 = 16.67ms)
 } as const;
 
-// Physics constants for animations
+// ============================================================================
+// PHYSICS - Animation Physics Constants
+// ============================================================================
+/**
+ * Physics constants for particle animations
+ * Used in reward celebrations, particle effects
+ *
+ * @example
+ * vy = vy + physics.gravity  // Apply gravity
+ * speed = physics.particleSpeed.fast  // Fast particles
+ */
 export const physics = {
   gravity: 0.5,
   particleSpeed: {
@@ -183,3 +374,77 @@ export const physics = {
     fast: 15,
   },
 } as const;
+
+// ============================================================================
+// TYPE EXPORTS - For Better TypeScript Support
+// ============================================================================
+/**
+ * Exported types for TypeScript autocomplete and type safety
+ */
+export type DesignToken = {
+  spacing: typeof spacing;
+  fontSize: typeof fontSize;
+  borderRadius: typeof borderRadius;
+  iconSize: typeof iconSize;
+  colors: typeof colors;
+  semanticColors: typeof semanticColors;
+  opacity: typeof opacity;
+  zIndex: typeof zIndex;
+  shadow: typeof shadow;
+  duration: typeof duration;
+  animation: typeof animation;
+  physics: typeof physics;
+};
+
+/**
+ * Helper type to get all semantic color paths
+ * Useful for strict typing in components
+ */
+export type SemanticColorPath =
+  | `bg.${keyof typeof semanticColors.bg}`
+  | `text.${keyof typeof semanticColors.text}`
+  | `border.${keyof typeof semanticColors.border}`
+  | `accent.${keyof typeof semanticColors.accent}`;
+
+// ============================================================================
+// USAGE EXAMPLES
+// ============================================================================
+/**
+ * @example Basic Usage
+ * ```tsx
+ * import { spacing, semanticColors, borderRadius } from '@/lib/design-system'
+ *
+ * function MyComponent() {
+ *   return (
+ *     <div style={{
+ *       padding: spacing[4],
+ *       backgroundColor: semanticColors.bg.primary,
+ *       color: semanticColors.text.primary,
+ *       borderRadius: borderRadius.lg
+ *     }}>
+ *       Content
+ *     </div>
+ *   )
+ * }
+ * ```
+ *
+ * @example Advanced Usage with Animations
+ * ```tsx
+ * import { duration, shadow, coloredShadow, colors } from '@/lib/design-system'
+ *
+ * function AnimatedCard() {
+ *   return (
+ *     <div style={{
+ *       transition: `all ${duration.normal}`,
+ *       boxShadow: shadow.md,
+ *       ':hover': {
+ *         boxShadow: coloredShadow(colors.cyan, '30'),
+ *         transform: 'scale(1.02)'
+ *       }
+ *     }}>
+ *       Card
+ *     </div>
+ *   )
+ * }
+ * ```
+ */
