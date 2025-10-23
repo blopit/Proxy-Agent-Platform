@@ -51,20 +51,17 @@ class SplitProxyAgent:
 
         # Determine AI provider
         self.ai_provider = os.getenv("LLM_PROVIDER", "openai").lower()
-        logger.info(f"SplitProxyAgent initializing with LLM_PROVIDER={self.ai_provider}, OPENAI_AVAILABLE={OPENAI_AVAILABLE}")
 
         # Initialize AI clients
         if OPENAI_AVAILABLE and self.ai_provider == "openai":
             api_key = os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY")
             if api_key:
                 self.openai_client = openai.AsyncOpenAI(api_key=api_key)
-                logger.info("✅ OpenAI client initialized for micro-step generation")
             else:
                 self.openai_client = None
-                logger.warning("❌ OpenAI API key not found")
+                logger.warning("OpenAI API key not found")
         else:
             self.openai_client = None
-            logger.warning(f"❌ OpenAI not available (OPENAI_AVAILABLE={OPENAI_AVAILABLE}, provider={self.ai_provider})")
 
         if ANTHROPIC_AVAILABLE and self.ai_provider == "anthropic":
             api_key = os.getenv("LLM_API_KEY") or os.getenv("ANTHROPIC_API_KEY")
@@ -146,12 +143,6 @@ class SplitProxyAgent:
             "total_estimated_minutes": sum(s.estimated_minutes for s in micro_steps)
         }
 
-        # Debug: Check what's being returned
-        import sys
-        if result["micro_steps"]:
-            first = result["micro_steps"][0]
-            print(f"🔍 split_task returning - icon: {repr(first.get('icon'))}, short_label: {repr(first.get('short_label'))}", file=sys.stderr)
-
         return result
 
     def _determine_task_scope(self, task: Task) -> TaskScope:
@@ -202,14 +193,12 @@ class SplitProxyAgent:
 
         # Call AI based on provider
         if self.openai_client and self.ai_provider == "openai":
-            logger.info(f"Using OpenAI for micro-step generation (task: {task.task_id})")
             steps_data = await self._split_with_openai(prompt, task)
         elif self.anthropic_client and self.ai_provider == "anthropic":
-            logger.info(f"Using Anthropic for micro-step generation (task: {task.task_id})")
             steps_data = await self._split_with_anthropic(prompt, task)
         else:
             # Fallback: Rule-based splitting
-            logger.warning(f"No LLM available for micro-step generation, using fallback rules (task: {task.task_id})")
+            logger.warning(f"No LLM available for micro-step generation, using fallback rules")
             steps_data = self._split_with_rules(task)
 
         # Convert to MicroStep objects
@@ -224,10 +213,6 @@ class SplitProxyAgent:
                 icon=step_data.get("icon"),
                 delegation_mode=step_data.get("delegation_mode", DelegationMode.DO)
             )
-            # Debug: Check if MicroStep has the fields
-            if i == 1:
-                import sys
-                print(f"🔍 MicroStep created - icon: {repr(step.icon)}, short_label: {repr(step.short_label)}", file=sys.stderr)
             micro_steps.append(step)
 
         return micro_steps
@@ -292,23 +277,22 @@ Focus on CLARITY and IMMEDIATE ACTION. Keep steps substantial - don't break triv
             import json
             result = json.loads(response.choices[0].message.content)
 
-            # Debug: Log the actual LLM response
-            import sys
-            print(f"🔍 OpenAI response structure: {list(result.keys())}", file=sys.stderr)
-            if "steps" in result and len(result["steps"]) > 0:
-                first_step = result["steps"][0]
-                print(f"🔍 First step fields: {list(first_step.keys())}", file=sys.stderr)
-                print(f"🔍 First step sample: {first_step}", file=sys.stderr)
-            logger.info(f"OpenAI response structure: {list(result.keys())}")
+            # Debug: Log first step to check icon
+            logger.info(f"🔍 OpenAI response result keys: {list(result.keys())}")
 
             # Handle different response formats
             if "steps" in result:
-                return result["steps"]
+                steps = result["steps"]
+                if steps and len(steps) > 0:
+                    logger.info(f"🔍 First step from OpenAI: icon={repr(steps[0].get('icon'))}, short_label={repr(steps[0].get('short_label'))}")
+                return steps
             elif isinstance(result, list):
+                if result and len(result) > 0:
+                    logger.info(f"🔍 First step from OpenAI (list format): icon={repr(result[0].get('icon'))}, short_label={repr(result[0].get('short_label'))}")
                 return result
             else:
                 # Fallback if unexpected format
-                logger.warning(f"Unexpected OpenAI response format, using fallback: {result.keys()}")
+                logger.warning(f"Unexpected OpenAI response format, using fallback: {list(result.keys())}")
                 return self._split_with_rules(task)
 
         except Exception as e:

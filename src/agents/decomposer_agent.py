@@ -173,13 +173,8 @@ class DecomposerAgent(BaseProxyAgent):
 
         # Convert to MicroStep objects if needed
         micro_steps = []
-        for i, step_data in enumerate(micro_steps_data):
+        for step_data in micro_steps_data:
             if isinstance(step_data, dict):
-                # Debug first step
-                if i == 0:
-                    import sys
-                    print(f"🔍 decomposer converting dict: icon={repr(step_data.get('icon'))}, short_label={repr(step_data.get('short_label'))}", file=sys.stderr)
-
                 micro_step = MicroStep(
                     parent_task_id=task.task_id,
                     step_number=step_data.get("step_number", len(micro_steps) + 1),
@@ -189,10 +184,6 @@ class DecomposerAgent(BaseProxyAgent):
                     icon=step_data.get("icon"),
                     delegation_mode=step_data.get("delegation_mode", "do"),
                 )
-
-                # Debug after creation
-                if i == 0:
-                    print(f"🔍 decomposer created MicroStep: icon={repr(micro_step.icon)}, short_label={repr(micro_step.short_label)}", file=sys.stderr)
             else:
                 micro_step = step_data  # Already a MicroStep object
 
@@ -201,8 +192,6 @@ class DecomposerAgent(BaseProxyAgent):
                 micro_steps.append(micro_step)
             else:
                 # Micro-step is still too complex - recurse
-                import sys
-                print(f"🔍 Recursing for non-atomic step: {micro_step.description[:60]}... (est_min: {micro_step.estimated_minutes}, len: {len(micro_step.description)})", file=sys.stderr)
                 sub_task = self._micro_step_to_task(micro_step, task)
                 sub_result = await self.decompose_task(sub_task, user_id, depth + 1)
                 micro_steps.extend(sub_result.get("micro_steps", []))
