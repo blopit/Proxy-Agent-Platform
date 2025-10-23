@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { ArrowUp, Zap, MessageCircle, Bot, Camera, Search, Mic } from 'lucide-react'
+import { ArrowUp, Zap, MessageCircle, Bot, Camera, Search, Mic, X, Square } from 'lucide-react'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import BiologicalTabs from '@/components/mobile/BiologicalTabs'
 import CaptureMode from '@/components/mobile/modes/CaptureMode'
@@ -32,10 +32,9 @@ import AsyncJobTimeline, { type JobStep } from '@/components/shared/AsyncJobTime
 import type { QuickCaptureResponse } from '@/lib/api'
 import type { LoadingStage } from '@/types/capture'
 import { useVoiceInput } from '@/hooks/useVoiceInput'
-import toast from 'react-hot-toast'
 // import { useWebSocket } from '@/hooks/useWebSocket'
 
-type Mode = 'capture' | 'scout' | 'hunter' | 'mender' | 'mapper'
+type Mode = 'capture' | 'search' | 'hunt' | 'mender' | 'mapper'
 
 // Agent configuration for each mode
 const AGENT_CONFIG = {
@@ -45,10 +44,10 @@ const AGENT_CONFIG = {
     name: 'Capture Agent',
     description: 'Captures tasks instantly with natural language'
   },
-  scout: {
+  search: {
     icon: Search,
     color: colors.yellow, // Yellow
-    name: 'Scout Agent',
+    name: 'Search Agent',
     description: 'Helps you search and discover tasks'
   }
 } as const
@@ -76,13 +75,64 @@ export default function MobileApp() {
   const [capturedTask, setCapturedTask] = useState<QuickCaptureResponse | null>(null)
   const [showBreakdown, setShowBreakdown] = useState(false)
 
-  // AsyncJobTimeline state
+  // AsyncJobTimeline state - Capture job
   const [captureSteps, setCaptureSteps] = useState<JobStep[]>([])
   const [captureProgress, setCaptureProgress] = useState(0)
   const [capturingTaskName, setCapturingTaskName] = useState('')
+  const [showCaptureJob, setShowCaptureJob] = useState(false)
+  const [captureStartTime, setCaptureStartTime] = useState(0)
+
+  // Task preview state
+  interface TaskPreview {
+    id: string;
+    jobName: string;
+    steps: JobStep[];
+    createdAt: number;
+  }
+  const [taskPreviews, setTaskPreviews] = useState<TaskPreview[]>([])
+  const MAX_PREVIEWS = 3
+  const CAPTURE_JOB_DISPLAY_TIME = 5000 // 5 seconds
+
+  // Function to clear all task previews
+  const clearTaskPreviews = () => {
+    setTaskPreviews([])
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('taskPreviews')
+    }
+  }
 
   // Voice input state
   const [wasVoiceInput, setWasVoiceInput] = useState(false)
+
+  // Suggestions visibility state
+  const [suggestionsVisible, setSuggestionsVisible] = useState(true)
+
+  // Suggestion examples pool
+  const SUGGESTION_EXAMPLES = [
+    "Add milk and eggs to grocery list",
+    "Research best noise-canceling headphones",
+    "Clean out the fridge before trash day",
+    "Reply to that text I've been avoiding",
+    "Book a haircut for next week",
+    "Download that article to read later",
+    "Order new filters for the air purifier",
+    "Check if I need to renew my license",
+    "Find a recipe for meal prep Sunday",
+    "Schedule oil change for the car",
+    "Call the dentist to reschedule",
+    "Return those shoes that don't fit",
+    "Update my resume with recent projects",
+    "Backup photos from my phone",
+    "Unsubscribe from those spam emails"
+  ]
+
+  // Suggestion label ticker messages
+  const SUGGESTION_LABELS = [
+    "Try these...",
+    "Quick captures...",
+    "Suggested for you...",
+    "Popular tasks..."
+  ]
 
   // Voice input hook
   const {
@@ -99,9 +149,10 @@ export default function MobileApp() {
       setChat(text);
       setWasVoiceInput(true);
     },
-    onError: (error) => {
+    onError: async (error) => {
       if (error.type !== 'no-speech' && error.type !== 'aborted') {
-        toast.error(error.message, { duration: 3000 });
+        const toast = await import('react-hot-toast');
+        toast.default.error(error.message, { duration: 3000 });
       }
     },
   })
@@ -143,16 +194,47 @@ export default function MobileApp() {
     updateTimeOfDay();
     fetchProgressData();
     fetchEnergyData();
-    
+
+    // Load task previews from localStorage (client-side only)
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('taskPreviews')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          setTaskPreviews(parsed)
+        }
+      } catch (error) {
+        console.warn('Failed to load task previews from localStorage:', error)
+      }
+    }
+
     // Set up intervals for real-time updates
     const timeInterval = setInterval(updateTimeOfDay, 60000); // Update time every minute
     const energyInterval = setInterval(fetchEnergyData, 60000); // Update energy every minute
-    
+
     return () => {
       clearInterval(timeInterval);
       clearInterval(energyInterval);
     };
   }, []);
+
+  // Reset suggestions when switching back to Capture tab
+  useEffect(() => {
+    if (mode === 'capture') {
+      setSuggestionsVisible(true);
+    }
+  }, [mode]);
+
+  // Save task previews to localStorage whenever they change (client-side only)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('taskPreviews', JSON.stringify(taskPreviews))
+      } catch (error) {
+        console.warn('Failed to save task previews to localStorage:', error)
+      }
+    }
+  }, [taskPreviews]);
 
   const fetchProgressData = async () => {
     try {
@@ -217,6 +299,8 @@ export default function MobileApp() {
 
     const taskText = chat.trim()
     setIsProcessing(true)
+    setShowCaptureJob(true) // Show capture job timeline
+    setCaptureStartTime(Date.now()) // Track start time
 
     try {
       // 1. Show drop animation
@@ -230,7 +314,7 @@ export default function MobileApp() {
         {
           id: 'parse',
           description: 'Parse natural language',
-          shortLabel: 'Parse',
+          shortLabel: 'Parsing input',
           detail: 'Extracting task details...',
           estimatedMinutes: 0,
           leafType: 'DIGITAL',
@@ -240,7 +324,7 @@ export default function MobileApp() {
         {
           id: 'llm',
           description: 'LLM decomposition',
-          shortLabel: 'LLM',
+          shortLabel: 'Breaking down',
           detail: 'Breaking into micro-steps...',
           estimatedMinutes: 0,
           leafType: 'DIGITAL',
@@ -250,7 +334,7 @@ export default function MobileApp() {
         {
           id: 'classify',
           description: 'Classify steps',
-          shortLabel: 'Classify',
+          shortLabel: 'Classifying steps',
           detail: 'Detecting task types...',
           estimatedMinutes: 0,
           leafType: 'DIGITAL',
@@ -260,7 +344,7 @@ export default function MobileApp() {
         {
           id: 'save',
           description: 'Save to database',
-          shortLabel: 'Save',
+          shortLabel: 'Saving task',
           detail: 'Creating task record...',
           estimatedMinutes: 0,
           leafType: 'DIGITAL',
@@ -353,12 +437,55 @@ export default function MobileApp() {
       // Store captured task data
       setCapturedTask(response)
 
-      // 4. Show celebration
+      // 4. Create task preview from API response
+      if (response.micro_steps && response.micro_steps.length > 0) {
+        console.log('Creating task preview with micro_steps:', response.micro_steps)
+
+        const taskPreview: TaskPreview = {
+          id: response.task?.task_id || `task-${Date.now()}`,
+          jobName: response.task?.title || taskText,
+          steps: response.micro_steps.map((step: any) => ({
+            id: step.step_id || `step-${Math.random()}`,
+            description: step.description || step.name || 'Unknown step',
+            shortLabel: step.short_label || step.shortLabel || (step.description || step.name || 'Unknown').slice(0, 15),
+            detail: step.detail,
+            estimatedMinutes: step.estimated_minutes || 0,
+            leafType: step.leaf_type || 'DIGITAL',
+            icon: step.icon,
+            status: 'done' as const,  // Changed from 'pending' to 'done' - these are completed tasks
+          })),
+          createdAt: Date.now(),
+        }
+
+        console.log('Adding task preview:', taskPreview)
+
+        // Add to task previews (keep max 3)
+        setTaskPreviews(prev => {
+          const newPreviews = [taskPreview, ...prev].slice(0, MAX_PREVIEWS)
+          console.log('Updated task previews:', newPreviews)
+          return newPreviews
+        })
+      } else {
+        console.warn('No micro_steps in response:', response)
+      }
+
+      // 5. Hide suggestions after successful capture
+      setSuggestionsVisible(false)
+
+      // 6. Show celebration
       setShowCelebration(true)
       setTimeout(() => setShowCelebration(false), animation.celebration)
 
-      // 5. Display breakdown panel
+      // 7. Display breakdown panel
       setShowBreakdown(true)
+
+      // 7. Hide capture job after 5 seconds
+      setTimeout(() => {
+        setShowCaptureJob(false)
+        setCaptureProgress(0)
+        setCaptureSteps([])
+        setCapturingTaskName('')
+      }, CAPTURE_JOB_DISPLAY_TIME)
 
       // Update XP if returned
       if (response.xp_earned) {
@@ -424,14 +551,15 @@ export default function MobileApp() {
   }
 
   // Handle voice/submit button click
-  const handleButtonClick = () => {
+  const handleButtonClick = async () => {
     if (!chat.trim()) {
       // Empty textarea - toggle voice input
       if (isListening) {
         stopListening()
       } else {
         if (!isVoiceSupported) {
-          toast.error('Voice input is not supported in this browser', { duration: 3000 })
+          const toast = await import('react-hot-toast');
+          toast.default.error('Voice input is not supported in this browser', { duration: 3000 });
           return
         }
         startListening()
@@ -497,7 +625,7 @@ export default function MobileApp() {
             disabled={isProcessing}
             className="absolute flex items-center justify-center transition-all"
             style={{
-              bottom: 13,
+              top: spacing[1],
               right: spacing[2],
               width: spacing[8],
               height: spacing[8],
@@ -515,10 +643,12 @@ export default function MobileApp() {
           >
             {isProcessing ? (
               <Zap size={iconSize.sm} className="animate-pulse" />
+            ) : isListening ? (
+              <Square size={iconSize.sm} className="animate-pulse" fill="currentColor" />
             ) : chat.trim() ? (
               <ArrowUp size={iconSize.sm} />
             ) : (
-              <Mic size={iconSize.sm} className={isListening ? 'animate-pulse' : ''} />
+              <Mic size={iconSize.sm} />
             )}
           </button>
         </div>
@@ -600,15 +730,83 @@ export default function MobileApp() {
         </div>
 
         {/* Visual Feedback Components */}
-        {/* Capture progress timeline - shows during processing */}
-        {captureProgress > 0 && captureProgress < 100 && captureSteps.length > 0 && (
-          <div style={{ padding: `${spacing[3]} 0` }}>
+        {/* Capture progress timeline - shows during and briefly after processing */}
+        {showCaptureJob && captureSteps.length > 0 && (
+          <div style={{
+            padding: `${spacing[3]} 0`,
+            marginLeft: `-${spacing[3]}`,
+            marginRight: `-${spacing[3]}`,
+            paddingLeft: spacing[3],
+            paddingRight: spacing[3]
+          }}>
             <AsyncJobTimeline
               jobName={capturingTaskName || 'Capturing task...'}
               steps={captureSteps}
               currentProgress={captureProgress}
               size="full"
             />
+          </div>
+        )}
+
+        {/* Recently Created Tasks - shows last 3 task previews */}
+        {taskPreviews.length > 0 && (
+          <div style={{ padding: `${spacing[3]} 0` }}>
+            <div style={{ 
+              marginBottom: spacing[2], 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center' 
+            }}>
+              <h3 style={{
+                fontSize: fontSize.xs,
+                color: semanticColors.text.secondary,
+                fontWeight: 'bold',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}>
+                Recently Created
+              </h3>
+              <button
+                onClick={clearTaskPreviews}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: semanticColors.text.secondary,
+                  cursor: 'pointer',
+                  padding: spacing[1],
+                  borderRadius: borderRadius.sm,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.1)'
+                  e.currentTarget.style.color = semanticColors.text.primary
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent'
+                  e.currentTarget.style.color = semanticColors.text.secondary
+                }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+              {taskPreviews.map((preview) => (
+                <AsyncJobTimeline
+                  key={preview.id}
+                  jobName={preview.jobName}
+                  steps={preview.steps}
+                  currentProgress={100}
+                  size="full"
+                  showProgressBar={false}
+                  onDismiss={() => {
+                    setTaskPreviews(prev => prev.filter(p => p.id !== preview.id))
+                  }}
+                />
+              ))}
+            </div>
           </div>
         )}
 
@@ -645,6 +843,9 @@ export default function MobileApp() {
             <CaptureMode
               onTaskCaptured={() => setRefreshTrigger(prev => prev + 1)}
               onExampleClick={(text) => setChat(text)}
+              suggestionsVisible={suggestionsVisible}
+              suggestionExamples={SUGGESTION_EXAMPLES}
+              suggestionLabels={SUGGESTION_LABELS}
             />
           )}
           {mode === 'scout' && (
@@ -777,7 +978,7 @@ export default function MobileApp() {
             />
 
             {/* Dynamic Ticker Placeholder */}
-            {!chat && (
+            {!chat && !interimTranscript && !isListening && (
               <div
                 className="absolute pointer-events-none"
                 style={{
@@ -802,7 +1003,7 @@ export default function MobileApp() {
               disabled={isProcessing}
               className="absolute flex items-center justify-center transition-all"
               style={{
-                bottom: spacing[3],
+                top: spacing[2],
                 right: spacing[2],
                 width: spacing[10],
                 height: spacing[10],
@@ -820,16 +1021,18 @@ export default function MobileApp() {
             >
               {isProcessing ? (
                 <Zap size={iconSize.base} className="animate-pulse" />
+              ) : isListening ? (
+                <Square size={iconSize.base} className="animate-pulse" fill="currentColor" />
               ) : chat.trim() ? (
                 <ArrowUp size={iconSize.base} />
               ) : (
-                <Mic size={iconSize.base} className={isListening ? 'animate-pulse' : ''} />
+                <Mic size={iconSize.base} />
               )}
             </button>
           </div>
 
-          {/* Capture progress timeline - shows during processing */}
-          {captureProgress > 0 && captureProgress < 100 && captureSteps.length > 0 && (
+          {/* Capture progress timeline - shows during and briefly after processing */}
+          {showCaptureJob && captureSteps.length > 0 && (
             <div style={{ paddingTop: spacing[3] }}>
               <AsyncJobTimeline
                 jobName={capturingTaskName || 'Capturing task...'}
