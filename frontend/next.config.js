@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: []
-  },
+  serverExternalPackages: [],
   // Suppress hydration warnings for browser extension attributes
   reactStrictMode: true,
   onDemandEntries: {

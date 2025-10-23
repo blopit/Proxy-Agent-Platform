@@ -227,7 +227,7 @@ class DecomposerAgent(BaseProxyAgent):
             description=micro_step.description,
             project_id=parent_task.project_id,
             parent_id=parent_task.task_id,
-            estimated_hours=micro_step.estimated_minutes / 60,
+            estimated_hours=round(micro_step.estimated_minutes / 60, 2),  # Round to 2 decimals
             priority=parent_task.priority,
         )
 

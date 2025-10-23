@@ -354,3 +354,32 @@ async def analyze_performance_trends(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to analyze trends: {str(e)}",
         )
+
+
+@router.get("/level-progression", response_model=LevelProgressionResponse)
+async def get_level_progression_mobile(user_id: str):
+    """
+    Get user's level progression for mobile interface (no auth required).
+
+    Mobile stub endpoint - returns mock data for immediate testing.
+    TODO: Integrate with real user progress tracking in production.
+    """
+    try:
+        # Return mock data for mobile testing
+        return LevelProgressionResponse(
+            current_level=5,
+            current_xp=420,
+            xp_for_next_level=700,
+            xp_needed=280,
+            progress_percentage=60.0,
+            level_benefits=["Task automation unlocked", "Priority tags enabled"],
+            prestige_tier="Bronze",
+            message="⭐ Level 5 (60.0% to next)",
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to get level progression for mobile: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get level: {str(e)}",
+        )

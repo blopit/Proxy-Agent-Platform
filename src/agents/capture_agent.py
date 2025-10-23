@@ -206,11 +206,17 @@ class CaptureAgent(BaseProxyAgent):
 
     def _create_task_from_analysis(self, analysis: dict) -> Task:
         """Create a Task object from QuickCaptureService analysis."""
+        # Round estimated_hours to 2 decimal places for Task model validation
+        estimated_hours = analysis.get("estimated_hours", 0.5)
+        if estimated_hours is not None:
+            estimated_hours = round(float(estimated_hours), 2)
+
         return Task(
             title=analysis.get("title", "Untitled Task"),
             description=analysis.get("description", ""),
+            project_id=analysis.get("project_id", "default-project"),
             priority=analysis.get("priority", "medium"),
-            estimated_hours=analysis.get("estimated_hours", 0.5),
+            estimated_hours=estimated_hours,
             tags=analysis.get("tags", []),
             due_date=analysis.get("due_date"),
         )
@@ -222,6 +228,7 @@ class CaptureAgent(BaseProxyAgent):
         return Task(
             title=manual_fields.get("title", input_text),
             description=manual_fields.get("description", input_text),
+            project_id=manual_fields.get("project_id", "default-project"),
             priority=manual_fields.get("priority", "medium"),
             estimated_hours=manual_fields.get("estimated_hours", 0.5),
             tags=manual_fields.get("tags", []),

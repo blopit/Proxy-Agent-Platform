@@ -161,6 +161,11 @@ class QuickCaptureService:
         if should_delegate:
             reasoning_parts.append(f"Identified as {delegation_type} task")
 
+        # Round estimated_hours to 2 decimal places for Task model validation
+        estimated_hours = task.estimated_hours
+        if estimated_hours is not None:
+            estimated_hours = round(float(estimated_hours), 2)
+
         return {
             "title": task.title,
             "priority": task.priority,
@@ -170,7 +175,7 @@ class QuickCaptureService:
             "reasoning": "; ".join(reasoning_parts),
             "tags": tags,
             "due_date": due_date,
-            "estimated_hours": task.estimated_hours,
+            "estimated_hours": estimated_hours,
             "entities": task.entities,
         }
 

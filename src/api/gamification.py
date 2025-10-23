@@ -321,3 +321,38 @@ async def get_engagement_analytics(current_username: str = Depends(verify_token)
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get analytics: {str(e)}",
         )
+
+
+@router.get("/user-stats", response_model=EngagementAnalyticsResponse)
+async def get_user_stats_mobile(user_id: str):
+    """
+    Get user gamification stats for mobile interface (no auth required).
+
+    Mobile stub endpoint - returns mock data for immediate testing.
+    TODO: Integrate with real user analytics in production.
+    """
+    try:
+        # Return mock data for mobile testing
+        return EngagementAnalyticsResponse(
+            engagement_score=7.5,
+            active_days_streak=12,
+            participation_rate=0.85,
+            achievement_completion_rate=0.65,
+            engagement_trends={
+                "trend": "improving",
+                "peak_times": ["09:00-11:00", "14:00-16:00"]
+            },
+            insights=[
+                "Great momentum! You're on a 12-day streak",
+                "Morning sessions show highest productivity",
+                "Consider scheduling complex tasks at peak times"
+            ],
+            message="📈 Engagement Score: 7.5/10",
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to get user stats for mobile: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get user stats: {str(e)}",
+        )

@@ -764,39 +764,101 @@ async def smart_prioritize_tasks(
 async def mobile_quick_capture(
     request: QuickCaptureRequest, task_service: TaskService = Depends(get_task_service)
 ):
-    """Enhanced quick capture for mobile with AI analysis"""
-    from src.services.quick_capture_service import QuickCaptureService
+    """
+    Enhanced quick capture for mobile with AI-powered micro-step breakdown.
+
+    Flow:
+    1. Capture raw text
+    2. AI analysis (QuickCaptureService)
+    3. Break into 2-5 minute micro-steps (DecomposerAgent)
+    4. Classify each step as DIGITAL or HUMAN (ClassifierAgent)
+    5. Return task + micro-steps for immediate ADHD-friendly display
+    """
+    from src.agents.capture_agent import CaptureAgent
+    from src.core.task_models import CaptureMode
+    from src.database.enhanced_adapter import get_enhanced_database
 
     start_time = datetime.utcnow()
 
     try:
+        # Determine capture mode
+        if request.ask_for_clarity:
+            mode = CaptureMode.CLARIFY
+        elif request.auto_mode:
+            mode = CaptureMode.AUTO
+        else:
+            mode = CaptureMode.MANUAL
+
+        # Use full capture pipeline with AI agents
+        from src.database.enhanced_adapter import EnhancedDatabaseAdapter
+        db = EnhancedDatabaseAdapter()
+        agent = CaptureAgent(db)
+
+        result = await agent.capture(
+            input_text=request.text,
+            user_id=request.user_id,
+            mode=mode,
+            manual_fields=None,
+        )
+
+        # Format micro-steps for frontend display
+        micro_steps_display = []
+        for step in result["micro_steps"]:
+            micro_steps_display.append({
+                "step_id": step.step_id,
+                "description": step.description,
+                "estimated_minutes": step.estimated_minutes,
+                "leaf_type": step.leaf_type.value,  # "DIGITAL" or "HUMAN"
+                "icon": "🤖" if step.leaf_type.value == "DIGITAL" else "👤",
+                "delegation_mode": step.delegation_mode.value,
+            })
+
+        task_data = result["task"]
+        processing_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+
+        # Build response with micro-steps breakdown
+        response = {
+            "task": {
+                "title": task_data.title,
+                "description": task_data.description,
+                "priority": task_data.priority,
+                "estimated_hours": task_data.estimated_hours,
+                "tags": task_data.tags,
+            },
+            "micro_steps": micro_steps_display,
+            "breakdown": {
+                "total_steps": len(micro_steps_display),
+                "digital_count": sum(1 for s in micro_steps_display if s["leaf_type"] == "DIGITAL"),
+                "human_count": sum(1 for s in micro_steps_display if s["leaf_type"] == "HUMAN"),
+                "total_minutes": sum(s["estimated_minutes"] for s in micro_steps_display),
+            },
+            "needs_clarification": not result["ready_to_save"],
+            "clarifications": [
+                {
+                    "field": c.field,
+                    "question": c.question,
+                    "options": c.options,
+                }
+                for c in result.get("clarifications", [])
+            ],
+            "processing_time_ms": int(processing_time),
+            "voice_processed": request.voice_input,
+            "location_captured": bool(request.location),
+        }
+
+        return response
+
+    except Exception as e:
+        # Fallback to simple analysis on error
+        logger.error(f"AI capture failed: {e}, falling back to simple mode")
+
+        from src.services.quick_capture_service import QuickCaptureService
         quick_capture = QuickCaptureService()
 
-        # Check if user wants clarifying questions
-        if request.ask_for_clarity:
-            # Generate questions instead of creating task
-            questions = await quick_capture.generate_clarifying_questions(
-                request.text, request.user_id
-            )
-
-            processing_time = (datetime.utcnow() - start_time).total_seconds() * 1000
-
-            return {
-                "needs_clarification": True,
-                "questions": questions,
-                "partial_data": {
-                    "original_text": request.text,
-                    "voice_input": request.voice_input,
-                },
-                "processing_time_ms": int(processing_time),
-            }
-
-        # Otherwise, analyze and create task
         analysis = await quick_capture.analyze_capture(
             request.text, request.user_id, request.voice_input
         )
 
-        # Create task data with AI analysis
         task_data = TaskCreationData(
             title=analysis.get("title", request.text[:100]),
             description=analysis.get("description", request.text),
@@ -807,11 +869,19 @@ async def mobile_quick_capture(
         )
 
         task = task_service.create_task(task_data)
-
         processing_time = (datetime.utcnow() - start_time).total_seconds() * 1000
 
         return {
             "task": TaskResponse.from_task(task),
+            "micro_steps": [],
+            "breakdown": {
+                "total_steps": 0,
+                "digital_count": 0,
+                "human_count": 0,
+                "total_minutes": 0
+            },
+            "needs_clarification": False,
+            "clarifications": [],
             "analysis": {
                 "category": analysis.get("category"),
                 "confidence": analysis.get("confidence"),
@@ -822,11 +892,8 @@ async def mobile_quick_capture(
             "processing_time_ms": int(processing_time),
             "voice_processed": request.voice_input,
             "location_captured": bool(request.location),
+            "error": str(e),
         }
-
-    except Exception as e:
-        logger.error(f"Error in mobile quick capture: {e}")
-        raise HTTPException(status_code=500, detail="Failed to capture task")
 
 
 @router.get("/mobile/dashboard/{user_id}")

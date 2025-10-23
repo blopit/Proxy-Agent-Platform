@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { Clock, CheckCircle, Zap, Award, TrendingUp } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns/formatDistanceToNow'
+import { formatDistanceToNow } from 'date-fns'
 
 interface ActivityItem {
   id: string

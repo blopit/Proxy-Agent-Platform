@@ -13,11 +13,9 @@ button, input[type="checkbox"], input[type="radio"] {
 
 /* Prevent scrolling - full screen app */
 html, body {
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-  height: 100%;
   overscroll-behavior: none;
+  margin: 0;
+  padding: 0;
 }
 
 /* Prevent text selection on buttons */
@@ -129,9 +127,8 @@ textarea:focus-visible {
 
 /* Full screen mobile app - no scrolling */
 #__next {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* Enhanced mobile cards */

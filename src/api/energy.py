@@ -138,7 +138,7 @@ def get_energy_agent() -> AdvancedEnergyAgent:
 
 @router.post("/track", response_model=EnergyReadingResponse)
 async def track_energy_level(
-    tracking_data: EnergyTrackingRequest, current_username: str = Depends(verify_token)
+    tracking_data: EnergyTrackingRequest, user_id: str = "mobile-user"
 ):
     """
     Track and assess current energy level.
@@ -152,9 +152,11 @@ async def track_energy_level(
     - Recent work patterns
 
     Returns comprehensive energy assessment with predictions and recommendations.
+
+    Note: Auth temporarily disabled for mobile testing.
+    TODO: Re-enable authentication for production.
     """
     try:
-        user_id = current_username
         agent = get_energy_agent()
 
         # Build context data
