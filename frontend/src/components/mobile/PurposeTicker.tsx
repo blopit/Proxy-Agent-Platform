@@ -158,19 +158,24 @@ const PurposeTicker: React.FC<PurposeTickerProps> = ({
   }, [activeTab]);
 
   useEffect(() => {
-    // Variable timing for unpredictability (9-21 seconds - 3x slower)
-    const getRandomInterval = () => Math.random() * 12000 + 9000; // 9-21 seconds
+    let timeoutId: NodeJS.Timeout;
+    let transitionTimeoutId: NodeJS.Timeout;
+    let resetTimeoutId: NodeJS.Timeout;
+    
+    // More reasonable timing: 5-10 seconds with some variation
+    const getRandomInterval = () => Math.random() * 5000 + 5000; // 5-10 seconds
     
     const scheduleNext = () => {
       const interval = getRandomInterval();
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         setIsTransitioning(true);
         setIsVisible(false);
         
-        setTimeout(() => {
+        transitionTimeoutId = setTimeout(() => {
           setCurrentMessageIndex((prev) => (prev + 1) % messages.length);
           setIsVisible(true);
-          setTimeout(() => {
+          
+          resetTimeoutId = setTimeout(() => {
             setIsTransitioning(false);
             scheduleNext(); // Schedule the next change
           }, 300);
@@ -179,6 +184,13 @@ const PurposeTicker: React.FC<PurposeTickerProps> = ({
     };
 
     scheduleNext();
+    
+    // Cleanup function
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (transitionTimeoutId) clearTimeout(transitionTimeoutId);
+      if (resetTimeoutId) clearTimeout(resetTimeoutId);
+    };
   }, [messages.length]);
 
   return (

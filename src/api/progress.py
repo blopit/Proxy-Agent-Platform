@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 from src.agents.progress_proxy_advanced import AdvancedProgressAgent
 from src.api.auth import verify_token
 from src.core.models import AgentRequest
-from src.database.enhanced_adapter import EnhancedDatabaseAdapter
+from src.database.enhanced_adapter import get_enhanced_database
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +112,7 @@ def get_progress_agent() -> AdvancedProgressAgent:
     """Get or create Progress Agent instance"""
     global _progress_agent
     if _progress_agent is None:
-        db = EnhancedDatabaseAdapter()
+        db = get_enhanced_database()
         _progress_agent = AdvancedProgressAgent(db)
     return _progress_agent
 

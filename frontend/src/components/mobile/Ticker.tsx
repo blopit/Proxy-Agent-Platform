@@ -110,20 +110,25 @@ const Ticker: React.FC<TickerProps> = ({ autoMode, askForClarity, className = ''
   useEffect(() => {
     if (isPaused) return; // Don't start interval if paused
     
-    // Variable timing for unpredictability (12-24 seconds - 3x slower)
-    const getRandomInterval = () => Math.random() * 12000 + 12000; // 12-24 seconds
+    let timeoutId: NodeJS.Timeout;
+    let transitionTimeoutId: NodeJS.Timeout;
+    let resetTimeoutId: NodeJS.Timeout;
+    
+    // More reasonable timing: 4-8 seconds with some variation
+    const getRandomInterval = () => Math.random() * 4000 + 4000; // 4-8 seconds
     
     const scheduleNext = () => {
       const interval = getRandomInterval();
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         if (!isPaused) {
           setIsTransitioning(true);
           setIsVisible(false);
           
-          setTimeout(() => {
+          transitionTimeoutId = setTimeout(() => {
             setCurrentMessageIndex((prev) => (prev + 1) % messages.length);
             setIsVisible(true);
-            setTimeout(() => {
+            
+            resetTimeoutId = setTimeout(() => {
               setIsTransitioning(false);
               scheduleNext(); // Schedule the next change
             }, 300);
@@ -133,6 +138,13 @@ const Ticker: React.FC<TickerProps> = ({ autoMode, askForClarity, className = ''
     };
 
     scheduleNext();
+    
+    // Cleanup function
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (transitionTimeoutId) clearTimeout(transitionTimeoutId);
+      if (resetTimeoutId) clearTimeout(resetTimeoutId);
+    };
   }, [messages.length, isPaused]);
 
   return (

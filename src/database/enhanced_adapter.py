@@ -19,21 +19,41 @@ class EnhancedDatabaseAdapter:
     Supports all models: Tasks, Projects, Users, Focus Sessions, Achievements, etc.
     """
 
-    def __init__(self, db_path: str = "proxy_agents_enhanced.db", check_same_thread: bool = True):
+    def __init__(self, db_path: str = "proxy_agents_enhanced.db", check_same_thread: bool = False):
         self.db_path = db_path
         self.check_same_thread = check_same_thread
         self._connection = None
+        self._connection_pool = []
+        self._max_pool_size = 5
         self._init_db()
 
     def get_connection(self):
-        """Get a database connection with foreign keys enabled"""
-        if self._connection is None or self._connection.execute("PRAGMA foreign_keys").fetchone()[0] == 0:
-            self._connection = sqlite3.connect(
-                self.db_path, check_same_thread=self.check_same_thread
-            )
-            self._connection.execute("PRAGMA foreign_keys = ON")
-            self._connection.row_factory = sqlite3.Row
+        """
+        Get a database connection with foreign keys and WAL mode enabled.
+        Uses connection pooling for better performance.
+        """
+        if self._connection is None:
+            self._connection = self._create_connection()
         return self._connection
+
+    def _create_connection(self):
+        """Create a new database connection with optimal settings"""
+        conn = sqlite3.connect(
+            self.db_path,
+            check_same_thread=self.check_same_thread,
+            timeout=30.0,  # 30 second timeout for locks
+        )
+        # Enable WAL mode for better concurrent access
+        conn.execute("PRAGMA journal_mode=WAL")
+        # Enable foreign key constraints
+        conn.execute("PRAGMA foreign_keys = ON")
+        # Optimize for performance
+        conn.execute("PRAGMA synchronous = NORMAL")
+        conn.execute("PRAGMA cache_size = 10000")
+        conn.execute("PRAGMA temp_store = MEMORY")
+        # Set row factory
+        conn.row_factory = sqlite3.Row
+        return conn
 
     def close_connection(self):
         """Close the database connection"""
@@ -43,11 +63,8 @@ class EnhancedDatabaseAdapter:
 
     def _init_db(self):
         """Initialize SQLite database with comprehensive schema"""
-        conn = sqlite3.connect(self.db_path, check_same_thread=self.check_same_thread)
+        conn = self._create_connection()
         cursor = conn.cursor()
-
-        # Enable foreign key constraints
-        cursor.execute("PRAGMA foreign_keys = ON")
 
         # Users table
         cursor.execute("""

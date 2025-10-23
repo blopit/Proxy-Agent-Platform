@@ -790,8 +790,8 @@ async def mobile_quick_capture(
             mode = CaptureMode.MANUAL
 
         # Use full capture pipeline with AI agents
-        from src.database.enhanced_adapter import EnhancedDatabaseAdapter
-        db = EnhancedDatabaseAdapter()
+        from src.database.enhanced_adapter import get_enhanced_database
+        db = get_enhanced_database()
         agent = CaptureAgent(db)
 
         result = await agent.capture(
@@ -804,13 +804,17 @@ async def mobile_quick_capture(
         # Format micro-steps for frontend display
         micro_steps_display = []
         for step in result["micro_steps"]:
+            # Handle both enum and string values for leaf_type and delegation_mode
+            leaf_type = step.leaf_type.value if hasattr(step.leaf_type, 'value') else step.leaf_type
+            delegation_mode = step.delegation_mode.value if hasattr(step.delegation_mode, 'value') else step.delegation_mode
+
             micro_steps_display.append({
                 "step_id": step.step_id,
                 "description": step.description,
                 "estimated_minutes": step.estimated_minutes,
-                "leaf_type": step.leaf_type.value,  # "DIGITAL" or "HUMAN"
-                "icon": "🤖" if step.leaf_type.value == "DIGITAL" else "👤",
-                "delegation_mode": step.delegation_mode.value,
+                "leaf_type": leaf_type,  # "DIGITAL" or "HUMAN"
+                "icon": "🤖" if leaf_type == "DIGITAL" else "👤",
+                "delegation_mode": delegation_mode,
             })
 
         task_data = result["task"]

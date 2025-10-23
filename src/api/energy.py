@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 from src.agents.energy_proxy_advanced import AdvancedEnergyAgent
 from src.api.auth import verify_token
 from src.core.models import AgentRequest
-from src.database.enhanced_adapter import EnhancedDatabaseAdapter
+from src.database.enhanced_adapter import get_enhanced_database
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +131,7 @@ def get_energy_agent() -> AdvancedEnergyAgent:
     """Get or create Energy Agent instance"""
     global _energy_agent
     if _energy_agent is None:
-        db = EnhancedDatabaseAdapter()
+        db = get_enhanced_database()
         _energy_agent = AdvancedEnergyAgent(db)
     return _energy_agent
 

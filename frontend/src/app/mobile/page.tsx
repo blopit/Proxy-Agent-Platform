@@ -160,11 +160,14 @@ export default function MobileApp() {
 
       {/* Main content area */}
       <div style={{ height: 'calc(100vh - 170px)' }}>
-        {mode === 'capture' ? (
-          <ErrorBoundary>
-            <CapturePage onTaskCaptured={() => { /* noop for now */ }} />
-          </ErrorBoundary>
-        ) : (
+                    {mode === 'capture' ? (
+                      <ErrorBoundary>
+                        <CapturePage 
+                          onTaskCaptured={() => { /* noop for now */ }} 
+                          onExampleClick={(text) => setChat(text)}
+                        />
+                      </ErrorBoundary>
+                    ) : (
           <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 18, marginBottom: 8 }}>{mode.toUpperCase()}</div>

@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 from src.agents.gamification_proxy_advanced import AdvancedGamificationAgent
 from src.api.auth import verify_token
 from src.core.models import AgentRequest
-from src.database.enhanced_adapter import EnhancedDatabaseAdapter
+from src.database.enhanced_adapter import get_enhanced_database
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ def get_gamification_agent() -> AdvancedGamificationAgent:
     """Get or create Gamification Agent instance"""
     global _gamification_agent
     if _gamification_agent is None:
-        db = EnhancedDatabaseAdapter()
+        db = get_enhanced_database()
         _gamification_agent = AdvancedGamificationAgent(db)
     return _gamification_agent
 

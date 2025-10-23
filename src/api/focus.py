@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 from src.agents.focus_proxy_advanced import AdvancedFocusAgent
 from src.api.auth import verify_token
 from src.core.models import AgentRequest
-from src.database.enhanced_adapter import EnhancedDatabaseAdapter
+from src.database.enhanced_adapter import get_enhanced_database
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +111,7 @@ def get_focus_agent() -> AdvancedFocusAgent:
     """Get or create Focus Agent instance"""
     global _focus_agent
     if _focus_agent is None:
-        db = EnhancedDatabaseAdapter()
+        db = get_enhanced_database()
         _focus_agent = AdvancedFocusAgent(db)
     return _focus_agent
 

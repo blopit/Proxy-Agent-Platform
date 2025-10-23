@@ -1,17 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(chmod +x test_capture_final.sh)",
-      "Bash(./test_capture_final.sh)",
-      "Bash(lsof proxy_agents_enhanced.db)",
-      "Bash(awk '{print $2}')",
-      "Bash(npm run dev)",
-      "Bash(lsof -i :3000)",
-      "Bash(kill -9 94960)",
+      "Bash(curl -X POST \"http://localhost:8000/api/v1/mobile/quick-capture\" -H \"Content-Type: application/json\" -d '{\"\"\"\"text\"\"\"\": \"\"\"\"Test task\"\"\"\", \"\"\"\"user_id\"\"\"\": \"\"\"\"mobile-user\"\"\"\", \"\"\"\"voice_input\"\"\"\": false, \"\"\"\"auto_mode\"\"\"\": true, \"\"\"\"ask_for_clarity\"\"\"\": false}')",
+      "Bash(curl -s -X POST http://localhost:8000/api/v1/mobile/quick-capture -H \"Content-Type: application/json\" -d '{\"\"\"\"text\"\"\"\": \"\"\"\"Test task from curl\"\"\"\", \"\"\"\"user_id\"\"\"\": \"\"\"\"mobile-user\"\"\"\", \"\"\"\"voice_input\"\"\"\": false, \"\"\"\"auto_mode\"\"\"\": true, \"\"\"\"ask_for_clarity\"\"\"\": false}')",
+      "Bash(curl -s -X POST http://localhost:8000/api/v1/mobile/quick-capture -H \"Content-Type: application/json\" -d '{\"\"\"\"text\"\"\"\": \"\"\"\"Buy groceries tomorrow\"\"\"\", \"\"\"\"user_id\"\"\"\": \"\"\"\"mobile-user\"\"\"\", \"\"\"\"voice_input\"\"\"\": false, \"\"\"\"auto_mode\"\"\"\": true, \"\"\"\"ask_for_clarity\"\"\"\": false}')",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s -X POST http://localhost:8000/api/v1/mobile/quick-capture -H \"Content-Type: application/json\" -d '{\"\"\"\"text\"\"\"\": \"\"\"\"Simple test task\"\"\"\", \"\"\"\"user_id\"\"\"\": \"\"\"\"test-user-1\"\"\"\", \"\"\"\"voice_input\"\"\"\": false, \"\"\"\"auto_mode\"\"\"\": true, \"\"\"\"ask_for_clarity\"\"\"\": false}')",
+      "Bash(chmod +x test_capture_comprehensive.sh)",
+      "Bash(./test_capture_comprehensive.sh)",
+      "Bash(curl -s -X POST http://localhost:8000/api/v1/mobile/quick-capture -H \"Content-Type: application/json\" -d '{\"\"text\"\": \"\"Write documentation for API endpoints\"\", \"\"user_id\"\": \"\"test-user\"\", \"\"voice_input\"\": false, \"\"auto_mode\"\": true, \"\"ask_for_clarity\"\": false}')",
+      "Bash(curl -s -X POST http://localhost:8000/api/v1/mobile/quick-capture -H \"Content-Type: application/json\" -d '{\"\"\"\"text\"\"\"\": \"\"\"\"Call client about project proposal on Friday\"\"\"\", \"\"\"\"user_id\"\"\"\": \"\"\"\"test-user\"\"\"\", \"\"\"\"voice_input\"\"\"\": false, \"\"\"\"auto_mode\"\"\"\": true, \"\"\"\"ask_for_clarity\"\"\"\": false}')",
+      "Bash(curl -s \"http://localhost:8000/api/v1/tasks?user_id=test-user&limit=10\")",
+      "Bash(python3 -c \"import sys, json; data=json.load(sys.stdin); print(f''''Total tasks: {data[\"\"total\"\"]}''''); print(f''''Retrieved: {len(data[\"\"tasks\"\"])}''''); print(''''\\nRecent tasks:''''); [print(f''''  {i+1}. [{t[\"\"status\"\"]}] {t[\"\"title\"\"]} (created: {t[\"\"created_at\"\"][:10]})'''') for i, t in enumerate(data[''''tasks''''][:10])]\")",
       "Bash(curl -s http://localhost:8000/health)",
-      "Bash(curl -X POST http://localhost:8000/api/v1/mobile/quick-capture -H \"Content-Type: application/json\" -d '{\"\"\"\"text\"\"\"\": \"\"\"\"Test task\"\"\"\", \"\"\"\"user_id\"\"\"\": \"\"\"\"mobile-user\"\"\"\", \"\"\"\"voice_input\"\"\"\": false, \"\"\"\"auto_mode\"\"\"\": true, \"\"\"\"ask_for_clarity\"\"\"\": false}' -v)",
-      "Bash(curl -X POST \"http://localhost:8000/api/v1/mobile/quick-capture\" -H \"Content-Type: application/json\" -d \"{\"\"text\"\": \"\"Test task\"\", \"\"user_id\"\": \"\"mobile-user\"\", \"\"voice_input\"\": false, \"\"auto_mode\"\": true, \"\"ask_for_clarity\"\": false}\")",
-      "Bash(.venv/bin/python -c \"\nimport sys\nimport asyncio\nfrom src.api.tasks import mobile_quick_capture, QuickCaptureRequest, get_task_service\n\nasync def test():\n    request = QuickCaptureRequest(\n        text=''Test task'',\n        user_id=''mobile-user'',\n        voice_input=False,\n        auto_mode=True,\n        ask_for_clarity=False\n    )\n    task_service = get_task_service()\n    try:\n        result = await mobile_quick_capture(request, task_service)\n        print(''Success:'', result)\n    except Exception as e:\n        print(''Error:'', e)\n        import traceback\n        traceback.print_exc()\n\nasyncio.run(test())\n\")"
+      "Bash(curl -s http://localhost:8000/)"
     ],
     "deny": [],
     "ask": []

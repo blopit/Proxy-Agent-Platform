@@ -8,9 +8,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 interface CapturePageProps {
   onTaskCaptured?: () => void;
+  onExampleClick?: (text: string) => void;
 }
 
-const CapturePage: React.FC<CapturePageProps> = ({ onTaskCaptured }) => {
+const CapturePage: React.FC<CapturePageProps> = ({ onTaskCaptured, onExampleClick }) => {
   const [captureText, setCaptureText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [recentCaptures, setRecentCaptures] = useState<string[]>([]);
@@ -112,8 +113,12 @@ const CapturePage: React.FC<CapturePageProps> = ({ onTaskCaptured }) => {
   ];
 
   const handleQuickPrompt = (prompt: string) => {
-    setCaptureText(prompt);
-    textareaRef.current?.focus();
+    if (onExampleClick) {
+      onExampleClick(prompt);
+    } else {
+      setCaptureText(prompt);
+      textareaRef.current?.focus();
+    }
   };
 
   return (
