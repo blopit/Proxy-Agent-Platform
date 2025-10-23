@@ -1033,7 +1033,13 @@ export default function MobileApp() {
 
           {/* Capture progress timeline - shows during and briefly after processing */}
           {showCaptureJob && captureSteps.length > 0 && (
-            <div style={{ paddingTop: spacing[3] }}>
+            <div style={{
+              paddingTop: spacing[3],
+              marginLeft: `-${spacing[3]}`,
+              marginRight: `-${spacing[3]}`,
+              paddingLeft: spacing[3],
+              paddingRight: spacing[3]
+            }}>
               <AsyncJobTimeline
                 jobName={capturingTaskName || 'Capturing task...'}
                 steps={captureSteps}
