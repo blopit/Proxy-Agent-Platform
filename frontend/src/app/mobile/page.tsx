@@ -401,8 +401,8 @@ export default function MobileApp() {
       // Import the API client
       const { apiClient } = await import('@/lib/api')
 
-      // Get agent context for capture and scout modes
-      const agentContext = (mode === 'capture' || mode === 'scout') && AGENT_CONFIG[mode]
+      // Get agent context for capture and search modes
+      const agentContext = (mode === 'capture' || mode === 'search') && AGENT_CONFIG[mode]
         ? { agent_type: mode, agent_name: AGENT_CONFIG[mode].name }
         : undefined
 
@@ -534,13 +534,13 @@ export default function MobileApp() {
   const handleStartNow = () => {
     console.log('Starting task now')
     setShowBreakdown(false)
-    setMode('hunter') // Switch to Hunter mode to start working
+    setMode('hunt') // Switch to Hunt mode to start working
   }
 
   const handleViewTasks = () => {
     console.log('Viewing all tasks')
     setShowBreakdown(false)
-    setMode('scout') // Switch to Scout mode to see all tasks
+    setMode('search') // Switch to Search mode to see all tasks
   }
 
   const handleCaptureAnother = () => {
@@ -672,21 +672,21 @@ export default function MobileApp() {
               {React.createElement(AGENT_CONFIG.capture.icon, { size: iconSize.xs })}
             </div>
           )}
-          {mode === 'scout' && AGENT_CONFIG.scout && (
+          {mode === 'search' && AGENT_CONFIG.search && (
             <div
               className="flex items-center"
               style={{
                 gap: spacing[1],
                 padding: `${spacing[1]} ${spacing[2]}`,
                 borderRadius: borderRadius.pill,
-                backgroundColor: AGENT_CONFIG.scout.color,
+                backgroundColor: AGENT_CONFIG.search.color,
                 color: semanticColors.text.inverse,
-                border: `1px solid ${AGENT_CONFIG.scout.color}`,
-                boxShadow: coloredShadow(AGENT_CONFIG.scout.color),
+                border: `1px solid ${AGENT_CONFIG.search.color}`,
+                boxShadow: coloredShadow(AGENT_CONFIG.search.color),
                 fontWeight: 'bold'
               }}
             >
-              {React.createElement(AGENT_CONFIG.scout.icon, { size: iconSize.xs })}
+              {React.createElement(AGENT_CONFIG.search.icon, { size: iconSize.xs })}
             </div>
           )}
           <label
@@ -750,12 +750,18 @@ export default function MobileApp() {
 
         {/* Recently Created Tasks - shows last 3 task previews */}
         {taskPreviews.length > 0 && (
-          <div style={{ padding: `${spacing[3]} 0` }}>
-            <div style={{ 
-              marginBottom: spacing[2], 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center' 
+          <div style={{
+            padding: `${spacing[3]} 0`,
+            marginLeft: `-${spacing[3]}`,
+            marginRight: `-${spacing[3]}`,
+            paddingLeft: spacing[3],
+            paddingRight: spacing[3]
+          }}>
+            <div style={{
+              marginBottom: spacing[2],
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
             }}>
               <h3 style={{
                 fontSize: fontSize.xs,
@@ -848,13 +854,13 @@ export default function MobileApp() {
               suggestionLabels={SUGGESTION_LABELS}
             />
           )}
-          {mode === 'scout' && (
+          {mode === 'search' && (
             <ScoutMode
               onTaskTap={handleTaskTap}
               refreshTrigger={refreshTrigger}
             />
           )}
-          {mode === 'hunter' && (
+          {mode === 'hunt' && (
             <HunterMode
               onSwipeLeft={handleSwipeLeft}
               onSwipeRight={handleSwipeRight}
@@ -862,14 +868,14 @@ export default function MobileApp() {
               refreshTrigger={refreshTrigger}
             />
           )}
-          {mode === 'mender' && (
+          {mode === 'rest' && (
             <MenderMode
               energy={energy}
               onTaskTap={handleTaskTap}
               refreshTrigger={refreshTrigger}
             />
           )}
-          {mode === 'mapper' && (
+          {mode === 'plan' && (
             <MapperMode
               xp={xp}
               level={level}
