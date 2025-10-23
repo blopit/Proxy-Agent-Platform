@@ -61,7 +61,32 @@ export default function RootLayout({
             {children}
           </main>
         </div>
-        <Toaster position="top-center" />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            // Solarized theme
+            style: {
+              background: '#073642', // base02
+              color: '#93a1a1', // base1
+              border: '1px solid #586e75', // base01
+            },
+            success: {
+              iconTheme: {
+                primary: '#859900', // green
+                secondary: '#073642',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#dc322f', // red
+                secondary: '#073642',
+              },
+              style: {
+                border: '1px solid #dc322f',
+              },
+            },
+          }}
+        />
       </body>
     </html>
   )

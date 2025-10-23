@@ -5,7 +5,12 @@ import { ArrowUp, Zap, MessageCircle, Bot } from 'lucide-react'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import BiologicalTabs from '@/components/mobile/BiologicalTabs'
 import CapturePage from './capture/page'
+import ScoutPage from './scout/page'
+import HunterPage from './hunter/page'
+import MenderPage from './mender/page'
+import MapperPage from './mapper/page'
 import Ticker from '@/components/mobile/Ticker'
+// import { useWebSocket } from '@/hooks/useWebSocket'
 
 type Mode = 'capture' | 'scout' | 'hunter' | 'mender' | 'mapper'
 
@@ -20,13 +25,73 @@ export default function MobileApp() {
   const [askForClarity, setAskForClarity] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [tickerPaused, setTickerPaused] = useState(false)
+  const [xp, setXp] = useState(0)
+  const [level, setLevel] = useState(1)
+  const [streakDays, setStreakDays] = useState(0)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
-  // Fetch task count on mount
+  // WebSocket connection for real-time updates (temporarily disabled)
+  // const { isConnected } = useWebSocket({
+  //   userId: 'mobile-user',
+  //   onMessage: (message) => {
+  //     console.log('WebSocket message:', message)
+
+  //     // Handle different message types
+  //     switch (message.type) {
+  //       case 'task_update':
+  //         setRefreshTrigger(prev => prev + 1)
+  //         break
+  //       case 'energy_update':
+  //         if (message.data?.current_level !== undefined) {
+  //           setEnergy(message.data.current_level)
+  //         }
+  //         break
+  //       case 'progress_update':
+  //         if (message.data?.total_xp !== undefined) setXp(message.data.total_xp)
+  //         if (message.data?.level !== undefined) setLevel(message.data.level)
+  //         if (message.data?.current_streak !== undefined) setStreakDays(message.data.current_streak)
+  //         break
+  //       case 'notification':
+  //         console.log('Notification:', message.data)
+  //         break
+  //     }
+  //   },
+  //   onConnect: () => console.log('Connected to WebSocket'),
+  //   onDisconnect: () => console.log('Disconnected from WebSocket'),
+  //   reconnectInterval: 3000,
+  //   maxReconnectAttempts: 5
+  // })
+
+  // Fetch initial data on mount
   useEffect(() => {
     updateTimeOfDay();
+    fetchProgressData();
+    fetchEnergyData();
     const interval = setInterval(updateTimeOfDay, 60000); // Update every minute
     return () => clearInterval(interval);
   }, []);
+
+  const fetchProgressData = async () => {
+    try {
+      const { apiClient } = await import('@/lib/api')
+      const stats = await apiClient.getProgressStats('mobile-user')
+      setXp(stats.total_xp || 0)
+      setLevel(stats.level || 1)
+      setStreakDays(stats.current_streak || 0)
+    } catch (error) {
+      console.error('Error fetching progress:', error)
+    }
+  };
+
+  const fetchEnergyData = async () => {
+    try {
+      const { apiClient } = await import('@/lib/api')
+      const energyData = await apiClient.getEnergyLevel('mobile-user')
+      setEnergy(energyData.current_level || 72)
+    } catch (error) {
+      console.error('Error fetching energy:', error)
+    }
+  };
 
   const updateTimeOfDay = () => {
     const hour = new Date().getHours();
@@ -44,9 +109,38 @@ export default function MobileApp() {
   const submitChat = async () => {
     if (!chat.trim() || isProcessing) return
     setIsProcessing(true)
+
     try {
-      // Hook up to backend later; for now just clear
-      setChat('')
+      // Import the API client
+      const { apiClient } = await import('@/lib/api')
+
+      const response = await apiClient.quickCapture({
+        text: chat,
+        user_id: 'mobile-user',
+        voice_input: false,
+        auto_mode: autoMode,
+        ask_for_clarity: askForClarity
+      })
+
+      if (response.success) {
+        // Clear the chat input
+        setChat('')
+
+        // Show success feedback
+        console.log('Task captured successfully:', response)
+
+        // Update XP if returned
+        if (response.xp_earned) {
+          setXp(prev => prev + response.xp_earned!)
+          console.log('XP earned:', response.xp_earned)
+        }
+
+        // Trigger refresh for task lists
+        setRefreshTrigger(prev => prev + 1)
+      }
+    } catch (error) {
+      console.error('Error capturing task:', error)
+      // Show error feedback to user (could add toast notification)
     } finally {
       setIsProcessing(false)
     }
@@ -160,21 +254,42 @@ export default function MobileApp() {
 
       {/* Main content area */}
       <div style={{ height: 'calc(100vh - 170px)' }}>
-                    {mode === 'capture' ? (
-                      <ErrorBoundary>
-                        <CapturePage 
-                          onTaskCaptured={() => { /* noop for now */ }} 
-                          onExampleClick={(text) => setChat(text)}
-                        />
-                      </ErrorBoundary>
-                    ) : (
-          <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 18, marginBottom: 8 }}>{mode.toUpperCase()}</div>
-              <div style={{ color: '#586e75' }}>Content coming next. Tabs are working.</div>
-            </div>
-          </div>
-        )}
+        <ErrorBoundary>
+          {mode === 'capture' && (
+            <CapturePage
+              onTaskCaptured={() => setRefreshTrigger(prev => prev + 1)}
+              onExampleClick={(text) => setChat(text)}
+            />
+          )}
+          {mode === 'scout' && (
+            <ScoutPage
+              onTaskTap={(task) => console.log('Task tapped:', task)}
+              refreshTrigger={refreshTrigger}
+            />
+          )}
+          {mode === 'hunter' && (
+            <HunterPage
+              onSwipeLeft={(task) => console.log('Swiped left:', task)}
+              onSwipeRight={(task) => console.log('Swiped right:', task)}
+              onTaskTap={(task) => console.log('Task tapped:', task)}
+              refreshTrigger={refreshTrigger}
+            />
+          )}
+          {mode === 'mender' && (
+            <MenderPage
+              energy={energy}
+              onTaskTap={(task) => console.log('Task tapped:', task)}
+              refreshTrigger={refreshTrigger}
+            />
+          )}
+          {mode === 'mapper' && (
+            <MapperPage
+              xp={xp}
+              level={level}
+              streakDays={streakDays}
+            />
+          )}
+        </ErrorBoundary>
       </div>
 
       {/* Bottom tabs */}
