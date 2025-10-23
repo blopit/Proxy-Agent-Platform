@@ -13,7 +13,7 @@ interface CapturePageProps {
   suggestionLabels?: string[];
 }
 
-const CapturePage: React.FC<CapturePageProps> = ({
+const CapturePage: React.FC<CapturePageProps> = React.memo(({
   onTaskCaptured,
   onExampleClick,
   suggestionsVisible = true,
@@ -22,14 +22,6 @@ const CapturePage: React.FC<CapturePageProps> = ({
 }) => {
   const [recentCaptures, setRecentCaptures] = useState<string[]>([]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-
-  // Debug logging
-  console.log('CaptureMode render:', {
-    suggestionsVisible,
-    examplesLength: suggestionExamples.length,
-    labelsLength: suggestionLabels.length,
-    examples: suggestionExamples.slice(0, 3)
-  });
 
   useEffect(() => {
     const saved = localStorage.getItem('recentCaptures');
@@ -143,6 +135,8 @@ const CapturePage: React.FC<CapturePageProps> = ({
 
     </div>
   );
-};
+});
+
+CapturePage.displayName = 'CapturePage';
 
 export default CapturePage;
