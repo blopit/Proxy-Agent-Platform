@@ -122,13 +122,13 @@ export default function MicroStepsBreakdown({
               value={`${breakdown.total_minutes} min`}
             />
             <StatBadge
-              icon="🤖"
+              icon="⚡"
               label="Digital"
               value={breakdown.digital_count}
               color={semanticColors.accent.secondary}
             />
             <StatBadge
-              icon="👤"
+              icon="🎯"
               label="Human"
               value={breakdown.human_count}
               color={semanticColors.accent.primary}
@@ -340,8 +340,44 @@ function MicroStepCard({
           {index + 1}
         </div>
 
-        <div style={{ fontSize: fontSize.lg, flexShrink: 0 }}>
-          {step.icon}
+        {/* Step icon with robot badge for DIGITAL steps */}
+        <div style={{ fontSize: fontSize.lg, flexShrink: 0, position: 'relative' }}>
+          {step.icon || (step.leaf_type === 'DIGITAL' ? '💻' : '🎯')}
+          {/* Robot badge for automatable steps */}
+          {step.leaf_type === 'DIGITAL' && (
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '-2px',
+                right: '-2px',
+                backgroundColor: semanticColors.accent.primary,
+                borderRadius: '50%',
+                padding: '2px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              title="Can be automated by AI"
+            >
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={semanticColors.bg.primary}
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 8V4H8" />
+                <rect width="16" height="12" x="4" y="8" rx="2" />
+                <path d="M2 14h2" />
+                <path d="M20 14h2" />
+                <path d="M15 13v2" />
+                <path d="M9 13v2" />
+              </svg>
+            </div>
+          )}
         </div>
 
         <div style={{ flex: 1, minWidth: 0 }}>

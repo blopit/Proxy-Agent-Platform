@@ -9,7 +9,6 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 from uuid import uuid4
-from pydantic.fields import FieldInfo
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -75,6 +74,15 @@ class CaptureMode(str, Enum):
     CLARIFY = "clarify"  # AI asks minimal questions for missing info
 
 
+class DecompositionState(str, Enum):
+    """Decomposition state for progressive task hierarchy disclosure"""
+
+    STUB = "stub"  # Created but not decomposed yet
+    DECOMPOSING = "decomposing"  # AI is working on decomposition
+    DECOMPOSED = "decomposed"  # Has children, fully decomposed
+    ATOMIC = "atomic"  # Cannot decompose (leaf node or <= 3 min)
+
+
 class AutomationStep(BaseModel):
     """Single step in an automation plan"""
 
@@ -111,7 +119,9 @@ class MicroStep(BaseModel):
     parent_task_id: str = Field(..., description="ID of the parent task")
     step_number: int = Field(..., ge=1, description="Order in sequence")
     description: str = Field(..., min_length=1, max_length=500)
-    estimated_minutes: int = Field(..., ge=1, le=10, description="1-10 minutes (target 2-5)")
+    short_label: str | None = Field(None, max_length=20, description="1-2 word label for UI display")
+    estimated_minutes: int = Field(..., ge=1, le=15, description="1-15 minutes (target 2-5)")
+    icon: str | None = Field(None, description="Emoji icon representing this step")
 
     # Delegation
     delegation_mode: DelegationMode = Field(default=DelegationMode.DO)
@@ -141,8 +151,8 @@ class MicroStep(BaseModel):
     @field_validator("estimated_minutes")
     @classmethod
     def validate_estimated_minutes(cls, v: int) -> int:
-        if v < 1 or v > 10:
-            raise ValueError("Estimated minutes must be between 1 and 10")
+        if v < 1 or v > 15:
+            raise ValueError("Estimated minutes must be between 1 and 15")
         return v
 
     def mark_completed(self) -> None:
@@ -202,6 +212,18 @@ class Task(BaseModel):
     micro_steps: list[MicroStep] = Field(default_factory=list, description="Micro-steps (2-5 min each)")
     is_micro_step: bool = Field(default=False, description="Is this task itself a micro-step")
     delegation_mode: DelegationMode = Field(default=DelegationMode.DO, description="4D delegation strategy")
+
+    # Progressive Hierarchy Support (7 Levels)
+    level: int = Field(default=0, ge=0, le=6, description="Hierarchy level: 0=Initiative, 6=Step")
+    custom_emoji: str | None = Field(None, description="AI-generated custom emoji for this node")
+    decomposition_state: DecompositionState = Field(
+        default=DecompositionState.STUB,
+        description="Current decomposition state"
+    )
+    children_ids: list[str] = Field(default_factory=list, description="IDs of child tasks")
+    total_minutes: int = Field(default=0, ge=0, description="Total time including all descendants")
+    is_leaf: bool = Field(default=False, description="True if atomic leaf node (can't decompose)")
+    leaf_type: LeafType | None = Field(None, description="Classification for leaf nodes (DIGITAL/HUMAN)")
 
     @field_validator("title")
     @classmethod

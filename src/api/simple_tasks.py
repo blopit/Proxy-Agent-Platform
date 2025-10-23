@@ -101,7 +101,7 @@ async def create_task(task_data: dict):
         created_task = task_repo.create(task)
         return created_task
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/tasks/{task_id}")
@@ -128,7 +128,7 @@ async def update_task(task_id: str, updates: Task):
         updated_task = task_repo.get_by_id(task_id)
         return updated_task
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.delete("/tasks/{task_id}", status_code=204)
@@ -144,11 +144,11 @@ async def delete_task(task_id: str):
             raise HTTPException(status_code=500, detail="Failed to delete task")
         return {"message": "Task deleted successfully"}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.patch("/tasks/bulk")
-async def bulk_update_tasks(bulk_data: dict):
+async def bulk_update_tasks(_bulk_data: dict):
     """Bulk update tasks - placeholder for tests"""
     # Return 405 for now as this endpoint needs bulk operation implementation
     raise HTTPException(status_code=405, detail="Bulk operations not implemented")
@@ -162,8 +162,8 @@ async def list_tasks(
     assignee: str | None = Query(None),
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
-    sort_by: str = Query("created_at"),
-    sort_order: str = Query("desc"),
+    _sort_by: str = Query("created_at"),
+    _sort_order: str = Query("desc"),
 ):
     """List tasks with filtering and pagination"""
     try:
@@ -192,7 +192,7 @@ async def list_tasks(
 
         return {"tasks": tasks, "total": total_count, "limit": limit, "offset": offset}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.post("/projects")
@@ -205,7 +205,7 @@ async def create_project(project_data: Project):
             raise HTTPException(status_code=500, detail="Failed to retrieve created project")
         return created_project
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/projects/{project_id}")
@@ -224,7 +224,7 @@ async def list_projects():
         projects = await project_repo.list_all()
         return projects
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 # Mobile-specific endpoints that frontend expects
@@ -260,7 +260,7 @@ async def quick_capture(request: dict):
         # Extract request data
         text = request.get("text", "")
         user_id = request.get("user_id", "default-user")
-        voice_input = request.get("voice_input", False)
+        _voice_input = request.get("voice_input", False)  # Reserved for future voice processing
         auto_mode = request.get("auto_mode", True)
         ask_for_clarity = request.get("ask_for_clarity", False)
 
@@ -289,9 +289,10 @@ async def quick_capture(request: dict):
             micro_steps_display.append({
                 "step_id": step.step_id,
                 "description": step.description,
+                "short_label": step.short_label,
                 "estimated_minutes": step.estimated_minutes,
                 "leaf_type": step.leaf_type.value,  # "DIGITAL" or "HUMAN"
-                "icon": "🤖" if step.leaf_type.value == "DIGITAL" else "👤",
+                "icon": step.icon,
                 "delegation_mode": step.delegation_mode.value,
             })
 
@@ -391,15 +392,15 @@ async def get_mobile_dashboard(user_id: str):
             ],
         }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/mobile/tasks/{user_id}")
-async def get_mobile_tasks(user_id: str, limit: int = Query(20, ge=1, le=50)):
+async def get_mobile_tasks(_user_id: str, limit: int = Query(20, ge=1, le=50)):
     """Get mobile-optimized task list"""
     try:
         result = task_repo.list_tasks(
-            filter_obj=None,  # TODO: Build proper filter for user
+            filter_obj=None,  # TODO: Build proper filter for user_id
             sort_obj=None,  # TODO: Build proper sort object
             limit=limit,
             offset=0,
@@ -424,54 +425,142 @@ async def get_mobile_tasks(user_id: str, limit: int = Query(20, ge=1, le=50)):
 
         return {"tasks": mobile_tasks}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 # Additional endpoints to satisfy test expectations
 @router.get("/tasks/{task_id}/hierarchy")
-async def get_task_hierarchy(task_id: str):
+async def get_task_hierarchy(_task_id: str):
     """Get task hierarchy - placeholder for tests"""
     # Return 404 for now as this endpoint needs complex implementation
     raise HTTPException(status_code=404, detail="Task hierarchy not found")
 
 
 @router.post("/tasks/{task_id}/estimate")
-async def estimate_task_duration(task_id: str):
+async def estimate_task_duration(_task_id: str):
     """Estimate task duration - placeholder for tests"""
     # Return 404 for now as this endpoint needs AI implementation
     raise HTTPException(status_code=404, detail="Estimation not available")
 
 
 @router.post("/tasks/{task_id}/breakdown", status_code=201)
-async def break_down_task(task_id: str):
+async def break_down_task(_task_id: str):
     """Break down task into subtasks - placeholder for tests"""
     # Return 404 for now as this endpoint needs AI implementation
     raise HTTPException(status_code=404, detail="Breakdown not available")
 
 
+@router.post("/tasks/{task_id}/decompose")
+async def decompose_task(
+    task_id: str,
+    decompose_to_level: int | None = Query(None, ge=0, le=6),
+    force_to_atomic: bool = Query(False),
+):
+    """
+    Decompose a task into hierarchical children (progressive disclosure)
+
+    Args:
+        task_id: ID of task to decompose
+        decompose_to_level: Optional max level to decompose to (0-6)
+        force_to_atomic: If True, decompose all the way to atomic steps
+
+    Returns:
+        Task with children populated
+    """
+    from src.agents.decomposer_agent import DecomposerAgent
+    from src.core.task_models import DecompositionState
+
+    # Get the task
+    task = task_repo.get_by_id(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Task {task_id} not found")
+
+    # Check if already decomposed
+    if task.decomposition_state == DecompositionState.DECOMPOSED and not force_to_atomic:
+        # Already decomposed, just return with children
+        children_tasks = []
+        for child_id in task.children_ids:
+            child = task_repo.get_by_id(child_id)
+            if child:
+                children_tasks.append({
+                    "task_id": child.task_id,
+                    "title": child.title,
+                    "description": child.description,
+                    "level": child.level,
+                    "estimated_minutes": int((child.estimated_hours or 0) * 60),
+                    "total_minutes": child.total_minutes,
+                    "decomposition_state": child.decomposition_state.value,
+                    "is_leaf": child.is_leaf,
+                    "leaf_type": child.leaf_type.value if child.leaf_type else None,
+                    "custom_emoji": child.custom_emoji,
+                    "icon": child.metadata.get("icon") if child.metadata else None,
+                    "children_ids": child.children_ids,
+                })
+
+        return {
+            "task_id": task.task_id,
+            "children": children_tasks,
+            "decomposition_state": task.decomposition_state.value,
+        }
+
+    # Initialize decomposer agent
+    decomposer = DecomposerAgent()
+
+    # Set decomposition state to decomposing
+    task.decomposition_state = DecompositionState.DECOMPOSING
+    task_repo.update(task)
+
+    try:
+        # Decompose the task using new hierarchy method
+        result = await decomposer.decompose_task_hierarchy(
+            task=task,
+            max_level=decompose_to_level,
+            force_atomic=force_to_atomic,
+        )
+
+        # Update task with children
+        task.children_ids = [child["task_id"] for child in result["children"]]
+        task.decomposition_state = DecompositionState.DECOMPOSED
+        task.total_minutes = result.get("total_minutes", 0)
+        task_repo.update(task)
+
+        return {
+            "task_id": task.task_id,
+            "children": result["children"],
+            "decomposition_state": DecompositionState.DECOMPOSED.value,
+            "total_minutes": result.get("total_minutes", 0),
+        }
+
+    except Exception as e:
+        # Reset state on error
+        task.decomposition_state = DecompositionState.STUB
+        task_repo.update(task)
+        raise HTTPException(status_code=500, detail=f"Decomposition failed: {str(e)}") from e
+
+
 @router.post("/tasks/from-template", status_code=201)
-async def create_task_from_template(template_data: dict):
+async def create_task_from_template(_template_data: dict):
     """Create task from template - placeholder for tests"""
     # Return 405 for now as this endpoint needs template system
     raise HTTPException(status_code=405, detail="Template creation not implemented")
 
 
 @router.get("/projects/{project_id}/analytics")
-async def get_project_analytics(project_id: str):
+async def get_project_analytics(_project_id: str):
     """Get project analytics - placeholder for tests"""
     # Return 404 for now as this endpoint needs analytics implementation
     raise HTTPException(status_code=404, detail="Analytics not available")
 
 
 @router.post("/projects/{project_id}/prioritize")
-async def smart_prioritize_tasks(project_id: str):
+async def smart_prioritize_tasks(_project_id: str):
     """Smart prioritize tasks - placeholder for tests"""
     # Return 404 for now as this endpoint needs AI implementation
     raise HTTPException(status_code=404, detail="Smart prioritization not available")
 
 
 @router.post("/mobile/voice-process")
-async def process_voice_input(voice_data: dict):
+async def process_voice_input(_voice_data: dict):
     """Process voice input - placeholder for tests"""
     # Return 404 for now as this endpoint needs voice processing
     raise HTTPException(status_code=404, detail="Voice processing not available")

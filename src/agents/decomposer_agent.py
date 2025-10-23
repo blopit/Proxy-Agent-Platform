@@ -1,8 +1,9 @@
 """
 Decomposer Agent - Recursive Task Decomposition
 
-Recursively breaks down complex tasks into atomic MicroSteps (2-5 minute actions).
-Stops when each leaf is atomic (single verb, single object, fits 2-5 min window).
+Recursively breaks down complex tasks into atomic MicroSteps (3-15 minute actions).
+Stops when each leaf is atomic (single verb, single object, fits practical time window).
+Avoids over-splitting trivial tasks - tasks under 15 minutes stay as single steps.
 
 Inspired by Task Master's expand_task pattern with ADHD-optimized splitting from SplitProxyAgent.
 """
@@ -12,7 +13,7 @@ from __future__ import annotations
 import json
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 from src.agents.base import BaseProxyAgent
 from src.agents.split_proxy_agent import SplitProxyAgent
@@ -20,20 +21,9 @@ from src.core.models import AgentRequest
 from src.core.task_models import MicroStep, Task, TaskScope
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
 
-# Try to import AI clients
-try:
-    import openai
-
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
-
-try:
-    import anthropic
-
-    ANTHROPIC_AVAILABLE = True
-except ImportError:
-    ANTHROPIC_AVAILABLE = False
+# AI client availability flags (not currently used but reserved for future AI integration)
+OPENAI_AVAILABLE = False
+ANTHROPIC_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -43,13 +33,36 @@ class DecomposerAgent(BaseProxyAgent):
     Agent for recursive task decomposition into atomic MicroSteps.
 
     Enhances SplitProxyAgent with recursive capabilities - keeps splitting
-    until every leaf is a 2-5 minute atomic action.
+    until every leaf is a 3-15 minute atomic action (practical range).
+    Simple tasks (< 15 min) remain unsplit to avoid excessive granularity.
     """
 
-    def __init__(self, db: Optional[EnhancedDatabaseAdapter] = None):
+    def __init__(self, db: EnhancedDatabaseAdapter | None = None):
         super().__init__("decomposer", db)
         self.split_agent = SplitProxyAgent()
-        self.max_depth = 5  # Prevent infinite recursion
+        self.max_depth = 7  # 7 levels: 0=Initiative to 6=Step
+
+        # Hierarchy level names
+        self.level_names = {
+            0: "initiative",
+            1: "phase",
+            2: "epic",
+            3: "sprint",
+            4: "task",
+            5: "subtask",
+            6: "step",
+        }
+
+        # Split range per level
+        self.split_ranges = {
+            0: (2, 6),   # Initiative -> Phases
+            1: (2, 6),   # Phase -> Projects (removed from hierarchy)
+            2: (4, 50),  # Epic -> Sprints (variable range)
+            3: (2, 6),   # Sprint -> Tasks
+            4: (2, 6),   # Task -> Subtasks
+            5: (2, 6),   # Subtask -> Steps
+            6: (1, 1),   # Steps never split
+        }
 
     async def _handle_request(
         self, request: AgentRequest, history: list[dict]
@@ -109,7 +122,7 @@ class DecomposerAgent(BaseProxyAgent):
                 "task_id": task.task_id,
                 "scope": TaskScope.SIMPLE,
                 "micro_steps": [],
-                "message": f"Task too complex - reached max depth. Please simplify manually.",
+                "message": "Task too complex - reached max depth. Please simplify manually.",
             }
 
         # Use SplitProxyAgent to analyze task scope
@@ -118,7 +131,7 @@ class DecomposerAgent(BaseProxyAgent):
         scope = split_result.get("scope")
 
         # SIMPLE scope - already atomic, no further splitting
-        if scope == TaskScope.SIMPLE:
+        if scope == TaskScope.SIMPLE or scope == "simple":
             # Create single MicroStep from task
             micro_step = MicroStep(
                 parent_task_id=task.task_id,
@@ -127,6 +140,7 @@ class DecomposerAgent(BaseProxyAgent):
                 estimated_minutes=min(10, int(float(task.estimated_hours or 0.1) * 60))
                 if task.estimated_hours
                 else 5,
+                icon="⚡",  # Default icon for simple tasks
             )
             return {
                 "task_id": task.task_id,
@@ -136,7 +150,7 @@ class DecomposerAgent(BaseProxyAgent):
             }
 
         # PROJECT scope - needs subtask creation first
-        if scope == TaskScope.PROJECT:
+        if scope == TaskScope.PROJECT or scope == "project":
             # Generate subtasks first, then decompose each
             subtasks = await self._generate_subtasks(task, user_id)
 
@@ -165,7 +179,9 @@ class DecomposerAgent(BaseProxyAgent):
                     parent_task_id=task.task_id,
                     step_number=step_data.get("step_number", len(micro_steps) + 1),
                     description=step_data["description"],
+                    short_label=step_data.get("short_label"),
                     estimated_minutes=step_data["estimated_minutes"],
+                    icon=step_data.get("icon"),
                     delegation_mode=step_data.get("delegation_mode", "do"),
                 )
             else:
@@ -199,26 +215,23 @@ class DecomposerAgent(BaseProxyAgent):
         Criteria for atomic:
         - Single clear action verb
         - Single object
-        - Description under 100 characters
-        - Estimated time is 2-10 minutes
+        - Description under 150 characters
+        - Estimated time is 2-15 minutes (practical range)
         """
         description = micro_step.description.lower()
 
-        # Check time constraint
-        if micro_step.estimated_minutes > 10:
+        # Check time constraint - increased to 15 min for practical micro-steps
+        if micro_step.estimated_minutes > 15:
             return False
 
-        # Check description length (proxy for complexity)
-        if len(description) > 100:
+        # Check description length (proxy for complexity) - relaxed to 150 chars
+        if len(description) > 150:
             return False
 
-        # Check for compound actions (and, then, after, etc.)
-        compound_indicators = [" and ", " then ", " after ", ", ", ";"]
-        if any(indicator in description for indicator in compound_indicators):
-            return False
-
-        # If all checks pass, it's atomic
-        return True
+        # Check for strong compound actions only (reduced false positives)
+        # Only split on clear sequential indicators, not simple "and" conjunctions
+        compound_indicators = [" then ", " after that", " followed by", "; "]
+        return not any(indicator in description for indicator in compound_indicators)
 
     def _micro_step_to_task(self, micro_step: MicroStep, parent_task: Task) -> Task:
         """Convert a MicroStep back into a Task for further decomposition."""
@@ -251,7 +264,7 @@ class DecomposerAgent(BaseProxyAgent):
 
         # Convert to Task objects
         subtasks = []
-        for i, subtask_data in enumerate(subtasks_data, 1):
+        for _, subtask_data in enumerate(subtasks_data, 1):
             subtask = Task(
                 title=subtask_data["title"],
                 description=subtask_data.get("description", subtask_data["title"]),
@@ -373,11 +386,188 @@ Focus on LOGICAL PHASES of the project."""
             },
         ]
 
+    async def decompose_task_hierarchy(
+        self,
+        task: Task,
+        max_level: int | None = None,
+        force_atomic: bool = False,
+    ) -> dict[str, Any]:
+        """
+        Decompose a task into hierarchical children using the 7-level system.
+
+        Progressive decomposition - only creates immediate children, not entire tree.
+
+        Args:
+            task: The task to decompose
+            max_level: Optional max level to decompose to (0-6)
+            force_atomic: If True, decompose all the way to atomic steps (level 6)
+
+        Returns:
+            Dict with task_id, children array, and metadata
+        """
+        from src.core.task_models import DecompositionState, LeafType
+
+        # Determine stop conditions
+        if task.level >= 6:  # Already at Step level
+            return {
+                "task_id": task.task_id,
+                "children": [],
+                "message": "Already at atomic Step level (L6)",
+            }
+
+        if task.estimated_minutes <= 3 and not force_atomic:
+            return {
+                "task_id": task.task_id,
+                "children": [],
+                "message": "Task is under 3 minutes - no decomposition needed",
+            }
+
+        if max_level is not None and task.level >= max_level:
+            return {
+                "task_id": task.task_id,
+                "children": [],
+                "message": f"Reached max level {max_level}",
+            }
+
+        # Get split range for this level
+        min_children, max_children = self.split_ranges.get(task.level, (2, 6))
+
+        # Determine optimal number of children based on time
+        estimated_minutes = int((task.estimated_hours or 0) * 60) or task.total_minutes or 30
+        if estimated_minutes <= 10:
+            num_children = 2
+        elif estimated_minutes <= 30:
+            num_children = min(3, max_children)
+        elif estimated_minutes <= 120:
+            num_children = min(4, max_children)
+        else:
+            # For large tasks, scale up (especially for Epics)
+            if task.level == 2:  # Epic level - can have 4-50 children
+                num_children = min(int(estimated_minutes / 60), max_children)
+            else:
+                num_children = min(6, max_children)
+
+        # Use SplitProxyAgent to generate children
+        child_level_name = self.level_names.get(task.level + 1, "task")
+
+        # Build AI prompt for this specific level
+        prompt = f"""You are decomposing a {self.level_names[task.level]} into {num_children} {child_level_name}s.
+
+Task: {task.title}
+Description: {task.description or task.title}
+Estimated Time: {estimated_minutes} minutes
+Current Level: {task.level} ({self.level_names[task.level]})
+Target Level: {task.level + 1} ({child_level_name})
+
+Requirements:
+1. Create exactly {num_children} {child_level_name}s
+2. Each should be logically grouped and semantically meaningful
+3. Total time should roughly equal {estimated_minutes} minutes
+4. Provide a custom emoji for each {child_level_name}
+5. Each {child_level_name} should have a clear, actionable title
+
+Return JSON array:
+[
+  {{
+    "title": "Clear title for this {child_level_name}",
+    "description": "Brief description",
+    "estimated_minutes": 100,
+    "custom_emoji": "🎯"
+  }},
+  ...
+]
+
+Focus on LOGICAL SEMANTIC GROUPING, not just time-based splits."""
+
+        # Call AI
+        children_data = []
+        try:
+            if self.split_agent.openai_client:
+                response = await self.split_agent.openai_client.chat.completions.create(
+                    model=os.getenv("LLM_MODEL", "gpt-4o-mini"),
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a task decomposition assistant. Always return valid JSON.",
+                        },
+                        {"role": "user", "content": prompt},
+                    ],
+                    response_format={"type": "json_object"},
+                    temperature=0.7,
+                )
+                result = json.loads(response.choices[0].message.content)
+                children_data = result.get("items", result.get("children", []))
+
+        except Exception as e:
+            logger.error(f"AI decomposition failed: {e}")
+            # Fallback: Simple equal splits
+            time_per_child = estimated_minutes // num_children
+            for i in range(num_children):
+                children_data.append({
+                    "title": f"{child_level_name.capitalize()} {i+1}",
+                    "description": f"Part {i+1} of {task.title}",
+                    "estimated_minutes": time_per_child,
+                    "custom_emoji": "📋",
+                })
+
+        # Create child Task objects
+        children = []
+        total_minutes = 0
+
+        for i, child_data in enumerate(children_data[:num_children], 1):
+            child_minutes = child_data.get("estimated_minutes", estimated_minutes // num_children)
+            total_minutes += child_minutes
+
+            child = {
+                "task_id": f"{task.task_id}-child-{i}",
+                "title": child_data["title"],
+                "description": child_data.get("description", child_data["title"]),
+                "level": task.level + 1,
+                "parent_id": task.task_id,
+                "estimated_minutes": child_minutes,
+                "total_minutes": child_minutes,
+                "custom_emoji": child_data.get("custom_emoji"),
+                "decomposition_state": DecompositionState.STUB.value,
+                "is_leaf": (task.level + 1) >= 6 or child_minutes <= 3,
+                "leaf_type": None,  # Will be classified when it becomes a leaf
+                "children_ids": [],
+            }
+
+            # If this is now a leaf (Step level or <= 3 min), classify it
+            if child["is_leaf"]:
+                # Simple heuristic: if description contains digital keywords
+                digital_keywords = [
+                    "api",
+                    "code",
+                    "script",
+                    "database",
+                    "email",
+                    "automated",
+                    "digital",
+                ]
+                desc_lower = child["description"].lower()
+                if any(keyword in desc_lower for keyword in digital_keywords):
+                    child["leaf_type"] = LeafType.DIGITAL.value
+                else:
+                    child["leaf_type"] = LeafType.HUMAN.value
+                child["decomposition_state"] = DecompositionState.ATOMIC.value
+
+            children.append(child)
+
+        return {
+            "task_id": task.task_id,
+            "children": children,
+            "total_minutes": total_minutes,
+            "level": task.level,
+            "child_level": task.level + 1,
+            "message": f"Decomposed into {len(children)} {child_level_name}s",
+        }
+
     def _format_decomposition_response(self, result: dict) -> str:
         """Format decomposition results as readable message."""
         response_lines = [
-            f"🔧 **Task Decomposition Complete**",
-            f"",
+            "🔧 **Task Decomposition Complete**",
+            "",
             f"**Scope:** {result.get('scope', 'UNKNOWN').upper()}",
             f"**Micro-Steps:** {len(result.get('micro_steps', []))}",
         ]
@@ -390,8 +580,8 @@ Focus on LOGICAL PHASES of the project."""
                 f"**Total Time:** {result['total_estimated_minutes']} minutes"
             )
 
-        response_lines.append(f"")
-        response_lines.append(f"**Next Steps:**")
+        response_lines.append("")
+        response_lines.append("**Next Steps:**")
 
         micro_steps = result.get("micro_steps", [])
         for i, step in enumerate(micro_steps[:5], 1):  # Show first 5

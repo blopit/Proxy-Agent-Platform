@@ -2,13 +2,24 @@
  * TypeScript types for Task Capture API
  */
 
+export type HierarchyLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+export type DecompositionState = 'stub' | 'decomposing' | 'decomposed' | 'atomic';
+
 export interface MicroStep {
   step_id: string;
   description: string;
   estimated_minutes: number;
   leaf_type: 'DIGITAL' | 'HUMAN' | 'unknown';
-  icon: string;
+  icon?: string;
   delegation_mode: string;
+
+  // Hierarchy support
+  level?: number;
+  custom_emoji?: string;
+  decomposition_state?: DecompositionState;
+  children_ids?: string[];
+  total_minutes?: number;
+  is_leaf?: boolean;
 }
 
 export interface TaskBreakdown {
@@ -61,4 +72,39 @@ export interface CaptureFlowState {
   error: string | null;
   showBreakdown: boolean;
   showDropAnimation: boolean;
+}
+
+/**
+ * Hierarchy Tree Node
+ * Represents a node in the 7-level task hierarchy tree
+ */
+export interface TaskNode {
+  task_id: string;
+  title: string;
+  description?: string;
+
+  // Hierarchy
+  level: HierarchyLevel;
+  parent_id?: string;
+  children?: TaskNode[];  // Populated when decomposed
+  children_ids: string[];
+
+  // Time
+  estimated_minutes: number;
+  total_minutes: number;
+
+  // State
+  decomposition_state: DecompositionState;
+  is_leaf: boolean;
+  leaf_type?: 'DIGITAL' | 'HUMAN' | 'unknown';
+
+  // Display
+  icon?: string;
+  custom_emoji?: string;
+  delegation_mode?: string;
+  step_number?: number;
+
+  // Metadata
+  priority?: string;
+  tags?: string[];
 }
