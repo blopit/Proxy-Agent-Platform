@@ -955,7 +955,6 @@ async def mobile_quick_capture(
             from src.repositories.enhanced_repositories import EnhancedTaskRepository
             from src.database.enhanced_adapter import get_enhanced_database
             from src.core.task_models import Task as CoreTask
-            from datetime import datetime
 
             # Create a clean Task object with only database-supported fields
             # (CaptureAgent returns a Task with extra fields like 'level' that don't exist in DB schema)
