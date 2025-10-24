@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { ArrowUp, Zap, MessageCircle, Bot, Camera, Search, Mic, X, Square } from 'lucide-react'
+import { ArrowUp, MessageCircle, Bot, Camera, Search, Mic, X, Square } from 'lucide-react'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import BiologicalTabs from '@/components/mobile/BiologicalTabs'
 import CaptureMode from '@/components/mobile/modes/CaptureMode'
@@ -357,27 +357,27 @@ export default function MobileApp() {
       // 2. Start loading with progressive stages
       setLoadingStage('analyzing')
 
-      // Simulate progress updates for AsyncJobTimeline
+      // Simulate progress updates for AsyncJobTimeline - match actual API timing (~8 seconds)
       const progressInterval = setInterval(() => {
         setCaptureProgress(prev => {
-          const newProgress = prev + 5
+          const newProgress = prev + 0.5 // Very slow increment to match 8-second API call
           if (newProgress >= 100) {
             clearInterval(progressInterval)
             return 100
           }
 
-          // Update step statuses based on progress
-          if (newProgress >= 25 && newProgress < 50) {
+          // Update step statuses based on progress - realistic timing for 8-second API
+          if (newProgress >= 10 && newProgress < 25) {
             setCaptureSteps(steps => steps.map((s, i) =>
               i === 0 ? { ...s, status: 'done' } :
               i === 1 ? { ...s, status: 'active' } : s
             ))
-          } else if (newProgress >= 50 && newProgress < 75) {
+          } else if (newProgress >= 25 && newProgress < 50) {
             setCaptureSteps(steps => steps.map((s, i) =>
               i <= 1 ? { ...s, status: 'done' } :
               i === 2 ? { ...s, status: 'active' } : s
             ))
-          } else if (newProgress >= 75 && newProgress < 100) {
+          } else if (newProgress >= 50 && newProgress < 80) {
             setCaptureSteps(steps => steps.map((s, i) =>
               i <= 2 ? { ...s, status: 'done' } :
               i === 3 ? { ...s, status: 'active' } : s
@@ -386,7 +386,7 @@ export default function MobileApp() {
 
           return newProgress
         })
-      }, 50)
+      }, 40) // 40ms interval = 25 updates per second, 0.5% per update = 200 updates total = 8 seconds
 
       // Progress to 'breaking_down' after 2 seconds
       const stage1Timer = setTimeout(() => {
@@ -441,19 +441,46 @@ export default function MobileApp() {
       if (response.micro_steps && response.micro_steps.length > 0) {
         console.log('Creating task preview with micro_steps:', response.micro_steps)
 
+        console.log('🔍 DEBUG: response.task?.tags:', response.task?.tags);
+        console.log('🔍 DEBUG: response.task:', response.task);
+        
+        
         const taskPreview: TaskPreview = {
-          id: response.task?.task_id || `task-${Date.now()}`,
+          id: `task-${Date.now()}`,
           jobName: response.task?.title || taskText,
-          steps: response.micro_steps.map((step: any) => ({
-            id: step.step_id || `step-${Math.random()}`,
-            description: step.description || step.name || 'Unknown step',
-            shortLabel: step.short_label || step.shortLabel || (step.description || step.name || 'Unknown').slice(0, 15),
-            detail: step.detail,
-            estimatedMinutes: step.estimated_minutes || 0,
-            leafType: step.leaf_type || 'DIGITAL',
-            icon: step.icon,
-            status: 'done' as const,  // Changed from 'pending' to 'done' - these are completed tasks
-          })),
+          steps: response.micro_steps.map((step: any) => {
+            const stepWithTags = {
+              id: step.step_id || `step-${Math.random()}`,
+              description: step.description || step.name || 'Unknown step',
+              shortLabel: step.short_label || step.shortLabel || (step.description || step.name || 'Unknown').slice(0, 15),
+              detail: step.detail,
+              estimatedMinutes: step.estimated_minutes || 0,
+              leafType: step.leaf_type || 'DIGITAL',
+              icon: step.icon,
+              status: 'done' as const,  // Changed from 'pending' to 'done' - these are completed tasks
+              tags: step.tags || [], // Use backend-generated CHAMPS tags
+
+              // Hierarchical fields - CRITICAL for step expansion!
+              parentStepId: step.parent_step_id || null,
+              level: step.level || 0,
+              isLeaf: step.is_leaf !== undefined ? step.is_leaf : true,
+              decompositionState: step.decomposition_state || 'atomic',
+            };
+
+            // Debug logging for hierarchy fields
+            console.log(`🔍 Step "${step.short_label}" hierarchy:`, {
+              id: stepWithTags.id,
+              isLeaf: stepWithTags.isLeaf,
+              decompositionState: stepWithTags.decompositionState,
+              estimatedMinutes: stepWithTags.estimatedMinutes,
+              rawApiValues: {
+                is_leaf: step.is_leaf,
+                decomposition_state: step.decomposition_state
+              }
+            });
+
+            return stepWithTags;
+          }),
           createdAt: Date.now(),
         }
 
@@ -642,7 +669,7 @@ export default function MobileApp() {
             }}
           >
             {isProcessing ? (
-              <Zap size={iconSize.sm} className="animate-pulse" />
+              <Bot size={iconSize.sm} className="animate-pulse" />
             ) : isListening ? (
               <Square size={iconSize.sm} className="animate-pulse" fill="currentColor" />
             ) : chat.trim() ? (
@@ -744,6 +771,7 @@ export default function MobileApp() {
               steps={captureSteps}
               currentProgress={captureProgress}
               size="full"
+              showProgressBar={false}
             />
           </div>
         )}
@@ -843,7 +871,46 @@ export default function MobileApp() {
       )}
 
       {/* Main content area */}
-      <div style={{ height: mode === 'capture' ? 'calc(100vh - 250px)' : 'calc(100vh - 170px)' }}>
+      <div style={{ height: mode === 'capture' ? 'calc(100vh - 250px)' : 'calc(100vh - 170px)', overflowY: 'auto' }}>
+        {/* Thin progress bar at top - messenger style */}
+        {showCaptureJob && captureProgress > 0 && captureProgress < 100 && (
+          <div style={{
+            position: 'sticky',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 10,
+            backgroundColor: semanticColors.bg.primary,
+            paddingBottom: spacing[2]
+          }}>
+            <div style={{
+              height: '3px',
+              backgroundColor: semanticColors.border.accent,
+              borderRadius: borderRadius.full,
+              overflow: 'hidden'
+            }}>
+              <div
+                style={{
+                  height: '100%',
+                  width: `${captureProgress}%`,
+                  backgroundColor: colors.cyan,
+                  transition: 'width 0.3s ease',
+                  boxShadow: `0 0 8px ${colors.cyan}`
+                }}
+              />
+            </div>
+            <div style={{
+              marginTop: spacing[1],
+              fontSize: fontSize.xs,
+              color: semanticColors.text.secondary,
+              textAlign: 'center',
+              fontStyle: 'italic'
+            }}>
+              {capturingTaskName || 'Processing...'}
+            </div>
+          </div>
+        )}
+
         <ErrorBoundary>
           {mode === 'capture' && (
             <CaptureMode
@@ -1026,7 +1093,7 @@ export default function MobileApp() {
               }}
             >
               {isProcessing ? (
-                <Zap size={iconSize.base} className="animate-pulse" />
+                <Bot size={iconSize.base} className="animate-pulse" />
               ) : isListening ? (
                 <Square size={iconSize.base} className="animate-pulse" fill="currentColor" />
               ) : chat.trim() ? (
@@ -1051,6 +1118,7 @@ export default function MobileApp() {
                 steps={captureSteps}
                 currentProgress={captureProgress}
                 size="full"
+                showProgressBar={false}
               />
             </div>
           )}

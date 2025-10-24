@@ -43,6 +43,14 @@ export interface JobStep {
   status: JobStepStatus;
   startTime?: number;
   endTime?: number;
+  tags?: string[];                 // Context tags (e.g., ["@home", "@work", "Email"])
+
+  // Hierarchical fields
+  parentStepId?: string | null;
+  level?: number;
+  isLeaf?: boolean;
+  decompositionState?: 'stub' | 'decomposing' | 'decomposed' | 'atomic';
+  children?: JobStep[];  // Loaded on demand
 }
 
 export interface AsyncJobTimelineProps {
@@ -70,29 +78,12 @@ function calculateStepWidths(
 ): Map<string, number> {
   const widths = new Map<string, number>();
 
-  // If no step is expanded, all take expected proportions
+  // If no step is expanded, all steps fill the width equally
   if (!expandedStepId) {
-    const humanSteps = steps.filter(s => s.leafType === 'HUMAN');
-    const digitalSteps = steps.filter(s => s.leafType === 'DIGITAL');
-
-    const totalHumanTime = humanSteps.reduce((sum, s) => sum + s.estimatedMinutes, 0);
-    const digitalCount = digitalSteps.length;
-
-    // Reserve 5% per digital task (max 20% total)
-    const digitalSpace = Math.min(digitalCount * 5, 20);
-    const humanSpace = 100 - digitalSpace;
-
+    const equalWidth = 100 / steps.length;
     steps.forEach(step => {
-      if (step.leafType === 'DIGITAL') {
-        widths.set(step.id, digitalSpace / digitalCount);
-      } else {
-        const proportion = totalHumanTime > 0
-          ? (step.estimatedMinutes / totalHumanTime) * humanSpace
-          : humanSpace / humanSteps.length;
-        widths.set(step.id, proportion);
-      }
+      widths.set(step.id, equalWidth);
     });
-
     return widths;
   }
 
@@ -142,9 +133,13 @@ interface StepSectionProps {
   onClick: () => void;
   stepProgressPercent?: number; // 0-100 for this specific step
   onRetry?: () => void;
+  effectiveExpandedId: string | null;
+  totalDurationText: string;
+  loadingChildren?: Set<string>; // For expand indicator
+  hasNestedContent?: boolean; // True if showing decomposition job or children
 }
 
-function StepSection({ step, index, width, isExpanded, size, onClick, stepProgressPercent, onRetry }: StepSectionProps) {
+function StepSection({ step, index, width, isExpanded, size, onClick, stepProgressPercent, onRetry, effectiveExpandedId, totalDurationText, loadingChildren, hasNestedContent }: StepSectionProps) {
   const statusColors = {
     pending: 'bg-[#073642] border-[#586e75]',
     active: 'bg-gradient-to-br from-[#268bd2]/30 to-[#268bd2]/10 border-[#268bd2] shadow-[0_0_12px_rgba(38,139,210,0.6)]',
@@ -167,6 +162,16 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
     if (step.leafType === 'DIGITAL') return '🤖';
     if (step.leafType === 'HUMAN') return '👤';
     return '📋';
+  };
+
+  // Render white circled number symbol for 0-20; fallback to styled circle for larger
+  const getWhiteCircledNumber = (num: number): string | null => {
+    const symbols = [
+      '⓪','①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩',
+      '⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'
+    ];
+    if (num >= 0 && num <= 20) return symbols[num];
+    return null;
   };
 
   const getCheckmarkBadge = () => {
@@ -207,28 +212,35 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
   };
 
   const getDurationText = () => {
-    if (step.estimatedMinutes === 0) return 'auto';
+    if (step.estimatedMinutes === 0) return '⚡';
     if (step.estimatedMinutes < 60) return `${step.estimatedMinutes}m`;
     return `${Math.round(step.estimatedMinutes / 60)}h`;
   };
 
+  // Wrapper controls sizing with flex; inner card stays content-focused
+  const wrapperFlexClasses = !effectiveExpandedId
+    ? 'flex-1 basis-0 min-w-0' // base: equal widths
+    : isExpanded
+      ? 'grow basis-0 min-w-0' // expanded: take remaining space
+      : 'basis-5 w-5 shrink-0 grow-0 min-w-0'; // collapsed: exactly 20px
+
   return (
-    <div
-      className={`
-        relative flex flex-col items-center justify-center
-        border rounded-sm transition-all duration-300 ease-out
-        cursor-pointer hover:border-[#2aa198]
-        ${statusColors[step.status]}
-        ${isExpanded ? 'scale-[1.02] z-10' : 'scale-100'}
-        hover:scale-[1.01] hover:shadow-lg
-        ${size === 'nano' ? 'h-8' : size === 'micro' ? 'h-9' : isExpanded ? 'h-12' : 'h-10'}
-        ${size === 'nano' ? 'px-0.5' : size === 'micro' ? 'px-1.5' : 'px-2'}
-        py-0.5
-      `}
-      style={{ width: `${width}%` }}
-      onClick={onClick}
-      title={size !== 'full' ? step.description : undefined}
-    >
+    <div className={`flex flex-col items-center ${wrapperFlexClasses}`}>
+      <div
+        className={`
+          relative flex flex-col items-center justify-center w-full
+          border rounded-sm transition-all duration-300 ease-out
+          cursor-pointer hover:border-[#2aa198]
+          ${statusColors[step.status]}
+          ${isExpanded ? 'scale-[1.02] z-10' : 'scale-100'}
+          hover:scale-[1.01] hover:shadow-lg
+          ${size === 'nano' ? 'h-8' : size === 'micro' ? 'h-9' : isExpanded ? 'h-12' : 'h-10'}
+          ${size === 'nano' ? 'px-0.5' : size === 'micro' ? 'px-1.5' : 'px-2'}
+          py-0.5
+        `}
+        onClick={onClick}
+        title={size !== 'full' ? step.description : undefined}
+      >
       {/* Nano size - just step number */}
       {size === 'nano' && (
         <span className={`text-[10px] font-medium ${textColors[step.status]}`}>
@@ -249,15 +261,23 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
       {size === 'full' && (
         <>
           {!isExpanded ? (
-            // Collapsed state - text only, icon floats above
-            <div className="flex flex-col items-center justify-center w-full h-full overflow-hidden">
-              <span className={`text-[10px] font-medium text-center line-clamp-1 px-0.5 w-full overflow-hidden ${textColors[step.status]}`}>
-                {getLabel()}
-              </span>
-              {step.status === 'pending' && (
-                <span className="text-[7px] text-[#586e75]">{getDurationText()}</span>
-              )}
-            </div>
+            // Check if any step is expanded (collapsed state)
+            effectiveExpandedId ? (
+              // Collapsed state - no text, just empty space for icon
+              <div className="flex items-center justify-center w-full h-full max-w-[40px] mx-auto">
+                {/* Empty space - icon will be positioned absolutely */}
+              </div>
+            ) : (
+              // Base state - text only, icon floats above
+              <div className="flex flex-col items-center justify-center w-full h-full overflow-hidden">
+                <span className={`text-[10px] font-medium text-center line-clamp-1 px-0.5 w-full overflow-hidden ${textColors[step.status]}`}>
+                  {getLabel()}
+                </span>
+                {step.status === 'pending' && (
+                  <span className="text-[7px] text-[#586e75]">{getDurationText()}</span>
+                )}
+              </div>
+            )
           ) : (
             // Expanded state - text only, icon floats above
             <div className="flex flex-col items-center gap-0.5 w-full h-full justify-center overflow-hidden px-1">
@@ -269,57 +289,55 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
                   {step.detail}
                 </p>
               )}
-              <span className="text-[7px] text-[#586e75] whitespace-nowrap">
-                {getDurationText()} • {step.leafType}
-              </span>
             </div>
           )}
         </>
       )}
 
-      {/* Icon badge floating above step - full size only */}
+      {/* Icon badge - full size only */}
       {size === 'full' && (
         <div
-          className="absolute -top-3 left-1/2 -translate-x-1/2 flex items-center justify-center z-10 transition-all duration-300 border-2 rounded-sm px-1.5 py-0.5"
-          style={{
-            borderColor: step.status === 'done' ? '#859900' :
-                         step.status === 'active' ? '#268bd2' :
-                         step.status === 'error' ? '#dc322f' :
-                         '#586e75',
-            backgroundColor: step.status === 'done' ? 'rgba(133, 153, 0, 0.15)' :
-                             step.status === 'active' ? 'rgba(38, 139, 210, 0.15)' :
-                             step.status === 'error' ? 'rgba(220, 50, 47, 0.15)' :
-                             'rgba(88, 110, 117, 0.1)'
-          }}
+          className={`absolute left-1/2 -translate-x-1/2 z-10 transition-all duration-300 rounded-full px-1.5 py-0.5 ${
+            isExpanded 
+              ? '-top-7' 
+              : effectiveExpandedId 
+                ? 'top-1/2 -translate-y-1/2' 
+                : '-top-3'
+          }`}
         >
-          <span className="text-sm">{getIcon()}</span>
+          <div className={`flex items-center ${isExpanded ? 'gap-1.5' : ''}`}>
+            <span className="text-sm">{getIcon()}</span>
+            {isExpanded && (
+              <span className={`text-[10px] text-[#93a1a1] line-clamp-1 max-w-[400px] -mt-0.5`}>
+                {getLabel()}
+              </span>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Step number badge */}
-      {size === 'full' && (
-        <div
-          className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center z-10 shadow-md transition-all duration-300 ${
-            step.status === 'done'
-              ? 'bg-[#859900] border-2 border-[#859900]'
-              : step.status === 'active'
-              ? 'bg-[#268bd2] border-2 border-[#268bd2] animate-pulse'
-              : step.status === 'error'
-              ? 'bg-[#dc322f] border-2 border-[#dc322f]'
-              : 'bg-[#073642] border-2 border-[#586e75]'
-          }`}
-        >
-          <span
-            className={`text-[10px] font-bold ${
-              step.status === 'pending' ? 'text-[#93a1a1]' : 'text-white'
-            }`}
-          >
-            {index + 1}
-          </span>
+      {/* Step number - top-left above step (only when expanded and NOT showing nested content) */}
+      {size === 'full' && isExpanded && !hasNestedContent && (
+        <span className="absolute -top-4 left-0 text-[12px] leading-none text-[#93a1a1] font-semibold">
+          {index + 1}
+        </span>
+      )}
+
+      {/* Step duration - top-right above step (only when expanded) */}
+      {size === 'full' && isExpanded && (
+        <span className="absolute -top-4 right-0 text-[12px] leading-none text-[#93a1a1] font-semibold">
+          {getDurationText()}
+        </span>
+      )}
+
+      {/* Expand indicator for decomposable steps */}
+      {size === 'full' && step.isLeaf === false && step.decompositionState !== 'atomic' && (
+        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-[#93a1a1]">
+          {loadingChildren && loadingChildren.has(step.id) ? '⏳' : (isExpanded ? '▼' : '▶')}
         </div>
       )}
-        </>
-      )}
+
+
 
       {/* Pulsing glow and shimmer effect for active steps */}
       {step.status === 'active' && (
@@ -362,6 +380,42 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
         </div>
       )}
 
+      </div>
+      
+      {/* Duration text below step - only in base state */}
+      {!effectiveExpandedId && (
+        <div className="text-[9px] text-[#586e75] font-medium whitespace-nowrap no-underline mt-1">
+          &nbsp;
+        </div>
+      )}
+      
+      {/* Tags below step - only in expanded state */}
+      {isExpanded && (
+        <div className="text-[10px] text-[#93a1a1] font-medium whitespace-nowrap no-underline mt-1">
+          {step.tags && step.tags.length > 0 ? (
+            <span>
+              {step.tags.slice(0, 5).map((tag, index) => (
+                <React.Fragment key={index}>
+                  {index > 0 && <span className="no-underline"> • </span>}
+                  <span className="underline">{tag}</span>
+                </React.Fragment>
+              ))}
+              {step.tags.length > 5 && (
+                <span className="no-underline"> • +{step.tags.length - 5}</span>
+              )}
+            </span>
+          ) : (
+            <span>&nbsp;</span>
+          )}
+        </div>
+      )}
+      
+      {/* Space character for collapsed state to maintain alignment */}
+      {!isExpanded && effectiveExpandedId && (
+        <div className="text-[8px] text-[#586e75] font-medium whitespace-nowrap no-underline mt-1">
+          &nbsp;
+        </div>
+      )}
     </div>
   );
 }
@@ -370,7 +424,7 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
 // Main Component
 // ============================================================================
 
-export default function AsyncJobTimeline({
+const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
   jobName,
   steps,
   currentProgress,
@@ -387,6 +441,16 @@ export default function AsyncJobTimeline({
   const [expandedStepId, setExpandedStepId] = useState<string | null>(null);
   const [manualExpandId, setManualExpandId] = useState<string | null>(null);
 
+  // State for hierarchical children
+  const [expandedStepChildren, setExpandedStepChildren] = useState<Map<string, JobStep[]>>(new Map());
+  const [loadingChildren, setLoadingChildren] = useState<Set<string>>(new Set());
+
+  // State for decomposition jobs
+  const [decompositionJobs, setDecompositionJobs] = useState<Map<string, {
+    steps: JobStep[];
+    progress: number;
+  }>>(new Map());
+
   // Auto-expand active step (unless user has manually expanded something)
   useEffect(() => {
     if (!manualExpandId) {
@@ -395,7 +459,171 @@ export default function AsyncJobTimeline({
     }
   }, [steps, manualExpandId]);
 
-  const handleStepClick = (stepId: string) => {
+  const handleStepClick = async (stepId: string) => {
+    const step = steps.find(s => s.id === stepId);
+
+    // If step is decomposable and not already expanded, fetch children
+    // IMPORTANT: Explicitly check isLeaf === false (not just falsy) to avoid treating undefined as decomposable
+    if (step && step.isLeaf === false && step.decompositionState && step.decompositionState !== 'atomic') {
+      if (!expandedStepChildren.has(stepId) && step.decompositionState === 'decomposed') {
+
+        // Step has already been decomposed - fetch existing children
+        setLoadingChildren(prev => new Set(prev).add(stepId));
+
+        try {
+          const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+          const response = await fetch(`${API_URL}/api/v1/micro-steps/${stepId}/children`);
+          const data = await response.json();
+
+          // Convert API response to JobStep format
+          const children: JobStep[] = data.children.map((child: any) => ({
+            id: child.step_id,
+            description: child.description,
+            shortLabel: child.short_label,
+            estimatedMinutes: child.estimated_minutes,
+            leafType: child.leaf_type as JobStepType,
+            icon: child.icon,
+            status: child.status || 'pending' as JobStepStatus,
+            tags: child.tags,
+            parentStepId: child.parent_step_id,
+            level: child.level,
+            isLeaf: child.is_leaf,
+            decompositionState: child.decomposition_state,
+          }));
+
+          setExpandedStepChildren(prev => new Map(prev).set(stepId, children));
+        } catch (error) {
+          console.error('Failed to fetch children:', error);
+        } finally {
+          setLoadingChildren(prev => { const next = new Set(prev); next.delete(stepId); return next; });
+        }
+      } else if (!expandedStepChildren.has(stepId) && step.decompositionState === 'stub') {
+        // Step needs decomposition - trigger AI decomposition with job timeline
+        setLoadingChildren(prev => new Set(prev).add(stepId));
+
+        // Create decomposition job steps
+        const decompositionSteps: JobStep[] = [
+          {
+            id: 'analyze',
+            description: 'Analyze step complexity',
+            shortLabel: 'Analyzing',
+            estimatedMinutes: 0,
+            leafType: 'DIGITAL',
+            icon: '🔍',
+            status: 'pending' as JobStepStatus,
+          },
+          {
+            id: 'breakdown',
+            description: 'Break down into sub-steps',
+            shortLabel: 'Breaking down',
+            estimatedMinutes: 0,
+            leafType: 'DIGITAL',
+            icon: '🧩',
+            status: 'pending' as JobStepStatus,
+          },
+          {
+            id: 'generate',
+            description: 'Generate micro-steps',
+            shortLabel: 'Generating',
+            estimatedMinutes: 0,
+            leafType: 'DIGITAL',
+            icon: '✨',
+            status: 'pending' as JobStepStatus,
+          },
+        ];
+
+        setDecompositionJobs(prev => new Map(prev).set(stepId, {
+          steps: decompositionSteps,
+          progress: 0
+        }));
+
+        // Simulate progress
+        let currentProgress = 0;
+        const progressInterval = setInterval(() => {
+          currentProgress += 2;
+          if (currentProgress <= 100) {
+            setDecompositionJobs(prev => {
+              const job = prev.get(stepId);
+              if (!job) return prev;
+
+              // Update step statuses based on progress
+              const updatedSteps = job.steps.map((s, i) => {
+                if (currentProgress >= (i + 1) * 33) {
+                  return { ...s, status: 'done' as JobStepStatus };
+                } else if (currentProgress >= i * 33) {
+                  return { ...s, status: 'active' as JobStepStatus };
+                }
+                return s;
+              });
+
+              return new Map(prev).set(stepId, {
+                steps: updatedSteps,
+                progress: currentProgress
+              });
+            });
+          }
+        }, 100);
+
+        try {
+          const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+          const response = await fetch(`${API_URL}/api/v1/micro-steps/${stepId}/decompose`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: 'default-user' })
+          });
+          const data = await response.json();
+
+          clearInterval(progressInterval);
+
+          // Mark all steps as done
+          setDecompositionJobs(prev => {
+            const job = prev.get(stepId);
+            if (!job) return prev;
+            return new Map(prev).set(stepId, {
+              steps: job.steps.map(s => ({ ...s, status: 'done' as JobStepStatus })),
+              progress: 100
+            });
+          });
+
+          // Convert API response to JobStep format
+          const children: JobStep[] = data.children.map((child: any) => ({
+            id: child.step_id,
+            description: child.description,
+            shortLabel: child.short_label,
+            estimatedMinutes: child.estimated_minutes,
+            leafType: child.leaf_type as JobStepType,
+            icon: child.icon,
+            status: 'pending' as JobStepStatus,
+            tags: child.tags,
+            parentStepId: child.parent_step_id,
+            level: child.level,
+            isLeaf: child.is_leaf,
+            decompositionState: child.decomposition_state,
+          }));
+
+          // Wait a bit to show completion, then replace with children
+          setTimeout(() => {
+            setExpandedStepChildren(prev => new Map(prev).set(stepId, children));
+            setDecompositionJobs(prev => {
+              const next = new Map(prev);
+              next.delete(stepId);
+              return next;
+            });
+          }, 500);
+        } catch (error) {
+          console.error('Failed to decompose step:', error);
+          clearInterval(progressInterval);
+          setDecompositionJobs(prev => {
+            const next = new Map(prev);
+            next.delete(stepId);
+            return next;
+          });
+        } finally {
+          setLoadingChildren(prev => { const next = new Set(prev); next.delete(stepId); return next; });
+        }
+      }
+    }
+
     // Toggle manual expansion
     if (manualExpandId === stepId) {
       setManualExpandId(null); // Collapse
@@ -408,6 +636,25 @@ export default function AsyncJobTimeline({
 
   const effectiveExpandedId = manualExpandId || expandedStepId;
   const stepWidths = calculateStepWidths(steps, effectiveExpandedId);
+  const totalMinutes = steps.reduce((sum, s) => sum + (s.estimatedMinutes || 0), 0);
+  const totalDurationText = totalMinutes < 60 ? `${totalMinutes}m` : `${Math.round(totalMinutes / 60)}h`;
+
+  const getDurationText = (step: JobStep) => {
+    if (step.estimatedMinutes === 0) return '⚡';
+    if (step.estimatedMinutes < 60) return `${step.estimatedMinutes}m`;
+    return `${Math.round(step.estimatedMinutes / 60)}h`;
+  };
+
+  const getDurationPrompt = (step: JobStep) => {
+    const minutes = step.estimatedMinutes;
+    if (minutes === 0) return 'AI will handle this automatically';
+    if (minutes <= 2) return 'Quick task - under 2 minutes';
+    if (minutes <= 5) return 'Short task - 2-5 minutes';
+    if (minutes <= 15) return 'Medium task - 5-15 minutes';
+    if (minutes <= 30) return 'Longer task - 15-30 minutes';
+    if (minutes <= 60) return 'Extended task - 30-60 minutes';
+    return 'Major task - over 1 hour';
+  };
 
   const isComplete = currentProgress >= 100;
   const allDone = steps.every(s => s.status === 'done');
@@ -422,14 +669,14 @@ export default function AsyncJobTimeline({
     >
       {/* Header - compact */}
       {size !== 'nano' && (
-        <div className="flex items-center justify-between mb-1.5">
-          <p className={`line-clamp-1 flex-1 ${size === 'micro' ? 'text-[9px]' : 'text-[10px]'} text-[#93a1a1] font-medium`}>
+        <div className="relative flex items-center justify-center mb-0.5 -mt-1">
+          <p className={`line-clamp-1 w-full text-center mb-2 ${size === 'micro' ? 'text-[9px]' : 'text-[10px]'} text-[#93a1a1] font-medium ${effectiveExpandedId ? 'opacity-0' : ''}`}>
             {jobName}
           </p>
           {(onClose || onDismiss) && (
             <button
               onClick={onDismiss || onClose}
-              className="text-[#586e75] hover:text-[#93a1a1] transition-colors ml-2 flex-shrink-0"
+              className="absolute right-0 text-[#586e75] hover:text-[#93a1a1] transition-colors flex-shrink-0"
               aria-label={onDismiss ? "Dismiss" : "Close"}
             >
               <X size={size === 'micro' ? 10 : 12} />
@@ -441,21 +688,63 @@ export default function AsyncJobTimeline({
       {/* Timeline */}
       <div className="relative">
         {/* Steps row */}
-        <div className="flex gap-1 items-end mb-1">
-          {steps.map((step, index) => (
-            <StepSection
-              key={step.id}
-              step={step}
-              index={index}
-              width={stepWidths.get(step.id) || 0}
-              isExpanded={effectiveExpandedId === step.id}
-              size={size}
-              onClick={() => handleStepClick(step.id)}
-              stepProgressPercent={stepProgress?.get(step.id)}
-              onRetry={onRetryStep ? () => onRetryStep(step.id) : undefined}
-            />
-          ))}
+        <div className="flex gap-1 items-end">
+          {steps.map((step, index) => {
+            // Calculate if this step has nested content (decomposition job or children)
+            const hasNestedContent = effectiveExpandedId === step.id &&
+              (decompositionJobs.has(step.id) || expandedStepChildren.has(step.id));
+
+            return (
+              <StepSection
+                key={step.id}
+                step={step}
+                index={index}
+                width={stepWidths.get(step.id) || 0}
+                isExpanded={effectiveExpandedId === step.id}
+                size={size}
+                onClick={() => handleStepClick(step.id)}
+                stepProgressPercent={stepProgress?.get(step.id)}
+                onRetry={onRetryStep ? () => onRetryStep(step.id) : undefined}
+                effectiveExpandedId={effectiveExpandedId}
+                totalDurationText={totalDurationText}
+                loadingChildren={loadingChildren}
+                hasNestedContent={hasNestedContent}
+              />
+            );
+          })}
         </div>
+
+        {/* Nested area for expanded step - show decomposition job or children */}
+        {effectiveExpandedId && (decompositionJobs.has(effectiveExpandedId) || expandedStepChildren.has(effectiveExpandedId)) && (
+          <div className="mt-2 px-2">
+            {/* Show decomposition job steps while processing */}
+            {decompositionJobs.has(effectiveExpandedId) ? (
+              <AsyncJobTimeline
+                jobName="Breaking down..."
+                steps={decompositionJobs.get(effectiveExpandedId)!.steps}
+                currentProgress={decompositionJobs.get(effectiveExpandedId)!.progress}
+                size={size === 'full' ? 'micro' : 'nano'}
+                showProgressBar={false}
+              />
+            ) : (
+              /* Show children steps after decomposition complete - replaces the job */
+              <AsyncJobTimeline
+                jobName={`${steps.find(s => s.id === effectiveExpandedId)?.shortLabel || 'Step'} breakdown`}
+                steps={expandedStepChildren.get(effectiveExpandedId)!}
+                currentProgress={0}
+                size={size === 'full' ? 'micro' : 'nano'}
+                showProgressBar={false}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Total duration - bottom right (only in base state) */}
+        {!effectiveExpandedId && (
+          <div className="absolute bottom-0 right-0 text-[#586e75] text-[10px] font-medium">
+            {totalDurationText}
+          </div>
+        )}
 
         {/* Progress bar */}
         {showProgressBar && (
@@ -488,24 +777,8 @@ export default function AsyncJobTimeline({
         )}
       </div>
 
-      {/* Footer (full size only) */}
-      {size === 'full' && (isComplete || processingTimeMs) && (
-        <div className="mt-2 pt-2 border-t border-[#586e75]">
-          {isComplete && allDone && (
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-[#859900]">✅ Complete</span>
-              {processingTimeMs && (
-                <span className="text-[#586e75]">{Math.round(processingTimeMs)}ms</span>
-              )}
-            </div>
-          )}
-          {currentProgress < 100 && (
-            <div className="text-xs text-[#93a1a1]">
-              {Math.round(currentProgress)}% • {steps.filter(s => s.status === 'done').length}/{steps.length} steps
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
-}
+});
+
+export default AsyncJobTimeline;

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Clock } from 'lucide-react';
-import { spacing, fontSize, borderRadius, iconSize, semanticColors } from '@/lib/design-system';
+import { spacing, fontSize, borderRadius, iconSize, semanticColors, colors } from '@/lib/design-system';
 import Ticker from '@/components/mobile/Ticker';
 
 interface CapturePageProps {
@@ -40,7 +40,7 @@ const CapturePage: React.FC<CapturePageProps> = React.memo(({
   return (
     <div className="h-full flex flex-col" style={{ backgroundColor: semanticColors.bg.primary }}>
       {/* Top Content - Scrollable - 4px grid */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto" style={{ padding: spacing[4], minHeight: '200px' }}>
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto" style={{ padding: spacing[4], minHeight: '300px', paddingBottom: '180px' }}>
         {/* Recent Captures - 4px grid */}
         {recentCaptures.length > 0 && (
           <div style={{ marginBottom: spacing[2] }}>
