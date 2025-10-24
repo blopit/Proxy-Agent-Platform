@@ -949,16 +949,104 @@ async def mobile_quick_capture(
             })
 
         task_data = result["task"]
+
+        # ✅ FIX P0 BUG: Save task to database first (to get real task_id)
+        try:
+            # Ensure task has project_id
+            if not hasattr(task_data, 'project_id') or not task_data.project_id:
+                task_data.project_id = "default-project"
+
+            # Create task in database
+            task_creation_data = TaskCreationData(
+                title=task_data.title,
+                description=task_data.description,
+                project_id=task_data.project_id,
+                priority=TaskPriority(task_data.priority) if isinstance(task_data.priority, str) else task_data.priority,
+                estimated_hours=Decimal(str(task_data.estimated_hours)) if task_data.estimated_hours else None,
+                tags=task_data.tags or [],
+                due_date=task_data.due_date if hasattr(task_data, 'due_date') else None,
+            )
+            created_task = task_service.create_task(task_creation_data)
+
+            # ✅ FIX P0 BUG: Save micro-steps to database
+            from src.services.micro_step_service import MicroStepService, MicroStepCreateData
+            from src.database.enhanced_adapter import get_enhanced_database
+
+            db = get_enhanced_database()
+            micro_step_service = MicroStepService(db)
+            saved_micro_steps = []
+
+            for i, step in enumerate(result["micro_steps"], 1):
+                try:
+                    # Create micro-step data
+                    step_data = MicroStepCreateData(
+                        parent_task_id=created_task.task_id,
+                        description=step.description,
+                        estimated_minutes=step.estimated_minutes,
+                        leaf_type=step.leaf_type.value if hasattr(step.leaf_type, 'value') else step.leaf_type,
+                        delegation_mode=step.delegation_mode.value if hasattr(step.delegation_mode, 'value') else step.delegation_mode,
+                        automation_plan=step.automation_plan.model_dump() if hasattr(step, 'automation_plan') and step.automation_plan else None,
+                        tags=step.tags or [],
+                        parent_step_id=step.parent_step_id if hasattr(step, 'parent_step_id') else None,
+                        level=step.level if hasattr(step, 'level') else 0,
+                        is_leaf=step.is_leaf if hasattr(step, 'is_leaf') else True,
+                        decomposition_state=step.decomposition_state.value if hasattr(step, 'decomposition_state') and hasattr(step.decomposition_state, 'value') else (step.decomposition_state if hasattr(step, 'decomposition_state') else "atomic"),
+                        short_label=step.short_label if hasattr(step, 'short_label') else None,
+                        icon=step.icon if hasattr(step, 'icon') else None,
+                    )
+
+                    # Save to database
+                    saved_step = await micro_step_service.create_micro_step(step_data)
+                    saved_micro_steps.append(saved_step)
+                except Exception as e:
+                    # Log error but continue with other steps
+                    logger.warning(f"Failed to save micro-step {i}: {e}")
+                    # Add unsaved step to list anyway
+                    saved_micro_steps.append(step)
+
+            # Update micro_steps_display with saved steps
+            micro_steps_display = []
+            for step in saved_micro_steps:
+                # Handle both saved (from DB) and unsaved steps
+                leaf_type = step.leaf_type.value if hasattr(step.leaf_type, 'value') else step.leaf_type
+                delegation_mode = step.delegation_mode.value if hasattr(step.delegation_mode, 'value') else step.delegation_mode
+                decomposition_state = (
+                    step.decomposition_state.value
+                    if hasattr(step, 'decomposition_state') and hasattr(step.decomposition_state, 'value')
+                    else (step.decomposition_state if hasattr(step, 'decomposition_state') else "atomic")
+                )
+
+                micro_steps_display.append({
+                    "step_id": step.step_id,
+                    "description": step.description,
+                    "short_label": step.short_label if hasattr(step, 'short_label') else None,
+                    "estimated_minutes": step.estimated_minutes,
+                    "leaf_type": leaf_type,
+                    "icon": step.icon if hasattr(step, 'icon') else ("🤖" if leaf_type == "DIGITAL" else "👤"),
+                    "delegation_mode": delegation_mode,
+                    "tags": step.tags or [],
+                    "parent_step_id": step.parent_step_id if hasattr(step, 'parent_step_id') else None,
+                    "level": step.level if hasattr(step, 'level') else 0,
+                    "is_leaf": step.is_leaf if hasattr(step, 'is_leaf') else True,
+                    "decomposition_state": decomposition_state,
+                })
+
+        except Exception as e:
+            logger.error(f"Failed to save task/micro-steps to database: {e}")
+            # Fall back to returning unsaved data
+            created_task = task_data
+
         processing_time = (datetime.utcnow() - start_time).total_seconds() * 1000
 
         # Build response with micro-steps breakdown
         response = {
             "task": {
-                "title": task_data.title,
-                "description": task_data.description,
-                "priority": task_data.priority,
-                "estimated_hours": task_data.estimated_hours,
-                "tags": task_data.tags,
+                "task_id": created_task.task_id if hasattr(created_task, 'task_id') else None,  # ✅ Real task_id from database
+                "title": created_task.title if hasattr(created_task, 'title') else task_data.title,
+                "description": created_task.description if hasattr(created_task, 'description') else task_data.description,
+                "priority": created_task.priority.value if hasattr(created_task, 'priority') and hasattr(created_task.priority, 'value') else (created_task.priority if hasattr(created_task, 'priority') else task_data.priority),
+                "estimated_hours": float(created_task.estimated_hours) if hasattr(created_task, 'estimated_hours') and created_task.estimated_hours else task_data.estimated_hours,
+                "tags": created_task.tags if hasattr(created_task, 'tags') else task_data.tags,
             },
             "micro_steps": micro_steps_display,
             "breakdown": {
