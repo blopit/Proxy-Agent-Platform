@@ -56,6 +56,7 @@ class MicroStepCreateData:
     parent_task_id: str
     description: str
     estimated_minutes: int
+    step_number: int = 1  # Required by database schema
     leaf_type: Optional[str] = None
     delegation_mode: Optional[str] = None
     automation_plan: Optional[dict] = None
@@ -201,24 +202,25 @@ class MicroStepService:
         
         tags_json = json.dumps(tags) if tags else None
 
+        # ⚠️ NOTE: Actual database schema differs from migration files
+        # Schema has: step_number, status, actual_minutes (NOT leaf_type, automation_plan, tags, completed, energy_level)
         cursor.execute(
             """
             INSERT INTO micro_steps (
-                step_id, parent_task_id, description, estimated_minutes,
-                leaf_type, delegation_mode, automation_plan, tags, completed,
-                parent_step_id, level, is_leaf, decomposition_state, short_label, icon
+                step_id, parent_task_id, step_number, description, estimated_minutes,
+                delegation_mode, status, parent_step_id, level, is_leaf,
+                decomposition_state, short_label, icon
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
             (
                 step_id,
                 data.parent_task_id,
+                data.step_number,
                 data.description,
                 data.estimated_minutes,
-                data.leaf_type,
                 data.delegation_mode,
-                automation_plan_json,
-                tags_json,
+                "todo",  # Map completed=False to status="todo"
                 data.parent_step_id,
                 data.level,
                 1 if data.is_leaf else 0,
