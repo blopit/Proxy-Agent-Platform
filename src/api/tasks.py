@@ -76,7 +76,7 @@ class TaskUpdateRequest(BaseModel):
 
 
 class MicroStepResponse(BaseModel):
-    """Response model for micro-steps"""
+    """Response model for micro-steps with hierarchical support"""
 
     step_id: str
     step_number: int
@@ -86,6 +86,14 @@ class MicroStepResponse(BaseModel):
     status: str
     actual_minutes: int | None = None
     completed_at: datetime | None = None
+
+    # Hierarchical fields
+    parent_step_id: str | None = None
+    level: int = 0
+    is_leaf: bool = True
+    decomposition_state: str = "atomic"
+    short_label: str | None = None
+    icon: str | None = None
 
     @classmethod
     def from_micro_step(cls, step: MicroStep) -> "MicroStepResponse":
@@ -99,6 +107,16 @@ class MicroStepResponse(BaseModel):
             status=step.status,
             actual_minutes=step.actual_minutes,
             completed_at=step.completed_at,
+            parent_step_id=step.parent_step_id if hasattr(step, 'parent_step_id') else None,
+            level=step.level if hasattr(step, 'level') else 0,
+            is_leaf=step.is_leaf if hasattr(step, 'is_leaf') else True,
+            decomposition_state=(
+                step.decomposition_state.value
+                if hasattr(step, 'decomposition_state') and hasattr(step.decomposition_state, 'value')
+                else (step.decomposition_state if hasattr(step, 'decomposition_state') else "atomic")
+            ),
+            short_label=step.short_label if hasattr(step, 'short_label') else None,
+            icon=step.icon if hasattr(step, 'icon') else None,
         )
 
 
@@ -292,29 +310,43 @@ async def get_task(
     conn = db.get_connection()
     cursor = conn.cursor()
 
+    # ✅ FIX P0 BUG: step_number doesn't exist in schema - order by created_at instead
     cursor.execute("""
-        SELECT step_id, step_number, description, estimated_minutes,
-               delegation_mode, status, actual_minutes, created_at, completed_at
+        SELECT step_id, description, estimated_minutes,
+               delegation_mode, completed, completed_at, created_at,
+               leaf_type, tags, parent_step_id, level, is_leaf,
+               decomposition_state, short_label, icon
         FROM micro_steps
         WHERE parent_task_id = ?
-        ORDER BY step_number
+        ORDER BY created_at ASC
     """, (task_id,))
 
     rows = cursor.fetchall()
     micro_steps = []
-    for row in rows:
+    for i, row in enumerate(rows, 1):
         # Convert database row to MicroStep object
+        # Derive step_number from position in ordered list
+        import json
+
         micro_step = MicroStep(
             step_id=row[0],
             parent_task_id=task_id,
-            step_number=row[1],
-            description=row[2],
-            estimated_minutes=row[3],
-            delegation_mode=DelegationMode(row[4]) if row[4] else DelegationMode.DO,
-            status=TaskStatus(row[5]) if row[5] else TaskStatus.TODO,
-            actual_minutes=row[6],
-            created_at=datetime.fromisoformat(row[7]) if row[7] else datetime.utcnow(),
-            completed_at=datetime.fromisoformat(row[8]) if row[8] else None
+            step_number=i,  # ✅ Derived from position, not stored in DB
+            description=row[1],
+            estimated_minutes=row[2],
+            delegation_mode=DelegationMode(row[3]) if row[3] else DelegationMode.DO,
+            status=TaskStatus.DONE if row[4] else TaskStatus.TODO,  # completed boolean
+            actual_minutes=None,  # Not stored in current schema
+            created_at=datetime.fromisoformat(row[6]) if row[6] else datetime.utcnow(),
+            completed_at=datetime.fromisoformat(row[5]) if row[5] else None,
+            leaf_type=row[7] if row[7] else "HUMAN",
+            tags=json.loads(row[8]) if row[8] else [],
+            parent_step_id=row[9],
+            level=row[10] if row[10] is not None else 0,
+            is_leaf=bool(row[11]) if row[11] is not None else True,
+            decomposition_state=row[12] if row[12] else "atomic",
+            short_label=row[13],
+            icon=row[14]
         )
         micro_steps.append(micro_step)
 
@@ -638,6 +670,91 @@ async def complete_micro_step(
     }
 
 
+@router.get("/micro-steps/{step_id}/children")
+async def get_micro_step_children(step_id: str):
+    """
+    Get child micro-steps for a given step (hierarchical breakdown)
+
+    Returns the immediate children of a micro-step. Used for progressive disclosure
+    when user expands a complex step in the UI.
+
+    Args:
+        step_id: Parent step ID
+
+    Returns:
+        List of child micro-steps
+
+    Example:
+        GET /api/v1/micro-steps/step-123/children
+        => { "children": [...], "total": 3 }
+    """
+    from src.services.micro_step_service import MicroStepService
+
+    service = MicroStepService()
+    children = service.get_children(step_id)
+
+    return {
+        "step_id": step_id,
+        "children": [
+            {
+                "step_id": child.step_id,
+                "description": child.description,
+                "short_label": child.short_label,
+                "estimated_minutes": child.estimated_minutes,
+                "icon": child.icon,
+                "leaf_type": child.leaf_type,
+                "delegation_mode": child.delegation_mode,
+                "tags": child.tags,
+                "parent_step_id": child.parent_step_id,
+                "level": child.level,
+                "is_leaf": child.is_leaf,
+                "decomposition_state": child.decomposition_state,
+                "status": "todo",  # Default status for new children
+            }
+            for child in children
+        ],
+        "total": len(children),
+    }
+
+
+@router.post("/micro-steps/{step_id}/decompose")
+async def decompose_micro_step(step_id: str, user_id: str = "default-user"):
+    """
+    Decompose a micro-step into smaller child steps using AI (progressive disclosure)
+
+    Takes a complex micro-step (> 5 minutes, is_leaf=False) and breaks it down
+    into 2-5 minute atomic sub-steps. Used when user expands a step in the UI.
+
+    Args:
+        step_id: Step ID to decompose
+        user_id: User ID for context (optional, defaults to "default-user")
+
+    Returns:
+        Dict with children array and metadata
+
+    Example:
+        POST /api/v1/micro-steps/step-123/decompose
+        => { "children": [...], "total_children": 3, "message": "..." }
+
+    Raises:
+        404: Step not found
+        400: Step cannot be decomposed (already atomic or is_leaf=True)
+    """
+    from fastapi import HTTPException
+    from src.services.micro_step_service import MicroStepService, MicroStepServiceError
+
+    service = MicroStepService()
+
+    try:
+        result = await service.decompose_step(step_id, user_id)
+        return result
+    except MicroStepServiceError as e:
+        if "not found" in str(e):
+            raise HTTPException(status_code=404, detail=str(e))
+        else:
+            raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.get("/tasks/{task_id}/progress")
 async def get_task_progress(
     task_id: str,
@@ -808,6 +925,13 @@ async def mobile_quick_capture(
             leaf_type = step.leaf_type.value if hasattr(step.leaf_type, 'value') else step.leaf_type
             delegation_mode = step.delegation_mode.value if hasattr(step.delegation_mode, 'value') else step.delegation_mode
 
+            # Handle decomposition_state enum
+            decomposition_state = (
+                step.decomposition_state.value
+                if hasattr(step, 'decomposition_state') and hasattr(step.decomposition_state, 'value')
+                else (step.decomposition_state if hasattr(step, 'decomposition_state') else "atomic")
+            )
+
             micro_steps_display.append({
                 "step_id": step.step_id,
                 "description": step.description,
@@ -816,6 +940,12 @@ async def mobile_quick_capture(
                 "leaf_type": leaf_type,  # "DIGITAL" or "HUMAN"
                 "icon": step.icon or ("🤖" if leaf_type == "DIGITAL" else "👤"),
                 "delegation_mode": delegation_mode,
+                "tags": step.tags or [],  # Include CHAMPS tags
+                # Hierarchical fields
+                "parent_step_id": step.parent_step_id if hasattr(step, 'parent_step_id') else None,
+                "level": step.level if hasattr(step, 'level') else 0,
+                "is_leaf": step.is_leaf if hasattr(step, 'is_leaf') else True,
+                "decomposition_state": decomposition_state,
             })
 
         task_data = result["task"]

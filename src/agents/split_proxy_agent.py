@@ -219,7 +219,18 @@ class SplitProxyAgent:
 
     def _build_split_prompt(self, task: Task) -> str:
         """Build AI prompt for task splitting"""
-        estimated_time = f"{float(task.estimated_hours) * 60:.0f} minutes" if task.estimated_hours else "30 minutes"
+        # ✅ FIX P1 BUG: Don't default to 30 minutes - estimate based on task or use "unknown"
+        if task.estimated_hours and task.estimated_hours > 0:
+            estimated_time = f"{float(task.estimated_hours) * 60:.0f} minutes"
+        else:
+            # Provide intelligent estimate based on task description length
+            word_count = len(task.description.split())
+            if word_count <= 5:
+                estimated_time = "10-15 minutes (simple task)"
+            elif word_count <= 15:
+                estimated_time = "20-30 minutes (moderate task)"
+            else:
+                estimated_time = "30-60 minutes (complex task)"
 
         return f"""You are an ADHD-optimized task management assistant. Break this task into micro-steps.
 

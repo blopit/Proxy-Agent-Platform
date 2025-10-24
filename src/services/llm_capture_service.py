@@ -41,7 +41,7 @@ class ParsedTask(BaseModel):
         default="medium", description="Task priority: critical, high, medium, low"
     )
     estimated_hours: float = Field(
-        default=0.5, description="Estimated time in hours", ge=0.0, le=100.0
+        default=0.25, description="Estimated time in hours (MUST estimate realistically - 15min default only as fallback)", ge=0.0, le=100.0
     )
     due_date: Optional[str] = Field(
         None, description="Due date in ISO format (YYYY-MM-DD)"
@@ -196,7 +196,8 @@ class LLMCaptureService:
                 "",
                 "**ADHD Optimization Rules:**",
                 "- Break compound tasks into single actions (e.g., 'email Sara and turn off AC' → focus on first action)",
-                "- Default to 0.5 hours for simple tasks",
+                "- Provide realistic time estimates based on task complexity (5 min task = 0.08 hours, 15 min = 0.25 hours, 30 min = 0.5 hours, 1 hour = 1.0 hours, etc.)",
+                "- Consider task complexity: simple email (0.1 hrs), research (1-2 hrs), writing (2-4 hrs), projects (4+ hrs)",
                 "- Tag urgency clearly",
                 "- Use context to avoid asking questions (e.g., if user has one AC, assume that device)",
                 "",
@@ -208,7 +209,7 @@ class LLMCaptureService:
                 '    "title": "Clean task title",',
                 '    "description": "Full description",',
                 '    "priority": "medium",',
-                '    "estimated_hours": 0.5,',
+                '    "estimated_hours": 0.25,  // ESTIMATE REALISTICALLY: 0.08 (5min), 0.25 (15min), 0.5 (30min), 1.0 (1hr), etc.',
                 '    "due_date": null,',
                 '    "tags": ["tag1", "tag2"],',
                 '    "entities": ["entity1", "entity2"],',

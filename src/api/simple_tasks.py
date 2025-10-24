@@ -283,31 +283,77 @@ async def quick_capture(request: dict):
             manual_fields=None,
         )
 
+        task_data = result["task"]
+
+        # ✅ FIX P0 BUG: Save task to database first (to get real task_id)
+        _ensure_default_entities()  # Ensure default project exists
+        task_data.project_id = task_data.project_id or "default-project"
+        created_task = task_repo.create(task_data)
+
+        # ✅ FIX P0 BUG: Save micro-steps to database
+        from src.services.micro_step_service import MicroStepService, MicroStepCreateData
+
+        micro_step_service = MicroStepService(db)
+        saved_micro_steps = []
+
+        for i, step in enumerate(result["micro_steps"], 1):
+            try:
+                # Create micro-step data
+                step_data = MicroStepCreateData(
+                    parent_task_id=created_task.task_id,
+                    description=step.description,
+                    estimated_minutes=step.estimated_minutes,
+                    leaf_type=step.leaf_type.value if hasattr(step.leaf_type, 'value') else step.leaf_type,
+                    delegation_mode=step.delegation_mode.value if hasattr(step.delegation_mode, 'value') else step.delegation_mode,
+                    automation_plan=step.automation_plan.model_dump() if step.automation_plan else None,
+                    tags=step.tags or [],
+                    parent_step_id=step.parent_step_id,
+                    level=step.level,
+                    is_leaf=step.is_leaf,
+                    decomposition_state=step.decomposition_state.value if hasattr(step.decomposition_state, 'value') else step.decomposition_state,
+                    short_label=step.short_label,
+                    icon=step.icon,
+                )
+
+                # Save to database
+                saved_step = await micro_step_service.create_micro_step(step_data)
+                saved_micro_steps.append(saved_step)
+            except Exception as e:
+                # Log error but continue with other steps
+                import logging
+                logging.getLogger(__name__).warning(f"Failed to save micro-step {i}: {e}")
+                # Add unsaved step to list anyway (for debugging)
+                saved_micro_steps.append(step)
+
         # Format micro-steps for frontend
         micro_steps_display = []
-        for step in result["micro_steps"]:
+        for step in saved_micro_steps:
             micro_steps_display.append({
                 "step_id": step.step_id,
                 "description": step.description,
-                "short_label": step.short_label,
+                "short_label": step.short_label if hasattr(step, 'short_label') else None,
                 "estimated_minutes": step.estimated_minutes,
-                "leaf_type": step.leaf_type.value,  # "DIGITAL" or "HUMAN"
-                "icon": step.icon,
-                "delegation_mode": step.delegation_mode.value,
+                "leaf_type": step.leaf_type.value if hasattr(step.leaf_type, 'value') else step.leaf_type,
+                "icon": step.icon if hasattr(step, 'icon') else None,
+                "delegation_mode": step.delegation_mode.value if hasattr(step.delegation_mode, 'value') else step.delegation_mode,
+                "tags": step.tags or [],
+                "is_leaf": step.is_leaf if hasattr(step, 'is_leaf') else True,
+                "decomposition_state": step.decomposition_state.value if hasattr(step.decomposition_state, 'value') else step.decomposition_state,
+                "level": step.level if hasattr(step, 'level') else 0,
+                "parent_step_id": step.parent_step_id if hasattr(step, 'parent_step_id') else None,
             })
 
-        task_data = result["task"]
         processing_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
 
         # Build response
         response = {
             "task": {
-                "task_id": str(uuid4()),  # Temporary ID (not saved yet)
-                "title": task_data.title,
-                "description": task_data.description,
-                "priority": task_data.priority,
-                "estimated_hours": task_data.estimated_hours,
-                "tags": task_data.tags,
+                "task_id": created_task.task_id,  # ✅ Real task_id from database
+                "title": created_task.title,
+                "description": created_task.description,
+                "priority": created_task.priority,
+                "estimated_hours": created_task.estimated_hours,
+                "tags": created_task.tags,
             },
             "micro_steps": micro_steps_display,
             "breakdown": {
