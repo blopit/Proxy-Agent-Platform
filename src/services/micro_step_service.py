@@ -167,11 +167,15 @@ class MicroStepService:
                 f"Micro-step duration {data.estimated_minutes}min is longer than ideal 2-5min range"
             )
 
-        # Validate leaf_type if provided
-        if data.leaf_type and data.leaf_type not in ["DIGITAL", "HUMAN"]:
-            raise MicroStepServiceError(
-                f"leaf_type must be 'DIGITAL' or 'HUMAN'. Got: {data.leaf_type}"
-            )
+        # Validate and normalize leaf_type if provided (case-insensitive)
+        if data.leaf_type:
+            normalized_type = data.leaf_type.upper()
+            if normalized_type not in ["DIGITAL", "HUMAN"]:
+                raise MicroStepServiceError(
+                    f"leaf_type must be 'DIGITAL' or 'HUMAN' (case-insensitive). Got: {data.leaf_type}"
+                )
+            # Normalize to uppercase for storage
+            data.leaf_type = normalized_type
 
         # Generate CHAMPS tags if not provided
         tags = data.tags

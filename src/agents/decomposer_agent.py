@@ -18,7 +18,7 @@ from typing import Any
 from src.agents.base import BaseProxyAgent
 from src.agents.split_proxy_agent import SplitProxyAgent
 from src.core.models import AgentRequest
-from src.core.task_models import MicroStep, Task, TaskScope
+from src.core.task_models import DecompositionState, MicroStep, Task, TaskScope
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
 
 # AI client availability flags (not currently used but reserved for future AI integration)
@@ -141,6 +141,10 @@ class DecomposerAgent(BaseProxyAgent):
                 if task.estimated_hours
                 else 5,
                 icon="⚡",  # Default icon for simple tasks
+                level=depth,  # Set hierarchy level
+                is_leaf=True,  # Simple tasks are always atomic leaves
+                decomposition_state=DecompositionState.ATOMIC,
+                leaf_type=self._classify_leaf_type(task.title),  # Returns LeafType enum
             )
             return {
                 "task_id": task.task_id,
@@ -183,18 +187,39 @@ class DecomposerAgent(BaseProxyAgent):
                     estimated_minutes=step_data["estimated_minutes"],
                     icon=step_data.get("icon"),
                     delegation_mode=step_data.get("delegation_mode", "do"),
+                    level=depth,  # Set hierarchy level
                 )
             else:
                 micro_step = step_data  # Already a MicroStep object
+                micro_step.level = depth  # Ensure level is set
+
+            # Classify leaf type EARLY (before checking if atomic)
+            from src.core.task_models import LeafType
+            # Always classify - overwrite UNKNOWN or missing values
+            if (not micro_step.leaf_type or
+                micro_step.leaf_type == LeafType.UNKNOWN or
+                micro_step.leaf_type == LeafType.UNKNOWN.value or
+                micro_step.leaf_type == "unknown"):
+                micro_step.leaf_type = self._classify_leaf_type(micro_step.description)
+
+            # Generate CHAMPS tags for the micro-step
+            await self._generate_champs_tags_for_micro_step(micro_step)
 
             # Check if this micro-step needs further splitting
+            # _is_atomic() now uses leaf_type-aware logic:
+            # - DIGITAL: can be any duration
+            # - HUMAN: max 5 minutes
             if self._is_atomic(micro_step):
+                # Atomic step - can't be decomposed further
+                micro_step.is_leaf = True
+                micro_step.decomposition_state = DecompositionState.ATOMIC
                 micro_steps.append(micro_step)
             else:
-                # Micro-step is still too complex - recurse
-                sub_task = self._micro_step_to_task(micro_step, task)
-                sub_result = await self.decompose_task(sub_task, user_id, depth + 1)
-                micro_steps.extend(sub_result.get("micro_steps", []))
+                # Complex step - mark as decomposable but don't decompose now (progressive disclosure)
+                # User can expand this later on-demand
+                micro_step.is_leaf = False
+                micro_step.decomposition_state = DecompositionState.STUB
+                micro_steps.append(micro_step)
 
         # Re-number steps sequentially
         for i, step in enumerate(micro_steps, 1):
@@ -207,25 +232,92 @@ class DecomposerAgent(BaseProxyAgent):
             "total_estimated_minutes": sum(s.estimated_minutes for s in micro_steps),
             "message": f"Task decomposed into {len(micro_steps)} atomic micro-steps",
         }
+    
+    async def _generate_champs_tags_for_micro_step(self, micro_step: MicroStep) -> None:
+        """
+        Generate CHAMPS-based tags for a micro-step using LLM
+        
+        Args:
+            micro_step: MicroStep to add tags to
+        """
+        try:
+            from src.services.champs_tag_service import CHAMPSTagService
+            
+            champs_service = CHAMPSTagService()
+            result = await champs_service.generate_tags(
+                micro_step.description,
+                micro_step.estimated_minutes,
+                micro_step.leaf_type.value if micro_step.leaf_type else "HUMAN"
+            )
+            
+            # Set the tags on the micro-step
+            micro_step.tags = result.tags.get_all_tags()
+            
+        except Exception as e:
+            logger.error(f"Error generating CHAMPS tags for micro-step: {e}")
+            # Set basic fallback tags
+            micro_step.tags = ["🎯 Focused", "⚡ Quick Win"]
+
+    def _classify_leaf_type(self, description: str) -> "LeafType":
+        """
+        Classify a step as DIGITAL (automatable) or HUMAN (requires person).
+
+        Args:
+            description: Step description
+
+        Returns:
+            LeafType.DIGITAL or LeafType.HUMAN
+        """
+        from src.core.task_models import LeafType
+
+        desc_lower = description.lower()
+
+        # Digital task keywords - tasks that can be automated by AI/APIs
+        digital_keywords = [
+            "email", "send email", "draft email",
+            "api", "code", "script", "program",
+            "database", "sql", "query",
+            "automated", "digital", "online",
+            "search", "google", "research",
+            "schedule", "calendar", "reminder",
+            "document", "spreadsheet", "template",
+            "analyze", "calculate", "compute"
+        ]
+
+        if any(keyword in desc_lower for keyword in digital_keywords):
+            return LeafType.DIGITAL
+
+        return LeafType.HUMAN
 
     def _is_atomic(self, micro_step: MicroStep) -> bool:
         """
         Determine if a MicroStep is atomic (no further splitting needed).
 
         Criteria for atomic:
-        - Single clear action verb
-        - Single object
-        - Description under 150 characters
-        - Estimated time is 2-15 minutes (practical range)
+        - DIGITAL tasks: Can be any duration (AI can automate)
+        - HUMAN tasks: Max 5 minutes (ADHD-friendly, actionable)
+        - Description under 100 characters (proxy for complexity)
+        - No sequential compound actions
         """
+        from src.core.task_models import LeafType
+
         description = micro_step.description.lower()
 
-        # Check time constraint - increased to 15 min for practical micro-steps
-        if micro_step.estimated_minutes > 15:
-            return False
+        # Classify leaf type if not already set
+        if not micro_step.leaf_type or micro_step.leaf_type == LeafType.UNKNOWN:
+            micro_step.leaf_type = self._classify_leaf_type(micro_step.description)
 
-        # Check description length (proxy for complexity) - relaxed to 150 chars
-        if len(description) > 150:
+        # Check time constraint based on leaf type
+        if micro_step.leaf_type == LeafType.DIGITAL.value or micro_step.leaf_type == LeafType.DIGITAL:
+            # DIGITAL tasks can be any duration - AI can handle complex automations
+            pass
+        else:
+            # HUMAN tasks: strict 5-minute max for ADHD-friendly actionability
+            if micro_step.estimated_minutes > 5:
+                return False
+
+        # Check description length (proxy for complexity) - stricter now
+        if len(description) > 100:
             return False
 
         # Check for strong compound actions only (reduced false positives)

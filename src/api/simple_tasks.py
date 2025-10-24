@@ -286,9 +286,52 @@ async def quick_capture(request: dict):
         task_data = result["task"]
 
         # ✅ FIX P0 BUG: Save task to database first (to get real task_id)
+        # Use direct SQL INSERT to bypass Task model field mismatch (level, decomposition_state, etc.)
         _ensure_default_entities()  # Ensure default project exists
-        task_data.project_id = task_data.project_id or "default-project"
-        created_task = task_repo.create(task_data)
+
+        from uuid import uuid4
+        import json as json_lib
+
+        task_id = str(uuid4())
+        now = datetime.now().isoformat()
+
+        conn = db.get_connection()
+        cursor = conn.cursor()
+
+        # Direct SQL INSERT with only schema-supported fields
+        cursor.execute("""
+            INSERT INTO tasks (
+                task_id, title, description, project_id, status, priority,
+                estimated_hours, actual_hours, tags, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            task_id,
+            task_data.title,
+            task_data.description,
+            task_data.project_id if hasattr(task_data, 'project_id') and task_data.project_id else "default-project",
+            "todo",
+            task_data.priority if hasattr(task_data, 'priority') else "medium",
+            float(task_data.estimated_hours) if hasattr(task_data, 'estimated_hours') and task_data.estimated_hours else 0.5,
+            0.0,  # actual_hours
+            json_lib.dumps(task_data.tags) if hasattr(task_data, 'tags') and task_data.tags else "[]",
+            now,
+            now
+        ))
+        conn.commit()
+
+        # Construct Task object for response
+        created_task = Task(
+            task_id=task_id,
+            title=task_data.title,
+            description=task_data.description,
+            project_id=task_data.project_id if hasattr(task_data, 'project_id') and task_data.project_id else "default-project",
+            priority=task_data.priority if hasattr(task_data, 'priority') else "medium",
+            estimated_hours=task_data.estimated_hours if hasattr(task_data, 'estimated_hours') and task_data.estimated_hours else 0.5,
+            tags=task_data.tags if hasattr(task_data, 'tags') else [],
+            status="todo",
+            created_at=datetime.fromisoformat(now),
+            updated_at=datetime.fromisoformat(now),
+        )
 
         # ✅ FIX P0 BUG: Save micro-steps to database
         from src.services.micro_step_service import MicroStepService, MicroStepCreateData

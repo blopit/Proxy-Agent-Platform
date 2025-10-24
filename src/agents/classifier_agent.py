@@ -84,9 +84,14 @@ class ClassifierAgent(BaseProxyAgent):
         # Try to find automation plan
         automation_plan = self.registry.can_automate(micro_step)
 
+        # If leaf_type is already classified as DIGITAL or HUMAN (from DecomposerAgent), respect it
+        already_classified = (micro_step.leaf_type == LeafType.DIGITAL or
+                              micro_step.leaf_type == LeafType.HUMAN)
+
         if automation_plan:
-            # Task is automatable - mark as DIGITAL
-            micro_step.leaf_type = LeafType.DIGITAL
+            # Task is automatable - mark as DIGITAL (only if not already classified)
+            if not already_classified:
+                micro_step.leaf_type = LeafType.DIGITAL
             micro_step.automation_plan = automation_plan
             micro_step.delegation_mode = self.registry.suggest_delegation_mode(
                 automation_plan
@@ -95,18 +100,19 @@ class ClassifierAgent(BaseProxyAgent):
                 micro_step, automation_plan
             )
 
-            if micro_step.clarification_needs:
-                # Has missing information - mark as UNKNOWN until clarified
+            if micro_step.clarification_needs and not already_classified:
+                # Has missing information - mark as UNKNOWN until clarified (only if not already classified)
                 micro_step.leaf_type = LeafType.UNKNOWN
 
         else:
             # No automation available - check if it's clearly HUMAN
             if self._is_clearly_human(micro_step):
-                micro_step.leaf_type = LeafType.HUMAN
+                if not already_classified:
+                    micro_step.leaf_type = LeafType.HUMAN
                 micro_step.delegation_mode = DelegationMode.DO
                 micro_step.clarification_needs = []
-            else:
-                # Ambiguous - needs clarification
+            elif not already_classified:
+                # Ambiguous - needs clarification (only if not already classified)
                 micro_step.leaf_type = LeafType.UNKNOWN
                 micro_step.clarification_needs = self._generate_generic_clarifications(
                     micro_step

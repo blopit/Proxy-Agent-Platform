@@ -113,7 +113,7 @@ class ClarificationNeed(BaseModel):
 
 
 class MicroStep(BaseModel):
-    """Micro-step model for Epic 7 - 2-5 minute actionable steps"""
+    """Micro-step model for Epic 7 - 2-5 minute actionable steps with hierarchical support"""
 
     step_id: str = Field(default_factory=lambda: str(uuid4()))
     parent_task_id: str = Field(..., description="ID of the parent task")
@@ -140,6 +140,19 @@ class MicroStep(BaseModel):
     clarification_needs: list[ClarificationNeed] = Field(
         default_factory=list, description="Questions requiring user input"
     )
+
+    # CHAMPS-based tags for success criteria and expectations
+    tags: list[str] = Field(default_factory=list, description="CHAMPS-based success criteria tags")
+
+    # Hierarchical structure fields
+    parent_step_id: str | None = Field(None, description="Parent micro-step ID (for hierarchy)")
+    level: int = Field(default=0, ge=0, description="Depth in tree (0 = top-level)")
+    is_leaf: bool = Field(default=True, description="True if atomic (can't decompose further)")
+    decomposition_state: DecompositionState = Field(
+        default=DecompositionState.ATOMIC,
+        description="Current decomposition state"
+    )
+    children_ids: list[str] = Field(default_factory=list, description="IDs of child micro-steps")
 
     @field_validator("description")
     @classmethod

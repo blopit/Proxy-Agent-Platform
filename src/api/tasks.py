@@ -956,24 +956,54 @@ async def mobile_quick_capture(
             from src.database.enhanced_adapter import get_enhanced_database
             from src.core.task_models import Task as CoreTask
 
-            # Create a clean Task object with only database-supported fields
-            # (CaptureAgent returns a Task with extra fields like 'level' that don't exist in DB schema)
-            clean_task = CoreTask(
+            # ⚠️ WORKAROUND: Use direct SQL INSERT to bypass Task model field mismatch
+            # The Task model has hierarchical fields (level, decomposition_state, children_ids)
+            # that don't exist in the database schema, causing "no such column" errors.
+            # Direct SQL only inserts fields that exist in the schema.
+            from uuid import uuid4
+            import json
+
+            db = get_enhanced_database()
+            conn = db.get_connection()
+            cursor = conn.cursor()
+
+            task_id = str(uuid4())
+            now = datetime.utcnow().isoformat()
+
+            # Direct SQL INSERT with only schema-supported fields
+            cursor.execute("""
+                INSERT INTO tasks (
+                    task_id, title, description, project_id, status, priority,
+                    estimated_hours, actual_hours, tags, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                task_id,
+                task_data.title,
+                task_data.description,
+                task_data.project_id if hasattr(task_data, 'project_id') and task_data.project_id else "default-project",
+                "todo",
+                task_data.priority if hasattr(task_data, 'priority') else "medium",
+                float(task_data.estimated_hours) if hasattr(task_data, 'estimated_hours') and task_data.estimated_hours else 0.5,
+                0.0,  # actual_hours
+                json.dumps(task_data.tags) if hasattr(task_data, 'tags') and task_data.tags else "[]",
+                now,
+                now
+            ))
+            conn.commit()
+
+            # Construct Task object for response
+            created_task = CoreTask(
+                task_id=task_id,
                 title=task_data.title,
                 description=task_data.description,
                 project_id=task_data.project_id if hasattr(task_data, 'project_id') and task_data.project_id else "default-project",
                 priority=task_data.priority if hasattr(task_data, 'priority') else "medium",
-                estimated_hours=task_data.estimated_hours if hasattr(task_data, 'estimated_hours') else 0.5,
+                estimated_hours=task_data.estimated_hours if hasattr(task_data, 'estimated_hours') and task_data.estimated_hours else 0.5,
                 tags=task_data.tags if hasattr(task_data, 'tags') else [],
-                due_date=task_data.due_date if hasattr(task_data, 'due_date') else None,
                 status="todo",
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
+                created_at=datetime.fromisoformat(now),
+                updated_at=datetime.fromisoformat(now),
             )
-
-            # Create task directly using repository
-            task_repo = EnhancedTaskRepository(get_enhanced_database())
-            created_task = task_repo.create(clean_task)
 
             # ✅ FIX P0 BUG: Save micro-steps to database
             from src.services.micro_step_service import MicroStepService, MicroStepCreateData
