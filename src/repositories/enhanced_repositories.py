@@ -675,6 +675,10 @@ class EnhancedTaskRepository(BaseEnhancedRepository):
             data["clarification_needs"] = json.dumps(
                 [c if isinstance(c, dict) else c.model_dump() for c in data["clarification_needs"]]
             )
+        
+        # Convert tags to JSON string if present
+        if data.get("tags"):
+            data["tags"] = json.dumps(data["tags"])
 
         # Convert enums to values
         if data.get("delegation_mode"):
@@ -690,6 +694,12 @@ class EnhancedTaskRepository(BaseEnhancedRepository):
         if data.get("leaf_type"):
             data["leaf_type"] = (
                 data["leaf_type"].value if hasattr(data["leaf_type"], "value") else data["leaf_type"]
+            )
+        if data.get("decomposition_state"):
+            data["decomposition_state"] = (
+                data["decomposition_state"].value
+                if hasattr(data["decomposition_state"], "value")
+                else data["decomposition_state"]
             )
 
         # Convert timestamps to ISO strings
@@ -707,8 +717,15 @@ class EnhancedTaskRepository(BaseEnhancedRepository):
             "delegation_mode",
             "status",
             "actual_minutes",
+            "tags",
             "created_at",
             "completed_at",
+            "parent_step_id",
+            "level",
+            "is_leaf",
+            "decomposition_state",
+            "short_label",
+            "icon",
         ]
 
         placeholders = ", ".join(["?" for _ in columns])

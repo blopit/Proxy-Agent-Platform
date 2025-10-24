@@ -60,6 +60,7 @@ class MicroStepResponse(BaseModel):
     short_label: Optional[str] = None
     automation_plan: Optional[AutomationPlan] = None
     clarification_needs: list[ClarificationNeed] = []
+    tags: list[str] = []  # CHAMPS-based tags
 
 
 class CaptureResponse(BaseModel):
@@ -175,6 +176,7 @@ async def create_capture(
                     leaf_type=step.leaf_type.value,
                     automation_plan=step.automation_plan,
                     clarification_needs=step.clarification_needs,
+                    tags=step.tags or [],  # Include CHAMPS tags
                 )
                 for step in result["micro_steps"]
             ],

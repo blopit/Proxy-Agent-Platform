@@ -129,14 +129,12 @@ class QuickCaptureService:
         # Convert confidence from 0-1 to 0-100
         confidence = int(task.confidence * 100)
 
-        # Build tags
+        # Build tags - only add voice tag, remove system tags
         tags = list(task.tags)
         if voice_input and "voice" not in tags:
             tags.append("voice")
-        if used_kg and "kg-enhanced" not in tags:
-            tags.append("kg-enhanced")
-        if llm_result.provider and f"llm-{llm_result.provider}" not in tags:
-            tags.append(f"llm-{llm_result.provider}")
+        # Remove system tags that were previously added
+        tags = [tag for tag in tags if tag not in ["kg-enhanced", "llm-openai", "llm-anthropic"]]
 
         # Determine delegation
         should_delegate = task.is_digital
