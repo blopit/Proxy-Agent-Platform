@@ -954,14 +954,27 @@ async def mobile_quick_capture(
         try:
             from src.repositories.enhanced_repositories import EnhancedTaskRepository
             from src.database.enhanced_adapter import get_enhanced_database
+            from src.core.task_models import Task as CoreTask
+            from datetime import datetime
 
-            # Ensure task has project_id and defaults
-            if not hasattr(task_data, 'project_id') or not task_data.project_id:
-                task_data.project_id = "default-project"
+            # Create a clean Task object with only database-supported fields
+            # (CaptureAgent returns a Task with extra fields like 'level' that don't exist in DB schema)
+            clean_task = CoreTask(
+                title=task_data.title,
+                description=task_data.description,
+                project_id=task_data.project_id if hasattr(task_data, 'project_id') and task_data.project_id else "default-project",
+                priority=task_data.priority if hasattr(task_data, 'priority') else "medium",
+                estimated_hours=task_data.estimated_hours if hasattr(task_data, 'estimated_hours') else 0.5,
+                tags=task_data.tags if hasattr(task_data, 'tags') else [],
+                due_date=task_data.due_date if hasattr(task_data, 'due_date') else None,
+                status="todo",
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
 
-            # Create task directly using repository (simpler than task_service)
+            # Create task directly using repository
             task_repo = EnhancedTaskRepository(get_enhanced_database())
-            created_task = task_repo.create(task_data)
+            created_task = task_repo.create(clean_task)
 
             # ✅ FIX P0 BUG: Save micro-steps to database
             from src.services.micro_step_service import MicroStepService, MicroStepCreateData
