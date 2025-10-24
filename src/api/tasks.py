@@ -952,21 +952,16 @@ async def mobile_quick_capture(
 
         # ✅ FIX P0 BUG: Save task to database first (to get real task_id)
         try:
-            # Ensure task has project_id
+            from src.repositories.enhanced_repositories import EnhancedTaskRepository
+            from src.database.enhanced_adapter import get_enhanced_database
+
+            # Ensure task has project_id and defaults
             if not hasattr(task_data, 'project_id') or not task_data.project_id:
                 task_data.project_id = "default-project"
 
-            # Create task in database
-            task_creation_data = TaskCreationData(
-                title=task_data.title,
-                description=task_data.description,
-                project_id=task_data.project_id,
-                priority=TaskPriority(task_data.priority) if isinstance(task_data.priority, str) else task_data.priority,
-                estimated_hours=Decimal(str(task_data.estimated_hours)) if task_data.estimated_hours else None,
-                tags=task_data.tags or [],
-                due_date=task_data.due_date if hasattr(task_data, 'due_date') else None,
-            )
-            created_task = task_service.create_task(task_creation_data)
+            # Create task directly using repository (simpler than task_service)
+            task_repo = EnhancedTaskRepository(get_enhanced_database())
+            created_task = task_repo.create(task_data)
 
             # ✅ FIX P0 BUG: Save micro-steps to database
             from src.services.micro_step_service import MicroStepService, MicroStepCreateData
