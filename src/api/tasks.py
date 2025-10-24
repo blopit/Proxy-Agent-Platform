@@ -1018,6 +1018,7 @@ async def mobile_quick_capture(
                     # Create micro-step data
                     step_data = MicroStepCreateData(
                         parent_task_id=created_task.task_id,
+                        step_number=i,  # ✅ Pass step number from loop index
                         description=step.description,
                         estimated_minutes=step.estimated_minutes,
                         leaf_type=step.leaf_type.value if hasattr(step.leaf_type, 'value') else step.leaf_type,
