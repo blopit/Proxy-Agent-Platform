@@ -15,6 +15,64 @@ This index organizes all project documentation into categories for easy navigati
   - Resource requirements and success metrics
   - **Status**: Active - guides current development
 
+- **[SYSTEM_HEALTH_REPORT.md](./SYSTEM_HEALTH_REPORT.md)** 🏥 HEALTH
+  - Comprehensive system assessment (Health Score: 8.2/10)
+  - Infrastructure, code quality, testing, performance, security analysis
+  - 78% test coverage, critical risks identified
+  - **Status**: Active - monthly review cycle
+
+- **[ARCHITECTURE_DEEP_DIVE.md](./ARCHITECTURE_DEEP_DIVE.md)** 🏗️ TECHNICAL
+  - Complete technical architecture documentation
+  - System design, data flow, component interactions
+  - Scalability patterns and future evolution
+  - **Status**: Active - reference for technical decisions
+
+- **[PRODUCT_DEVELOPMENT_PLAYBOOK.md](./PRODUCT_DEVELOPMENT_PLAYBOOK.md)** 📚 METHODOLOGY
+  - ADHD-optimized development methodology
+  - UX principles, testing protocols, design patterns
+  - 2-second rule, friction budgets, dopamine-driven design
+  - **Status**: Active - guides all feature development
+
+### CHAMPS Framework (Active Development)
+- **[CHAMPS_FRAMEWORK.md](./CHAMPS_FRAMEWORK.md)** ⭐ PRIMARY
+  - AI-powered success criteria for ADHD task management
+  - 6 dimensions: Conversation, Help, Activity, Movement, Participation, Success
+  - Personalization, analytics, and gamification roadmap
+  - **Status**: Active - core framework documentation
+
+- **[EXTENDED_TASK_METADATA.md](./EXTENDED_TASK_METADATA.md)** 📐 TECHNICAL
+  - 10 additional metadata dimensions beyond CHAMPS
+  - Psychological, cognitive load, prerequisites, sensory, motivation
+  - Risk, social, temporal, learning, and execution metadata
+  - **Status**: Active - comprehensive metadata design
+
+- **[CHAMPS_RESEARCH.md](./CHAMPS_RESEARCH.md)** 📚 RESEARCH
+  - Academic evidence and research foundation
+  - Original classroom CHAMPS studies (Sprick et al.)
+  - ADHD research, cognitive load theory, working memory
+  - Validation study design and research gaps
+  - **Status**: Active - research backing
+
+- **[CHAMPS_EXPANSION_SUMMARY.md](./CHAMPS_EXPANSION_SUMMARY.md)** 📊 SUMMARY
+  - Executive summary of CHAMPS expansion work
+  - 30,000+ words, 30+ citations, 16 metadata dimensions
+  - Implementation priorities and next steps
+  - **Status**: Complete - research summary
+
+### Anti-Procrastination Features (Active Development)
+- **[ANTI_PROCRASTINATION_REPORT.md](./ANTI_PROCRASTINATION_REPORT.md)** ⭐ PRIMARY
+  - Transform timeline from passive viewing → active completion
+  - 8 evidence-based features (Ready Now badge, Energy matching, XP preview, etc.)
+  - Expected impact: +133% task completion rate (24% → 56%)
+  - 3-phase implementation plan, ROI: 974% first year
+  - **Status**: Active - ready for implementation
+
+- **[ANTI_PROCRASTINATION_TIMELINE.md](./ANTI_PROCRASTINATION_TIMELINE.md)** 📐 TECHNICAL
+  - Detailed feature specifications
+  - UI/UX designs, technical implementation details
+  - Database schema, API endpoints, component architecture
+  - **Status**: Active - technical reference
+
 ### Temporal Knowledge Graph (Phase 1 - Complete)
 - **[TEMPORAL_KG_SUMMARY.md](./TEMPORAL_KG_SUMMARY.md)** ⭐ OVERVIEW
   - Executive summary of temporal KG implementation
@@ -165,6 +223,15 @@ Moved to: `archive/reports/`
 ### "I want to verify quality/testing"
 → **[TEST_RESULTS.md](./TEST_RESULTS.md)**
 
+### "I want to understand CHAMPS framework"
+→ **[CHAMPS_FRAMEWORK.md](./CHAMPS_FRAMEWORK.md)**
+
+### "I want to see extended task metadata options"
+→ **[EXTENDED_TASK_METADATA.md](./EXTENDED_TASK_METADATA.md)**
+
+### "I want research backing for CHAMPS"
+→ **[CHAMPS_RESEARCH.md](./CHAMPS_RESEARCH.md)**
+
 ---
 
 ## 📝 Document Maintenance
@@ -173,6 +240,9 @@ Moved to: `archive/reports/`
 - FUTURE_ROADMAP_REPORT.md - Update after each phase
 - INTEGRATION_GUIDE.md - Update with new APIs
 - TEST_RESULTS.md - Update with new test runs
+- CHAMPS_FRAMEWORK.md - Update as CHAMPS features are implemented
+- EXTENDED_TASK_METADATA.md - Update as new metadata dimensions are added
+- CHAMPS_RESEARCH.md - Update with validation study results
 
 ### Reference Documents (Stable)
 - TEMPORAL_KG_DESIGN.md - Stable architecture
@@ -215,14 +285,23 @@ archive/
 
 ## Version History
 
-### v1.0 - October 23, 2025
+### v1.1 - October 23, 2025 (Evening)
+- **Added CHAMPS Framework Documentation** (3 new docs)
+  - CHAMPS_FRAMEWORK.md - Core framework and roadmap
+  - EXTENDED_TASK_METADATA.md - 10 additional metadata dimensions
+  - CHAMPS_RESEARCH.md - Academic research foundation
+- Updated Quick Navigation with CHAMPS links
+- Added CHAMPS to Active Documents maintenance list
+
+### v1.0 - October 23, 2025 (Morning)
 - Initial index created
 - Organized Phase 1 (Temporal KG) documentation
 - Created archive structure
 - Archived completed UX/agent architecture docs
 
 ### Next Update
-- After Phase 2 completion (Nov 2025)
+- After CHAMPS Phase 1 implementation (Nov 2025)
+- After Phase 2 completion (Nov-Dec 2025)
 - Add input classification documentation
 - Update roadmap progress
 
@@ -230,4 +309,4 @@ archive/
 
 **Maintained By**: Development Team
 **Last Review**: October 23, 2025
-**Next Review**: December 2025 (after Phase 2)
+**Next Review**: December 2025 (after CHAMPS Phase 1 & Phase 2)

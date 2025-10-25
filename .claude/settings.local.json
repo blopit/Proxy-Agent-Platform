@@ -1,20 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(curl -s -X POST http://localhost:8000/api/v1/mobile/quick-capture -H 'Content-Type: application/json' -d '{\"\"text\"\": \"\"Fix the leaky faucet\"\", \"\"user_id\"\": \"\"test-user\"\", \"\"voice_input\"\": false, \"\"auto_mode\"\": true, \"\"ask_for_clarity\"\": false}')",
-      "Bash(curl -s http://localhost:3000/mobile)",
-      "Bash(curl -s -X POST http://localhost:8000/api/v1/mobile/quick-capture -H 'Content-Type: application/json' -d '{\"\"\"\"text\"\"\"\": \"\"\"\"Plan my vacation\"\"\"\", \"\"\"\"user_id\"\"\"\": \"\"\"\"test-user\"\"\"\", \"\"\"\"voice_input\"\"\"\": false, \"\"\"\"auto_mode\"\"\"\": true, \"\"\"\"ask_for_clarity\"\"\"\": false}')",
-      "Bash(python3 -c \"import sys, json; d=json.load(sys.stdin); s=d[''''micro_steps''''][0]; print(f\"\"First step:\\n  icon: {repr(s.get(''''icon''''))}\\n  short_label: {repr(s.get(''''short_label''''))}\\n  description: {s[''''description''''][:60]}...\"\")\")",
-      "Bash(git add frontend/src/app/mobile/page.tsx)",
-      "Bash(git commit -m \"fix(capture): display task previews with ''done'' status after successful capture\n\nFix issue where completed task previews weren''t showing up properly.\n\n## Changes\n\n- Changed task preview steps status from ''pending'' → ''done'' (line 455)\n- Added debug logging to track micro_steps creation\n- Fixed task_id field reference (was response.task_id, now response.task?.task_id)\n- Added console warnings when micro_steps are missing from API response\n\n## Why\n\nTask previews were showing with ''pending'' status even though they were completed.\nThis caused visual inconsistency where completed tasks looked incomplete.\n\n## Result\n\nTask previews now correctly show all steps with green ''done'' status and checkmarks.\")",
-      "Bash(python3 -c \"import sys, json; d=json.load(sys.stdin); print(''''\\n=== MICRO-STEPS ===''''); [print(f\"\"{i+1}. {s.get(''''icon'''', ''''❌'''')} {s.get(''''short_label'''', ''''NO_LABEL''''):12} - {s[''''description''''][:50]}\"\") for i, s in enumerate(d[''''micro_steps''''])]\")",
-      "Bash(curl -s -X POST http://localhost:8000/api/v1/mobile/quick-capture -H 'Content-Type: application/json' -d '{\"\"text\"\": \"\"Make coffee and read the morning news\"\", \"\"user_id\"\": \"\"test-user\"\", \"\"voice_input\"\": false, \"\"auto_mode\"\": true, \"\"ask_for_clarity\"\": false}')",
-      "Bash(git commit -m \"fix(ui): extend capture progress bar to full width\n\nAdd negative margins to make AsyncJobTimeline span edge-to-edge.\n\n## Changes\n\n- Added marginLeft: -spacing[3] and marginRight: -spacing[3] (lines 1038-1039)  \n- Added corresponding paddingLeft and paddingRight to maintain content spacing\n- Matches the pattern used elsewhere for full-width components\n\n## Result\n\nCapture progress bar now extends to full screen width instead of being constrained\nby the parent container''s padding. Clean, modern edge-to-edge design.\")",
-      "Bash(git add src/database/migrations/004_add_temporal_kg.sql src/knowledge/temporal_models.py src/services/shopping_list_service.py src/services/tests/test_shopping_list_service.py)",
-      "Bash(curl -s -X POST http://localhost:8000/api/v1/mobile/quick-capture -H 'Content-Type: application/json' -d '{\"\"text\"\": \"\"Build a birdhouse\"\", \"\"user_id\"\": \"\"test-user\"\", \"\"voice_input\"\": false, \"\"auto_mode\"\": true, \"\"ask_for_clarity\"\": false}')",
-      "Bash(curl -s -X POST http://localhost:8000/api/v1/mobile/quick-capture -H 'Content-Type: application/json' -d '{\"\"\"\"text\"\"\"\": \"\"\"\"Write a thank you note\"\"\"\", \"\"\"\"user_id\"\"\"\": \"\"\"\"test-user\"\"\"\", \"\"\"\"voice_input\"\"\"\": false, \"\"\"\"auto_mode\"\"\"\": true, \"\"\"\"ask_for_clarity\"\"\"\": false}')",
-      "Bash(python3 -c \"import sys, json; d=json.load(sys.stdin); s=d[''''micro_steps''''][0]; print(f\"\"icon: {repr(s.get(''''icon''''))}, short_label: {repr(s.get(''''short_label''''))}\"\")\")",
-      "Bash(git add -A)"
+      "Bash(git log --name-only --pretty=format: --since=\"2 weeks ago\")",
+      "Bash(xargs ls -lt)",
+      "Bash(awk '{print $NF}')",
+      "WebSearch",
+      "WebFetch(domain:codepen.io)",
+      "WebFetch(domain:css-tricks.com)"
     ],
     "deny": [],
     "ask": []
