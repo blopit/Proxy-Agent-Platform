@@ -1,16 +1,16 @@
 // Mock global objects that might be used in components
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: (query: string) => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(), // deprecated
-    removeListener: jest.fn(), // deprecated
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
-  })),
+    addListener: () => {}, // deprecated
+    removeListener: () => {}, // deprecated
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  }),
 });
 
 // Mock IntersectionObserver
@@ -30,14 +30,19 @@ global.ResizeObserver = class ResizeObserver {
 };
 
 // Mock fetch globally
-global.fetch = jest.fn();
+global.fetch = (() => Promise.resolve({
+  ok: true,
+  status: 200,
+  json: async () => ({}),
+  text: async () => '',
+})) as any;
 
 // Mock navigator.geolocation
 Object.defineProperty(navigator, 'geolocation', {
   value: {
-    getCurrentPosition: jest.fn(),
-    watchPosition: jest.fn(),
-    clearWatch: jest.fn(),
+    getCurrentPosition: () => {},
+    watchPosition: () => 0,
+    clearWatch: () => {},
   },
   writable: true,
 });
