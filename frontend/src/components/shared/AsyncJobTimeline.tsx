@@ -23,6 +23,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, CheckCircle2, Circle, Loader2, AlertCircle, User, Bot, FileText } from 'lucide-react';
 import ProgressBar from './ProgressBar';
+import ChevronStep from '@/components/mobile/ChevronStep';
 
 // OpenMoji component for consistent emoji rendering
 const OpenMoji = ({ emoji, size = 16, className = '', variant = 'black' }: {
@@ -184,10 +185,10 @@ interface StepSectionProps {
 function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, onClick, stepProgressPercent, onRetry, effectiveExpandedId, totalDurationText, loadingChildren, hasNestedContent }: StepSectionProps) {
   // Text colors for Solarized backgrounds
   const textColors = {
-    pending: 'text-[#073642]',      // Solarized base02 (darker, more visible on light)
-    active: 'text-[#268bd2] font-semibold',  // Solarized blue (pops on cream)
-    done: 'text-[#93a1a1]',         // Solarized base1 (light on dark)
-    error: 'text-white font-semibold',
+    pending: '#073642',      // Solarized base02 (darker, more visible on light)
+    active: '#268bd2',       // Solarized blue (pops on cream)
+    done: '#93a1a1',         // Solarized base1 (light on dark)
+    error: '#ffffff',        // White text on red background
   };
 
   const getStepIcon = () => {
@@ -210,7 +211,6 @@ function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, on
       />
     );
   };
-
 
   const getLabel = () => {
     if (size === 'nano') return `${index + 1}`;
@@ -237,240 +237,169 @@ function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, on
     return `${Math.round(step.estimatedMinutes / 60)}h`;
   };
 
-  // Wrapper controls sizing with flex; inner card stays content-focused
+  // Determine chevron position
+  const getChevronPosition = () => {
+    const isFirst = index === 0;
+    const isLast = index === totalSteps - 1;
+
+    if (isFirst && isLast) return 'single';
+    if (isFirst) return 'first';
+    if (isLast) return 'last';
+    return 'middle';
+  };
+
+  // Wrapper controls sizing with flex
   const wrapperFlexClasses = !effectiveExpandedId
     ? 'flex-1 basis-0 min-w-0' // base: equal widths
     : isExpanded
       ? 'grow basis-0 min-w-0' // expanded: take remaining space
-      : 'basis-[30px] w-[30px] shrink-0 grow-0 min-w-0'; // collapsed: 30px wide (25% reduction from 40px)
-
-  // Chevron shape using clip-path (cleaner arrow design)
-  const getChevronClipPath = () => {
-    const isFirst = index === 0;
-    const isLast = index === totalSteps - 1;
-    const arrowDepth = 10; // Fixed depth - doesn't change with expansion
-
-    if (isFirst && isLast) {
-      // Single step: flat both sides (rectangle)
-      return 'none';
-    }
-
-    if (isFirst) {
-      // First step: flat left, chevron right
-      return `polygon(0 0, calc(100% - ${arrowDepth}px) 0, 100% 50%, calc(100% - ${arrowDepth}px) 100%, 0 100%)`;
-    }
-
-    if (isLast) {
-      // Last step: chevron left, flat right
-      return `polygon(0 0, 100% 0, 100% 100%, 0 100%, ${arrowDepth}px 50%)`;
-    }
-
-    // Middle steps: chevron both sides
-    return `polygon(0 0, calc(100% - ${arrowDepth}px) 0, 100% 50%, calc(100% - ${arrowDepth}px) 100%, 0 100%, ${arrowDepth}px 50%)`;
-  };
-
-  // Get margin for puzzle-fit effect (overlap chevrons with 4px gap)
-  const getChevronMargin = () => {
-    if (size !== 'full') return undefined;
-    const arrowDepth = 10;
-    const desiredGap = 4; // 4px visible gap between chevrons
-    return index < totalSteps - 1 ? -(arrowDepth - desiredGap) : 0;
-  };
-
-  // Original Solarized colors (clean, no gradient progression)
-  const getBackgroundColor = () => {
-    if (step.status === 'done') {
-      return 'bg-[#073642]'; // Solarized base02 (dark)
-    }
-    if (step.status === 'active') {
-      return 'bg-[#eee8d5]'; // Solarized base2 (light cream)
-    }
-    if (step.status === 'error') {
-      return 'bg-[#dc322f]'; // Solarized red
-    }
-    // Pending
-    return 'bg-[#fdf6e3]'; // Solarized base3 (lightest)
-  };
-
-  // Get border color based on status for drop-shadow
-  const getBorderColor = () => {
-    return '#ffcc00'; // Bright yellow border for all states
-  };
+      : 'basis-[30px] w-[30px] shrink-0 grow-0 min-w-0'; // collapsed: 30px wide
 
   return (
     <div
       className={`relative flex flex-col items-center overflow-visible ${wrapperFlexClasses}`}
-      style={{ marginRight: size === 'full' && index !== totalSteps - 1 ? '-6px' : '0' }}
+      style={{ marginRight: index !== totalSteps - 1 ? '-4px' : '0' }}
     >
-      {/* Border layer (yellow) */}
-      <div
-        className={`
-          absolute inset-0 w-full
-          ${size === 'nano' ? 'h-8' : size === 'micro' ? 'h-9' : 'h-16'}
-        `}
-        style={{
-          clipPath: size === 'full' ? getChevronClipPath() : undefined,
-          backgroundColor: getBorderColor(),
-        }}
-      />
-
-      {/* Content layer with background (inset by 2px for border) */}
-      <div
-        className={`
-          relative w-full
-          transition-all duration-300 ease-out
-          cursor-pointer
-          ${getBackgroundColor()}
-          ${size === 'nano' ? 'h-8' : size === 'micro' ? 'h-9' : 'h-16'}
-          ${size === 'nano' ? 'px-2' : size === 'micro' ? 'px-3' : 'px-4'}
-          py-1
-          flex flex-col items-center justify-center gap-1
-          hover:brightness-95
-        `}
-        style={{
-          clipPath: size === 'full' ? getChevronClipPath() : undefined,
-          margin: size === 'full' ? '2px' : '0',
-        }}
+      {/* SVG Chevron Step */}
+      <ChevronStep
+        status={step.status}
+        position={getChevronPosition()}
+        size={size}
         onClick={onClick}
-        title={size !== 'full' ? step.description : undefined}
+        isExpanded={isExpanded}
+        width="100%"
       >
-      {/* Nano size - just step number */}
-      {size === 'nano' && (
-        <span className={`text-[10px] font-medium ${textColors[step.status]}`}>
-          {getLabel()}
-        </span>
-      )}
-
-      {/* Micro size - show number ONLY when collapsed */}
-      {size === 'micro' && (
-        <>
-          {effectiveExpandedId && !isExpanded ? (
-            // Collapsed: show number
-            <div className="flex items-center justify-center w-full h-full relative">
-              <span
-                className={`text-[11px] font-bold ${textColors[step.status]}`}
-                style={{
-                  position: 'relative',
-                  // Adjust horizontal position based on chevron shape
-                  left: index === 0 ? '-3px' : // First step: shift left (right side extends)
-                        index === totalSteps - 1 ? '3px' : // Last step: shift right (left side indents)
-                        '2px' // Middle steps: shift right to center in double-chevron shape
-                }}
-              >
-                {index + 1}
-              </span>
-            </div>
-          ) : (
-            // Not collapsed: show icon + text
-            <div className="flex flex-col items-center justify-center gap-1">
-              {getStepIcon()}
-              <span className={`text-[9px] font-medium text-center line-clamp-1 ${textColors[step.status]}`}>
-                {getLabel()}
-              </span>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Full size - show number ONLY when collapsed */}
-      {size === 'full' && (
-        <>
-          {effectiveExpandedId && !isExpanded ? (
-            // Collapsed: show number
-            <div className="flex items-center justify-center w-full h-full relative">
-              <span
-                className={`text-[11px] font-bold ${textColors[step.status]}`}
-                style={{
-                  position: 'relative',
-                  // Adjust horizontal position based on chevron shape
-                  left: index === 0 ? '-3px' : // First step: shift left (right side extends)
-                        index === totalSteps - 1 ? '3px' : // Last step: shift right (left side indents)
-                        '2px' // Middle steps: shift right to center in double-chevron shape
-                }}
-              >
-                {index + 1}
-              </span>
-            </div>
-          ) : tab ? (
-            // Not collapsed + tab mode: icon + text inside
-            <div className="flex flex-col items-center justify-center gap-1">
-              {getStepIcon()}
-              <span className={`text-[10px] font-medium text-center line-clamp-2 px-2 ${textColors[step.status]}`}>
-                {getLabel()}
-              </span>
-            </div>
-          ) : (
-            // Not collapsed + non-tab mode: text only
-            <div className="flex items-center justify-center w-full h-full">
-              <span className={`text-[10px] font-medium text-center line-clamp-2 px-2 ${textColors[step.status]}`}>
-                {getLabel()}
-              </span>
-            </div>
-          )}
-
-          {/* Icon floating on top border when NOT in tab mode and NOT collapsed */}
-          {!tab && !(effectiveExpandedId && !isExpanded) && (
-            <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-30 bg-[#002b36] rounded-full p-1 border-2 border-[#586e75]">
-              {getStepIcon()}
-            </div>
-          )}
-        </>
-      )}
-
-
-
-      {/* Cleaner pulsing glow for active steps */}
-      {step.status === 'active' && (
-        <>
-          {/* Subtle pulsing glow */}
-          <div
-            className="absolute inset-0 bg-[#268bd2]/20 animate-pulse-glow pointer-events-none"
+        {/* Content inside chevron */}
+        {size === 'nano' && (
+          <span
             style={{
-              clipPath: size === 'full' ? getChevronClipPath() : undefined,
-            }}
-          />
-
-          {/* Shimmer effect */}
-          <div
-            className="absolute inset-0 overflow-hidden pointer-events-none"
-            style={{
-              clipPath: size === 'full' ? getChevronClipPath() : undefined,
+              fontSize: '10px',
+              fontWeight: 500,
+              color: textColors[step.status],
             }}
           >
-            <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-          </div>
-        </>
-      )}
+            {getLabel()}
+          </span>
+        )}
 
-      {/* Error state overlay with retry button */}
-      {step.status === 'error' && onRetry && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-[#002b36]/80 rounded-sm backdrop-blur-sm">
-          <span className="text-lg animate-bounce">⚠️</span>
-          {size === 'full' && (
-            <button
-              className="text-[9px] px-2 py-0.5 bg-[#dc322f] hover:bg-[#dc322f]/80 text-white rounded transition-colors font-medium"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRetry();
-              }}
-            >
-              Retry
-            </button>
-          )}
-        </div>
-      )}
+        {/* Micro size - number inside when collapsed */}
+        {size === 'micro' && effectiveExpandedId && !isExpanded && (
+          <span
+            style={{
+              fontSize: '9px',
+              fontWeight: 'bold',
+              color: textColors[step.status],
+            }}
+          >
+            {index + 1}
+          </span>
+        )}
 
-      {/* Mini progress indicator for active steps - only when progress > 0 */}
-      {step.status === 'active' && stepProgressPercent !== undefined && stepProgressPercent > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#586e75]/30 rounded-b-sm overflow-hidden">
+        {/* Full size - number inside when collapsed */}
+        {size === 'full' && effectiveExpandedId && !isExpanded && (
+          <span
+            style={{
+              fontSize: '11px',
+              fontWeight: 'bold',
+              color: textColors[step.status],
+            }}
+          >
+            {index + 1}
+          </span>
+        )}
+
+        {/* Error state overlay with retry button */}
+        {step.status === 'error' && onRetry && (
           <div
-            className="h-full bg-[#268bd2] transition-all duration-300"
-            style={{ width: `${stepProgressPercent}%` }}
-          />
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '4px',
+              backgroundColor: 'rgba(0, 43, 54, 0.8)',
+              backdropFilter: 'blur(4px)',
+            }}
+          >
+            <span style={{ fontSize: '18px', animation: 'bounce 1s infinite' }}>⚠️</span>
+            {(size === 'full' || size === 'micro') && (
+              <button
+                style={{
+                  fontSize: '9px',
+                  padding: '2px 8px',
+                  backgroundColor: '#dc322f',
+                  color: 'white',
+                  borderRadius: '4px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 500,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRetry();
+                }}
+              >
+                Retry
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Mini progress indicator for active steps */}
+        {step.status === 'active' && stepProgressPercent !== undefined && stepProgressPercent > 0 && (
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '2px',
+              backgroundColor: 'rgba(88, 110, 117, 0.3)',
+              overflow: 'hidden',
+            }}
+          >
+            <div
+              style={{
+                height: '100%',
+                backgroundColor: '#268bd2',
+                width: `${stepProgressPercent}%`,
+                transition: 'width 0.3s ease-out',
+              }}
+            />
+          </div>
+        )}
+      </ChevronStep>
+
+      {/* Icon + title floating above when NOT collapsed (micro and full sizes) */}
+      {(size === 'micro' || size === 'full') && !(effectiveExpandedId && !isExpanded) && (
+        <div
+          style={{
+            position: 'absolute',
+            top: size === 'full' ? '-32px' : '-20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 30,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: size === 'full' ? '4px' : '2px',
+          }}
+        >
+          {getStepIcon()}
+          <span
+            style={{
+              fontSize: size === 'full' ? '10px' : '8px',
+              fontWeight: 500,
+              whiteSpace: 'nowrap',
+              color: textColors[step.status],
+            }}
+          >
+            {getLabel()}
+          </span>
         </div>
       )}
-
-      </div>
     </div>
   );
 }
@@ -720,13 +649,13 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
       className={`
         bg-[#073642] border border-[#586e75] rounded overflow-visible
         ${size === 'nano' ? 'p-1' : size === 'micro' ? 'p-2' : 'p-2'}
-        ${size === 'full' ? 'pt-8' : ''}
+        ${size === 'full' ? 'pt-12' : size === 'micro' ? 'pt-10' : ''}
         ${className}
       `}
     >
       {/* Header - compact */}
       {size !== 'nano' && (
-        <div className="relative flex items-center justify-center mb-0.5 -mt-6">
+        <div className={`relative flex items-center justify-center mb-0.5 ${size === 'micro' ? '-mt-8' : '-mt-10'}`}>
           <p className={`line-clamp-1 w-full text-center mb-2 ${size === 'micro' ? 'text-[9px]' : 'text-[10px]'} text-[#93a1a1] font-medium ${effectiveExpandedId ? 'opacity-0' : ''}`}>
             {jobName}
           </p>

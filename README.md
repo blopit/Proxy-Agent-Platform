@@ -168,6 +168,17 @@ pap recommend
 
 ## 📚 Documentation
 
+### Backend Development (Start Here!)
+
+**New backend developer?** Follow this path:
+
+1. **[Backend Onboarding](BACKEND_ONBOARDING.md)** ⭐ Complete setup checklist (1-3 days)
+2. **[CLAUDE.md](CLAUDE.md)** ⭐ Development standards and TDD workflow (REQUIRED)
+3. **[Backend Guide](BACKEND_GUIDE.md)** Architecture, patterns, and workflows
+4. **[Naming Conventions](NAMING_CONVENTIONS.md)** Coding and database naming standards
+5. **[Backend Resources](BACKEND_RESOURCES.md)** Tools, libraries, and learning materials
+6. **[Backend Hub](docs/backend/README.md)** Central documentation index
+
 ### Quick Reference
 - [Installation Guide](docs/installation.md)
 - [API Documentation](docs/api/README.md)

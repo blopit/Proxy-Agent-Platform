@@ -850,13 +850,18 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 ## 🔗 Shared Components
 
 #### AsyncJobTimeline
-**Purpose**: Timeline visualization for async job processing
+**Purpose**: Timeline visualization for async job processing with SVG chevron steps
 **Location**: [`src/components/shared/AsyncJobTimeline.tsx`](src/components/shared/AsyncJobTimeline.tsx)
 **Key Props**:
 ```typescript
 interface AsyncJobTimelineProps {
-  job: AsyncJob
-  onStepClick?: (step: JobStep) => void
+  jobName: string
+  steps: JobStep[]
+  currentProgress: number  // 0-100
+  size?: 'full' | 'micro' | 'nano'
+  onStepClick?: (stepId: string) => void
+  onRetryStep?: (stepId: string) => void
+  showProgressBar?: boolean
 }
 ```
 **Usage**:
@@ -864,15 +869,116 @@ interface AsyncJobTimelineProps {
 import AsyncJobTimeline from '@/components/shared/AsyncJobTimeline'
 
 <AsyncJobTimeline
-  job={currentJob}
+  jobName="Send email to Sara"
+  steps={[
+    {
+      id: 'draft',
+      description: 'Draft email message',
+      shortLabel: 'Draft',
+      estimatedMinutes: 3,
+      leafType: 'HUMAN',
+      icon: '✍️',
+      status: 'done',
+    },
+    {
+      id: 'send',
+      description: 'Send via API',
+      shortLabel: 'Send',
+      estimatedMinutes: 0,
+      leafType: 'DIGITAL',
+      icon: '📧',
+      status: 'active',
+    },
+  ]}
+  currentProgress={75}
+  size="full"
+  showProgressBar={true}
   onStepClick={handleStepClick}
 />
 ```
 **Features**:
-- Step-by-step progress
-- Status indicators
-- Error state display
-- Interactive steps
+- Step-by-step progress with SVG chevrons
+- Three size variants (full: 64px, micro: 40px, nano: 32px)
+- Status indicators (pending, active, done, error)
+- Interactive step expansion/collapse
+- Hierarchical decomposition support
+- Progress bars for active steps
+- Solarized color palette
+- Smooth animations
+
+**Size Variants**:
+- `full` - Main task decomposition view (64px height, full details)
+- `micro` - Nested sub-tasks (40px height, icons float above)
+- `nano` - Minimal progress indicator (32px height, numbers only)
+
+---
+
+#### ChevronStep
+**Purpose**: SVG-based chevron shape for step progression visualization
+**Location**: [`src/components/mobile/ChevronStep.tsx`](src/components/mobile/ChevronStep.tsx)
+**Key Props**:
+```typescript
+interface ChevronStepProps {
+  status: 'pending' | 'active' | 'done' | 'error'
+  position: 'first' | 'middle' | 'last' | 'single'
+  size: 'full' | 'micro' | 'nano'
+  children?: ReactNode
+  onClick?: () => void
+  isExpanded?: boolean
+  width?: number | string
+}
+```
+**Usage**:
+```typescript
+import ChevronStep, { CollapsedChevron } from '@/components/mobile/ChevronStep'
+
+// Full content chevron
+<ChevronStep
+  status="active"
+  position="middle"
+  size="full"
+  onClick={handleClick}
+>
+  <span>Step content</span>
+</ChevronStep>
+
+// Collapsed variant (just step number)
+<CollapsedChevron
+  stepNumber={2}
+  status="pending"
+  position="last"
+  size="micro"
+/>
+```
+**Features**:
+- Clean SVG rendering with proper stroke-based borders
+- Four position variants (first, middle, last, single)
+- Four status variants with Solarized colors
+- Three size variants (full: 64px, micro: 40px, nano: 32px)
+- Smooth hover effects
+- Active state pulsing glow animation
+- Active state shimmer effect
+- Content slot for flexible layouts
+- Better browser compatibility than clip-path
+
+**Why SVG over clip-path?**
+- Crisp rendering across all browsers (especially mobile)
+- True stroke-based borders (no margin hacks)
+- Better performance with GPU acceleration
+- Easier to maintain and customize
+- No visual artifacts or rendering inconsistencies
+
+**Color Mapping (Solarized)**:
+- `pending`: Light cream fill (#fdf6e3), gray border (#586e75)
+- `active`: Cream fill (#eee8d5), blue border (#268bd2) + glow
+- `done`: Dark fill (#073642), green border (#859900)
+- `error`: Red fill (#dc322f), red border (#dc322f)
+
+**Position Shapes**:
+- `first`: Flat left edge, chevron point right →
+- `middle`: Chevron points on both sides >→<
+- `last`: Chevron point left, flat right edge ←
+- `single`: Flat rectangle (no chevron points)
 
 ---
 
