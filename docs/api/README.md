@@ -2,7 +2,47 @@
 
 Welcome to the comprehensive API documentation for the Proxy Agent Platform. This guide covers all available endpoints, authentication, request/response formats, and integration examples.
 
-## 📚 Table of Contents
+## 📚 Documentation Resources
+
+### 🎯 Quick Links
+- **[API Reference](./API_REFERENCE.md)** - Complete endpoint documentation (86 endpoints, all modules)
+- **[OpenAPI JSON](./openapi.json)** - Machine-readable OpenAPI 3.1 specification
+- **[OpenAPI YAML](./openapi.yaml)** - Human-readable OpenAPI specification
+- **[TypeScript Types](../../frontend/src/types/api-schemas.ts)** - Auto-generated type definitions
+
+### 🚀 Interactive Documentation
+- **Swagger UI**: `http://localhost:8000/docs` (FastAPI auto-generated)
+- **ReDoc**: `http://localhost:8000/redoc` (Alternative UI)
+- **OpenAPI JSON**: `http://localhost:8000/openapi.json` (Live spec)
+
+---
+
+## 📊 API Statistics
+
+- **Total Endpoints:** 86
+- **Total Schemas:** 76
+- **OpenAPI Version:** 3.1.0
+- **API Version:** 0.1.0
+
+### Endpoints by Module
+| Module | Endpoints | Description |
+|--------|-----------|-------------|
+| Simple Tasks | 20 | Simplified task operations |
+| Secretary | 10 | Intelligent organization |
+| Energy | 6 | Energy level tracking |
+| Progress | 6 | XP and analytics |
+| Gamification | 6 | Achievements and leaderboards |
+| Focus | 5 | Focus sessions & Pomodoro |
+| Tasks | 5 | Comprehensive task management |
+| Auth | 5 | Authentication |
+| Capture | 4 | Brain dump capture |
+| Rewards | 4 | Dopamine reward system |
+| Basic Tasks | 6 | Basic task operations |
+| Health | 9 | System health & monitoring |
+
+---
+
+## 📋 Table of Contents
 
 - [Authentication](#authentication)
 - [Core Agents API](#core-agents-api)
@@ -672,12 +712,26 @@ curl -X POST "https://api.proxyagent.dev/v1/agents/focus/sessions" \
 
 ## 🔗 Additional Resources
 
-- [OpenAPI Specification](openapi.yaml)
-- [Postman Collection](postman-collection.json)
-- [SDK Documentation](sdks/README.md)
-- [Integration Examples](examples/README.md)
-- [API Changelog](CHANGELOG.md)
+### Documentation Files
+- **[API_REFERENCE.md](./API_REFERENCE.md)** - Complete API reference with examples
+- **[openapi.json](./openapi.json)** - OpenAPI 3.1 specification (JSON)
+- **[openapi.yaml](./openapi.yaml)** - OpenAPI 3.1 specification (YAML)
+
+### TypeScript Integration
+- **[api-schemas.ts](../../frontend/src/types/api-schemas.ts)** - Auto-generated TypeScript types
+- Import into your frontend: `import type { paths, components } from '@/types/api-schemas'`
+
+### Tools & Testing
+- **Swagger UI**: `http://localhost:8000/docs`
+- **ReDoc**: `http://localhost:8000/redoc`
+- **Postman**: Import `http://localhost:8000/openapi.json`
+- **Insomnia**: Import `http://localhost:8000/openapi.json`
+
+### Frontend Integration Guide
+See **[API_PATTERNS.md](../../frontend/API_PATTERNS.md)** for frontend integration patterns and best practices.
 
 ---
 
-**Need help?** Contact our support team at [api-support@proxyagent.dev](mailto:api-support@proxyagent.dev) or check our [Developer Community](https://discord.gg/proxy-agent).
+**Last Updated:** October 24, 2025
+
+**Need help?** Open an issue on [GitHub](https://github.com/your-repo/issues) or check the [API Reference](./API_REFERENCE.md) for detailed examples.
