@@ -31,10 +31,19 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showMysteryTask, setShowMysteryTask] = useState(false);
   const [activeFilter, setActiveFilter] = useState<'all' | 'digital' | 'human' | 'urgent'>('all');
+  const [activeMode, setActiveMode] = useState<'discover' | 'organize'>('discover');
+
+  // Organize mode state
+  const [inboxTasks, setInboxTasks] = useState<Task[]>([]);
+  const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
+  const [swipedTask, setSwipedTask] = useState<{id: string, direction: 'left' | 'right'} | null>(null);
 
   useEffect(() => {
     fetchTasks();
-  }, [refreshTrigger]);
+    if (activeMode === 'organize') {
+      fetchInboxTasks();
+    }
+  }, [refreshTrigger, activeMode]);
 
   useEffect(() => {
     // 15% chance to show mystery task (ADHD: unpredictable rewards)
@@ -122,6 +131,93 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
     return [incompleteTasks[randomIndex]];
   };
 
+  // Organize mode functions
+  const fetchInboxTasks = async () => {
+    try {
+      // Fetch unprocessed tasks (tasks without tags, low priority, or recently created)
+      const response = await fetch(`${API_URL}/api/v1/tasks?user_id=mobile-user&status=TODO`);
+      if (response.ok) {
+        const data = await response.json();
+        const allTasks = data.tasks || data || [];
+        // Filter for "unprocessed" - no tags or priority not set
+        const unprocessed = allTasks.filter((t: Task) =>
+          (!t.tags || t.tags.length === 0) || t.priority === 'medium'
+        );
+        setInboxTasks(unprocessed);
+      } else {
+        // Fallback to mock data
+        setInboxTasks([
+          { task_id: '1', title: 'Add milk and eggs to grocery list', status: 'TODO', priority: 'medium', tags: [] },
+          { task_id: '2', title: 'Research best noise-canceling headphones', status: 'TODO', priority: 'medium', tags: [] },
+          { task_id: '3', title: 'Reply to that text I\'ve been avoiding', status: 'TODO', priority: 'medium', tags: [] },
+        ]);
+      }
+    } catch (error) {
+      console.warn('Failed to fetch inbox tasks:', error);
+      setInboxTasks([
+        { task_id: '1', title: 'Add milk and eggs to grocery list', status: 'TODO', priority: 'medium', tags: [] },
+        { task_id: '2', title: 'Research best noise-canceling headphones', status: 'TODO', priority: 'medium', tags: [] },
+        { task_id: '3', title: 'Reply to that text I\'ve been avoiding', status: 'TODO', priority: 'medium', tags: [] },
+      ]);
+    }
+  };
+
+  const toggleTaskSelection = (taskId: string) => {
+    setSelectedTasks(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(taskId)) {
+        newSet.delete(taskId);
+      } else {
+        newSet.add(taskId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSwipe = (taskId: string, direction: 'left' | 'right') => {
+    setSwipedTask({ id: taskId, direction });
+    // Auto-remove after animation
+    setTimeout(() => {
+      if (direction === 'right') {
+        // Keep as task (mark as high priority)
+        handleKeepTask(taskId);
+      } else {
+        // Archive/Delete
+        handleArchiveTask(taskId);
+      }
+      setSwipedTask(null);
+    }, 300);
+  };
+
+  const handleKeepTask = async (taskId: string) => {
+    // Update task to high priority
+    setInboxTasks(prev => prev.filter(t => t.task_id !== taskId || t.id?.toString() !== taskId));
+    // TODO: Call API to update task priority
+    console.log('Kept task:', taskId);
+  };
+
+  const handleArchiveTask = async (taskId: string) => {
+    // Remove from inbox
+    setInboxTasks(prev => prev.filter(t => t.task_id !== taskId || t.id?.toString() !== taskId));
+    // TODO: Call API to archive/delete task
+    console.log('Archived task:', taskId);
+  };
+
+  const handleBatchTag = (tag: string) => {
+    if (selectedTasks.size === 0) return;
+    // Apply tag to all selected tasks
+    console.log(`Applying tag "${tag}" to ${selectedTasks.size} tasks`);
+    // TODO: Call API to batch update tags
+    setSelectedTasks(new Set());
+  };
+
+  const handleBatchPriority = (priority: 'high' | 'medium' | 'low') => {
+    if (selectedTasks.size === 0) return;
+    console.log(`Setting priority "${priority}" for ${selectedTasks.size} tasks`);
+    // TODO: Call API to batch update priority
+    setSelectedTasks(new Set());
+  };
+
   if (isLoading && tasks.length === 0) {
     return (
       <div className="flex items-center justify-center h-full" style={{ backgroundColor: semanticColors.bg.primary }}>
@@ -154,38 +250,93 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
               Scout Mode
             </h2>
             <p style={{ fontSize: fontSize.xs, color: semanticColors.text.secondary }}>
-              Seek novelty & identify doable targets
+              {activeMode === 'discover' ? 'Seek novelty & identify doable targets' : 'Give everything a home'}
             </p>
           </div>
         </div>
 
-        {/* Filter Pills - 4px grid */}
-        <div className="flex" style={{ gap: spacing[2], marginBottom: spacing[3], overflowX: 'auto' }}>
-          {[
-            { key: 'all', label: 'All', icon: Search },
-            { key: 'digital', label: 'Digital', icon: Bot },
-            { key: 'urgent', label: 'Urgent', icon: Zap }
-          ].map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              onClick={() => setActiveFilter(key as any)}
-              className="flex items-center transition-all"
-              style={{
-                gap: spacing[1],
-                padding: `${spacing[1]} ${spacing[3]}`,
-                borderRadius: borderRadius.full,
-                fontSize: fontSize.xs,
-                backgroundColor: activeFilter === key ? semanticColors.accent.primary : semanticColors.bg.secondary,
-                color: activeFilter === key ? semanticColors.text.inverse : semanticColors.text.primary,
-                border: `1px solid ${activeFilter === key ? semanticColors.accent.primary : semanticColors.border.default}`,
-                whiteSpace: 'nowrap'
-              }}
-            >
-              <Icon size={12} />
-              <span>{label}</span>
-            </button>
-          ))}
+        {/* Mode Toggle Tabs */}
+        <div className="flex" style={{ gap: spacing[2], marginBottom: spacing[3] }}>
+          <button
+            onClick={() => setActiveMode('discover')}
+            className="flex-1 transition-all"
+            style={{
+              padding: `${spacing[2]} ${spacing[3]}`,
+              borderRadius: borderRadius.base,
+              fontSize: fontSize.xs,
+              fontWeight: '600',
+              backgroundColor: activeMode === 'discover' ? semanticColors.accent.primary : semanticColors.bg.secondary,
+              color: activeMode === 'discover' ? semanticColors.text.inverse : semanticColors.text.primary,
+              border: `1px solid ${activeMode === 'discover' ? semanticColors.accent.primary : semanticColors.border.default}`
+            }}
+          >
+            🔍 Discover
+          </button>
+          <button
+            onClick={() => setActiveMode('organize')}
+            className="flex-1 transition-all relative"
+            style={{
+              padding: `${spacing[2]} ${spacing[3]}`,
+              borderRadius: borderRadius.base,
+              fontSize: fontSize.xs,
+              fontWeight: '600',
+              backgroundColor: activeMode === 'organize' ? semanticColors.accent.primary : semanticColors.bg.secondary,
+              color: activeMode === 'organize' ? semanticColors.text.inverse : semanticColors.text.primary,
+              border: `1px solid ${activeMode === 'organize' ? semanticColors.accent.primary : semanticColors.border.default}`
+            }}
+          >
+            📋 Organize
+            {inboxTasks.length > 0 && activeMode !== 'organize' && (
+              <span
+                className="absolute -top-1 -right-1 rounded-full"
+                style={{
+                  width: spacing[4],
+                  height: spacing[4],
+                  backgroundColor: semanticColors.accent.warning,
+                  color: semanticColors.text.inverse,
+                  fontSize: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 'bold'
+                }}
+              >
+                {inboxTasks.length}
+              </span>
+            )}
+          </button>
         </div>
+
+        {/* Discover Mode Content */}
+        {activeMode === 'discover' && (
+          <>
+            {/* Filter Pills - 4px grid */}
+            <div className="flex" style={{ gap: spacing[2], marginBottom: spacing[3], overflowX: 'auto' }}>
+              {[
+                { key: 'all', label: 'All', icon: Search },
+                { key: 'digital', label: 'Digital', icon: Bot },
+                { key: 'urgent', label: 'Urgent', icon: Zap }
+              ].map(({ key, label, icon: Icon }) => (
+                <button
+                  key={key}
+                  onClick={() => setActiveFilter(key as any)}
+                  className="flex items-center transition-all"
+                  style={{
+                    gap: spacing[1],
+                    padding: `${spacing[1]} ${spacing[3]}`,
+                    borderRadius: borderRadius.full,
+                    fontSize: fontSize.xs,
+                    backgroundColor: activeFilter === key ? semanticColors.accent.primary : semanticColors.bg.secondary,
+                    color: activeFilter === key ? semanticColors.text.inverse : semanticColors.text.primary,
+                    border: `1px solid ${activeFilter === key ? semanticColors.accent.primary : semanticColors.border.default}`,
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <Icon size={12} />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
 
         {/* Progress Bar - 4px grid */}
         <div style={{ marginBottom: spacing[3], padding: spacing[2], backgroundColor: semanticColors.bg.secondary, borderRadius: borderRadius.base, border: `1px solid ${semanticColors.border.default}` }}>
@@ -240,8 +391,6 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
             />
           </div>
         )}
-
-      </div>
 
       {/* Continuous Feed - All Categories */}
       <div className="flex flex-col" style={{ paddingBottom: spacing[20] }}>
@@ -308,6 +457,203 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
           </p>
         </div>
       )}
+          </>
+        )}
+
+        {/* Organize Mode - Inbox Processing */}
+        {activeMode === 'organize' && (
+          <div style={{ paddingTop: spacing[4], paddingBottom: spacing[20] }}>
+            {/* Inbox Header */}
+            <div style={{ marginBottom: spacing[4] }}>
+              <h3 style={{ fontSize: fontSize.base, fontWeight: 'bold', color: semanticColors.text.primary, marginBottom: spacing[1] }}>
+                📥 Inbox ({inboxTasks.length})
+              </h3>
+              <p style={{ fontSize: fontSize.xs, color: semanticColors.text.secondary }}>
+                Swipe right to keep, left to archive
+              </p>
+            </div>
+
+          {/* Batch Actions Toolbar */}
+          {selectedTasks.size > 0 && (
+            <div
+              className="flex items-center flex-wrap"
+              style={{
+                gap: spacing[2],
+                marginBottom: spacing[4],
+                padding: spacing[3],
+                backgroundColor: semanticColors.accent.primary,
+                borderRadius: borderRadius.base,
+                border: `1px solid ${semanticColors.accent.primary}`
+              }}
+            >
+              <span style={{ fontSize: fontSize.xs, color: semanticColors.text.inverse, fontWeight: 'bold' }}>
+                {selectedTasks.size} selected
+              </span>
+              <button
+                onClick={() => handleBatchPriority('high')}
+                style={{
+                  padding: `${spacing[1]} ${spacing[2]}`,
+                  borderRadius: borderRadius.base,
+                  fontSize: fontSize.xs,
+                  backgroundColor: semanticColors.accent.error,
+                  color: semanticColors.text.inverse,
+                  border: 'none',
+                  fontWeight: '600'
+                }}
+              >
+                🔥 High Priority
+              </button>
+              <button
+                onClick={() => handleBatchTag('🎯 Focus')}
+                style={{
+                  padding: `${spacing[1]} ${spacing[2]}`,
+                  borderRadius: borderRadius.base,
+                  fontSize: fontSize.xs,
+                  backgroundColor: semanticColors.bg.secondary,
+                  color: semanticColors.text.primary,
+                  border: `1px solid ${semanticColors.border.default}`,
+                  fontWeight: '600'
+                }}
+              >
+                + Tag
+              </button>
+              <button
+                onClick={() => setSelectedTasks(new Set())}
+                style={{
+                  padding: `${spacing[1]} ${spacing[2]}`,
+                  borderRadius: borderRadius.base,
+                  fontSize: fontSize.xs,
+                  backgroundColor: 'transparent',
+                  color: semanticColors.text.inverse,
+                  border: `1px solid ${semanticColors.text.inverse}`,
+                  fontWeight: '600'
+                }}
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
+          {/* Inbox Task List */}
+          <div className="space-y-3">
+            {inboxTasks.length > 0 ? (
+              inboxTasks.map((task, index) => {
+                const taskId = task.task_id || task.id?.toString() || `task-${index}`;
+                const isSelected = selectedTasks.has(taskId);
+                const isSwiped = swipedTask?.id === taskId;
+
+                return (
+                  <div
+                    key={taskId}
+                    className="transition-all duration-300"
+                    style={{
+                      transform: isSwiped
+                        ? swipedTask?.direction === 'right'
+                          ? 'translateX(100px)'
+                          : 'translateX(-100px)'
+                        : 'translateX(0)',
+                      opacity: isSwiped ? 0.5 : 1,
+                      marginBottom: spacing[2]
+                    }}
+                  >
+                    <div
+                      onClick={() => toggleTaskSelection(taskId)}
+                      className="flex items-center"
+                      style={{
+                        gap: spacing[3],
+                        padding: spacing[3],
+                        backgroundColor: isSelected ? `${semanticColors.accent.primary}20` : semanticColors.bg.secondary,
+                        borderRadius: borderRadius.base,
+                        border: `2px solid ${isSelected ? semanticColors.accent.primary : semanticColors.border.default}`,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {/* Checkbox */}
+                      <div
+                        style={{
+                          width: spacing[5],
+                          height: spacing[5],
+                          borderRadius: borderRadius.base,
+                          border: `2px solid ${isSelected ? semanticColors.accent.primary : semanticColors.border.default}`,
+                          backgroundColor: isSelected ? semanticColors.accent.primary : 'transparent',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}
+                      >
+                        {isSelected && <span style={{ color: semanticColors.text.inverse, fontSize: '12px' }}>✓</span>}
+                      </div>
+
+                      {/* Task Content */}
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: fontSize.sm, color: semanticColors.text.primary, fontWeight: '500' }}>
+                          {task.title}
+                        </p>
+                        {task.description && (
+                          <p style={{ fontSize: fontSize.xs, color: semanticColors.text.secondary, marginTop: spacing[1] }}>
+                            {task.description}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Swipe Buttons */}
+                      <div className="flex" style={{ gap: spacing[2], flexShrink: 0 }}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSwipe(taskId, 'left');
+                          }}
+                          style={{
+                            padding: spacing[2],
+                            borderRadius: borderRadius.base,
+                            backgroundColor: semanticColors.accent.error,
+                            color: semanticColors.text.inverse,
+                            border: 'none',
+                            fontSize: fontSize.xs
+                          }}
+                        >
+                          🗑️
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSwipe(taskId, 'right');
+                          }}
+                          style={{
+                            padding: spacing[2],
+                            borderRadius: borderRadius.base,
+                            backgroundColor: semanticColors.accent.success,
+                            color: semanticColors.text.inverse,
+                            border: 'none',
+                            fontSize: fontSize.xs
+                          }}
+                        >
+                          ✓
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div
+                className="flex flex-col items-center justify-center"
+                style={{ padding: spacing[8], textAlign: 'center' }}
+              >
+                <div style={{ fontSize: '64px', marginBottom: spacing[3] }}>🎉</div>
+                <h3 style={{ fontSize: fontSize.lg, fontWeight: 'bold', color: semanticColors.text.primary, marginBottom: spacing[2] }}>
+                  Inbox Zero!
+                </h3>
+                <p style={{ fontSize: fontSize.sm, color: semanticColors.text.secondary }}>
+                  Everything has a home. Great work!
+                </p>
+              </div>
+            )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

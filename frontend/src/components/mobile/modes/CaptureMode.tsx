@@ -39,29 +39,29 @@ const CapturePage: React.FC<CapturePageProps> = React.memo(({
 
   return (
     <div className="h-full flex flex-col" style={{ backgroundColor: semanticColors.bg.primary }}>
-      {/* Top Content - Scrollable - 4px grid */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto" style={{ padding: spacing[4], minHeight: '300px', paddingBottom: '180px' }}>
-        {/* Recent Captures - 4px grid */}
+      {/* Scrollable Content - Recent Captures at top, Suggestions at bottom */}
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto" style={{ padding: spacing[4], paddingBottom: '200px' }}>
+        {/* Recent Captures */}
         {recentCaptures.length > 0 && (
-          <div style={{ marginBottom: spacing[2] }}>
-            <div className="flex items-center" style={{ gap: spacing[2], marginBottom: spacing[1] }}>
+          <div style={{ marginBottom: spacing[6] }}>
+            <div className="flex items-center" style={{ gap: spacing[2], marginBottom: spacing[2] }}>
               <Clock size={iconSize.sm} style={{ color: semanticColors.text.secondary }} />
-              <h3 style={{ fontSize: fontSize.xs, color: semanticColors.text.secondary, fontWeight: 'bold' }}>
+              <h3 style={{ fontSize: fontSize.sm, color: semanticColors.text.secondary, fontWeight: 'bold' }}>
                 Recent
               </h3>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
-              {recentCaptures.slice(0, 2).map((capture, index) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+              {recentCaptures.map((capture, index) => (
                 <div
                   key={index}
                   style={{
-                    padding: spacing[2],
+                    padding: spacing[3],
                     backgroundColor: semanticColors.bg.secondary,
-                    borderRadius: borderRadius.sm,
+                    borderRadius: borderRadius.md,
                     border: `1px solid ${semanticColors.border.default}`
                   }}
                 >
-                  <p className="line-clamp-1" style={{ fontSize: fontSize.xs, color: semanticColors.text.secondary }}>
+                  <p style={{ fontSize: fontSize.sm, color: semanticColors.text.primary }}>
                     {capture}
                   </p>
                 </div>
@@ -70,35 +70,21 @@ const CapturePage: React.FC<CapturePageProps> = React.memo(({
           </div>
         )}
 
-        {/* Suggestions - sticky at bottom of scrollable area */}
+        {/* Suggestions - scrolls with content, appears at bottom */}
         {suggestionsVisible && suggestionExamples.length > 0 && (
-          <div
-            style={{
-              position: 'sticky',
-              bottom: 0,
-              backgroundColor: semanticColors.bg.primary,
-              borderTop: `1px solid ${semanticColors.border.default}`,
-              paddingTop: spacing[3],
-              paddingBottom: spacing[4],
-              paddingLeft: spacing[4],
-              paddingRight: spacing[4],
-              marginLeft: `-${spacing[4]}`,
-              marginRight: `-${spacing[4]}`,
-              marginBottom: `-${spacing[4]}`
-            }}
-          >
+          <div style={{ marginTop: 'auto', paddingTop: spacing[4] }}>
             {/* Suggestion label ticker */}
-            <div style={{ marginBottom: spacing[2] }}>
+            <div style={{ marginBottom: spacing[3] }}>
               <Ticker
                 messages={suggestionLabels}
                 intervalMin={6000}
                 intervalMax={10000}
-                className="text-[#586e75] font-semibold uppercase tracking-wide"
+                className="text-[#586e75] font-semibold uppercase tracking-wide text-xs"
               />
             </div>
 
             {/* Suggestion examples - 3 tickers */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[1] }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
               {[0, 1, 2].map((index) => (
                 <button
                   key={index}
@@ -110,12 +96,12 @@ const CapturePage: React.FC<CapturePageProps> = React.memo(({
                   }}
                   className="text-left hover:bg-[#002b36] hover:border-[#2aa198] transition-all"
                   style={{
-                    padding: spacing[2],
+                    padding: spacing[3],
                     backgroundColor: semanticColors.bg.secondary,
-                    borderRadius: borderRadius.sm,
-                    fontSize: fontSize.xs,
+                    borderRadius: borderRadius.md,
+                    fontSize: fontSize.sm,
                     border: `1px solid ${semanticColors.border.default}`,
-                    minHeight: '32px',
+                    minHeight: '44px',
                     display: 'flex',
                     alignItems: 'center'
                   }}
@@ -132,7 +118,6 @@ const CapturePage: React.FC<CapturePageProps> = React.memo(({
           </div>
         )}
       </div>
-
     </div>
   );
 });

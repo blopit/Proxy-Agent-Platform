@@ -599,7 +599,7 @@ export default function MobileApp() {
 
   return (
     <div style={{ minHeight: '100vh', background: semanticColors.bg.primary, color: semanticColors.text.primary }}>
-      {/* Top bar with capture textarea - only show for non-capture modes */}
+      {/* Top bar with capture textarea - only show for non-capture modes (Search, Hunt, Rest, Plan) */}
       {mode !== 'capture' && (
       <div style={{ position: 'sticky', top: 0, zIndex: zIndex.sticky, padding: spacing[3] }}>
         <div style={{ position: 'relative' }}>
@@ -871,7 +871,7 @@ export default function MobileApp() {
       )}
 
       {/* Main content area */}
-      <div style={{ height: mode === 'capture' ? 'calc(100vh - 250px)' : 'calc(100vh - 170px)', overflowY: 'auto' }}>
+      <div style={{ height: mode === 'capture' ? 'calc(100vh - 200px)' : 'calc(100vh - 170px)', overflowY: 'auto' }}>
         {/* Thin progress bar at top - messenger style */}
         {showCaptureJob && captureProgress > 0 && captureProgress < 100 && (
           <div style={{
@@ -952,184 +952,120 @@ export default function MobileApp() {
         </ErrorBoundary>
       </div>
 
-      {/* Capture mode: textarea above tabs */}
+      {/* Capture mode: Simple messaging-app style layout */}
       {mode === 'capture' && (
         <div style={{
           position: 'fixed',
           left: 0,
           right: 0,
-          bottom: 78, // Above tabs (tab height ~70px)
-          padding: spacing[3],
+          bottom: 60, // Above tabs (smaller tab height now)
           backgroundColor: semanticColors.bg.primary,
-          borderTop: `1px solid ${semanticColors.bg.secondary}`,
+          borderTop: `1px solid ${semanticColors.border.default}`,
           zIndex: zIndex.fixed
         }}>
-          {/* Toggle chips - above textarea in capture mode */}
-          <div style={{ display: 'flex', gap: spacing[1], marginBottom: spacing[2] }}>
-            {/* Active Agent Indicator (always on) */}
-            {AGENT_CONFIG[mode] && (
-              <div
-                className="flex items-center transition-all hover:scale-105"
-                style={{
-                  gap: spacing[1],
-                  padding: `${spacing[1]} ${spacing[3]}`,
-                  borderRadius: borderRadius.pill,
-                  backgroundColor: AGENT_CONFIG[mode].color,
-                  color: semanticColors.text.inverse,
-                  border: `1px solid ${AGENT_CONFIG[mode].color}`,
-                  boxShadow: coloredShadow(AGENT_CONFIG[mode].color),
-                  fontWeight: 'bold'
-                }}
-              >
-                {React.createElement(AGENT_CONFIG[mode].icon, { size: iconSize.sm })}
-              </div>
-            )}
-            <label
-              className="flex items-center cursor-pointer transition-all active:scale-95 hover:scale-105"
+          {/* Toggle chips */}
+          <div style={{ padding: `${spacing[2]} ${spacing[3]} ${spacing[1]} ${spacing[3]}`, display: 'flex', gap: spacing[1] }}>
+            {/* Active Agent Indicator */}
+            <div
+              className="flex items-center"
               style={{
                 gap: spacing[1],
-                padding: `${spacing[1]} ${spacing[3]}`,
+                padding: `${spacing[1]} ${spacing[2]}`,
                 borderRadius: borderRadius.pill,
-                backgroundColor: autoMode ? colors.cyan : `${colors.base02}CC`,
-                color: autoMode ? semanticColors.text.inverse : semanticColors.text.primary,
-                border: `1px solid ${autoMode ? colors.cyan : `${colors.base01}80`}`,
-                boxShadow: autoMode ? coloredShadow(colors.cyan, '30') : shadow.sm,
-                opacity: autoMode ? 1 : 0.8
+                backgroundColor: colors.cyan,
+                color: semanticColors.text.inverse,
+                border: `1px solid ${colors.cyan}`,
+                fontSize: fontSize.xs
               }}
             >
-              <input type="checkbox" className="hidden" checked={autoMode} onChange={(e) => {
-                setAutoMode(e.target.checked);
-                setTickerPaused(true);
-                setTimeout(() => setTickerPaused(false), animation.togglePause);
-              }} />
-              <Bot size={iconSize.sm} />
+              <Camera size={iconSize.xs} />
+              <span style={{ fontWeight: '600' }}>Capture</span>
+            </div>
+            <label
+              className="flex items-center cursor-pointer transition-all active:scale-95"
+              style={{
+                padding: `${spacing[1]} ${spacing[2]}`,
+                borderRadius: borderRadius.pill,
+                backgroundColor: autoMode ? colors.cyan : semanticColors.bg.secondary,
+                color: autoMode ? semanticColors.text.inverse : semanticColors.text.secondary,
+                border: `1px solid ${autoMode ? colors.cyan : semanticColors.border.default}`
+              }}
+            >
+              <input type="checkbox" className="hidden" checked={autoMode} onChange={(e) => setAutoMode(e.target.checked)} />
+              <Bot size={iconSize.xs} />
             </label>
             <label
-              className="flex items-center cursor-pointer transition-all active:scale-95 hover:scale-105"
+              className="flex items-center cursor-pointer transition-all active:scale-95"
               style={{
-                gap: spacing[1],
-                padding: `${spacing[1]} ${spacing[3]}`,
+                padding: `${spacing[1]} ${spacing[2]}`,
                 borderRadius: borderRadius.pill,
-                backgroundColor: askForClarity ? colors.blue : `${colors.base02}CC`,
-                color: askForClarity ? semanticColors.text.inverse : semanticColors.text.primary,
-                border: `1px solid ${askForClarity ? colors.blue : `${colors.base01}80`}`,
-                boxShadow: askForClarity ? coloredShadow(colors.blue, '30') : shadow.sm,
-                opacity: askForClarity ? 1 : 0.8
+                backgroundColor: askForClarity ? colors.blue : semanticColors.bg.secondary,
+                color: askForClarity ? semanticColors.text.inverse : semanticColors.text.secondary,
+                border: `1px solid ${askForClarity ? colors.blue : semanticColors.border.default}`
               }}
             >
-              <input type="checkbox" className="hidden" checked={askForClarity} onChange={(e) => {
-                setAskForClarity(e.target.checked);
-                setTickerPaused(true);
-                setTimeout(() => setTickerPaused(false), animation.togglePause);
-              }} />
-              <MessageCircle size={iconSize.sm} />
+              <input type="checkbox" className="hidden" checked={askForClarity} onChange={(e) => setAskForClarity(e.target.checked)} />
+              <MessageCircle size={iconSize.xs} />
             </label>
           </div>
 
-          {/* Expanded textarea */}
-          <div style={{ position: 'relative' }}>
+          {/* Textarea */}
+          <div style={{ padding: `0 ${spacing[3]} ${spacing[2]} ${spacing[3]}`, position: 'relative' }}>
             <textarea
               value={chat || interimTranscript}
               onChange={(e) => {
                 setChat(e.target.value);
-                setWasVoiceInput(false); // Reset voice flag when typing manually
+                setWasVoiceInput(false);
               }}
-              placeholder=""
+              placeholder="What's on your mind?"
               className="w-full resize-none focus:outline-none"
               style={{
-                height: spacing[24], // Expanded height (96px)
+                height: spacing[16],
                 backgroundColor: semanticColors.bg.secondary,
                 color: interimTranscript && !chat ? semanticColors.text.secondary : semanticColors.text.primary,
                 borderRadius: borderRadius.lg,
-                border: `2px solid ${isListening ? colors.magenta : semanticColors.border.accent}`,
-                fontSize: fontSize.sm,
+                border: `1px solid ${isListening ? colors.magenta : semanticColors.border.accent}`,
+                fontSize: fontSize.base,
                 padding: `${spacing[3]} ${spacing[12]} ${spacing[3]} ${spacing[3]}`,
-                lineHeight: 1.5,
                 fontStyle: interimTranscript && !chat ? 'italic' : 'normal'
               }}
               disabled={isProcessing || isListening}
             />
-
-            {/* Dynamic Ticker Placeholder */}
-            {!chat && !interimTranscript && !isListening && (
-              <div
-                className="absolute pointer-events-none"
-                style={{
-                  top: spacing[3],
-                  left: spacing[3],
-                  maxWidth: 'calc(100% - 60px)',
-                  overflow: 'hidden'
-                }}
-              >
-                <Ticker
-                  autoMode={autoMode}
-                  askForClarity={askForClarity}
-                  isPaused={tickerPaused}
-                  mode={mode}
-                  className="text-[#586e75]"
-                />
-              </div>
-            )}
-
             <button
               onClick={handleButtonClick}
               disabled={isProcessing}
               className="absolute flex items-center justify-center transition-all"
               style={{
-                top: spacing[2],
-                right: spacing[2],
-                width: spacing[10],
-                height: spacing[10],
-                borderRadius: borderRadius.pill,
-                background: chat.trim() && !isProcessing ? semanticColors.accent.primary :
+                bottom: spacing[3],
+                right: spacing[4],
+                width: spacing[9],
+                height: spacing[9],
+                borderRadius: borderRadius.full,
+                background: chat.trim() && !isProcessing ? colors.cyan :
                            isListening ? colors.magenta :
-                           semanticColors.bg.secondary,
-                color: chat.trim() && !isProcessing ? semanticColors.text.inverse :
-                       isListening ? semanticColors.text.inverse :
-                       semanticColors.text.secondary,
-                border: `1px solid ${isListening ? colors.magenta : semanticColors.text.secondary}`,
+                           semanticColors.bg.tertiary,
+                color: semanticColors.text.inverse,
+                border: 'none',
                 cursor: isProcessing ? 'not-allowed' : 'pointer',
-                boxShadow: isListening ? coloredShadow(colors.magenta, '30') : 'none'
+                boxShadow: isListening ? `0 0 12px ${colors.magenta}` : 'none'
               }}
             >
               {isProcessing ? (
-                <Bot size={iconSize.base} className="animate-pulse" />
+                <Bot size={iconSize.sm} className="animate-pulse" />
               ) : isListening ? (
-                <Square size={iconSize.base} className="animate-pulse" fill="currentColor" />
+                <Square size={iconSize.sm} className="animate-pulse" fill="currentColor" />
               ) : chat.trim() ? (
-                <ArrowUp size={iconSize.base} />
+                <ArrowUp size={iconSize.sm} />
               ) : (
-                <Mic size={iconSize.base} />
+                <Mic size={iconSize.sm} />
               )}
             </button>
           </div>
-
-          {/* Capture progress timeline - shows during and briefly after processing */}
-          {showCaptureJob && captureSteps.length > 0 && (
-            <div style={{
-              paddingTop: spacing[3],
-              marginLeft: `-${spacing[3]}`,
-              marginRight: `-${spacing[3]}`,
-              paddingLeft: spacing[3],
-              paddingRight: spacing[3]
-            }}>
-              <AsyncJobTimeline
-                jobName={capturingTaskName || 'Capturing task...'}
-                steps={captureSteps}
-                currentProgress={captureProgress}
-                size="full"
-                showProgressBar={false}
-              />
-            </div>
-          )}
-
-          {/* Spacer to add breathing room above tabs */}
-          <div style={{ height: spacing[4] }} />
         </div>
       )}
 
       {/* Bottom tabs */}
-      <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, padding: `${spacing[2]} 0`, zIndex: zIndex.fixed }}>
+      <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, padding: `${spacing[1]} 0`, backgroundColor: semanticColors.bg.primary, borderTop: `1px solid ${semanticColors.border.default}`, zIndex: zIndex.fixed }}>
         <BiologicalTabs
           activeTab={mode}
           onTabChange={(t) => setMode(t as Mode)}

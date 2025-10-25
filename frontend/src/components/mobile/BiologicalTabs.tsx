@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search, Target, Heart, Map, Camera } from 'lucide-react';
-import PurposeTicker from './PurposeTicker';
-import { getBatteryColor } from '../../utils/colorBlending';
 
 interface BiologicalTabsProps {
   activeTab: string;
@@ -110,116 +108,11 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
     }
   }, [activeTab, timeOfDay, energy]);
 
-  // Get neuro-clock recommendation
-  const getNeuroClockRecommendation = () => {
-    if (timeOfDay === 'morning') {
-      return 'Scout → Hunter heavy (optimal dopamine window)';
-    } else if (timeOfDay === 'afternoon') {
-      return 'Mender micro-bursts recommended';
-    } else if (timeOfDay === 'evening') {
-      return 'Mapper reflections (consolidation time)';
-    } else {
-      return 'Rest mode - minimal cognitive load';
-    }
-  };
-
-  // Breathing circle animation for active tab
-  const getBreathingAnimation = (circuitId: string) => {
-    if (activeTab === circuitId) {
-      return 'animate-pulse';
-    }
-    return '';
-  };
 
   return (
     <div className="w-full">
-      <style jsx>{`
-        @keyframes shine {
-          0% { 
-            opacity: 0; 
-            transform: translateX(-100%); 
-          }
-          50% { 
-            opacity: 1; 
-            transform: translateX(0%); 
-          }
-          100% { 
-            opacity: 0; 
-            transform: translateX(100%); 
-          }
-        }
-        .shine-effect {
-          animation: shine 3s ease-in-out infinite;
-        }
-      `}</style>
-      {/* Mode description bar */}
-      <div className="flex items-center justify-between px-4 mb-2">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="min-w-0 flex-1">
-            <PurposeTicker 
-              activeTab={activeTab}
-              energy={energy}
-              timeOfDay={timeOfDay}
-              className="text-[#586e75]"
-            />
-          </div>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* iPhone-style Battery Symbol */}
-          <div className="flex items-center gap-0.5">
-            {/* Battery body */}
-            <div
-              className="relative"
-              style={{
-                width: '26px',
-                height: '12px',
-                border: '1.5px solid rgba(147, 161, 161, 0.6)',
-                borderRadius: '3px',
-                backgroundColor: '#002b36',
-                padding: '1px'
-              }}
-            >
-              {/* Battery fill - colored energy (left-aligned with 1px margin and rounded) */}
-              <div
-                className="transition-all duration-300 ease-out"
-                style={{
-                  height: '100%',
-                  width: `${energy}%`,
-                  borderRadius: '1.5px',
-                  backgroundColor: getBatteryColor(energy),
-                  opacity: energy < 10 ? 0.8 : 1
-                }}
-              />
-            </div>
-
-            {/* Battery terminal (positive tip) */}
-            <div
-              style={{
-                width: '2px',
-                height: '6px',
-                backgroundColor: 'rgba(147, 161, 161, 0.6)',
-                borderRadius: '0 1px 1px 0'
-              }}
-            />
-
-            {/* Energy percentage text */}
-            <span
-              style={{
-                color: '#93a1a1',
-                fontSize: '11px',
-                fontWeight: '600',
-                marginLeft: '4px',
-                fontFamily: '-apple-system, BlinkMacSystemFont, system-ui, sans-serif'
-              }}
-            >
-              {energy}%
-            </span>
-          </div>
-        </div>
-      </div>
-
       {/* Bottom Navigation Tabs - Fill entire row with 5 tabs */}
-      <div className="flex items-center justify-center gap-1 px-2">
+      <div className="flex items-center justify-center gap-0.5 px-1.5">
         {circuits.map((circuit) => {
           const IconComponent = circuit.icon;
           return (
@@ -227,27 +120,27 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
               key={circuit.id}
               onClick={() => onTabChange(circuit.id)}
               className={`
-                relative flex-1 py-3 px-1 rounded-xl transition-all duration-300
+                relative flex-1 py-1.5 px-0.5 rounded-lg transition-all duration-300
                 ${activeTab === circuit.id
                   ? 'bg-[#268bd2] text-[#fdf6e3] shadow-lg scale-105'
                   : 'bg-[#073642] text-[#586e75] border border-[#586e75]'
                 }
-                ${circuit.isOptimal && circuit.id !== 'capture' ? 'ring-2 ring-[#b58900] ring-opacity-50' : ''}
+                ${circuit.isOptimal && circuit.id !== 'capture' ? 'ring-1 ring-[#b58900] ring-opacity-50' : ''}
                 ${pulseAnimation === circuit.id ? 'animate-pulse' : ''}
               `}
             >
               {/* Optimal indicator (not for capture since it's always optimal) */}
               {circuit.isOptimal && circuit.id !== 'capture' && (
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-[#b58900] rounded-full animate-ping" />
+                <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-[#b58900] rounded-full animate-ping" />
               )}
 
               {/* Circuit icon */}
-              <div className="flex justify-center mb-1">
-                <IconComponent size={18} className="transition-transform duration-300" />
+              <div className="flex justify-center mb-0.5">
+                <IconComponent size={14} className="transition-transform duration-300" />
               </div>
 
               {/* Circuit name */}
-              <div className="text-xs font-medium text-center whitespace-nowrap">
+              <div className="text-[10px] font-medium text-center whitespace-nowrap">
                 {circuit.name}
               </div>
             </button>

@@ -21,8 +21,47 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, CheckCircle2, Circle, Loader2, AlertCircle, User, Bot, FileText } from 'lucide-react';
 import ProgressBar from './ProgressBar';
+
+// OpenMoji component for consistent emoji rendering
+const OpenMoji = ({ emoji, size = 16, className = '', variant = 'black' }: {
+  emoji: string;
+  size?: number;
+  className?: string;
+  variant?: 'color' | 'black';
+}) => {
+  // Convert emoji to Unicode hex code point (handles multi-byte emojis)
+  const getHexCode = (emoji: string) => {
+    const codePoint = emoji.codePointAt(0);
+    if (!codePoint) return '';
+    // Pad to at least 4 digits, but allow more for emojis that need it
+    const hex = codePoint.toString(16).toUpperCase();
+    return hex.length < 4 ? hex.padStart(4, '0') : hex;
+  };
+
+  const hexCode = getHexCode(emoji);
+  // Use OpenMoji CDN with black (line art) or color version
+  const cdnUrl = `https://cdn.jsdelivr.net/npm/openmoji@15.0.0/${variant}/svg/${hexCode}.svg`;
+
+  return (
+    <img
+      src={cdnUrl}
+      alt={emoji}
+      width={size}
+      height={size}
+      className={className}
+      style={{ display: 'inline-block' }}
+      onError={(e) => {
+        // Fallback to showing the emoji text if SVG fails to load
+        const target = e.target as HTMLImageElement;
+        target.style.display = 'none';
+        const fallback = document.createTextNode(emoji);
+        target.parentNode?.appendChild(fallback);
+      }}
+    />
+  );
+};
 
 // ============================================================================
 // Types
@@ -58,6 +97,7 @@ export interface AsyncJobTimelineProps {
   steps: JobStep[];
   currentProgress: number;          // 0-100
   size?: TimelineSize;
+  tab?: boolean;                    // Default: true. When false, icon floats on top border
   onClose?: () => void;
   onDismiss?: () => void;           // For task previews - shows [×] to remove
   onStepClick?: (stepId: string) => void;
@@ -127,9 +167,11 @@ function calculateStepWidths(
 interface StepSectionProps {
   step: JobStep;
   index: number;
+  totalSteps: number;
   width: number;
   isExpanded: boolean;
   size: TimelineSize;
+  tab: boolean;
   onClick: () => void;
   stepProgressPercent?: number; // 0-100 for this specific step
   onRetry?: () => void;
@@ -139,58 +181,36 @@ interface StepSectionProps {
   hasNestedContent?: boolean; // True if showing decomposition job or children
 }
 
-function StepSection({ step, index, width, isExpanded, size, onClick, stepProgressPercent, onRetry, effectiveExpandedId, totalDurationText, loadingChildren, hasNestedContent }: StepSectionProps) {
-  const statusColors = {
-    pending: 'bg-[#073642] border-[#586e75]',
-    active: 'bg-gradient-to-br from-[#268bd2]/30 to-[#268bd2]/10 border-[#268bd2] shadow-[0_0_12px_rgba(38,139,210,0.6)]',
-    done: 'bg-gradient-to-br from-[#859900]/30 to-[#859900]/10 border-[#859900] shadow-[0_0_8px_rgba(133,153,0,0.4)]',
-    error: 'bg-gradient-to-br from-[#dc322f]/30 to-[#dc322f]/10 border-[#dc322f] shadow-[0_0_12px_rgba(220,50,47,0.6)]',
-  };
-
+function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, onClick, stepProgressPercent, onRetry, effectiveExpandedId, totalDurationText, loadingChildren, hasNestedContent }: StepSectionProps) {
+  // Text colors for Solarized backgrounds
   const textColors = {
-    pending: 'text-[#586e75]',
-    active: 'text-[#268bd2]',
-    done: 'text-[#859900]',
-    error: 'text-[#dc322f]',
+    pending: 'text-[#073642]',      // Solarized base02 (darker, more visible on light)
+    active: 'text-[#268bd2] font-semibold',  // Solarized blue (pops on cream)
+    done: 'text-[#93a1a1]',         // Solarized base1 (light on dark)
+    error: 'text-white font-semibold',
   };
 
-  const getIcon = () => {
-    // Always return the custom emoji if available, otherwise default icons
-    if (step.icon) return step.icon;
+  const getStepIcon = () => {
+    const iconSize = isExpanded ? 32 : 24;
 
-    // Fallback icons based on leaf type
-    if (step.leafType === 'DIGITAL') return '🤖';
-    if (step.leafType === 'HUMAN') return '👤';
-    return '📋';
-  };
-
-  // Render white circled number symbol for 0-20; fallback to styled circle for larger
-  const getWhiteCircledNumber = (num: number): string | null => {
-    const symbols = [
-      '⓪','①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩',
-      '⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'
-    ];
-    if (num >= 0 && num <= 20) return symbols[num];
-    return null;
-  };
-
-  const getCheckmarkBadge = () => {
-    if (step.status !== 'done') return null;
+    // Determine which emoji to show
+    const getEmoji = () => {
+      // Priority: custom icon > leaf type > default
+      if (step.icon) return step.icon;
+      if (step.leafType === 'DIGITAL') return '🤖';
+      if (step.leafType === 'HUMAN') return '👤';
+      return '📋'; // Default
+    };
 
     return (
-      <div className="absolute -bottom-0.5 -right-0.5 bg-[#859900] rounded-full p-0.5 shadow-sm">
-        <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="none">
-          <path
-            d="M5 13l4 4L19 7"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </div>
+      <OpenMoji
+        emoji={getEmoji()}
+        size={iconSize}
+        variant="color"
+      />
     );
   };
+
 
   const getLabel = () => {
     if (size === 'nano') return `${index + 1}`;
@@ -222,22 +242,95 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
     ? 'flex-1 basis-0 min-w-0' // base: equal widths
     : isExpanded
       ? 'grow basis-0 min-w-0' // expanded: take remaining space
-      : 'basis-5 w-5 shrink-0 grow-0 min-w-0'; // collapsed: exactly 20px
+      : 'basis-[30px] w-[30px] shrink-0 grow-0 min-w-0'; // collapsed: 30px wide (25% reduction from 40px)
+
+  // Chevron shape using clip-path (cleaner arrow design)
+  const getChevronClipPath = () => {
+    const isFirst = index === 0;
+    const isLast = index === totalSteps - 1;
+    const arrowDepth = 10; // Fixed depth - doesn't change with expansion
+
+    if (isFirst && isLast) {
+      // Single step: flat both sides (rectangle)
+      return 'none';
+    }
+
+    if (isFirst) {
+      // First step: flat left, chevron right
+      return `polygon(0 0, calc(100% - ${arrowDepth}px) 0, 100% 50%, calc(100% - ${arrowDepth}px) 100%, 0 100%)`;
+    }
+
+    if (isLast) {
+      // Last step: chevron left, flat right
+      return `polygon(0 0, 100% 0, 100% 100%, 0 100%, ${arrowDepth}px 50%)`;
+    }
+
+    // Middle steps: chevron both sides
+    return `polygon(0 0, calc(100% - ${arrowDepth}px) 0, 100% 50%, calc(100% - ${arrowDepth}px) 100%, 0 100%, ${arrowDepth}px 50%)`;
+  };
+
+  // Get margin for puzzle-fit effect (overlap chevrons with 4px gap)
+  const getChevronMargin = () => {
+    if (size !== 'full') return undefined;
+    const arrowDepth = 10;
+    const desiredGap = 4; // 4px visible gap between chevrons
+    return index < totalSteps - 1 ? -(arrowDepth - desiredGap) : 0;
+  };
+
+  // Original Solarized colors (clean, no gradient progression)
+  const getBackgroundColor = () => {
+    if (step.status === 'done') {
+      return 'bg-[#073642]'; // Solarized base02 (dark)
+    }
+    if (step.status === 'active') {
+      return 'bg-[#eee8d5]'; // Solarized base2 (light cream)
+    }
+    if (step.status === 'error') {
+      return 'bg-[#dc322f]'; // Solarized red
+    }
+    // Pending
+    return 'bg-[#fdf6e3]'; // Solarized base3 (lightest)
+  };
+
+  // Get border color based on status for drop-shadow
+  const getBorderColor = () => {
+    return '#ffcc00'; // Bright yellow border for all states
+  };
 
   return (
-    <div className={`flex flex-col items-center ${wrapperFlexClasses}`}>
+    <div
+      className={`relative flex flex-col items-center overflow-visible ${wrapperFlexClasses}`}
+      style={{ marginRight: size === 'full' && index !== totalSteps - 1 ? '-6px' : '0' }}
+    >
+      {/* Border layer (yellow) */}
       <div
         className={`
-          relative flex flex-col items-center justify-center w-full
-          border rounded-sm transition-all duration-300 ease-out
-          cursor-pointer hover:border-[#2aa198]
-          ${statusColors[step.status]}
-          ${isExpanded ? 'scale-[1.02] z-10' : 'scale-100'}
-          hover:scale-[1.01] hover:shadow-lg
-          ${size === 'nano' ? 'h-8' : size === 'micro' ? 'h-9' : isExpanded ? 'h-12' : 'h-10'}
-          ${size === 'nano' ? 'px-0.5' : size === 'micro' ? 'px-1.5' : 'px-2'}
-          py-0.5
+          absolute inset-0 w-full
+          ${size === 'nano' ? 'h-8' : size === 'micro' ? 'h-9' : 'h-16'}
         `}
+        style={{
+          clipPath: size === 'full' ? getChevronClipPath() : undefined,
+          backgroundColor: getBorderColor(),
+        }}
+      />
+
+      {/* Content layer with background (inset by 2px for border) */}
+      <div
+        className={`
+          relative w-full
+          transition-all duration-300 ease-out
+          cursor-pointer
+          ${getBackgroundColor()}
+          ${size === 'nano' ? 'h-8' : size === 'micro' ? 'h-9' : 'h-16'}
+          ${size === 'nano' ? 'px-2' : size === 'micro' ? 'px-3' : 'px-4'}
+          py-1
+          flex flex-col items-center justify-center gap-1
+          hover:brightness-95
+        `}
+        style={{
+          clipPath: size === 'full' ? getChevronClipPath() : undefined,
+          margin: size === 'full' ? '2px' : '0',
+        }}
         onClick={onClick}
         title={size !== 'full' ? step.description : undefined}
       >
@@ -248,106 +341,103 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
         </span>
       )}
 
-      {/* Micro size - short label only */}
+      {/* Micro size - show number ONLY when collapsed */}
       {size === 'micro' && (
-        <div className="flex flex-col items-center justify-center w-full h-full">
-          <span className={`text-[9px] font-medium text-center line-clamp-1 ${textColors[step.status]}`}>
-            {getLabel()}
-          </span>
-        </div>
-      )}
-
-      {/* Full size - detailed view */}
-      {size === 'full' && (
         <>
-          {!isExpanded ? (
-            // Check if any step is expanded (collapsed state)
-            effectiveExpandedId ? (
-              // Collapsed state - no text, just empty space for icon
-              <div className="flex items-center justify-center w-full h-full max-w-[40px] mx-auto">
-                {/* Empty space - icon will be positioned absolutely */}
-              </div>
-            ) : (
-              // Base state - text only, icon floats above
-              <div className="flex flex-col items-center justify-center w-full h-full overflow-hidden">
-                <span className={`text-[10px] font-medium text-center line-clamp-1 px-0.5 w-full overflow-hidden ${textColors[step.status]}`}>
-                  {getLabel()}
-                </span>
-                {step.status === 'pending' && (
-                  <span className="text-[7px] text-[#586e75]">{getDurationText()}</span>
-                )}
-              </div>
-            )
-          ) : (
-            // Expanded state - text only, icon floats above
-            <div className="flex flex-col items-center gap-0.5 w-full h-full justify-center overflow-hidden px-1">
-              <span className={`text-[10px] font-semibold text-center line-clamp-2 w-full overflow-hidden ${textColors[step.status]}`}>
-                {step.description}
+          {effectiveExpandedId && !isExpanded ? (
+            // Collapsed: show number
+            <div className="flex items-center justify-center w-full h-full relative">
+              <span
+                className={`text-[11px] font-bold ${textColors[step.status]}`}
+                style={{
+                  position: 'relative',
+                  // Adjust horizontal position based on chevron shape
+                  left: index === 0 ? '-3px' : // First step: shift left (right side extends)
+                        index === totalSteps - 1 ? '3px' : // Last step: shift right (left side indents)
+                        '2px' // Middle steps: shift right to center in double-chevron shape
+                }}
+              >
+                {index + 1}
               </span>
-              {step.detail && (
-                <p className="text-[8px] text-[#93a1a1] text-center line-clamp-1 w-full overflow-hidden">
-                  {step.detail}
-                </p>
-              )}
+            </div>
+          ) : (
+            // Not collapsed: show icon + text
+            <div className="flex flex-col items-center justify-center gap-1">
+              {getStepIcon()}
+              <span className={`text-[9px] font-medium text-center line-clamp-1 ${textColors[step.status]}`}>
+                {getLabel()}
+              </span>
             </div>
           )}
         </>
       )}
 
-      {/* Icon badge - full size only */}
+      {/* Full size - show number ONLY when collapsed */}
       {size === 'full' && (
-        <div
-          className={`absolute left-1/2 -translate-x-1/2 z-10 transition-all duration-300 rounded-full px-1.5 py-0.5 ${
-            isExpanded 
-              ? '-top-7' 
-              : effectiveExpandedId 
-                ? 'top-1/2 -translate-y-1/2' 
-                : '-top-3'
-          }`}
-        >
-          <div className={`flex items-center ${isExpanded ? 'gap-1.5' : ''}`}>
-            <span className="text-sm">{getIcon()}</span>
-            {isExpanded && (
-              <span className={`text-[10px] text-[#93a1a1] line-clamp-1 max-w-[400px] -mt-0.5`}>
+        <>
+          {effectiveExpandedId && !isExpanded ? (
+            // Collapsed: show number
+            <div className="flex items-center justify-center w-full h-full relative">
+              <span
+                className={`text-[11px] font-bold ${textColors[step.status]}`}
+                style={{
+                  position: 'relative',
+                  // Adjust horizontal position based on chevron shape
+                  left: index === 0 ? '-3px' : // First step: shift left (right side extends)
+                        index === totalSteps - 1 ? '3px' : // Last step: shift right (left side indents)
+                        '2px' // Middle steps: shift right to center in double-chevron shape
+                }}
+              >
+                {index + 1}
+              </span>
+            </div>
+          ) : tab ? (
+            // Not collapsed + tab mode: icon + text inside
+            <div className="flex flex-col items-center justify-center gap-1">
+              {getStepIcon()}
+              <span className={`text-[10px] font-medium text-center line-clamp-2 px-2 ${textColors[step.status]}`}>
                 {getLabel()}
               </span>
-            )}
-          </div>
-        </div>
-      )}
+            </div>
+          ) : (
+            // Not collapsed + non-tab mode: text only
+            <div className="flex items-center justify-center w-full h-full">
+              <span className={`text-[10px] font-medium text-center line-clamp-2 px-2 ${textColors[step.status]}`}>
+                {getLabel()}
+              </span>
+            </div>
+          )}
 
-      {/* Step number - top-left above step (only when expanded and NOT showing nested content) */}
-      {size === 'full' && isExpanded && !hasNestedContent && (
-        <span className="absolute -top-4 left-0 text-[12px] leading-none text-[#93a1a1] font-semibold">
-          {index + 1}
-        </span>
-      )}
-
-      {/* Step duration - top-right above step (only when expanded) */}
-      {size === 'full' && isExpanded && (
-        <span className="absolute -top-4 right-0 text-[12px] leading-none text-[#93a1a1] font-semibold">
-          {getDurationText()}
-        </span>
-      )}
-
-      {/* Expand indicator for decomposable steps */}
-      {size === 'full' && step.isLeaf === false && step.decompositionState !== 'atomic' && (
-        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-[#93a1a1]">
-          {loadingChildren && loadingChildren.has(step.id) ? '⏳' : (isExpanded ? '▼' : '▶')}
-        </div>
+          {/* Icon floating on top border when NOT in tab mode and NOT collapsed */}
+          {!tab && !(effectiveExpandedId && !isExpanded) && (
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-30 bg-[#002b36] rounded-full p-1 border-2 border-[#586e75]">
+              {getStepIcon()}
+            </div>
+          )}
+        </>
       )}
 
 
 
-      {/* Pulsing glow and shimmer effect for active steps */}
+      {/* Cleaner pulsing glow for active steps */}
       {step.status === 'active' && (
         <>
-          {/* Pulsing glow background */}
-          <div className="absolute inset-0 rounded-sm bg-[#268bd2]/20 animate-pulse-glow pointer-events-none" />
+          {/* Subtle pulsing glow */}
+          <div
+            className="absolute inset-0 bg-[#268bd2]/20 animate-pulse-glow pointer-events-none"
+            style={{
+              clipPath: size === 'full' ? getChevronClipPath() : undefined,
+            }}
+          />
 
           {/* Shimmer effect */}
-          <div className="absolute inset-0 rounded-sm overflow-hidden pointer-events-none">
-            <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          <div
+            className="absolute inset-0 overflow-hidden pointer-events-none"
+            style={{
+              clipPath: size === 'full' ? getChevronClipPath() : undefined,
+            }}
+          >
+            <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/20 to-transparent" />
           </div>
         </>
       )}
@@ -381,41 +471,6 @@ function StepSection({ step, index, width, isExpanded, size, onClick, stepProgre
       )}
 
       </div>
-      
-      {/* Duration text below step - only in base state */}
-      {!effectiveExpandedId && (
-        <div className="text-[9px] text-[#586e75] font-medium whitespace-nowrap no-underline mt-1">
-          &nbsp;
-        </div>
-      )}
-      
-      {/* Tags below step - only in expanded state */}
-      {isExpanded && (
-        <div className="text-[10px] text-[#93a1a1] font-medium whitespace-nowrap no-underline mt-1">
-          {step.tags && step.tags.length > 0 ? (
-            <span>
-              {step.tags.slice(0, 5).map((tag, index) => (
-                <React.Fragment key={index}>
-                  {index > 0 && <span className="no-underline"> • </span>}
-                  <span className="underline">{tag}</span>
-                </React.Fragment>
-              ))}
-              {step.tags.length > 5 && (
-                <span className="no-underline"> • +{step.tags.length - 5}</span>
-              )}
-            </span>
-          ) : (
-            <span>&nbsp;</span>
-          )}
-        </div>
-      )}
-      
-      {/* Space character for collapsed state to maintain alignment */}
-      {!isExpanded && effectiveExpandedId && (
-        <div className="text-[8px] text-[#586e75] font-medium whitespace-nowrap no-underline mt-1">
-          &nbsp;
-        </div>
-      )}
     </div>
   );
 }
@@ -429,6 +484,7 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
   steps,
   currentProgress,
   size = 'full',
+  tab = true,
   onClose,
   onDismiss,
   onStepClick,
@@ -662,14 +718,15 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
   return (
     <div
       className={`
-        bg-[#073642] border border-[#586e75] rounded
+        bg-[#073642] border border-[#586e75] rounded overflow-visible
         ${size === 'nano' ? 'p-1' : size === 'micro' ? 'p-2' : 'p-2'}
+        ${size === 'full' ? 'pt-8' : ''}
         ${className}
       `}
     >
       {/* Header - compact */}
       {size !== 'nano' && (
-        <div className="relative flex items-center justify-center mb-0.5 -mt-1">
+        <div className="relative flex items-center justify-center mb-0.5 -mt-6">
           <p className={`line-clamp-1 w-full text-center mb-2 ${size === 'micro' ? 'text-[9px]' : 'text-[10px]'} text-[#93a1a1] font-medium ${effectiveExpandedId ? 'opacity-0' : ''}`}>
             {jobName}
           </p>
@@ -686,9 +743,9 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
       )}
 
       {/* Timeline */}
-      <div className="relative">
+      <div className="relative overflow-visible">
         {/* Steps row */}
-        <div className="flex gap-1 items-end">
+        <div className="flex gap-0 items-end overflow-visible">
           {steps.map((step, index) => {
             // Calculate if this step has nested content (decomposition job or children)
             const hasNestedContent = effectiveExpandedId === step.id &&
@@ -699,9 +756,11 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
                 key={step.id}
                 step={step}
                 index={index}
+                totalSteps={steps.length}
                 width={stepWidths.get(step.id) || 0}
                 isExpanded={effectiveExpandedId === step.id}
                 size={size}
+                tab={tab}
                 onClick={() => handleStepClick(step.id)}
                 stepProgressPercent={stepProgress?.get(step.id)}
                 onRetry={onRetryStep ? () => onRetryStep(step.id) : undefined}
@@ -716,7 +775,7 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
 
         {/* Nested area for expanded step - show decomposition job or children */}
         {effectiveExpandedId && (decompositionJobs.has(effectiveExpandedId) || expandedStepChildren.has(effectiveExpandedId)) && (
-          <div className="mt-2 px-2">
+          <div className="mt-2 px-2 overflow-visible">
             {/* Show decomposition job steps while processing */}
             {decompositionJobs.has(effectiveExpandedId) ? (
               <AsyncJobTimeline
@@ -736,13 +795,6 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
                 showProgressBar={false}
               />
             )}
-          </div>
-        )}
-
-        {/* Total duration - bottom right (only in base state) */}
-        {!effectiveExpandedId && (
-          <div className="absolute bottom-0 right-0 text-[#586e75] text-[10px] font-medium">
-            {totalDurationText}
           </div>
         )}
 
