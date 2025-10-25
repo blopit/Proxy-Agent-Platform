@@ -260,6 +260,9 @@ class QuickCaptureService:
         if priority == "high":
             tags.append("urgent")
 
+        # Estimate time based on task complexity keywords
+        estimated_hours = self._estimate_time_from_keywords(text_lower, delegation_type)
+
         # Generate reasoning
         reasoning_parts = []
         if priority == "high":
@@ -268,6 +271,7 @@ class QuickCaptureService:
             reasoning_parts.append(f"Identified as {delegation_type} task")
         if due_date:
             reasoning_parts.append("Extracted due date from text")
+        reasoning_parts.append(f"Estimated {estimated_hours} hours based on task complexity")
 
         reasoning = "; ".join(reasoning_parts) if reasoning_parts else "Standard task"
 
@@ -276,11 +280,82 @@ class QuickCaptureService:
             "priority": priority,
             "confidence": confidence,
             "should_delegate": should_delegate,
-            "delegation_type": delegation_type,
+            "delegation_mode": delegation_type,
             "reasoning": reasoning,
             "tags": tags,
             "due_date": due_date,
+            "estimated_hours": estimated_hours,
         }
+
+    def _estimate_time_from_keywords(self, text_lower: str, delegation_type: Optional[str]) -> float:
+        """
+        Estimate task duration based on keywords and complexity.
+
+        Args:
+            text_lower: Lowercase task text
+            delegation_type: Type of delegation (email, research, etc.)
+
+        Returns:
+            Estimated hours (rounded to 2 decimals)
+        """
+        # Quick tasks (5-10 minutes = 0.08-0.17 hours)
+        quick_keywords = ["quick", "send", "reply", "check", "turn on", "turn off",
+                         "set", "adjust", "call", "text", "message"]
+
+        # Short tasks (15-30 minutes = 0.25-0.5 hours)
+        short_keywords = ["email", "draft", "review", "organize", "clean", "file",
+                         "update", "fix", "schedule", "book"]
+
+        # Medium tasks (30-60 minutes = 0.5-1 hour)
+        medium_keywords = ["write", "create", "design", "plan", "research", "analyze",
+                          "prepare", "meeting", "presentation", "document"]
+
+        # Long tasks (1-2 hours)
+        long_keywords = ["develop", "build", "implement", "project", "workshop",
+                        "training", "deep dive", "comprehensive"]
+
+        # Very long tasks (2+ hours)
+        very_long_keywords = ["major", "complete", "overhaul", "redesign", "migrate",
+                             "full", "entire", "all"]
+
+        # Count word complexity
+        word_count = len(text_lower.split())
+
+        # Estimate based on keywords (check from longest to shortest)
+        if any(kw in text_lower for kw in very_long_keywords):
+            return round(2.0 + (word_count / 50) * 0.5, 2)  # 2-3 hours
+        elif any(kw in text_lower for kw in long_keywords):
+            return round(1.0 + (word_count / 40) * 0.3, 2)  # 1-1.5 hours
+        elif any(kw in text_lower for kw in medium_keywords):
+            return round(0.5 + (word_count / 30) * 0.2, 2)  # 30-45 min
+        elif any(kw in text_lower for kw in short_keywords):
+            return round(0.25 + (word_count / 20) * 0.15, 2)  # 15-30 min
+        elif any(kw in text_lower for kw in quick_keywords):
+            return round(0.1 + (word_count / 15) * 0.1, 2)  # 5-15 min
+
+        # Delegation-based estimation
+        if delegation_type:
+            delegation_times = {
+                "email": 0.25,      # 15 minutes
+                "calendar": 0.17,   # 10 minutes
+                "web": 0.33,        # 20 minutes
+                "research": 0.75,   # 45 minutes
+                "document": 1.0,    # 1 hour
+                "home_iot": 0.08,   # 5 minutes
+            }
+            return round(delegation_times.get(delegation_type, 0.5), 2)
+
+        # Default: 30 minutes for unrecognized tasks
+        # But adjust for word count (longer description = more complex)
+        base_time = 0.5
+        if word_count > 20:
+            base_time = 0.75  # 45 min for longer descriptions
+        elif word_count > 10:
+            base_time = 0.5   # 30 min
+        else:
+            base_time = 0.25  # 15 min for very short
+
+        return round(base_time, 2)
 
     def _categorize_task(self, analysis: dict[str, Any]) -> str:
         """

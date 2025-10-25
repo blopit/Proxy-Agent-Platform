@@ -74,6 +74,15 @@ class CaptureMode(str, Enum):
     CLARIFY = "clarify"  # AI asks minimal questions for missing info
 
 
+class CaptureType(str, Enum):
+    """Type of capture entity for proper handling"""
+
+    TASK = "task"  # One-time actionable item with completion criteria
+    GOAL = "goal"  # Long-term objective with milestones and progress tracking
+    HABIT = "habit"  # Recurring activity with frequency pattern and streak tracking
+    SHOPPING_LIST = "shopping_list"  # List of items to purchase with store/category grouping
+
+
 class DecompositionState(str, Enum):
     """Decomposition state for progressive task hierarchy disclosure"""
 
@@ -192,6 +201,9 @@ class Task(BaseModel):
     description: str = Field(..., max_length=2000)
     project_id: str = Field(..., description="ID of the project this task belongs to")
     parent_id: str | None = Field(None, description="Parent task ID for subtasks")
+
+    # Capture type (task, goal, habit, shopping_list)
+    capture_type: CaptureType = Field(default=CaptureType.TASK, description="Type of capture entity")
 
     # Status and priority
     status: TaskStatus = Field(default=TaskStatus.TODO)
@@ -756,6 +768,334 @@ class ProductivityMetrics(BaseModel):
         """Calculate derived metrics"""
         self.completion_rate = self.task_completion_rate
         self.focus_efficiency = self.focus_completion_rate
+        self.updated_at = datetime.utcnow()
+
+    model_config = ConfigDict(
+        use_enum_values=True,
+        populate_by_name=True,
+    )
+
+
+# Capture Type Specific Models
+
+
+class Milestone(BaseModel):
+    """Milestone model for goal tracking"""
+
+    value: Decimal = Field(..., description="Target value for this milestone")
+    date: datetime = Field(..., description="Target date for this milestone")
+    description: str | None = Field(None, max_length=500, description="Optional description")
+    completed: bool = Field(default=False, description="Whether milestone is achieved")
+    completed_at: datetime | None = Field(None, description="When milestone was achieved")
+
+    model_config = ConfigDict(
+        use_enum_values=True,
+        populate_by_name=True,
+    )
+
+
+class Goal(BaseModel):
+    """Goal model for long-term objectives with milestone tracking"""
+
+    goal_id: str = Field(default_factory=lambda: str(uuid4()))
+    task_id: str = Field(..., description="Link to tasks table (capture_type='goal')")
+
+    # Goal-specific fields
+    target_value: Decimal | None = Field(None, description="Numeric target (NULL for non-quantifiable)")
+    current_value: Decimal = Field(default=Decimal("0.0"), description="Current progress")
+    unit: str | None = Field(None, max_length=50, description="Measurement unit (pounds, dollars, etc.)")
+    target_date: datetime | None = Field(None, description="When you want to achieve this goal")
+
+    # Milestones
+    milestones: list[Milestone] = Field(default_factory=list, description="Intermediate checkpoints")
+
+    # Progress tracking
+    progress_percentage: Decimal = Field(
+        default=Decimal("0.0"),
+        ge=0,
+        le=100,
+        decimal_places=2,
+        description="Progress (0-100)"
+    )
+    last_progress_update: datetime | None = Field(None, description="When progress was last updated")
+
+    # Goal hierarchy
+    parent_goal_id: str | None = Field(None, description="Parent goal (NULL for top-level)")
+
+    # Status
+    is_active: bool = Field(default=True, description="Whether goal is currently being pursued")
+    is_achieved: bool = Field(default=False, description="Whether goal has been completed")
+    achieved_at: datetime | None = Field(None, description="When goal was achieved")
+
+    # Metadata
+    notes: str | None = Field(None, max_length=2000)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    def update_progress(self, new_value: Decimal) -> None:
+        """Update goal progress"""
+        self.current_value = new_value
+        self.last_progress_update = datetime.utcnow()
+        self.updated_at = datetime.utcnow()
+
+        # Calculate percentage if target_value exists
+        if self.target_value and self.target_value > 0:
+            percentage = (self.current_value / self.target_value) * 100
+            self.progress_percentage = min(Decimal("100.0"), max(Decimal("0.0"), percentage))
+
+            # Check if achieved
+            if self.current_value >= self.target_value and not self.is_achieved:
+                self.is_achieved = True
+                self.achieved_at = datetime.utcnow()
+
+    def add_milestone(self, value: Decimal, date: datetime, description: str | None = None) -> None:
+        """Add a new milestone"""
+        milestone = Milestone(value=value, date=date, description=description)
+        self.milestones.append(milestone)
+        self.updated_at = datetime.utcnow()
+
+    model_config = ConfigDict(
+        use_enum_values=True,
+        populate_by_name=True,
+    )
+
+
+class RecurrencePattern(BaseModel):
+    """RRULE-compatible recurrence pattern for habits"""
+
+    frequency: str = Field(..., description="daily, weekly, monthly, custom")
+    interval: int = Field(default=1, ge=1, description="Every N days/weeks/months")
+    active_days: list[int] | None = Field(
+        None,
+        description="For weekly: 0=Sunday, 6=Saturday"
+    )
+    time_of_day: str | None = Field(None, pattern=r"^\d{2}:\d{2}$", description="Preferred time (HH:MM)")
+    rrule: str | None = Field(None, description="Full RRULE string (optional)")
+
+    model_config = ConfigDict(
+        use_enum_values=True,
+        populate_by_name=True,
+    )
+
+
+class HabitCompletion(BaseModel):
+    """Individual habit completion record"""
+
+    completion_id: str = Field(default_factory=lambda: str(uuid4()))
+    habit_id: str = Field(..., description="Habit this completion belongs to")
+
+    # Completion details
+    completed_at: datetime = Field(default_factory=datetime.utcnow)
+    completion_date: str = Field(..., description="ISO date (YYYY-MM-DD) for grouping")
+
+    # Optional quality metrics
+    energy_level: int | None = Field(None, ge=1, le=5, description="Energy level (1-5)")
+    mood: str | None = Field(None, description="good, neutral, bad")
+    notes: str | None = Field(None, max_length=500)
+
+    # Metadata
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+    model_config = ConfigDict(
+        use_enum_values=True,
+        populate_by_name=True,
+    )
+
+
+class Habit(BaseModel):
+    """Habit model for recurring activities with streak tracking"""
+
+    habit_id: str = Field(default_factory=lambda: str(uuid4()))
+    task_id: str = Field(..., description="Link to tasks table (capture_type='habit')")
+
+    # Recurrence
+    frequency: str = Field(..., description="daily, weekly, monthly, custom")
+    recurrence_pattern: RecurrencePattern = Field(..., description="Full recurrence pattern")
+
+    # Streak tracking
+    streak_count: int = Field(default=0, ge=0, description="Current consecutive streak")
+    longest_streak: int = Field(default=0, ge=0, description="Best streak ever achieved")
+    total_completions: int = Field(default=0, ge=0, description="Lifetime completion count")
+    last_completed_at: datetime | None = Field(None, description="Most recent completion")
+
+    # Reminders
+    reminder_time: str | None = Field(None, pattern=r"^\d{2}:\d{2}$", description="Time for notifications (HH:MM)")
+    reminder_enabled: bool = Field(default=False, description="Whether to send reminders")
+
+    # Status
+    is_active: bool = Field(default=True, description="Whether habit is being tracked")
+    paused_at: datetime | None = Field(None, description="When habit was paused")
+
+    # Completion history (denormalized for quick stats)
+    completion_history: list[str] = Field(
+        default_factory=list,
+        description="ISO dates of recent completions (last 90 days)"
+    )
+
+    # Metadata
+    notes: str | None = Field(None, max_length=2000)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    def mark_completed_today(self, completion_date: str | None = None) -> HabitCompletion:
+        """Mark habit as completed for today and update streak"""
+        if completion_date is None:
+            completion_date = datetime.utcnow().strftime("%Y-%m-%d")
+
+        # Create completion record
+        completion = HabitCompletion(habit_id=self.habit_id, completion_date=completion_date)
+
+        # Update habit stats
+        self.total_completions += 1
+        self.last_completed_at = datetime.utcnow()
+
+        # Add to history (keep last 90 days)
+        if completion_date not in self.completion_history:
+            self.completion_history.append(completion_date)
+            self.completion_history = sorted(self.completion_history)[-90:]
+
+        # Update streak (simplified - should validate consecutive days based on frequency)
+        self.streak_count += 1
+        if self.streak_count > self.longest_streak:
+            self.longest_streak = self.streak_count
+
+        self.updated_at = datetime.utcnow()
+
+        return completion
+
+    def reset_streak(self) -> None:
+        """Reset current streak (when habit is missed)"""
+        self.streak_count = 0
+        self.updated_at = datetime.utcnow()
+
+    model_config = ConfigDict(
+        use_enum_values=True,
+        populate_by_name=True,
+    )
+
+
+class ShoppingListItem(BaseModel):
+    """Individual item in a shopping list"""
+
+    item_id: str = Field(default_factory=lambda: str(uuid4()))
+    list_id: str = Field(..., description="Shopping list this item belongs to")
+
+    # Item details
+    name: str = Field(..., min_length=1, max_length=255, description="Item name")
+    quantity: Decimal = Field(default=Decimal("1.0"), ge=0, description="Amount needed")
+    unit: str | None = Field(None, max_length=50, description="Measurement unit")
+
+    # Pricing
+    estimated_price: Decimal | None = Field(None, ge=0, decimal_places=2)
+    actual_price: Decimal | None = Field(None, ge=0, decimal_places=2)
+    currency: str = Field(default="USD", max_length=3)
+
+    # Categorization
+    category: str | None = Field(None, max_length=100, description="Product category")
+    aisle: str | None = Field(None, max_length=50, description="Store aisle/location")
+
+    # Priority and ordering
+    priority: TaskPriority = Field(default=TaskPriority.MEDIUM)
+    item_order: int = Field(default=0, ge=0, description="Display/shopping order")
+
+    # Purchase tracking
+    is_purchased: bool = Field(default=False)
+    purchased_at: datetime | None = None
+
+    # Metadata
+    notes: str | None = Field(None, max_length=500)
+    brand: str | None = Field(None, max_length=100)
+    barcode: str | None = Field(None, max_length=50)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    def mark_purchased(self, actual_price: Decimal | None = None) -> None:
+        """Mark item as purchased"""
+        self.is_purchased = True
+        self.purchased_at = datetime.utcnow()
+        if actual_price is not None:
+            self.actual_price = actual_price
+        self.updated_at = datetime.utcnow()
+
+    model_config = ConfigDict(
+        use_enum_values=True,
+        populate_by_name=True,
+    )
+
+
+class ShoppingList(BaseModel):
+    """Shopping list model for managing purchase items"""
+
+    list_id: str = Field(default_factory=lambda: str(uuid4()))
+    task_id: str = Field(..., description="Link to tasks table (capture_type='shopping_list')")
+
+    # List organization
+    store_name: str | None = Field(None, max_length=255, description="Target store")
+    store_category: str | None = Field(None, max_length=100, description="Store type")
+
+    # Shopping details
+    shopping_date: datetime | None = Field(None, description="When you plan to shop")
+    total_estimated_cost: Decimal = Field(default=Decimal("0.0"), ge=0, decimal_places=2)
+    total_actual_cost: Decimal = Field(default=Decimal("0.0"), ge=0, decimal_places=2)
+    currency: str = Field(default="USD", max_length=3)
+
+    # Completion tracking
+    total_items: int = Field(default=0, ge=0)
+    purchased_items: int = Field(default=0, ge=0)
+    completion_percentage: Decimal = Field(default=Decimal("0.0"), ge=0, le=100, decimal_places=2)
+
+    # List status
+    is_active: bool = Field(default=True)
+    is_completed: bool = Field(default=False)
+    completed_at: datetime | None = None
+
+    # Shopping trip details
+    shopped_at: datetime | None = Field(None, description="When shopping was completed")
+    shopping_duration_minutes: int | None = Field(None, ge=0)
+
+    # Items (populated from repository)
+    items: list[ShoppingListItem] = Field(default_factory=list, description="Items in this list")
+
+    # Metadata
+    notes: str | None = Field(None, max_length=2000)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    def update_totals(self) -> None:
+        """Recalculate totals based on items"""
+        self.total_items = len(self.items)
+        self.purchased_items = sum(1 for item in self.items if item.is_purchased)
+
+        # Update completion percentage
+        if self.total_items > 0:
+            self.completion_percentage = Decimal(
+                (self.purchased_items / self.total_items) * 100
+            )
+        else:
+            self.completion_percentage = Decimal("0.0")
+
+        # Update costs
+        self.total_estimated_cost = sum(
+            (item.estimated_price or Decimal("0.0")) * item.quantity
+            for item in self.items
+        )
+        self.total_actual_cost = sum(
+            (item.actual_price or Decimal("0.0")) * item.quantity
+            for item in self.items
+            if item.is_purchased
+        )
+
+        # Check if completed
+        if self.total_items > 0 and self.purchased_items == self.total_items:
+            self.is_completed = True
+            if not self.completed_at:
+                self.completed_at = datetime.utcnow()
+
         self.updated_at = datetime.utcnow()
 
     model_config = ConfigDict(

@@ -202,16 +202,15 @@ class MicroStepService:
         
         tags_json = json.dumps(tags) if tags else None
 
-        # ⚠️ NOTE: Actual database schema differs from migration files
-        # Schema has: step_number, status, actual_minutes (NOT leaf_type, automation_plan, tags, completed, energy_level)
+        # Insert into database with actual schema columns
         cursor.execute(
             """
             INSERT INTO micro_steps (
                 step_id, parent_task_id, step_number, description, estimated_minutes,
-                delegation_mode, status, parent_step_id, level, is_leaf,
+                delegation_mode, status, actual_minutes, parent_step_id, level, is_leaf,
                 decomposition_state, short_label, icon
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
             (
                 step_id,
@@ -219,8 +218,9 @@ class MicroStepService:
                 data.step_number,
                 data.description,
                 data.estimated_minutes,
-                data.delegation_mode,
-                "todo",  # Map completed=False to status="todo"
+                data.delegation_mode or "do",
+                "todo",  # Default status
+                0,  # Default actual_minutes
                 data.parent_step_id,
                 data.level,
                 1 if data.is_leaf else 0,
@@ -250,9 +250,8 @@ class MicroStepService:
 
         cursor.execute(
             """
-            SELECT step_id, parent_task_id, description, estimated_minutes,
-                   leaf_type, delegation_mode, automation_plan, tags, completed,
-                   completed_at, energy_level, created_at,
+            SELECT step_id, parent_task_id, step_number, description, estimated_minutes,
+                   delegation_mode, status, actual_minutes, created_at, completed_at,
                    parent_step_id, level, is_leaf, decomposition_state, short_label, icon
             FROM micro_steps
             WHERE step_id = ?
@@ -264,30 +263,25 @@ class MicroStepService:
         if not row:
             return None
 
-        import json
-
-        automation_plan = json.loads(row[6]) if row[6] else None
-        tags = json.loads(row[7]) if row[7] else None
-
         return MicroStep(
             step_id=row[0],
             parent_task_id=row[1],
-            description=row[2],
-            estimated_minutes=row[3],
-            leaf_type=row[4],
+            description=row[3],
+            estimated_minutes=row[4],
+            leaf_type=None,  # Not in schema
             delegation_mode=row[5],
-            automation_plan=automation_plan,
-            tags=tags,
-            completed=bool(row[8]),
+            automation_plan=None,  # Not in schema
+            tags=None,  # Not in schema
+            completed=(row[6] == 'done'),  # Map status to completed
             completed_at=datetime.fromisoformat(row[9]) if row[9] else None,
-            energy_level=row[10],
-            created_at=datetime.fromisoformat(row[11]),
-            parent_step_id=row[12],
-            level=row[13] if row[13] is not None else 0,
-            is_leaf=bool(row[14]) if row[14] is not None else True,
-            decomposition_state=row[15] if row[15] else "atomic",
-            short_label=row[16],
-            icon=row[17],
+            energy_level=None,  # Not in schema
+            created_at=datetime.fromisoformat(row[8]),
+            parent_step_id=row[10],
+            level=row[11] if row[11] is not None else 0,
+            is_leaf=bool(row[12]) if row[12] is not None else True,
+            decomposition_state=row[13] if row[13] else "atomic",
+            short_label=row[14],
+            icon=row[15],
         )
 
     def get_micro_steps_by_task(self, parent_task_id: str) -> list[MicroStep]:
@@ -305,45 +299,39 @@ class MicroStepService:
 
         cursor.execute(
             """
-            SELECT step_id, parent_task_id, description, estimated_minutes,
-                   leaf_type, delegation_mode, automation_plan, tags, completed,
-                   completed_at, energy_level, created_at,
+            SELECT step_id, parent_task_id, step_number, description, estimated_minutes,
+                   delegation_mode, status, actual_minutes, created_at, completed_at,
                    parent_step_id, level, is_leaf, decomposition_state, short_label, icon
             FROM micro_steps
             WHERE parent_task_id = ? AND parent_step_id IS NULL
-            ORDER BY created_at ASC
+            ORDER BY step_number ASC
         """,
             (parent_task_id,),
         )
 
         rows = cursor.fetchall()
 
-        import json
-
         micro_steps = []
         for row in rows:
-            automation_plan = json.loads(row[6]) if row[6] else None
-            tags = json.loads(row[7]) if row[7] else None
-
             micro_step = MicroStep(
                 step_id=row[0],
                 parent_task_id=row[1],
-                description=row[2],
-                estimated_minutes=row[3],
-                leaf_type=row[4],
+                description=row[3],
+                estimated_minutes=row[4],
+                leaf_type=None,  # Not in schema
                 delegation_mode=row[5],
-                automation_plan=automation_plan,
-                tags=tags,
-                completed=bool(row[8]),
+                automation_plan=None,  # Not in schema
+                tags=None,  # Not in schema
+                completed=(row[6] == 'done'),  # Map status to completed
                 completed_at=datetime.fromisoformat(row[9]) if row[9] else None,
-                energy_level=row[10],
-                created_at=datetime.fromisoformat(row[11]),
-                parent_step_id=row[12],
-                level=row[13] if row[13] is not None else 0,
-                is_leaf=bool(row[14]) if row[14] is not None else True,
-                decomposition_state=row[15] if row[15] else "atomic",
-                short_label=row[16],
-                icon=row[17],
+                energy_level=None,  # Not in schema
+                created_at=datetime.fromisoformat(row[8]),
+                parent_step_id=row[10],
+                level=row[11] if row[11] is not None else 0,
+                is_leaf=bool(row[12]) if row[12] is not None else True,
+                decomposition_state=row[13] if row[13] else "atomic",
+                short_label=row[14],
+                icon=row[15],
             )
             micro_steps.append(micro_step)
 
@@ -423,8 +411,8 @@ class MicroStepService:
             params.append(json.dumps(data.automation_plan))
 
         if data.completed is not None:
-            updates.append("completed = ?")
-            params.append(1 if data.completed else 0)
+            updates.append("status = ?")
+            params.append('done' if data.completed else 'todo')
 
             # Auto-set completed_at if marking as completed
             if data.completed and data.completed_at is None:
@@ -543,45 +531,39 @@ class MicroStepService:
 
         cursor.execute(
             """
-            SELECT step_id, parent_task_id, description, estimated_minutes,
-                   leaf_type, delegation_mode, automation_plan, tags, completed,
-                   completed_at, energy_level, created_at,
+            SELECT step_id, parent_task_id, step_number, description, estimated_minutes,
+                   delegation_mode, status, actual_minutes, created_at, completed_at,
                    parent_step_id, level, is_leaf, decomposition_state, short_label, icon
             FROM micro_steps
             WHERE parent_step_id = ?
-            ORDER BY created_at ASC
+            ORDER BY step_number ASC
         """,
             (parent_step_id,),
         )
 
         rows = cursor.fetchall()
 
-        import json
-
         children = []
         for row in rows:
-            automation_plan = json.loads(row[6]) if row[6] else None
-            tags = json.loads(row[7]) if row[7] else None
-
             child = MicroStep(
                 step_id=row[0],
                 parent_task_id=row[1],
-                description=row[2],
-                estimated_minutes=row[3],
-                leaf_type=row[4],
+                description=row[3],
+                estimated_minutes=row[4],
+                leaf_type=None,  # Not in schema
                 delegation_mode=row[5],
-                automation_plan=automation_plan,
-                tags=tags,
-                completed=bool(row[8]),
+                automation_plan=None,  # Not in schema
+                tags=None,  # Not in schema
+                completed=(row[6] == 'done'),  # Map status to completed
                 completed_at=datetime.fromisoformat(row[9]) if row[9] else None,
-                energy_level=row[10],
-                created_at=datetime.fromisoformat(row[11]),
-                parent_step_id=row[12],
-                level=row[13],
-                is_leaf=bool(row[14]),
-                decomposition_state=row[15],
-                short_label=row[16],
-                icon=row[17],
+                energy_level=None,  # Not in schema
+                created_at=datetime.fromisoformat(row[8]),
+                parent_step_id=row[10],
+                level=row[11],
+                is_leaf=bool(row[12]),
+                decomposition_state=row[13],
+                short_label=row[14],
+                icon=row[15],
             )
             children.append(child)
 
