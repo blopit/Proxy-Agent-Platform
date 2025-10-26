@@ -263,6 +263,137 @@ pulseDelay: '200ms'  // Start pulsing 200ms after completion
 
 ---
 
+## Step Visibility Psychology: Camera Angles for ADHD Minds
+
+### The Core Question: Show All Steps or Just the Next One?
+
+This is a deep design question that goes to the psychology of **motivation vs overwhelm**, especially in ADHD systems.
+
+Let's visualize this as two camera angles:
+
+---
+
+### 🎥 **1. "The Overview Shot" — Showing All the Steps**
+
+**Imagine** your camera is zoomed out: you see the whole staircase — 10 steps up to "Clean the room" or "Finish report."
+
+It *feels structured* at first glance — you can see how it ends.
+
+But for an ADHD brain, this can trigger:
+
+* **Cognitive overload** → the brain starts simulating all future effort at once.
+* **Reward diffusion** → the dopamine hit of progress is delayed until the very end.
+* **Paralysis** → "Ugh, this is a mountain."
+
+So showing *all* the steps is great for **planning mode**, but disastrous for **action mode**.
+
+The camera angle is too wide — the brain stops moving.
+
+---
+
+### 🎥 **2. "The Action Shot" — Showing Only the Next Step**
+
+Now the camera zooms in — tight shot, shallow depth of field.
+
+You see *just the next tile*, glowing like a progress chevron.
+
+You take that step, and only then does the next one reveal itself — almost like a *game level loading as you go.*
+
+This creates:
+
+* **Curiosity** ("What's next?" → dopamine drip)
+* **Safety** (no overwhelm)
+* **Momentum** (each action reloads motivation)
+* **Flow alignment** (you're in *Now Mode*, not *Executive Mode*)
+
+It's how games, quests, and even good UI tutorials hook you — reveal, reward, repeat.
+
+---
+
+### ⚖️ **Best of Both Worlds: Two Modes**
+
+Design it like a camera toggle:
+
+* **Map View (Zoomed Out)**: When planning, show all steps. Let the user drag, reorder, visualize the journey.
+* **Focus View (Zoomed In)**: When doing, hide everything except the *next actionable tile*. Reveal each new step as a micro-reward.
+
+This mimics how ADHD brains *naturally time-slice*: we don't see the whole future — we just need to trust there's a next breadcrumb.
+
+---
+
+### 🧠 **Behavioral Principle**
+
+ADHD brains are "dopamine economy" machines — they thrive on **novelty + progress + reward**.
+
+Revealing one step at a time gives the brain a **constant sense of discovery**, while showing all steps shifts focus to the **weight of completion**.
+
+---
+
+### 🎬 **Implementation Strategy**
+
+```tsx
+// Two visibility modes for ChevronProgress
+<ChevronProgress
+  steps={allSteps}
+  viewMode="focus"  // Only show current + next step
+  // OR
+  viewMode="map"    // Show all steps for planning
+  onViewModeToggle={(mode) => setViewMode(mode)}
+/>
+```
+
+**Visual Design**:
+- **Focus Mode**: Current step large and glowing, next step visible but dimmed, future steps hidden
+- **Map Mode**: All steps visible, allowing drag-to-reorder, visual journey planning
+- **Toggle Button**: Camera icon to switch between modes (📷 → 🗺️)
+
+**Animation Strategy**:
+- **Step Reveal**: When completing a step in Focus Mode, animate the next step sliding into view
+- **Confetti Burst**: Micro-celebration for each completed step (not just at the end)
+- **Glow Effect**: Next step pulses subtly to draw attention
+- **Progress Tunnel**: Visual effect of "moving forward" through steps
+
+---
+
+### 🎮 **Game-Like Progression**
+
+Think of it like a game level loading system:
+
+1. **Current tile** = bright, active, full opacity
+2. **Next tile** = visible, slightly dimmed, pulsing gently
+3. **Future tiles** = hidden or extremely subtle (ghost outlines)
+4. **Completed tiles** = checkmarked, subtle, receding into background
+
+This creates a **"progression tunnel"** effect where you're always moving forward into revealed space, never overwhelmed by the entire journey ahead.
+
+---
+
+### 📊 **When to Use Each Mode**
+
+| Scenario | Mode | Reasoning |
+|----------|------|-----------|
+| **Planning/Organizing** | Map View | Need to see full scope, reorder, understand dependencies |
+| **Executing Tasks** | Focus View | Need to eliminate overwhelm, maintain momentum |
+| **Review/Reflection** | Map View | See what was accomplished, understand patterns |
+| **Onboarding** | Focus View | Don't overwhelm new users with complexity |
+| **Complex Projects** | Toggle | Plan in Map, execute in Focus |
+
+---
+
+### 🎯 **Success Metrics**
+
+Track these to validate the approach:
+
+1. **Completion Rate**: Do users finish more tasks in Focus Mode?
+2. **Time to First Action**: Do users start faster with Focus Mode?
+3. **Mode Switching**: How often do users toggle between views?
+4. **Session Duration**: Do users stay engaged longer with Focus Mode?
+5. **Overwhelm Signals**: Do users abandon less in Focus Mode?
+
+**Hypothesis**: Focus Mode will show 40% higher task completion and 60% faster initiation.
+
+---
+
 ## Visual Consistency Rules
 
 ### Color States (Enforce Religiously)
@@ -638,14 +769,26 @@ NOT addiction to:
 - [ ] Add completion animations
 - [ ] Measure completion rate increase
 
-### Week 3: System-Wide Consistency
+### Week 3: Step Visibility Modes (NEW - HIGH PRIORITY)
+- [ ] Implement Focus View mode (show only current + next step)
+- [ ] Implement Map View mode (show all steps for planning)
+- [ ] Add camera toggle button to switch between modes
+- [ ] Create "progression tunnel" animation for Focus Mode
+- [ ] Add step reveal animations when completing in Focus Mode
+- [ ] Implement ghost outlines for hidden future steps
+- [ ] Add micro-confetti for each step completion (not just at end)
+- [ ] Test with ADHD users for completion rate improvement
+
+### Week 4: System-Wide Consistency
 - [ ] Convert mode headers to chevrons
-- [ ] Update onboarding flow
+- [ ] Update onboarding flow to use Focus Mode by default
 - [ ] Add chevrons to achievement cards
 - [ ] Document patterns in Storybook
 
-### Week 4: Optimization
+### Week 5: Optimization & Metrics
 - [ ] A/B test chevron vs. traditional UI
+- [ ] A/B test Focus Mode vs. Map Mode default
+- [ ] Track completion rates, time to first action, mode switching
 - [ ] Tune animation timing based on data
 - [ ] Add sound effects (optional)
 - [ ] Measure dopamine metrics

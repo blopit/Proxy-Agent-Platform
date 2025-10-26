@@ -5,20 +5,30 @@
  *           5-point  6-point   5-point
  *
  * Features:
- * - CSS clip-path approach for pixel-perfect consistent chevron contour
+ * - Pure SVG approach for reliable shadows and borders
  *   • First: 5-point polygon (straight left |, CONVEX right point >)
  *   • Middle: 6-point polygon (CONCAVE INWARD left notch >, CONVEX right point >)
  *   • Last: 5-point polygon (CONCAVE INWARD left notch >, straight right |)
- *   • Single: 4-point rectangle (no clipping)
- * - FIXED 12px arrow depth that stays consistent across all widths
- *   • Uses CSS calc() with fixed pixel value (12px) for subtle contour
+ *   • Single: 4-point rectangle
+ * - FIXED 10px arrow depth that stays consistent across all widths
  *   • Arrow size remains constant whether narrow, base, or expanded width
- *   • No SVG viewBox distortion issues
- * - Chevrons interlock perfectly - right > points fit snugly into left > notches
- * - Background color and border applied directly to div (no SVG needed)
+ *   • No viewBox distortion issues
+ * - Chevrons interlock perfectly with -4px overlap for visual rhythm
+ * - Sharp raised bevel gradient: pronounced 3D effect with tight transitions
+ *   • Vertical gradient: light top (35% lighter) → sharp transition at 30% → base middle → sharp transition at 70% → dark bottom (20% darker)
+ *   • Glossy overlay: 45% white at top, sharp fade by 25%, gone by 50%
+ *   • White inset ring: 1px white stroke inside (10% opacity, mimics box-shadow inset)
+ *   • Tip brightness: concentrated at right edge - 75% threshold, 30% opacity for "future" direction
+ * - Subtle 1-2px shimmer animation (4s cycle, 15% opacity) for forward motion cue
+ * - ADHD-friendly design: consistent spacing, predictable rhythm, non-urgent motion
+ * - All layers rendered as SVG paths with geometricPrecision rendering
+ * - Multi-layer SVG filter shadow (mimics box-shadow):
+ *   • Small tight shadow: 0px 1px 1px rgba(0,0,0,0.25)
+ *   • Medium soft shadow: 0px 2px 8px rgba(0,0,0,0.25)
  * - Supports first/middle/last/single variants
- * - Solarized palette with active pulse and hover overlays
- * - Performs better than SVG approach (native CSS rendering)
+ * - Modern white theme with smooth antialiasing
+ * - Active pulse and hover overlays as SVG paths with CSS animations
+ * - Uniform 2px borders across all sizes for crisp rendering
  */
 
 'use client';
@@ -30,7 +40,7 @@ import React, { ReactNode } from 'react';
 // ============================================================================
 
 export type ChevronPosition = 'first' | 'middle' | 'last' | 'single';
-export type ChevronStatus = 'pending' | 'active' | 'done' | 'error';
+export type ChevronStatus = 'pending' | 'active' | 'done' | 'error' | 'next';
 export type ChevronSize = 'full' | 'micro' | 'nano';
 
 export interface ChevronStepProps {
@@ -49,25 +59,29 @@ export interface ChevronStepProps {
 }
 
 // ============================================================================
-// Default Colors (Solarized)
+// Default Colors (Modern white with shadows)
 // ============================================================================
 
 const DEFAULT_COLORS = {
   pending: {
-    fill: '#fdf6e3',
-    stroke: '#586e75',
+    fill: '#ffffff',
+    stroke: '#d1d5db',
   },
   active: {
-    fill: '#eee8d5',
-    stroke: '#268bd2',
+    fill: '#ffffff',
+    stroke: '#3b82f6',
   },
   done: {
-    fill: '#073642',
-    stroke: '#859900',
+    fill: '#f0fdf4',
+    stroke: '#22c55e',
   },
   error: {
-    fill: '#dc322f',
-    stroke: '#dc322f',
+    fill: '#fef2f2',
+    stroke: '#ef4444',
+  },
+  next: {
+    fill: '#fffbeb',
+    stroke: '#f59e0b',
   },
 };
 
@@ -77,8 +91,8 @@ const DEFAULT_COLORS = {
 
 const SIZE_CONFIG = {
   full: { height: 64, borderWidth: 2 },
-  micro: { height: 40, borderWidth: 1.5 },
-  nano: { height: 32, borderWidth: 1 },
+  micro: { height: 40, borderWidth: 2 },
+  nano: { height: 32, borderWidth: 2 },
 };
 
 // Standardized chevron arrow depth - fixed pixel value for consistent contour
@@ -186,43 +200,95 @@ export default function ChevronStep({
   };
 
   // Generate SVG path for border stroke
-  const getSVGPath = (pos: ChevronPosition, width: number, height: number, expanded: boolean): string => {
+  const getSVGPath = (pos: ChevronPosition, width: number, height: number, isCollapsed: boolean): string => {
     const arrow = CHEVRON_ARROW_DEPTH_PX;
     const h = height;
     const w = width;
     const half = h / 2;
 
-    // Pull all three right edge points in for collapsed chevrons
-    const rightEdgeAdjust = expanded ? 0 : 4;
+    // Pull right edge in for collapsed chevrons to ensure border is visible
+    // before next chevron overlaps it (chevrons overlap by -4px)
+    const rightEdgeAdjust = isCollapsed && (pos === 'first' || pos === 'middle') ? 4 : 0;
 
     if (pos === 'single') {
       return `M 0,0 L ${w},0 L ${w},${h} L 0,${h} Z`;
     }
 
     if (pos === 'first') {
-      // Move all three right points: top right, tip, bottom right
+      // Move all three right points in when collapsed
       return `M 0,0 L ${w - arrow - rightEdgeAdjust},0 L ${w - rightEdgeAdjust},${half} L ${w - arrow - rightEdgeAdjust},${h} L 0,${h} Z`;
     }
 
     if (pos === 'middle') {
-      // Move all three right points: top right, tip, bottom right
+      // Move right points in when collapsed, left notch stays at arrow position
       return `M 0,0 L ${w - arrow - rightEdgeAdjust},0 L ${w - rightEdgeAdjust},${half} L ${w - arrow - rightEdgeAdjust},${h} L 0,${h} L ${arrow},${half} Z`;
     }
 
-    // last
+    // last - straight right edge, left notch stays at arrow position
     return `M 0,0 L ${w},0 L ${w},${h} L 0,${h} L ${arrow},${half} Z`;
   };
 
 
   const h = config.height;
 
+  // Determine if chevron is truly collapsed (narrow width)
+  // Collapsed chevrons are very narrow (< 60px)
+  const isCollapsed = containerWidth < 60;
+
+  // Generate unique gradient ID for this chevron instance
+  const gradientId = React.useId();
+
+  // Helper functions for bevel gradient colors
+  const adjustColor = (color: string, amount: number): string => {
+    // For hex colors
+    if (color.startsWith('#')) {
+      const hex = color.replace('#', '');
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+
+      const adjust = (val: number) => {
+        if (amount > 0) {
+          // Lighten
+          return Math.min(255, Math.floor(val + (255 - val) * amount));
+        } else {
+          // Darken
+          return Math.max(0, Math.floor(val * (1 + amount)));
+        }
+      };
+
+      return `rgb(${adjust(r)}, ${adjust(g)}, ${adjust(b)})`;
+    }
+    return color;
+  };
+
+  // Button-10 style: smooth gradient with subtle contrast
+  const highlightColor = adjustColor(finalFill, 0.18);   // Top highlight (lighter, like button)
+  const shadowColor = adjustColor(finalFill, -0.18);     // Bottom shadow (darker, like button)
+  const tipHighlight = adjustColor(finalFill, 0.25);     // Right tip (future direction)
+
+  // Extract RGB values from finalStroke for colored shadow (Button-10 style)
+  const getShadowColor = (color: string): string => {
+    if (color.startsWith('#')) {
+      const hex = color.replace('#', '');
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, 0.25)`;
+    }
+    // If already rgb/rgba, just adjust opacity
+    return color.replace(/[\d.]+\)$/, '0.25)');
+  };
+  const statusShadowColor = getShadowColor(finalStroke);
+
   return (
     <div
       ref={containerRef}
-      className={`chevron-step-wrapper ${className}`}
+      className={`chevron-step-wrapper ${className} ${status === 'next' ? 'shake-next' : ''}`}
       style={{
         position: 'relative',
         width: width,
+        minWidth: '40px',
         height: `${h}px`,
         cursor: onClick ? 'pointer' : 'default',
         flexShrink: isExpanded ? 0 : 1,
@@ -241,7 +307,7 @@ export default function ChevronStep({
         }
       }}
     >
-      {/* SVG Border Stroke */}
+      {/* Consolidated SVG with all layers and multi-layer shadow */}
       <svg
         style={{
           position: 'absolute',
@@ -250,74 +316,170 @@ export default function ChevronStep({
           width: '100%',
           height: '100%',
           pointerEvents: 'none',
-          zIndex: 2,
+          zIndex: 1,
+          overflow: 'visible',
         }}
         viewBox={`0 0 ${containerWidth} ${h}`}
         preserveAspectRatio="xMinYMin slice"
       >
+        {/* Gradient definitions */}
+        <defs>
+          {/* Multi-layer drop shadow filter (mimics box-shadow, Button-10 style: colored shadows) */}
+          <filter id={`multi-shadow-${gradientId}`} x="-50%" y="-50%" width="200%" height="200%">
+            {/* Shadow 1: Small tight shadow - 0px 1px 1px (status color) */}
+            <feGaussianBlur in="SourceAlpha" stdDeviation="0.5" result="blur1"/>
+            <feOffset in="blur1" dx="0" dy="1" result="offset1"/>
+            <feFlood floodColor={statusShadowColor} result="color1"/>
+            <feComposite in="color1" in2="offset1" operator="in" result="shadow1"/>
+
+            {/* Shadow 2: Medium soft shadow - 0px 2px 8px (status color) */}
+            <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur2"/>
+            <feOffset in="blur2" dx="0" dy="2" result="offset2"/>
+            <feFlood floodColor={statusShadowColor} result="color2"/>
+            <feComposite in="color2" in2="offset2" operator="in" result="shadow2"/>
+
+            {/* Merge shadows */}
+            <feMerge result="merged-shadows">
+              <feMergeNode in="shadow2"/>
+              <feMergeNode in="shadow1"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+
+          {/* Simple 2-stop gradient: smooth top-to-bottom (like Button-10) */}
+          <linearGradient id={`bevel-gradient-${gradientId}`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={highlightColor} stopOpacity="1" />
+            <stop offset="100%" stopColor={shadowColor} stopOpacity="1" />
+          </linearGradient>
+
+          {/* Thin inset highlight: mimics 'inset 0px 0.8px' from Button-10 */}
+          <linearGradient id={`inset-highlight-${gradientId}`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255, 255, 255, 0.2)" />
+            <stop offset="5%" stopColor="rgba(255, 255, 255, 0)" />
+          </linearGradient>
+
+          {/* Sharp tip brightness: concentrated at the future (right edge) */}
+          <linearGradient id={`tip-gradient-${gradientId}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(255, 255, 255, 0)" />
+            <stop offset="75%" stopColor="rgba(255, 255, 255, 0)" />
+            <stop offset="100%" stopColor={tipHighlight} stopOpacity="0.3" />
+          </linearGradient>
+
+          {/* Progress shimmer gradient - animated sweep */}
+          <linearGradient id={`shimmer-gradient-${gradientId}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="rgba(255, 255, 255, 0)" />
+            <stop offset="40%" stopColor="rgba(255, 255, 255, 0)" />
+            <stop offset="50%" stopColor="rgba(255, 255, 255, 0.5)" />
+            <stop offset="60%" stopColor="rgba(255, 255, 255, 0)" />
+            <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
+          </linearGradient>
+
+          {/* Inset shadow filter for border effect */}
+          <filter id={`inset-border-${gradientId}`} x="-20%" y="-20%" width="140%" height="140%">
+            {/* Step 1: Get the inverse of the shape (everything OUTSIDE) */}
+            <feFlood floodColor="black" result="outside-color"/>
+            <feComposite in="outside-color" in2="SourceAlpha" operator="out" result="outside"/>
+
+            {/* Step 2: Blur the outside to create soft edge */}
+            <feGaussianBlur in="outside" stdDeviation="1.5" result="outside-blur"/>
+
+            {/* Step 3: Keep only what's INSIDE the original shape (inset effect) */}
+            <feComposite in="outside-blur" in2="SourceAlpha" operator="in" result="inset-shadow"/>
+
+            {/* Step 4: Color it with the status color */}
+            <feFlood floodColor={finalStroke} floodOpacity="0.6" result="shadow-color"/>
+            <feComposite in="shadow-color" in2="inset-shadow" operator="in" result="colored-inset"/>
+          </filter>
+        </defs>
+
+        {/* Layer 1: Base bevel gradient with shadow filter */}
         <path
-          d={getSVGPath(position, containerWidth, h, isExpanded)}
+          d={getSVGPath(position, containerWidth, h, isCollapsed)}
+          fill={`url(#bevel-gradient-${gradientId})`}
+          shapeRendering="geometricPrecision"
+          filter={`url(#multi-shadow-${gradientId})`}
+        />
+
+        {/* Layer 2: Thin inset highlight (top edge, like Button-10) */}
+        <path
+          d={getSVGPath(position, containerWidth, h, isCollapsed)}
+          fill={`url(#inset-highlight-${gradientId})`}
+          shapeRendering="geometricPrecision"
+        />
+
+        {/* Layer 3: Tip brightness (lighter = future) */}
+        <path
+          d={getSVGPath(position, containerWidth, h, isCollapsed)}
+          fill={`url(#tip-gradient-${gradientId})`}
+          shapeRendering="geometricPrecision"
+        />
+
+        {/* Layer 4: Progress shimmer (active status only) */}
+        {status === 'active' && (
+          <path
+            d={getSVGPath(position, containerWidth, h, isCollapsed)}
+            fill={`url(#shimmer-gradient-${gradientId})`}
+            shapeRendering="geometricPrecision"
+            className="shimmer-flow"
+          />
+        )}
+
+        {/* Layer 5: Active pulse overlay */}
+        {status === 'active' && (
+          <path
+            d={getSVGPath(position, containerWidth, h, isCollapsed)}
+            fill="rgba(59, 130, 246, 0.12)"
+            shapeRendering="geometricPrecision"
+            className="pulse-glow"
+          />
+        )}
+
+        {/* Layer 6: Hover sheen overlay */}
+        {isHovered && (
+          <path
+            d={getSVGPath(position, containerWidth, h, isCollapsed)}
+            fill="rgba(0, 0, 0, 0.04)"
+            shapeRendering="geometricPrecision"
+          />
+        )}
+
+        {/* Layer 7: Inset shadow border */}
+        <g filter={`url(#inset-border-${gradientId})`}>
+          <path
+            d={getSVGPath(position, containerWidth, h, isCollapsed)}
+            fill={finalStroke}
+            fillOpacity="0.4"
+            shapeRendering="geometricPrecision"
+          />
+        </g>
+
+        {/* Layer 8: Visible border stroke */}
+        <path
+          d={getSVGPath(position, containerWidth, h, isCollapsed)}
           fill="none"
-          stroke="red"
+          stroke={finalStroke}
           strokeWidth={config.borderWidth}
+          shapeRendering="geometricPrecision"
+          strokeLinejoin="miter"
+          strokeLinecap="butt"
+          style={{ strokeWidth: `${config.borderWidth}px` }}
         />
       </svg>
-
-      {/* Background with clip-path */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: finalFill,
-          clipPath: getClipPath(position),
-          transition: 'background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
-      />
-
-      {/* Active pulse overlay */}
-      {status === 'active' && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            backgroundColor: 'rgba(38, 139, 210, 0.18)',
-            clipPath: getClipPath(position),
-            animation: 'pulse-glow 2s ease-in-out infinite',
-            pointerEvents: 'none',
-          }}
-        />
-      )}
-
-      {/* Hover sheen */}
-      {isHovered && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            backgroundColor: 'rgba(255,255,255,0.06)',
-            clipPath: getClipPath(position),
-            pointerEvents: 'none',
-          }}
-        />
-      )}
 
       {/* Content Layer */}
       <div
         style={{
-          position: 'relative',
-          width: '100%',
-          height: '100%',
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: size === 'nano' ? '4px 16px' : size === 'micro' ? '6px 20px' : '8px 24px',
-          paddingLeft: position === 'middle' || position === 'last' ? `${CHEVRON_ARROW_DEPTH_PX + 12}px` : undefined,
-          paddingRight: position === 'first' || position === 'middle' ? `${CHEVRON_ARROW_DEPTH_PX + 12}px` : undefined,
           fontSize: size === 'nano' ? '18px' : size === 'micro' ? '22px' : '26px',
-          zIndex: 1,
+          lineHeight: 1,
+          zIndex: 2,
+          pointerEvents: 'none',
         }}
       >
         {children}
@@ -332,6 +494,70 @@ export default function ChevronStep({
           50% {
             opacity: 0.85;
           }
+        }
+
+        @keyframes shimmer-flow {
+          0% {
+            transform: translateX(-100%);
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          90% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(200%);
+            opacity: 0;
+          }
+        }
+
+        @keyframes bounce-elastic {
+          0%, 100% {
+            transform: translateX(0) scale(1);
+          }
+          5% {
+            transform: translateX(6px) scale(1.02, 0.98);
+          }
+          10% {
+            transform: translateX(-6px) scale(0.98, 1.02);
+          }
+          15% {
+            transform: translateX(4px) scale(1.015, 0.985);
+          }
+          20% {
+            transform: translateX(-3px) scale(0.99, 1.01);
+          }
+          25% {
+            transform: translateX(2px) scale(1.008, 0.992);
+          }
+          30% {
+            transform: translateX(-1px) scale(0.995, 1.005);
+          }
+          35% {
+            transform: translateX(0.5px) scale(1.002, 0.998);
+          }
+          40%, 90% {
+            transform: translateX(0) scale(1);
+          }
+        }
+
+        :global(.pulse-glow) {
+          animation: pulse-glow 2s ease-in-out infinite;
+        }
+
+        :global(.shimmer-flow) {
+          animation: shimmer-flow 2.5s ease-in-out infinite;
+          transform-origin: center;
+        }
+
+        :global(.shake-next) {
+          animation: bounce-elastic 3s ease-in-out infinite;
+        }
+
+        :global(.shake-next):hover {
+          animation-play-state: paused;
         }
       `}</style>
     </div>
@@ -354,10 +580,10 @@ export function CollapsedChevron({
   ...props
 }: CollapsedChevronProps) {
   const textColors = {
-    pending: '#073642',
-    active: '#268bd2',
-    done: '#93a1a1',
-    error: '#ffffff',
+    pending: '#6b7280',
+    active: '#3b82f6',
+    done: '#22c55e',
+    error: '#ef4444',
   };
 
   const fontSize = size === 'nano' ? '10px' : size === 'micro' ? '11px' : '13px';

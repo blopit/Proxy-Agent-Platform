@@ -24,48 +24,7 @@ import React, { useState, useEffect } from 'react';
 import { X, CheckCircle2, Circle, Loader2, AlertCircle, User, Bot, FileText } from 'lucide-react';
 import ProgressBar from './ProgressBar';
 import ChevronStep from '@/components/mobile/ChevronStep';
-
-// OpenMoji component for consistent emoji rendering
-const OpenMoji = ({ emoji, size = 16, className = '', variant = 'black' }: {
-  emoji: string;
-  size?: number;
-  className?: string;
-  variant?: 'color' | 'black';
-}) => {
-  // Convert emoji to Unicode hex code point (handles multi-byte emojis)
-  const getHexCode = (emoji: string) => {
-    const codePoint = emoji.codePointAt(0);
-    if (!codePoint) return '';
-    // Pad to at least 4 digits, but allow more for emojis that need it
-    const hex = codePoint.toString(16).toUpperCase();
-    return hex.length < 4 ? hex.padStart(4, '0') : hex;
-  };
-
-  const hexCode = getHexCode(emoji);
-  // Use OpenMoji CDN with black (line art) or color version
-  const cdnUrl = `https://cdn.jsdelivr.net/npm/openmoji@15.0.0/${variant}/svg/${hexCode}.svg`;
-
-  return (
-    <img
-      src={cdnUrl}
-      alt={emoji}
-      width={size}
-      height={size}
-      className={className}
-      style={{
-        display: 'block',
-        flexShrink: 0,
-      }}
-      onError={(e) => {
-        // Fallback to showing the emoji text if SVG fails to load
-        const target = e.target as HTMLImageElement;
-        target.style.display = 'none';
-        const fallback = document.createTextNode(emoji);
-        target.parentNode?.appendChild(fallback);
-      }}
-    />
-  );
-};
+import OpenMoji from './OpenMoji';
 
 // ============================================================================
 // Types
@@ -186,12 +145,12 @@ interface StepSectionProps {
 }
 
 function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, onClick, stepProgressPercent, onRetry, effectiveExpandedId, totalDurationText, loadingChildren, hasNestedContent }: StepSectionProps) {
-  // Text colors for Solarized backgrounds
+  // Text colors for modern white backgrounds
   const textColors = {
-    pending: '#073642',      // Solarized base02 (darker, more visible on light)
-    active: '#268bd2',       // Solarized blue (pops on cream)
-    done: '#93a1a1',         // Solarized base1 (light on dark)
-    error: '#ffffff',        // White text on red background
+    pending: '#6b7280',      // Gray 500
+    active: '#3b82f6',       // Blue 500
+    done: '#22c55e',         // Green 500
+    error: '#ef4444',        // Red 500
   };
 
   const getStepIcon = () => {
@@ -256,7 +215,7 @@ function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, on
     ? 'flex-1 basis-0 min-w-0' // base: equal widths
     : isExpanded
       ? 'grow basis-0 min-w-0' // expanded: take remaining space
-      : 'basis-[30px] w-[30px] shrink-0 grow-0 min-w-0'; // collapsed: 30px wide
+      : 'basis-[40px] w-[40px] shrink-0 grow-0 min-w-0'; // collapsed: 40px wide
 
   return (
     <div
@@ -283,16 +242,35 @@ function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, on
               height: '100%',
             }}
           >
-            <span
-              style={{
-                fontSize: '10px',
-                fontWeight: 500,
-                color: textColors[step.status],
-                lineHeight: 1,
-              }}
-            >
-              {getLabel()}
-            </span>
+            {step.status === 'active' ? (
+              <span
+                style={{
+                  fontSize: '10px',
+                  fontWeight: 500,
+                  color: textColors[step.status],
+                  lineHeight: 1,
+                }}
+              >
+                {getLabel()}
+              </span>
+            ) : step.icon ? (
+              <OpenMoji
+                emoji={step.icon}
+                size={16}
+                variant="black"
+              />
+            ) : (
+              <span
+                style={{
+                  fontSize: '10px',
+                  fontWeight: 500,
+                  color: textColors[step.status],
+                  lineHeight: 1,
+                }}
+              >
+                {getLabel()}
+              </span>
+            )}
           </div>
         )}
 
@@ -305,6 +283,7 @@ function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, on
               justifyContent: 'center',
               width: '100%',
               height: '100%',
+              marginLeft: getChevronPosition() === 'middle' ? '4px' : '0',
             }}
           >
             <OpenMoji
@@ -324,6 +303,7 @@ function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, on
               justifyContent: 'center',
               width: '100%',
               height: '100%',
+              marginLeft: getChevronPosition() === 'middle' ? '4px' : '0',
             }}
           >
             <OpenMoji
@@ -345,7 +325,7 @@ function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, on
               alignItems: 'center',
               justifyContent: 'center',
               gap: '4px',
-              backgroundColor: 'rgba(0, 43, 54, 0.8)',
+              backgroundColor: 'rgba(0, 0, 0, 0.75)',
               backdropFilter: 'blur(4px)',
             }}
           >
@@ -355,7 +335,7 @@ function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, on
                 style={{
                   fontSize: '9px',
                   padding: '2px 8px',
-                  backgroundColor: '#dc322f',
+                  backgroundColor: '#ef4444',
                   color: 'white',
                   borderRadius: '4px',
                   border: 'none',
@@ -382,14 +362,14 @@ function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, on
               left: 0,
               right: 0,
               height: '2px',
-              backgroundColor: 'rgba(88, 110, 117, 0.3)',
+              backgroundColor: 'rgba(209, 213, 219, 0.5)',
               overflow: 'hidden',
             }}
           >
             <div
               style={{
                 height: '100%',
-                backgroundColor: '#268bd2',
+                backgroundColor: '#3b82f6',
                 width: `${stepProgressPercent}%`,
                 transition: 'width 0.3s ease-out',
               }}
@@ -403,14 +383,14 @@ function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, on
         <div
           style={{
             position: 'absolute',
-            top: size === 'full' ? '-32px' : '-20px',
+            top: size === 'full' ? '-22px' : '-16px',
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 30,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: size === 'full' ? '4px' : '2px',
+            gap: size === 'full' ? '2px' : '1px',
           }}
         >
           {getStepIcon()}
@@ -420,6 +400,7 @@ function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, on
               fontWeight: 500,
               whiteSpace: 'nowrap',
               color: textColors[step.status],
+              lineHeight: 1.2,
             }}
           >
             {getLabel()}
@@ -693,22 +674,25 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
   return (
     <div
       className={`
-        bg-[#073642] border border-[#586e75] rounded overflow-visible
+        bg-gray-50 border border-gray-200 rounded overflow-visible
         ${size === 'nano' ? 'p-1' : size === 'micro' ? 'p-2' : 'p-2'}
         ${size === 'full' ? 'pt-12' : size === 'micro' ? 'pt-10' : ''}
         ${className}
       `}
+      style={{
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
+      }}
     >
       {/* Header - compact */}
       {size !== 'nano' && (
         <div className={`relative flex items-center justify-center mb-0.5 ${size === 'micro' ? '-mt-8' : '-mt-10'}`}>
-          <p className={`line-clamp-1 w-full text-center mb-2 ${size === 'micro' ? 'text-[9px]' : 'text-[10px]'} text-[#93a1a1] font-medium ${effectiveExpandedId ? 'opacity-0' : ''}`}>
+          <p className={`line-clamp-1 w-full text-center mb-2 ${size === 'micro' ? 'text-[9px]' : 'text-[10px]'} text-gray-600 font-medium ${effectiveExpandedId ? 'opacity-0' : ''}`}>
             {jobName}
           </p>
           {(onClose || onDismiss) && (
             <button
               onClick={onDismiss || onClose}
-              className="absolute right-0 text-[#586e75] hover:text-[#93a1a1] transition-colors flex-shrink-0"
+              className="absolute right-0 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
               aria-label={onDismiss ? "Dismiss" : "Close"}
             >
               <X size={size === 'micro' ? 10 : 12} />
@@ -782,12 +766,12 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
               segments={[
                 {
                   percentage: (steps.filter(s => s.leafType === 'DIGITAL').length / steps.length) * 100,
-                  color: '#2aa198',
+                  color: '#10b981',
                   label: `${steps.filter(s => s.leafType === 'DIGITAL').length} digital steps`,
                 },
                 {
                   percentage: (steps.filter(s => s.leafType === 'HUMAN').length / steps.length) * 100,
-                  color: '#268bd2',
+                  color: '#3b82f6',
                   label: `${steps.filter(s => s.leafType === 'HUMAN').length} human steps`,
                 },
               ].filter(seg => seg.percentage > 0)}

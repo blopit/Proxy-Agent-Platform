@@ -96,7 +96,7 @@ const ExpandableTile: React.FC<ExpandableTileProps> = ({
             isExpanded ? 'text-[#268bd2]' : 'text-[#586e75]'
           }`}
         >
-          ▼
+          🔽
         </span>
       </div>
 

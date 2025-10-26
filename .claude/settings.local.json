@@ -6,7 +6,8 @@
       "Bash(awk '{print $NF}')",
       "WebSearch",
       "WebFetch(domain:codepen.io)",
-      "WebFetch(domain:css-tricks.com)"
+      "WebFetch(domain:css-tricks.com)",
+      "Bash(npm run type-check)"
     ],
     "deny": [],
     "ask": []
