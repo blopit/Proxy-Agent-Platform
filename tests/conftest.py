@@ -234,3 +234,216 @@ def mock_project_repository():
     Mock ProjectRepository for service layer unit tests
     """
     return Mock()
+
+
+# ============================================================================
+# Integration Test Fixtures (Sprint 1.3)
+# ============================================================================
+
+@pytest.fixture
+async def api_client():
+    """
+    FastAPI test client for integration tests
+
+    Uses TestClient from httpx for async support.
+    """
+    from httpx import AsyncClient
+    from src.api.main import app
+
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        yield client
+
+
+@pytest.fixture
+def test_project(test_db):
+    """
+    Create a test project in the database
+
+    Returns Project domain model.
+    """
+    from src.database.models import Project as ProjectModel
+    from src.core.task_models import Project
+
+    project_data = {
+        "project_id": str(uuid4()),
+        "name": "Test Project",
+        "description": "A test project for integration tests",
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc),
+    }
+
+    project_model = ProjectModel(**project_data)
+    test_db.add(project_model)
+    test_db.commit()
+    test_db.refresh(project_model)
+
+    return Project(**project_data)
+
+
+@pytest.fixture
+def test_task(test_db, test_project):
+    """
+    Create a test task in the database
+
+    Returns Task domain model.
+    """
+    from src.database.models import Task as TaskModel
+    from src.core.task_models import Task
+
+    task_data = {
+        "task_id": str(uuid4()),
+        "title": "Test Task",
+        "description": "A test task for integration tests",
+        "project_id": test_project.project_id,
+        "status": TaskStatus.TODO.value,
+        "priority": TaskPriority.MEDIUM.value,
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc),
+    }
+
+    task_model = TaskModel(**task_data)
+    test_db.add(task_model)
+    test_db.commit()
+    test_db.refresh(task_model)
+
+    # Convert to domain model
+    return Task(
+        task_id=task_model.task_id,
+        title=task_model.title,
+        description=task_model.description,
+        project_id=task_model.project_id,
+        status=TaskStatus(task_model.status),
+        priority=TaskPriority(task_model.priority),
+        created_at=task_model.created_at,
+        updated_at=task_model.updated_at,
+    )
+
+
+@pytest.fixture
+def test_task_in_progress(test_db, test_project):
+    """
+    Create a test task in IN_PROGRESS status
+
+    Returns Task domain model.
+    """
+    from src.database.models import Task as TaskModel
+    from src.core.task_models import Task
+
+    task_data = {
+        "task_id": str(uuid4()),
+        "title": "In Progress Task",
+        "description": "A task currently in progress",
+        "project_id": test_project.project_id,
+        "status": TaskStatus.IN_PROGRESS.value,
+        "priority": TaskPriority.HIGH.value,
+        "started_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc),
+    }
+
+    task_model = TaskModel(**task_data)
+    test_db.add(task_model)
+    test_db.commit()
+    test_db.refresh(task_model)
+
+    return Task(
+        task_id=task_model.task_id,
+        title=task_model.title,
+        description=task_model.description,
+        project_id=task_model.project_id,
+        status=TaskStatus(task_model.status),
+        priority=TaskPriority(task_model.priority),
+        started_at=task_model.started_at,
+        created_at=task_model.created_at,
+        updated_at=task_model.updated_at,
+    )
+
+
+@pytest.fixture
+def test_task_searchable(test_db, test_project):
+    """
+    Create a task with searchable content
+
+    Returns Task domain model.
+    """
+    from src.database.models import Task as TaskModel
+    from src.core.task_models import Task
+
+    task_data = {
+        "task_id": str(uuid4()),
+        "title": "Implement user authentication system",
+        "description": "Add JWT-based authentication with secure token handling",
+        "project_id": test_project.project_id,
+        "status": TaskStatus.TODO.value,
+        "priority": TaskPriority.HIGH.value,
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc),
+    }
+
+    task_model = TaskModel(**task_data)
+    test_db.add(task_model)
+    test_db.commit()
+    test_db.refresh(task_model)
+
+    return Task(
+        task_id=task_model.task_id,
+        title=task_model.title,
+        description=task_model.description,
+        project_id=task_model.project_id,
+        status=TaskStatus(task_model.status),
+        priority=TaskPriority(task_model.priority),
+        created_at=task_model.created_at,
+        updated_at=task_model.updated_at,
+    )
+
+
+@pytest.fixture
+def test_project_with_tasks(test_db):
+    """
+    Create a project with multiple tasks in different statuses
+
+    Returns Project domain model with tasks populated.
+    """
+    from src.database.models import Project as ProjectModel, Task as TaskModel
+    from src.core.task_models import Project
+
+    # Create project
+    project_data = {
+        "project_id": str(uuid4()),
+        "name": "Project with Tasks",
+        "description": "A project with multiple tasks for statistics testing",
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc),
+    }
+
+    project_model = ProjectModel(**project_data)
+    test_db.add(project_model)
+    test_db.commit()
+
+    # Create tasks in different statuses
+    statuses = [TaskStatus.TODO, TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.COMPLETED]
+    priorities = [TaskPriority.LOW, TaskPriority.MEDIUM, TaskPriority.HIGH, TaskPriority.HIGH]
+
+    for i, (status, priority) in enumerate(zip(statuses, priorities)):
+        task_data = {
+            "task_id": str(uuid4()),
+            "title": f"Task {i+1}",
+            "description": f"Test task {i+1}",
+            "project_id": project_data["project_id"],
+            "status": status.value,
+            "priority": priority.value,
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
+        }
+
+        if status == TaskStatus.COMPLETED:
+            task_data["completed_at"] = datetime.now(timezone.utc)
+        elif status == TaskStatus.IN_PROGRESS:
+            task_data["started_at"] = datetime.now(timezone.utc)
+
+        task_model = TaskModel(**task_data)
+        test_db.add(task_model)
+
+    test_db.commit()
+
+    return Project(**project_data)
