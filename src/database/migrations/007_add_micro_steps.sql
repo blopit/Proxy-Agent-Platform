@@ -14,7 +14,7 @@ CREATE TABLE micro_steps (
     parent_task_id TEXT NOT NULL,
     step_number INTEGER NOT NULL,
     description TEXT NOT NULL,
-    estimated_minutes INTEGER NOT NULL CHECK(estimated_minutes >= 1 AND estimated_minutes <= 10),
+    estimated_minutes INTEGER NOT NULL CHECK(estimated_minutes >= 2 AND estimated_minutes <= 5),
     delegation_mode TEXT DEFAULT 'do',
     status TEXT DEFAULT 'todo',
     actual_minutes INTEGER,

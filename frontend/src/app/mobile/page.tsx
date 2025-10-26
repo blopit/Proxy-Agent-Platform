@@ -9,6 +9,7 @@ import CaptureMode from '@/components/mobile/modes/CaptureMode'
 import ScoutMode from '@/components/mobile/modes/ScoutMode'
 import TodayMode from '@/components/mobile/modes/TodayMode'
 import ProgressView from '@/components/mobile/ProgressView'
+import MorningRitualModal from '@/components/mobile/MorningRitualModal'
 import MenderMode from '@/components/mobile/modes/MenderMode'
 import MapperMode from '@/components/mobile/modes/MapperMode'
 import Ticker from '@/components/mobile/Ticker'
@@ -80,6 +81,9 @@ export default function MobileApp() {
   const [streakDays, setStreakDays] = useState(0)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [completedCount, setCompletedCount] = useState(0) // Track completed tasks today
+
+  // Morning Ritual state
+  const [showMorningRitual, setShowMorningRitual] = useState(false)
 
   // ADHD UX visual feedback states
   const [loadingStage, setLoadingStage] = useState<LoadingStage | null>(null)
@@ -207,6 +211,7 @@ export default function MobileApp() {
     updateTimeOfDay();
     fetchProgressData();
     fetchEnergyData();
+    checkMorningRitual(); // Check if morning ritual should show
 
     // Load task previews from localStorage (client-side only)
     if (typeof window !== 'undefined') {
@@ -304,6 +309,26 @@ export default function MobileApp() {
       setTimeOfDay('evening');
     } else {
       setTimeOfDay('night');
+    }
+  };
+
+  const checkMorningRitual = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/v1/ritual/check?user_id=mobile-user`);
+
+      if (!response.ok) {
+        console.warn('Ritual check failed, skipping');
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.should_show) {
+        setShowMorningRitual(true);
+      }
+    } catch (err) {
+      console.error('Failed to check morning ritual:', err);
+      // Silently fail - don't block app loading
     }
   };
 
@@ -1077,6 +1102,18 @@ export default function MobileApp() {
         }}
         onStartTask={handleStartNow}
         onViewAllTasks={handleViewTasks}
+      />
+
+      {/* Morning Ritual Modal - Daily focus task selection (6am-12pm) */}
+      <MorningRitualModal
+        isOpen={showMorningRitual}
+        onClose={() => setShowMorningRitual(false)}
+        onComplete={(taskIds) => {
+          console.log('Morning ritual completed with tasks:', taskIds);
+          setShowMorningRitual(false);
+          setRefreshTrigger(prev => prev + 1); // Refresh tasks
+        }}
+        userId="mobile-user"
       />
     </div>
   )

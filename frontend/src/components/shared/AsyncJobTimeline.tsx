@@ -52,7 +52,10 @@ const OpenMoji = ({ emoji, size = 16, className = '', variant = 'black' }: {
       width={size}
       height={size}
       className={className}
-      style={{ display: 'inline-block' }}
+      style={{
+        display: 'block',
+        flexShrink: 0,
+      }}
       onError={(e) => {
         // Fallback to showing the emoji text if SVG fails to load
         const target = e.target as HTMLImageElement;
@@ -271,41 +274,64 @@ function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, on
       >
         {/* Content inside chevron */}
         {size === 'nano' && (
-          <span
+          <div
             style={{
-              fontSize: '10px',
-              fontWeight: 500,
-              color: textColors[step.status],
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+              height: '100%',
             }}
           >
-            {getLabel()}
-          </span>
+            <span
+              style={{
+                fontSize: '10px',
+                fontWeight: 500,
+                color: textColors[step.status],
+                lineHeight: 1,
+              }}
+            >
+              {getLabel()}
+            </span>
+          </div>
         )}
 
-        {/* Micro size - number inside when collapsed */}
-        {size === 'micro' && effectiveExpandedId && !isExpanded && (
-          <span
+        {/* Micro size - icon inside when collapsed */}
+        {size === 'micro' && effectiveExpandedId && !isExpanded && step.icon && (
+          <div
             style={{
-              fontSize: '9px',
-              fontWeight: 'bold',
-              color: textColors[step.status],
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+              height: '100%',
             }}
           >
-            {index + 1}
-          </span>
+            <OpenMoji
+              emoji={step.icon}
+              size={18}
+              variant="black"
+            />
+          </div>
         )}
 
-        {/* Full size - number inside when collapsed */}
-        {size === 'full' && effectiveExpandedId && !isExpanded && (
-          <span
+        {/* Full size - icon inside when collapsed */}
+        {size === 'full' && effectiveExpandedId && !isExpanded && step.icon && (
+          <div
             style={{
-              fontSize: '11px',
-              fontWeight: 'bold',
-              color: textColors[step.status],
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '100%',
+              height: '100%',
             }}
           >
-            {index + 1}
-          </span>
+            <OpenMoji
+              emoji={step.icon}
+              size={24}
+              variant="black"
+            />
+          </div>
         )}
 
         {/* Error state overlay with retry button */}
@@ -425,6 +451,7 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
 }: AsyncJobTimelineProps) {
   const [expandedStepId, setExpandedStepId] = useState<string | null>(null);
   const [manualExpandId, setManualExpandId] = useState<string | null>(null);
+  const [forceCollapsed, setForceCollapsed] = useState(false); // Track if user manually collapsed active step
 
   // State for hierarchical children
   const [expandedStepChildren, setExpandedStepChildren] = useState<Map<string, JobStep[]>>(new Map());
@@ -436,16 +463,39 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
     progress: number;
   }>>(new Map());
 
-  // Auto-expand active step (unless user has manually expanded something)
+  // Auto-expand active step (unless user has manually expanded something or force collapsed)
   useEffect(() => {
-    if (!manualExpandId) {
+    if (!manualExpandId && !forceCollapsed) {
       const activeStep = steps.find(s => s.status === 'active');
       setExpandedStepId(activeStep?.id || null);
+    } else if (forceCollapsed) {
+      // If force collapsed, don't auto-expand
+      setExpandedStepId(null);
     }
-  }, [steps, manualExpandId]);
+  }, [steps, manualExpandId, forceCollapsed]);
 
   const handleStepClick = async (stepId: string) => {
     const step = steps.find(s => s.id === stepId);
+    const effectiveExpanded = manualExpandId || expandedStepId;
+    const currentlyExpanded = effectiveExpanded === stepId;
+    const isActiveStep = step?.status === 'active';
+
+    // If clicking on currently expanded step (including active step), collapse it
+    if (currentlyExpanded) {
+      if (isActiveStep && !manualExpandId) {
+        // Active step auto-expanded - force collapse it
+        setForceCollapsed(true);
+      } else if (manualExpandId === stepId) {
+        // Manually expanded - collapse it
+        setManualExpandId(null);
+        setForceCollapsed(false); // Reset force collapsed when manually toggling
+      }
+      onStepClick?.(stepId);
+      return; // Don't proceed to expansion logic
+    }
+
+    // Reset force collapsed when expanding a different step
+    setForceCollapsed(false);
 
     // If step is decomposable and not already expanded, fetch children
     // IMPORTANT: Explicitly check isLeaf === false (not just falsy) to avoid treating undefined as decomposable
@@ -609,12 +659,8 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
       }
     }
 
-    // Toggle manual expansion
-    if (manualExpandId === stepId) {
-      setManualExpandId(null); // Collapse
-    } else {
-      setManualExpandId(stepId); // Expand
-    }
+    // Expand this step (collapse is handled at the beginning of the function)
+    setManualExpandId(stepId);
 
     onStepClick?.(stepId);
   };

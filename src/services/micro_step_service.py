@@ -152,20 +152,15 @@ class MicroStepService:
                 f"Parent task with ID {data.parent_task_id} not found"
             )
 
-        # Validate estimated_minutes (ADHD-friendly: 2-15 minutes recommended)
-        # Note: We allow 1-30 minutes but log warnings for outliers
-        if data.estimated_minutes < 1:
+        # Validate estimated_minutes (ADHD-friendly: 2-5 minutes required)
+        if data.estimated_minutes < 2:
             raise MicroStepServiceError(
-                f"Micro-steps must be at least 1 minute. Got: {data.estimated_minutes}"
+                f"Micro-steps must be 2-5 minutes for ADHD-friendly task management. Got: {data.estimated_minutes} minute(s)"
             )
 
-        if data.estimated_minutes > 30:
-            logger.warning(
-                f"Micro-step duration {data.estimated_minutes}min exceeds recommended 15min max"
-            )
-        elif data.estimated_minutes > 15:
-            logger.info(
-                f"Micro-step duration {data.estimated_minutes}min is longer than ideal 2-5min range"
+        if data.estimated_minutes > 5:
+            raise MicroStepServiceError(
+                f"Micro-steps must be 2-5 minutes for ADHD-friendly task management. Got: {data.estimated_minutes} minutes"
             )
 
         # Validate and normalize leaf_type if provided (case-insensitive)
@@ -208,9 +203,10 @@ class MicroStepService:
             INSERT INTO micro_steps (
                 step_id, parent_task_id, step_number, description, estimated_minutes,
                 delegation_mode, status, actual_minutes, parent_step_id, level, is_leaf,
-                decomposition_state, short_label, icon
+                decomposition_state, short_label, icon, leaf_type, automation_plan,
+                completed, completed_at, energy_level
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
             (
                 step_id,
@@ -227,6 +223,11 @@ class MicroStepService:
                 data.decomposition_state,
                 data.short_label,
                 data.icon,
+                data.leaf_type,
+                automation_plan_json,
+                0,  # Default completed = False
+                None,  # Default completed_at = None
+                None,  # Default energy_level = None
             ),
         )
 
@@ -252,7 +253,8 @@ class MicroStepService:
             """
             SELECT step_id, parent_task_id, step_number, description, estimated_minutes,
                    delegation_mode, status, actual_minutes, created_at, completed_at,
-                   parent_step_id, level, is_leaf, decomposition_state, short_label, icon
+                   parent_step_id, level, is_leaf, decomposition_state, short_label, icon,
+                   leaf_type, automation_plan, completed, energy_level
             FROM micro_steps
             WHERE step_id = ?
         """,
@@ -263,18 +265,20 @@ class MicroStepService:
         if not row:
             return None
 
+        import json
+
         return MicroStep(
             step_id=row[0],
             parent_task_id=row[1],
             description=row[3],
             estimated_minutes=row[4],
-            leaf_type=None,  # Not in schema
+            leaf_type=row[16],
             delegation_mode=row[5],
-            automation_plan=None,  # Not in schema
-            tags=None,  # Not in schema
-            completed=(row[6] == 'done'),  # Map status to completed
+            automation_plan=json.loads(row[17]) if row[17] else None,
+            tags=None,  # Tags not stored in micro_steps yet
+            completed=bool(row[18]) if row[18] is not None else False,
             completed_at=datetime.fromisoformat(row[9]) if row[9] else None,
-            energy_level=None,  # Not in schema
+            energy_level=row[19],
             created_at=datetime.fromisoformat(row[8]),
             parent_step_id=row[10],
             level=row[11] if row[11] is not None else 0,
@@ -413,6 +417,10 @@ class MicroStepService:
         if data.completed is not None:
             updates.append("status = ?")
             params.append('done' if data.completed else 'todo')
+
+            # Also update the completed column
+            updates.append("completed = ?")
+            params.append(1 if data.completed else 0)
 
             # Auto-set completed_at if marking as completed
             if data.completed and data.completed_at is None:
