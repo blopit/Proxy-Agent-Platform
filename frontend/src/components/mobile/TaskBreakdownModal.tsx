@@ -10,8 +10,10 @@ import React, { useEffect, useState } from 'react';
 import { X, CheckCircle } from 'lucide-react';
 import TaskCardBig from './cards/TaskCardBig';
 import HierarchyTreeNode from './HierarchyTreeNode';
+import AsyncJobTimeline, { type JobStep } from '@/components/shared/AsyncJobTimeline';
 import { captureResponseToCardProps } from '@/types/task-schema';
 import type { CaptureResponse, TaskNode } from '@/types/capture';
+import { taskApi } from '@/services/taskApi';
 
 export interface TaskBreakdownModalProps {
   captureResponse: CaptureResponse | null;
@@ -37,6 +39,12 @@ export default function TaskBreakdownModal({
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [showHierarchyView, setShowHierarchyView] = useState(false);
 
+  // Decomposition state
+  const [decomposingNodeId, setDecomposingNodeId] = useState<string | null>(null);
+  const [decompositionSteps, setDecompositionSteps] = useState<JobStep[]>([]);
+  const [decompositionProgress, setDecompositionProgress] = useState(0);
+  const [hierarchyTree, setHierarchyTree] = useState<TaskNode | null>(null);
+
   // Animate content on open
   useEffect(() => {
     if (isOpen && captureResponse) {
@@ -46,8 +54,12 @@ export default function TaskBreakdownModal({
 
       // Then show content
       setTimeout(() => setShowContent(true), 100);
+
+      // Initialize hierarchy tree
+      setHierarchyTree(convertToHierarchyTree());
     } else {
       setShowContent(false);
+      setHierarchyTree(null);
     }
   }, [isOpen, captureResponse]);
 
@@ -97,11 +109,173 @@ export default function TaskBreakdownModal({
     return rootNode;
   };
 
-  const hierarchyTree = convertToHierarchyTree();
-
   const handleExpand = async (nodeId: string) => {
-    // TODO: Call API to decompose node if needed
-    setExpandedNodes(prev => new Set(prev).add(nodeId));
+    // Find the node in the tree
+    const findNode = (node: TaskNode): TaskNode | null => {
+      if (node.task_id === nodeId) return node;
+      if (node.children) {
+        for (const child of node.children) {
+          const found = findNode(child);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const node = hierarchyTree ? findNode(hierarchyTree) : null;
+
+    // If node needs decomposition (stub state), call API
+    if (node && node.decomposition_state === 'stub') {
+      setDecomposingNodeId(nodeId);
+
+      // Initialize decomposition steps for timeline
+      setDecompositionSteps([
+        {
+          id: 'analyze',
+          description: 'Analyze complexity',
+          shortLabel: 'Analyzing',
+          detail: 'Understanding task structure...',
+          estimatedMinutes: 0,
+          leafType: 'DIGITAL',
+          icon: '🔍',
+          status: 'active',
+        },
+        {
+          id: 'breakdown',
+          description: 'Break into subtasks',
+          shortLabel: 'Breaking down',
+          detail: 'Creating micro-steps...',
+          estimatedMinutes: 0,
+          leafType: 'DIGITAL',
+          icon: '🔨',
+          status: 'pending',
+        },
+        {
+          id: 'classify',
+          description: 'Classify steps',
+          shortLabel: 'Classifying',
+          detail: 'Detecting task types...',
+          estimatedMinutes: 0,
+          leafType: 'DIGITAL',
+          icon: '🏷️',
+          status: 'pending',
+        },
+        {
+          id: 'save',
+          description: 'Save results',
+          shortLabel: 'Saving',
+          detail: 'Updating task tree...',
+          estimatedMinutes: 0,
+          leafType: 'DIGITAL',
+          icon: '💾',
+          status: 'pending',
+        },
+      ]);
+      setDecompositionProgress(0);
+
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        setDecompositionProgress(prev => {
+          const newProgress = prev + 0.5;
+          if (newProgress >= 100) {
+            clearInterval(progressInterval);
+            return 100;
+          }
+
+          // Update step statuses based on progress
+          if (newProgress >= 10 && newProgress < 30) {
+            setDecompositionSteps(steps => steps.map((s, i) =>
+              i === 0 ? { ...s, status: 'done' } :
+              i === 1 ? { ...s, status: 'active' } : s
+            ));
+          } else if (newProgress >= 30 && newProgress < 60) {
+            setDecompositionSteps(steps => steps.map((s, i) =>
+              i <= 1 ? { ...s, status: 'done' } :
+              i === 2 ? { ...s, status: 'active' } : s
+            ));
+          } else if (newProgress >= 60 && newProgress < 90) {
+            setDecompositionSteps(steps => steps.map((s, i) =>
+              i <= 2 ? { ...s, status: 'done' } :
+              i === 3 ? { ...s, status: 'active' } : s
+            ));
+          }
+
+          return newProgress;
+        });
+      }, 40);
+
+      try {
+        // Call the decomposition API
+        const response = await taskApi.breakDownTask(nodeId);
+
+        // Clear interval
+        clearInterval(progressInterval);
+
+        // Mark all steps as done
+        setDecompositionSteps(steps => steps.map(s => ({ ...s, status: 'done' as const })));
+        setDecompositionProgress(100);
+
+        // Update the hierarchy tree with new children
+        const updateNodeChildren = (node: TaskNode): TaskNode => {
+          if (node.task_id === nodeId) {
+            return {
+              ...node,
+              decomposition_state: 'decomposed',
+              children: response.subtasks.map((subtask: any) => ({
+                task_id: subtask.task_id || subtask.step_id,
+                title: subtask.title || subtask.description,
+                description: subtask.description,
+                level: (subtask.level || node.level + 1) as any,
+                parent_id: nodeId,
+                children_ids: [],
+                estimated_minutes: subtask.estimated_minutes,
+                total_minutes: subtask.total_minutes || subtask.estimated_minutes,
+                decomposition_state: subtask.decomposition_state || 'atomic',
+                is_leaf: subtask.is_leaf ?? true,
+                leaf_type: subtask.leaf_type,
+                icon: subtask.icon,
+                custom_emoji: subtask.custom_emoji,
+                delegation_mode: subtask.delegation_mode,
+              })),
+              children_ids: response.subtasks.map((s: any) => s.task_id || s.step_id),
+            };
+          }
+          if (node.children) {
+            return {
+              ...node,
+              children: node.children.map(updateNodeChildren),
+            };
+          }
+          return node;
+        };
+
+        if (hierarchyTree) {
+          setHierarchyTree(updateNodeChildren(hierarchyTree));
+        }
+
+        // Expand the node after a brief delay to show the transformation
+        setTimeout(() => {
+          setExpandedNodes(prev => new Set(prev).add(nodeId));
+          setDecomposingNodeId(null);
+          setDecompositionSteps([]);
+          setDecompositionProgress(0);
+        }, 1000);
+
+      } catch (error) {
+        console.error('Error decomposing task:', error);
+        clearInterval(progressInterval);
+        setDecomposingNodeId(null);
+        setDecompositionSteps([]);
+        setDecompositionProgress(0);
+
+        // Show error toast
+        const toast = await import('react-hot-toast');
+        toast.default.error('Failed to decompose task. Please try again.');
+      }
+    } else {
+      // Just expand/collapse if already decomposed
+      setExpandedNodes(prev => new Set(prev).add(nodeId));
+    }
   };
 
   const handleCollapse = (nodeId: string) => {
@@ -210,12 +384,27 @@ export default function TaskBreakdownModal({
                   <span>🌳</span>
                   <span>Hierarchy Breakdown</span>
                 </h3>
+
+                {/* Decomposition Timeline - shows during active decomposition */}
+                {decomposingNodeId && decompositionSteps.length > 0 && (
+                  <div className="mb-4 p-3 bg-[#002b36] rounded-lg border border-[#268bd2]">
+                    <AsyncJobTimeline
+                      jobName="Decomposing task..."
+                      steps={decompositionSteps}
+                      currentProgress={decompositionProgress}
+                      size="full"
+                      showProgressBar={true}
+                    />
+                  </div>
+                )}
+
                 {hierarchyTree ? (
                   <HierarchyTreeNode
                     node={hierarchyTree}
                     isExpanded={expandedNodes.has(hierarchyTree.task_id)}
                     onExpand={handleExpand}
                     onCollapse={handleCollapse}
+                    onDecompose={handleExpand}
                     onStartWork={(nodeId) => {
                       console.log('Start work on:', nodeId);
                       handleStartTask();

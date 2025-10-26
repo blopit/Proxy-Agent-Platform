@@ -13,6 +13,7 @@ from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from faker import Faker
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -240,17 +241,18 @@ def mock_project_repository():
 # Integration Test Fixtures (Sprint 1.3)
 # ============================================================================
 
-@pytest.fixture
+@pytest_asyncio.fixture(scope="function")
 async def api_client():
     """
     FastAPI test client for integration tests
 
-    Uses TestClient from httpx for async support.
+    Uses AsyncClient from httpx for async support.
     """
-    from httpx import AsyncClient
+    from httpx import AsyncClient, ASGITransport
     from src.api.main import app
 
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
 
 

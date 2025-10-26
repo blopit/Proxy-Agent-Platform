@@ -1,358 +1,409 @@
 """
-Gamification API Endpoints - Gamification Proxy Agent Integration
+Gamification API Endpoints - SIMPLIFIED FOR MVP
 
-Provides RESTful API for:
-- Achievement detection and unlocking
-- Leaderboard generation and rankings
-- Motivation algorithm recommendations
-- Reward distribution and tracking
-- Engagement analytics and insights
+Provides simple XP and streak tracking:
+- View current XP and level
+- Track daily streaks
+- Simple level progression
+
+No achievements, leaderboards, or complex motivation algorithms - just core progression.
 """
 
 import logging
-from datetime import datetime
-from typing import Any
+from datetime import datetime, date
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
-from src.agents.gamification_proxy_advanced import AdvancedGamificationAgent
-from src.api.auth import verify_token
-from src.core.models import AgentRequest
 from src.database.enhanced_adapter import get_enhanced_database
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/gamification", tags=["gamification"])
 
-# Pydantic models for request/response
+# ============================================================================
+# Pydantic Models (Simplified)
+# ============================================================================
 
 
-class AchievementCheckRequest(BaseModel):
-    """Request to check for achievement unlocks"""
+class UserProgressResponse(BaseModel):
+    """User XP and level response"""
 
-    user_activity: dict[str, Any] = Field(
-        ..., description="User activity data for achievement detection"
+    user_id: str
+    total_xp: int
+    current_level: int
+    xp_for_next_level: int
+    xp_progress_percent: float
+    current_streak: int
+    longest_streak: int
+    total_tasks_completed: int
+    message: str
+
+
+class StreakResponse(BaseModel):
+    """User streak response"""
+
+    user_id: str
+    current_streak: int
+    longest_streak: int
+    last_completion_date: str | None
+    streak_at_risk: bool  # True if haven't completed task today
+    message: str
+
+
+# ============================================================================
+# XP & Level Constants
+# ============================================================================
+
+# Simple exponential level progression
+# Level 1→2: 100 XP
+# Level 2→3: 180 XP
+# Level 3→4: 324 XP
+# Level 10→11: ~2,600 XP
+def xp_for_level(level: int) -> int:
+    """Calculate XP required for given level (exponential curve)"""
+    return int(100 * (level ** 1.5))
+
+
+def calculate_level(total_xp: int) -> int:
+    """Calculate level from total XP"""
+    level = 1
+    while total_xp >= xp_for_level(level):
+        total_xp -= xp_for_level(level)
+        level += 1
+    return level
+
+
+def xp_progress_in_current_level(total_xp: int) -> tuple[int, int, float]:
+    """Calculate progress within current level"""
+    level = calculate_level(total_xp)
+
+    # Calculate XP used for previous levels
+    xp_used = 0
+    for lvl in range(1, level):
+        xp_used += xp_for_level(lvl)
+
+    # XP in current level
+    xp_in_level = total_xp - xp_used
+    xp_needed = xp_for_level(level)
+    progress_percent = (xp_in_level / xp_needed) * 100
+
+    return (xp_in_level, xp_needed, progress_percent)
+
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
+
+
+def get_or_create_user_progress(user_id: str) -> dict:
+    """Get user progress from database, create if doesn't exist"""
+    db = get_enhanced_database()
+    conn = db.get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            total_xp,
+            current_level,
+            current_streak,
+            longest_streak,
+            last_completion_date,
+            total_tasks_completed
+        FROM user_progress
+        WHERE user_id = ?
+        """,
+        (user_id,)
     )
 
+    row = cursor.fetchone()
 
-class AchievementResponse(BaseModel):
-    """Achievement unlock response"""
+    if row:
+        return {
+            "total_xp": row[0],
+            "current_level": row[1],
+            "current_streak": row[2],
+            "longest_streak": row[3],
+            "last_completion_date": row[4],
+            "total_tasks_completed": row[5]
+        }
+    else:
+        # Create new user progress
+        cursor.execute(
+            """
+            INSERT INTO user_progress
+            (user_id, total_xp, current_level, current_streak, longest_streak,
+             total_tasks_completed, created_at, updated_at)
+            VALUES (?, 0, 1, 0, 0, 0, ?, ?)
+            """,
+            (user_id, datetime.now().isoformat(), datetime.now().isoformat())
+        )
+        conn.commit()
 
-    achievements_unlocked: list[dict[str, Any]]
-    total_xp_earned: int
-    new_badges: list[str]
-    message: str
-    next_achievements: list[dict[str, Any]]
-
-
-class LeaderboardRequest(BaseModel):
-    """Request for leaderboard data"""
-
-    category: str = Field("overall", description="Leaderboard category: overall, weekly, monthly")
-    limit: int = Field(10, description="Number of top users to return", ge=1, le=100)
-
-
-class LeaderboardResponse(BaseModel):
-    """Leaderboard rankings"""
-
-    category: str
-    entries: list[dict[str, Any]]
-    user_rank: int | None
-    user_score: int | None
-    total_participants: int
-    message: str
-
-
-class MotivationRequest(BaseModel):
-    """Request for motivation recommendations"""
-
-    user_context: dict[str, Any] = Field(..., description="User context and current state")
-
-
-class MotivationResponse(BaseModel):
-    """Motivation algorithm recommendations"""
-
-    motivation_strategy: str
-    recommendations: list[str]
-    encouragement_message: str
-    suggested_goals: list[dict[str, Any]]
-    engagement_score: float
-    message: str
+        return {
+            "total_xp": 0,
+            "current_level": 1,
+            "current_streak": 0,
+            "longest_streak": 0,
+            "last_completion_date": None,
+            "total_tasks_completed": 0
+        }
 
 
-class RewardDistributionResponse(BaseModel):
-    """Reward distribution tracking"""
+def update_streak(user_id: str) -> dict:
+    """Update user's streak based on last completion date"""
+    db = get_enhanced_database()
+    conn = db.get_connection()
+    cursor = conn.cursor()
 
-    rewards_earned: list[dict[str, Any]]
-    total_rewards_value: int
-    pending_rewards: list[dict[str, Any]]
-    redemption_options: list[dict[str, Any]]
-    message: str
+    progress = get_or_create_user_progress(user_id)
+
+    today = date.today()
+    last_date_str = progress["last_completion_date"]
+
+    if not last_date_str:
+        # First completion ever
+        new_streak = 1
+        longest_streak = 1
+    else:
+        last_date = date.fromisoformat(last_date_str)
+        days_since = (today - last_date).days
+
+        if days_since == 0:
+            # Already completed today, no change
+            return {
+                "current_streak": progress["current_streak"],
+                "longest_streak": progress["longest_streak"],
+                "streak_continued": False
+            }
+        elif days_since == 1:
+            # Continue streak
+            new_streak = progress["current_streak"] + 1
+            longest_streak = max(new_streak, progress["longest_streak"])
+        else:
+            # Streak broken, restart
+            new_streak = 1
+            longest_streak = progress["longest_streak"]
+
+    # Update database
+    cursor.execute(
+        """
+        UPDATE user_progress
+        SET current_streak = ?,
+            longest_streak = ?,
+            last_completion_date = ?,
+            total_tasks_completed = total_tasks_completed + 1,
+            updated_at = ?
+        WHERE user_id = ?
+        """,
+        (new_streak, longest_streak, today.isoformat(), datetime.now().isoformat(), user_id)
+    )
+    conn.commit()
+
+    return {
+        "current_streak": new_streak,
+        "longest_streak": longest_streak,
+        "streak_continued": True
+    }
 
 
-class EngagementAnalyticsResponse(BaseModel):
-    """Engagement analytics and insights"""
-
-    engagement_score: float
-    active_days_streak: int
-    participation_rate: float
-    achievement_completion_rate: float
-    engagement_trends: dict[str, Any]
-    insights: list[str]
-    message: str
+# ============================================================================
+# API Endpoints
+# ============================================================================
 
 
-# Initialize gamification agent (singleton pattern)
-_gamification_agent: AdvancedGamificationAgent | None = None
+@router.get("/progress", response_model=UserProgressResponse)
+async def get_user_progress(
+    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
+):
+    """
+    Get your current XP, level, and progress.
+
+    Shows:
+    - Total XP earned
+    - Current level
+    - Progress to next level
+    - Current and longest streaks
+    - Total tasks completed
+    """
+    try:
+        progress = get_or_create_user_progress(user_id)
+
+        # Calculate level and progress
+        total_xp = progress["total_xp"]
+        level = calculate_level(total_xp)
+        xp_in_level, xp_needed, progress_percent = xp_progress_in_current_level(total_xp)
+
+        # Check if streak is at risk
+        last_date_str = progress["last_completion_date"]
+        streak_at_risk = False
+        if last_date_str:
+            last_date = date.fromisoformat(last_date_str)
+            days_since = (date.today() - last_date).days
+            streak_at_risk = (days_since >= 1)  # Haven't completed today
+
+        return UserProgressResponse(
+            user_id=user_id,
+            total_xp=total_xp,
+            current_level=level,
+            xp_for_next_level=xp_needed,
+            xp_progress_percent=round(progress_percent, 1),
+            current_streak=progress["current_streak"],
+            longest_streak=progress["longest_streak"],
+            total_tasks_completed=progress["total_tasks_completed"],
+            message=f"⭐ Level {level} | {total_xp} XP | {progress['current_streak']}🔥 streak"
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to get user progress: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get progress: {str(e)}"
+        )
 
 
-def get_gamification_agent() -> AdvancedGamificationAgent:
-    """Get or create Gamification Agent instance"""
-    global _gamification_agent
-    if _gamification_agent is None:
+class AddXPRequest(BaseModel):
+    """Request model for adding XP"""
+    xp_amount: int = Field(..., ge=1, le=1000, description="XP to add")
+    reason: str = Field("Task completed", description="Reason for XP")
+    user_id: str = Field("mobile-user", description="User ID")
+
+
+@router.post("/xp/add")
+async def add_xp(request: AddXPRequest):
+    """
+    Add XP to user (called when completing tasks/sessions).
+
+    This endpoint:
+    - Adds XP to user's total
+    - Updates their level if they level up
+    - Updates streak if it's a new day
+    - Returns updated progress
+    """
+    xp_amount = request.xp_amount
+    reason = request.reason
+    user_id = request.user_id
+    try:
         db = get_enhanced_database()
-        _gamification_agent = AdvancedGamificationAgent(db)
-    return _gamification_agent
+        conn = db.get_connection()
+        cursor = conn.cursor()
+
+        # Get current progress
+        progress = get_or_create_user_progress(user_id)
+        old_level = progress["current_level"]
+        old_xp = progress["total_xp"]
+
+        # Add XP
+        new_total_xp = old_xp + xp_amount
+        new_level = calculate_level(new_total_xp)
+        leveled_up = (new_level > old_level)
+
+        # Update streak
+        streak_info = update_streak(user_id)
+
+        # Update XP and level in database
+        cursor.execute(
+            """
+            UPDATE user_progress
+            SET total_xp = ?,
+                current_level = ?,
+                updated_at = ?
+            WHERE user_id = ?
+            """,
+            (new_total_xp, new_level, datetime.now().isoformat(), user_id)
+        )
+        conn.commit()
+
+        # Build response message
+        message = f"+{xp_amount} XP"
+        if leveled_up:
+            message += f" | 🎉 Level Up! Now level {new_level}"
+        if streak_info["streak_continued"]:
+            message += f" | 🔥 {streak_info['current_streak']} day streak"
+
+        return {
+            "user_id": user_id,
+            "xp_added": xp_amount,
+            "reason": reason,
+            "old_total_xp": old_xp,
+            "new_total_xp": new_total_xp,
+            "old_level": old_level,
+            "new_level": new_level,
+            "leveled_up": leveled_up,
+            "current_streak": streak_info["current_streak"],
+            "message": message
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to add XP: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to add XP: {str(e)}"
+        )
 
 
-@router.post("/achievements/check", response_model=AchievementResponse)
-async def check_achievements(
-    request_data: AchievementCheckRequest, current_username: str = Depends(verify_token)
+@router.get("/streak", response_model=StreakResponse)
+async def get_streak(
+    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
 ):
     """
-    Check for achievement unlocks based on user activity.
+    Get your current streak status.
 
-    Detects achievement triggers based on:
-    - Task completion counts
-    - Focus session completions
-    - Streak milestones
-    - Quality ratings
-    - Productivity metrics
-
-    Returns newly unlocked achievements and next available goals.
+    Streak = consecutive days completing at least one task.
+    Breaks if you skip a day.
     """
     try:
-        user_id = current_username
-        agent = get_gamification_agent()
+        progress = get_or_create_user_progress(user_id)
 
-        # Check for achievement triggers
-        achievement_result = await agent.check_achievement_triggers(request_data.user_activity)
+        # Check if streak is at risk
+        last_date_str = progress["last_completion_date"]
+        streak_at_risk = False
 
-        unlocked = achievement_result.get("achievements_unlocked", [])
-        total_xp = sum(a.get("xp_reward", 0) for a in unlocked)
+        if last_date_str:
+            last_date = date.fromisoformat(last_date_str)
+            days_since = (date.today() - last_date).days
 
-        return AchievementResponse(
-            achievements_unlocked=unlocked,
-            total_xp_earned=total_xp,
-            new_badges=[a.get("badge_tier", "") for a in unlocked],
-            message=f"🏆 {len(unlocked)} achievement(s) unlocked! +{total_xp} XP earned",
-            next_achievements=achievement_result.get("next_achievements", []),
+            if days_since >= 1:
+                streak_at_risk = True
+
+        emoji = "🔥" if progress["current_streak"] > 0 else "💤"
+
+        message = f"{emoji} {progress['current_streak']} day streak"
+        if streak_at_risk and progress["current_streak"] > 0:
+            message += " (at risk! Complete a task today)"
+
+        return StreakResponse(
+            user_id=user_id,
+            current_streak=progress["current_streak"],
+            longest_streak=progress["longest_streak"],
+            last_completion_date=last_date_str,
+            streak_at_risk=streak_at_risk,
+            message=message
         )
 
     except Exception as e:
-        logger.error(f"Failed to check achievements: {e}")
+        logger.error(f"Failed to get streak: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to check achievements: {str(e)}",
+            detail=f"Failed to get streak: {str(e)}"
         )
 
 
-@router.get("/leaderboard", response_model=LeaderboardResponse)
-async def get_leaderboard(
-    category: str = "overall",
-    limit: int = 10,
-    current_username: str = Depends(verify_token),
-):
-    """
-    Get leaderboard rankings.
+# ============================================================================
+# MVP SCOPE NOTES
+# ============================================================================
 
-    Leaderboard categories:
-    - overall: All-time total XP
-    - weekly: XP earned this week
-    - monthly: XP earned this month
-    - focus: Focus session performance
-    - productivity: Task completion metrics
+# ✅ KEPT (Simple & Motivating):
+# - GET /progress: View XP, level, and streak
+# - POST /xp/add: Award XP (called by task completion)
+# - GET /streak: Check streak status
 
-    Returns top users, current user rank, and statistics.
-    """
-    try:
-        user_id = current_username
-        agent = get_gamification_agent()
+# ❌ ARCHIVED (Complex, not MVP):
+# - Achievement system (check, unlock, badges)
+# - Leaderboards (social comparison)
+# - Motivation algorithm (AI recommendations)
+# - Reward distribution (no rewards in MVP)
+# - Engagement analytics (too complex)
 
-        # Generate leaderboard
-        user_context = {"user_id": user_id, "limit": limit}
-        leaderboard_data = await agent.generate_leaderboard(category, user_context)
-
-        return LeaderboardResponse(
-            category=leaderboard_data.get("leaderboard_type", category),
-            entries=leaderboard_data.get("top_10", [])[:limit],
-            user_rank=leaderboard_data.get("user_rank"),
-            user_score=leaderboard_data.get("user_entry", {}).get("score"),
-            total_participants=leaderboard_data.get("total_participants", 0),
-            message=f"📊 {category.title()} Leaderboard (Top {limit})",
-        )
-
-    except Exception as e:
-        logger.error(f"Failed to generate leaderboard: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate leaderboard: {str(e)}",
-        )
-
-
-@router.post("/motivation", response_model=MotivationResponse)
-async def get_motivation_recommendations(
-    request_data: MotivationRequest, current_username: str = Depends(verify_token)
-):
-    """
-    Get personalized motivation recommendations.
-
-    Motivation algorithm analyzes:
-    - Current engagement levels
-    - Recent activity patterns
-    - Achievement progress
-    - Streak status
-    - Performance trends
-
-    Returns tailored strategies, goals, and encouragement.
-    """
-    try:
-        user_id = current_username
-        agent = get_gamification_agent()
-
-        # Get motivation strategy
-        motivation_data = await agent.generate_motivation_strategy(request_data.user_context)
-
-        # Map agent response to API response
-        strategy_type = motivation_data.get("primary_strategy", "balanced_approach")
-
-        return MotivationResponse(
-            motivation_strategy=strategy_type,
-            recommendations=motivation_data.get("recommendations", []),
-            encouragement_message=f"{motivation_data.get('motivation_type', 'Keep going!')} - Expected {motivation_data.get('expected_improvement', 0.15)*100}% improvement in {motivation_data.get('timeline', '2-4 weeks')}",
-            suggested_goals=motivation_data.get("success_metrics", []),
-            engagement_score=motivation_data.get("expected_improvement", 0.5) * 10,  # Scale to 0-10
-            message=f"💪 {strategy_type.replace('_', ' ').title()} motivation strategy activated",
-        )
-
-    except Exception as e:
-        logger.error(f"Failed to get motivation recommendations: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get motivation: {str(e)}",
-        )
-
-
-@router.get("/rewards", response_model=RewardDistributionResponse)
-async def get_rewards(current_username: str = Depends(verify_token)):
-    """
-    Get user rewards and redemption options.
-
-    Tracks:
-    - Earned rewards from achievements
-    - Pending reward claims
-    - Available redemption options
-    - Total rewards value
-
-    Rewards may include bonus XP, special badges, or unlockable features.
-    """
-    try:
-        user_id = current_username
-        agent = get_gamification_agent()
-
-        # Get reward distribution
-        achievement_data = {"user_id": user_id, "achievement_type": "general"}
-        reward_data = await agent.distribute_achievement_reward(achievement_data)
-
-        return RewardDistributionResponse(
-            rewards_earned=reward_data.get("additional_rewards", []),
-            total_rewards_value=reward_data.get("xp_reward", 0),
-            pending_rewards=[],  # Mock for now
-            redemption_options=[],  # Mock for now
-            message=f"🎁 Reward earned: {reward_data.get('xp_reward', 0)} XP ({reward_data.get('celebration_type', 'standard')} celebration)",
-        )
-
-    except Exception as e:
-        logger.error(f"Failed to get rewards: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get rewards: {str(e)}",
-        )
-
-
-@router.get("/analytics", response_model=EngagementAnalyticsResponse)
-async def get_engagement_analytics(current_username: str = Depends(verify_token)):
-    """
-    Get engagement analytics and insights.
-
-    Analyzes:
-    - Overall engagement score
-    - Active days and streaks
-    - Participation rate
-    - Achievement completion rate
-    - Engagement trends over time
-
-    Provides actionable insights for improving engagement.
-    """
-    try:
-        user_id = current_username
-        agent = get_gamification_agent()
-
-        # Get engagement analytics
-        analytics_data = await agent.analyze_user_engagement(user_id, "30d")
-
-        # Map agent response to API response
-        engagement_score = analytics_data.get("engagement_score", 5.0)
-
-        return EngagementAnalyticsResponse(
-            engagement_score=engagement_score,
-            active_days_streak=0,  # Would come from streak tracking
-            participation_rate=min(1.0, engagement_score / 10.0),  # Scale engagement score to 0-1
-            achievement_completion_rate=0.5,  # Mock for now
-            engagement_trends={"trend": analytics_data.get("engagement_trend", "stable"), "peak_times": analytics_data.get("peak_activity_times", [])},
-            insights=analytics_data.get("recommendations", []) + analytics_data.get("risk_factors", []),
-            message=f"📈 Engagement Score: {engagement_score:.1f}/10",
-        )
-
-    except Exception as e:
-        logger.error(f"Failed to get engagement analytics: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get analytics: {str(e)}",
-        )
-
-
-@router.get("/user-stats", response_model=EngagementAnalyticsResponse)
-async def get_user_stats_mobile(user_id: str):
-    """
-    Get user gamification stats for mobile interface (no auth required).
-
-    Mobile stub endpoint - returns mock data for immediate testing.
-    TODO: Integrate with real user analytics in production.
-    """
-    try:
-        # Return mock data for mobile testing
-        return EngagementAnalyticsResponse(
-            engagement_score=7.5,
-            active_days_streak=12,
-            participation_rate=0.85,
-            achievement_completion_rate=0.65,
-            engagement_trends={
-                "trend": "improving",
-                "peak_times": ["09:00-11:00", "14:00-16:00"]
-            },
-            insights=[
-                "Great momentum! You're on a 12-day streak",
-                "Morning sessions show highest productivity",
-                "Consider scheduling complex tasks at peak times"
-            ],
-            message="📈 Engagement Score: 7.5/10",
-        )
-
-    except Exception as e:
-        logger.error(f"Failed to get user stats for mobile: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get user stats: {str(e)}",
-        )
+# See archive/backend/services/gamification_router_complex.py for full implementation

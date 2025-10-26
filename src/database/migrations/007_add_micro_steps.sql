@@ -12,18 +12,28 @@ DROP TABLE IF EXISTS micro_steps;
 CREATE TABLE micro_steps (
     step_id TEXT PRIMARY KEY,
     parent_task_id TEXT NOT NULL,
+    step_number INTEGER NOT NULL,
     description TEXT NOT NULL,
-    estimated_minutes INTEGER,
+    estimated_minutes INTEGER NOT NULL CHECK(estimated_minutes >= 1 AND estimated_minutes <= 10),
+    delegation_mode TEXT DEFAULT 'do',
+    status TEXT DEFAULT 'todo',
+    actual_minutes INTEGER,
+    parent_step_id TEXT,
+    level INTEGER DEFAULT 0,
+    is_leaf INTEGER DEFAULT 1,
+    decomposition_state TEXT DEFAULT 'atomic',
+    short_label TEXT,
+    icon TEXT,
     leaf_type TEXT,  -- 'DIGITAL' or 'HUMAN'
-    delegation_mode TEXT,  -- 'DO', 'DO_WITH_ME', 'DELEGATE', 'DELETE'
     automation_plan TEXT,  -- JSON: AutomationPlan details
     completed INTEGER DEFAULT 0,  -- Boolean: 0=false, 1=true
     completed_at TIMESTAMP,
     energy_level INTEGER,  -- 1-5 scale for reflection
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    -- Foreign key constraint with CASCADE delete
-    FOREIGN KEY (parent_task_id) REFERENCES tasks(task_id) ON DELETE CASCADE
+    -- Foreign key constraints with CASCADE delete
+    FOREIGN KEY (parent_task_id) REFERENCES tasks(task_id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_step_id) REFERENCES micro_steps(step_id) ON DELETE CASCADE
 );
 
 -- Create indexes for common queries

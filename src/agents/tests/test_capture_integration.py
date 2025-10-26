@@ -30,7 +30,8 @@ def db():
             user_id TEXT NOT NULL,
             metadata TEXT DEFAULT '{}',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, entity_type, name)
         )
     """)
 
@@ -41,7 +42,8 @@ def db():
             to_entity_id TEXT NOT NULL,
             relationship_type TEXT NOT NULL,
             metadata TEXT DEFAULT '{}',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(from_entity_id, to_entity_id, relationship_type)
         )
     """)
 
@@ -55,87 +57,66 @@ def graph_service(db):
     """Provide GraphService with test data"""
     service = GraphService(db)
 
-    # Create sample entities
-    ac_device = Entity(
-        entity_id="device-1",
+    # Create entities using the correct API signature
+    ac_device = service.create_entity(
         entity_type=EntityType.DEVICE,
         name="AC",
         user_id="alice",
         metadata={"type": "air_conditioner", "location": "living_room"},
     )
 
-    heater_device = Entity(
-        entity_id="device-2",
+    heater_device = service.create_entity(
         entity_type=EntityType.DEVICE,
         name="Heater",
         user_id="alice",
         metadata={"type": "heater", "location": "bedroom"},
     )
 
-    sara_person = Entity(
-        entity_id="person-1",
+    sara_person = service.create_entity(
         entity_type=EntityType.PERSON,
         name="Sara",
         user_id="alice",
         metadata={"role": "colleague", "email": "sara@company.com"},
     )
 
-    bob_person = Entity(
-        entity_id="person-2",
+    bob_person = service.create_entity(
         entity_type=EntityType.PERSON,
         name="Bob",
         user_id="alice",
         metadata={"role": "boss", "email": "bob@company.com"},
     )
 
-    office_location = Entity(
-        entity_id="location-1",
+    office_location = service.create_entity(
         entity_type=EntityType.LOCATION,
         name="Office",
         user_id="alice",
         metadata={"address": "123 Main St"},
     )
 
-    # Create entities
-    service.create_entity(ac_device)
-    service.create_entity(heater_device)
-    service.create_entity(sara_person)
-    service.create_entity(bob_person)
-    service.create_entity(office_location)
-
-    # Create relationships
-    owns_ac = Relationship(
-        relationship_id="rel-1",
+    # Create relationships using the correct API signature
+    service.create_relationship(
         from_entity_id="alice",
-        to_entity_id="device-1",
+        to_entity_id=ac_device.entity_id,
         relationship_type=RelationshipType.OWNS_DEVICE,
     )
 
-    owns_heater = Relationship(
-        relationship_id="rel-2",
+    service.create_relationship(
         from_entity_id="alice",
-        to_entity_id="device-2",
+        to_entity_id=heater_device.entity_id,
         relationship_type=RelationshipType.OWNS_DEVICE,
     )
 
-    works_with_sara = Relationship(
-        relationship_id="rel-3",
+    service.create_relationship(
         from_entity_id="alice",
-        to_entity_id="person-1",
+        to_entity_id=sara_person.entity_id,
         relationship_type=RelationshipType.WORKS_WITH,
     )
 
-    works_for_bob = Relationship(
-        relationship_id="rel-4",
+    service.create_relationship(
         from_entity_id="alice",
-        to_entity_id="person-2",
-        relationship_type=RelationshipType.WORKS_FOR,
+        to_entity_id=bob_person.entity_id,
+        relationship_type=RelationshipType.REPORTS_TO,
     )
-
-    service.create_relationship(owns_ac)
-    service.create_relationship(owns_heater)
-    service.create_relationship(works_with_sara)
-    service.create_relationship(works_for_bob)
 
     return service
 

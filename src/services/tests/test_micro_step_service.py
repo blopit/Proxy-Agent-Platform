@@ -42,7 +42,8 @@ def sample_task(task_service, test_project):
 class TestMicroStepCreation:
     """Test creating micro-steps"""
 
-    def test_create_micro_step_success(self, micro_step_service, sample_task):
+    @pytest.mark.asyncio
+    async def test_create_micro_step_success(self, micro_step_service, sample_task):
         """Test creating a micro-step for a task"""
         create_data = MicroStepCreateData(
             parent_task_id=sample_task.task_id,
@@ -52,7 +53,7 @@ class TestMicroStepCreation:
             delegation_mode="DO",
         )
 
-        micro_step = micro_step_service.create_micro_step(create_data)
+        micro_step = await micro_step_service.create_micro_step(create_data)
 
         assert micro_step is not None
         assert micro_step.step_id is not None
@@ -64,7 +65,8 @@ class TestMicroStepCreation:
         assert micro_step.completed is False
         assert micro_step.completed_at is None
 
-    def test_create_micro_step_with_automation_plan(self, micro_step_service, sample_task):
+    @pytest.mark.asyncio
+    async def test_create_micro_step_with_automation_plan(self, micro_step_service, sample_task):
         """Test creating micro-step with automation plan"""
         automation_plan = {
             "tool": "code_generator",
@@ -81,12 +83,13 @@ class TestMicroStepCreation:
             automation_plan=automation_plan,
         )
 
-        micro_step = micro_step_service.create_micro_step(create_data)
+        micro_step = await micro_step_service.create_micro_step(create_data)
 
         assert micro_step.automation_plan == automation_plan
         assert micro_step.automation_plan["tool"] == "code_generator"
 
-    def test_create_micro_step_invalid_parent_task(self, micro_step_service):
+    @pytest.mark.asyncio
+    async def test_create_micro_step_invalid_parent_task(self, micro_step_service):
         """Test creating micro-step with non-existent parent task fails"""
         create_data = MicroStepCreateData(
             parent_task_id="non-existent-task-id",
@@ -95,11 +98,12 @@ class TestMicroStepCreation:
         )
 
         with pytest.raises(MicroStepServiceError) as exc_info:
-            micro_step_service.create_micro_step(create_data)
+            await micro_step_service.create_micro_step(create_data)
 
         assert "parent task" in str(exc_info.value).lower()
 
-    def test_create_micro_step_validates_estimated_minutes(self, micro_step_service, sample_task):
+    @pytest.mark.asyncio
+    async def test_create_micro_step_validates_estimated_minutes(self, micro_step_service, sample_task):
         """Test that estimated_minutes must be 2-5 minutes (ADHD-friendly)"""
         # Too short (< 2 minutes)
         with pytest.raises(MicroStepServiceError) as exc_info:
@@ -108,7 +112,7 @@ class TestMicroStepCreation:
                 description="Too quick",
                 estimated_minutes=1,
             )
-            micro_step_service.create_micro_step(create_data)
+            await micro_step_service.create_micro_step(create_data)
 
         assert "2-5 minutes" in str(exc_info.value)
 
@@ -119,11 +123,12 @@ class TestMicroStepCreation:
                 description="Too long",
                 estimated_minutes=10,
             )
-            micro_step_service.create_micro_step(create_data)
+            await micro_step_service.create_micro_step(create_data)
 
         assert "2-5 minutes" in str(exc_info.value)
 
-    def test_create_micro_step_validates_leaf_type(self, micro_step_service, sample_task):
+    @pytest.mark.asyncio
+    async def test_create_micro_step_validates_leaf_type(self, micro_step_service, sample_task):
         """Test that leaf_type must be DIGITAL or HUMAN"""
         # Valid: DIGITAL
         create_data = MicroStepCreateData(
@@ -132,7 +137,7 @@ class TestMicroStepCreation:
             estimated_minutes=3,
             leaf_type="DIGITAL",
         )
-        micro_step = micro_step_service.create_micro_step(create_data)
+        micro_step = await micro_step_service.create_micro_step(create_data)
         assert micro_step.leaf_type == "DIGITAL"
 
         # Valid: HUMAN
@@ -142,7 +147,7 @@ class TestMicroStepCreation:
             estimated_minutes=3,
             leaf_type="HUMAN",
         )
-        micro_step = micro_step_service.create_micro_step(create_data)
+        micro_step = await micro_step_service.create_micro_step(create_data)
         assert micro_step.leaf_type == "HUMAN"
 
         # Invalid
@@ -153,13 +158,14 @@ class TestMicroStepCreation:
                 estimated_minutes=3,
                 leaf_type="INVALID",
             )
-            micro_step_service.create_micro_step(create_data)
+            await micro_step_service.create_micro_step(create_data)
 
 
 class TestMicroStepRetrieval:
     """Test retrieving micro-steps"""
 
-    def test_get_micro_step_by_id(self, micro_step_service, sample_task):
+    @pytest.mark.asyncio
+    async def test_get_micro_step_by_id(self, micro_step_service, sample_task):
         """Test retrieving a micro-step by ID"""
         create_data = MicroStepCreateData(
             parent_task_id=sample_task.task_id,
@@ -167,7 +173,7 @@ class TestMicroStepRetrieval:
             estimated_minutes=3,
         )
 
-        created = micro_step_service.create_micro_step(create_data)
+        created = await micro_step_service.create_micro_step(create_data)
 
         # Retrieve
         retrieved = micro_step_service.get_micro_step(created.step_id)
@@ -176,12 +182,14 @@ class TestMicroStepRetrieval:
         assert retrieved.step_id == created.step_id
         assert retrieved.description == "Test retrieval"
 
-    def test_get_micro_step_not_found(self, micro_step_service):
+    @pytest.mark.asyncio
+    async def test_get_micro_step_not_found(self, micro_step_service):
         """Test retrieving non-existent micro-step returns None"""
         result = micro_step_service.get_micro_step("non-existent-id")
         assert result is None
 
-    def test_get_micro_steps_by_parent_task(self, micro_step_service, sample_task):
+    @pytest.mark.asyncio
+    async def test_get_micro_steps_by_parent_task(self, micro_step_service, sample_task):
         """Test retrieving all micro-steps for a task"""
         # Create 3 micro-steps
         for i in range(3):
@@ -190,7 +198,7 @@ class TestMicroStepRetrieval:
                 description=f"Step {i+1}",
                 estimated_minutes=3,
             )
-            micro_step_service.create_micro_step(create_data)
+            await micro_step_service.create_micro_step(create_data)
 
         # Retrieve all
         micro_steps = micro_step_service.get_micro_steps_by_task(sample_task.task_id)
@@ -198,7 +206,8 @@ class TestMicroStepRetrieval:
         assert len(micro_steps) == 3
         assert all(ms.parent_task_id == sample_task.task_id for ms in micro_steps)
 
-    def test_get_incomplete_micro_steps(self, micro_step_service, sample_task):
+    @pytest.mark.asyncio
+    async def test_get_incomplete_micro_steps(self, micro_step_service, sample_task):
         """Test retrieving only incomplete micro-steps"""
         # Create 3 micro-steps
         created_steps = []
@@ -208,7 +217,7 @@ class TestMicroStepRetrieval:
                 description=f"Step {i+1}",
                 estimated_minutes=3,
             )
-            step = micro_step_service.create_micro_step(create_data)
+            step = await micro_step_service.create_micro_step(create_data)
             created_steps.append(step)
 
         # Mark one as completed
@@ -221,7 +230,8 @@ class TestMicroStepRetrieval:
         assert len(incomplete) == 2
         assert all(not ms.completed for ms in incomplete)
 
-    def test_get_next_micro_step(self, micro_step_service, sample_task):
+    @pytest.mark.asyncio
+    async def test_get_next_micro_step(self, micro_step_service, sample_task):
         """Test getting the next incomplete micro-step (for Hunter mode)"""
         # Create micro-steps
         for i in range(3):
@@ -230,7 +240,7 @@ class TestMicroStepRetrieval:
                 description=f"Step {i+1}",
                 estimated_minutes=3,
             )
-            micro_step_service.create_micro_step(create_data)
+            await micro_step_service.create_micro_step(create_data)
 
         # Get next (should be first incomplete)
         next_step = micro_step_service.get_next_micro_step(sample_task.task_id)
@@ -243,14 +253,15 @@ class TestMicroStepRetrieval:
 class TestMicroStepUpdate:
     """Test updating micro-steps"""
 
-    def test_update_micro_step_description(self, micro_step_service, sample_task):
+    @pytest.mark.asyncio
+    async def test_update_micro_step_description(self, micro_step_service, sample_task):
         """Test updating micro-step description"""
         create_data = MicroStepCreateData(
             parent_task_id=sample_task.task_id,
             description="Original description",
             estimated_minutes=3,
         )
-        created = micro_step_service.create_micro_step(create_data)
+        created = await micro_step_service.create_micro_step(create_data)
 
         # Update
         update_data = MicroStepUpdateData(description="Updated description")
@@ -258,14 +269,15 @@ class TestMicroStepUpdate:
 
         assert updated.description == "Updated description"
 
-    def test_mark_micro_step_completed(self, micro_step_service, sample_task):
+    @pytest.mark.asyncio
+    async def test_mark_micro_step_completed(self, micro_step_service, sample_task):
         """Test marking a micro-step as completed"""
         create_data = MicroStepCreateData(
             parent_task_id=sample_task.task_id,
             description="Complete me",
             estimated_minutes=3,
         )
-        created = micro_step_service.create_micro_step(create_data)
+        created = await micro_step_service.create_micro_step(create_data)
 
         assert not created.completed
         assert created.completed_at is None
@@ -278,14 +290,15 @@ class TestMicroStepUpdate:
         assert completed.completed_at is not None
         assert isinstance(completed.completed_at, datetime)
 
-    def test_update_energy_level_after_completion(self, micro_step_service, sample_task):
+    @pytest.mark.asyncio
+    async def test_update_energy_level_after_completion(self, micro_step_service, sample_task):
         """Test updating energy_level (for reflection)"""
         create_data = MicroStepCreateData(
             parent_task_id=sample_task.task_id,
             description="Rate my energy",
             estimated_minutes=3,
         )
-        created = micro_step_service.create_micro_step(create_data)
+        created = await micro_step_service.create_micro_step(create_data)
 
         # Update energy level (1-5 scale)
         update_data = MicroStepUpdateData(energy_level=4, completed=True)
@@ -298,14 +311,15 @@ class TestMicroStepUpdate:
 class TestMicroStepDeletion:
     """Test deleting micro-steps"""
 
-    def test_delete_micro_step(self, micro_step_service, sample_task):
+    @pytest.mark.asyncio
+    async def test_delete_micro_step(self, micro_step_service, sample_task):
         """Test deleting a micro-step"""
         create_data = MicroStepCreateData(
             parent_task_id=sample_task.task_id,
             description="Delete me",
             estimated_minutes=3,
         )
-        created = micro_step_service.create_micro_step(create_data)
+        created = await micro_step_service.create_micro_step(create_data)
 
         # Delete
         result = micro_step_service.delete_micro_step(created.step_id)
@@ -315,7 +329,8 @@ class TestMicroStepDeletion:
         retrieved = micro_step_service.get_micro_step(created.step_id)
         assert retrieved is None
 
-    def test_delete_non_existent_micro_step(self, micro_step_service):
+    @pytest.mark.asyncio
+    async def test_delete_non_existent_micro_step(self, micro_step_service):
         """Test deleting non-existent micro-step returns False"""
         result = micro_step_service.delete_micro_step("non-existent-id")
         assert result is False
@@ -324,7 +339,8 @@ class TestMicroStepDeletion:
 class TestMicroStepStatistics:
     """Test micro-step statistics and calculations"""
 
-    def test_calculate_completion_percentage(self, micro_step_service, sample_task):
+    @pytest.mark.asyncio
+    async def test_calculate_completion_percentage(self, micro_step_service, sample_task):
         """Test calculating completion % for a task"""
         # Create 4 micro-steps
         created_steps = []
@@ -334,7 +350,7 @@ class TestMicroStepStatistics:
                 description=f"Step {i+1}",
                 estimated_minutes=3,
             )
-            step = micro_step_service.create_micro_step(create_data)
+            step = await micro_step_service.create_micro_step(create_data)
             created_steps.append(step)
 
         # Complete 2 of 4
@@ -347,7 +363,8 @@ class TestMicroStepStatistics:
 
         assert percentage == 50.0  # 2/4 = 50%
 
-    def test_calculate_total_estimated_time(self, micro_step_service, sample_task):
+    @pytest.mark.asyncio
+    async def test_calculate_total_estimated_time(self, micro_step_service, sample_task):
         """Test calculating total estimated time for all micro-steps"""
         # Create micro-steps with different durations
         durations = [2, 3, 5, 4]
@@ -357,14 +374,15 @@ class TestMicroStepStatistics:
                 description=f"Step {duration}min",
                 estimated_minutes=duration,
             )
-            micro_step_service.create_micro_step(create_data)
+            await micro_step_service.create_micro_step(create_data)
 
         # Calculate total
         total_minutes = micro_step_service.get_total_estimated_minutes(sample_task.task_id)
 
         assert total_minutes == sum(durations)  # 2+3+5+4 = 14 minutes
 
-    def test_get_completion_stats(self, micro_step_service, sample_task):
+    @pytest.mark.asyncio
+    async def test_get_completion_stats(self, micro_step_service, sample_task):
         """Test getting comprehensive completion stats"""
         # Create and complete some steps
         for i in range(5):
@@ -373,7 +391,7 @@ class TestMicroStepStatistics:
                 description=f"Step {i+1}",
                 estimated_minutes=3,
             )
-            step = micro_step_service.create_micro_step(create_data)
+            step = await micro_step_service.create_micro_step(create_data)
 
             # Complete first 3
             if i < 3:

@@ -56,15 +56,16 @@ class BaseEnhancedRepository:
                 "criteria",
                 "context",
                 "micro_steps",  # Epic 7: Task Splitting
+                "children_ids",  # Progressive hierarchy
             ] and isinstance(value, str):
                 try:
                     data[key] = (
                         json.loads(value)
                         if value
-                        else ([] if key in ["tags", "team_members", "default_tags", "micro_steps"] else {})
+                        else ([] if key in ["tags", "team_members", "default_tags", "micro_steps", "children_ids"] else {})
                     )
                 except json.JSONDecodeError:
-                    data[key] = [] if key in ["tags", "team_members", "default_tags", "micro_steps"] else {}
+                    data[key] = [] if key in ["tags", "team_members", "default_tags", "micro_steps", "children_ids"] else {}
             elif (
                 key
                 in [
@@ -102,6 +103,7 @@ class BaseEnhancedRepository:
                 "criteria",
                 "context",
                 "micro_steps",  # Epic 7: Task Splitting
+                "children_ids",  # Progressive hierarchy
             ] and isinstance(value, (list, dict)):
                 data[key] = json.dumps(value)
             elif isinstance(value, Decimal):

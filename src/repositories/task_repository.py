@@ -75,15 +75,16 @@ class BaseRepository:
                 "settings",
                 "default_tags",
                 "micro_steps",  # Epic 7: Task Splitting
+                "children_ids",  # Progressive hierarchy
             ] and isinstance(value, str):
                 try:
                     data[key] = (
                         json.loads(value)
                         if value
-                        else ([] if key in ["tags", "team_members", "default_tags", "micro_steps"] else {})
+                        else ([] if key in ["tags", "team_members", "default_tags", "micro_steps", "children_ids"] else {})
                     )
                 except json.JSONDecodeError:
-                    data[key] = [] if key in ["tags", "team_members", "default_tags", "micro_steps"] else {}
+                    data[key] = [] if key in ["tags", "team_members", "default_tags", "micro_steps", "children_ids"] else {}
             elif (
                 key in ["estimated_hours", "actual_hours", "default_estimated_hours"]
                 and value is not None
@@ -111,6 +112,7 @@ class BaseRepository:
                 "settings",
                 "default_tags",
                 "micro_steps",  # Epic 7: Task Splitting
+                "children_ids",  # Progressive hierarchy
             ] and isinstance(value, (list, dict)):
                 data[key] = json.dumps(value)
             elif isinstance(value, Decimal):
@@ -136,6 +138,7 @@ class TaskRepository(BaseRepository):
                 description TEXT NOT NULL,
                 project_id TEXT NOT NULL,
                 parent_id TEXT,
+                capture_type TEXT DEFAULT 'task',
                 status TEXT NOT NULL DEFAULT 'todo',
                 priority TEXT NOT NULL DEFAULT 'medium',
                 estimated_hours TEXT,
@@ -151,7 +154,14 @@ class TaskRepository(BaseRepository):
                 scope TEXT DEFAULT 'simple',
                 micro_steps TEXT DEFAULT '[]',
                 is_micro_step INTEGER DEFAULT 0,
-                delegation_mode TEXT DEFAULT 'do'
+                delegation_mode TEXT DEFAULT 'do',
+                level INTEGER DEFAULT 0,
+                custom_emoji TEXT,
+                decomposition_state TEXT DEFAULT 'stub',
+                children_ids TEXT DEFAULT '[]',
+                total_minutes INTEGER DEFAULT 0,
+                is_leaf INTEGER DEFAULT 0,
+                leaf_type TEXT
             )
         """)
         conn.commit()

@@ -16,11 +16,14 @@ from src.agents.registry import AgentRegistry
 from src.api.auth import router as auth_router
 from src.api.basic_tasks import router as basic_task_router
 from src.api.capture import router as capture_router
+from src.api.compass import router as compass_router  # MVP: Compass zones
 from src.api.energy import router as energy_router
 from src.api.focus import router as focus_router
 from src.api.gamification import router as gamification_router
 from src.api.progress import router as progress_router
 from src.api.rewards import router as rewards_router
+from src.api.ritual import router as ritual_router  # MVP: Morning ritual
+from src.api.routes import tasks_v2_router  # New v2 API
 from src.api.secretary import router as secretary_router
 from src.api.simple_tasks import router as simple_task_router
 from src.api.tasks import router as comprehensive_task_router
@@ -70,14 +73,17 @@ app.add_middleware(
 registry = AgentRegistry()
 
 # Include routers - All routers now working with fixed service layer
-# Note: Comprehensive router MUST come first to avoid route conflicts
-app.include_router(comprehensive_task_router)  # Dependency-injected task service
+# Note: v2 router should come first, then comprehensive router for backward compatibility
+app.include_router(tasks_v2_router)  # NEW: v2 API with TaskService DI
+app.include_router(comprehensive_task_router)  # Legacy: v1 task service
 app.include_router(capture_router)  # Capture Mode brain dump system (Epic: Capture)
 app.include_router(auth_router)  # Authentication endpoints
-app.include_router(focus_router)  # Focus & Pomodoro endpoints (Epic 2.2)
-app.include_router(energy_router)  # Energy management endpoints (Epic 2.2)
+app.include_router(focus_router)  # Focus & Pomodoro endpoints (MVP Simplified)
+app.include_router(energy_router)  # Energy management endpoints (MVP Simplified)
 app.include_router(progress_router)  # Progress tracking endpoints (Epic 2.3)
-app.include_router(gamification_router)  # Gamification endpoints (Epic 2.3)
+app.include_router(gamification_router)  # Gamification endpoints (MVP Simplified)
+app.include_router(compass_router)  # Compass zones (MVP Week 2)
+app.include_router(ritual_router)  # Morning ritual (MVP Week 2)
 app.include_router(rewards_router)  # Dopamine reward system (HABIT.md)
 app.include_router(secretary_router)  # Secretary intelligent organization
 app.include_router(simple_task_router)  # Legacy simple tasks

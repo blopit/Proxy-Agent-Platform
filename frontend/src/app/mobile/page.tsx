@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from 'react'
 import { ArrowUp, MessageCircle, Bot, Camera, Search, Mic, X, Square } from 'lucide-react'
 import ErrorBoundary from '@/components/ErrorBoundary'
-import BiologicalTabs from '@/components/mobile/BiologicalTabs'
+import SimpleTabs from '@/components/mobile/SimpleTabs'
+import type { SimpleTab } from '@/components/mobile/SimpleTabs'
 import CaptureMode from '@/components/mobile/modes/CaptureMode'
 import ScoutMode from '@/components/mobile/modes/ScoutMode'
-import HunterMode from '@/components/mobile/modes/HunterMode'
+import TodayMode from '@/components/mobile/modes/TodayMode'
+import ProgressView from '@/components/mobile/ProgressView'
 import MenderMode from '@/components/mobile/modes/MenderMode'
 import MapperMode from '@/components/mobile/modes/MapperMode'
 import Ticker from '@/components/mobile/Ticker'
@@ -34,19 +36,29 @@ import type { LoadingStage } from '@/types/capture'
 import { useVoiceInput } from '@/hooks/useVoiceInput'
 // import { useWebSocket } from '@/hooks/useWebSocket'
 
-type Mode = 'capture' | 'search' | 'hunt' | 'mender' | 'mapper'
+// MVP: Simplified 3-tab navigation
+// 'inbox' = Capture + Scout combined
+// 'today' = Today/Hunter view
+// 'progress' = Progress tracking (Mender + Mapper combined)
+type Mode = SimpleTab | 'search' // Keep search for internal use, map to inbox
 
 // Agent configuration for each mode
 const AGENT_CONFIG = {
+  inbox: {
+    icon: Camera,
+    color: colors.cyan,
+    name: 'Inbox Agent',
+    description: 'Captures tasks instantly with natural language'
+  },
   capture: {
     icon: Camera,
-    color: colors.cyan, // Cyan
+    color: colors.cyan,
     name: 'Capture Agent',
     description: 'Captures tasks instantly with natural language'
   },
   search: {
     icon: Search,
-    color: colors.yellow, // Yellow
+    color: colors.yellow,
     name: 'Search Agent',
     description: 'Helps you search and discover tasks'
   }
@@ -55,7 +67,7 @@ const AGENT_CONFIG = {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export default function MobileApp() {
-  const [mode, setMode] = useState<Mode>('capture')
+  const [mode, setMode] = useState<Mode>('inbox') // MVP: Start with Inbox tab
   const [energy, setEnergy] = useState(72)
   const [timeOfDay, setTimeOfDay] = useState<'morning' | 'afternoon' | 'evening' | 'night'>('morning')
   const [chat, setChat] = useState('')
@@ -67,6 +79,7 @@ export default function MobileApp() {
   const [level, setLevel] = useState(1)
   const [streakDays, setStreakDays] = useState(0)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [completedCount, setCompletedCount] = useState(0) // Track completed tasks today
 
   // ADHD UX visual feedback states
   const [loadingStage, setLoadingStage] = useState<LoadingStage | null>(null)
@@ -218,9 +231,9 @@ export default function MobileApp() {
     };
   }, []);
 
-  // Reset suggestions when switching back to Capture tab
+  // Reset suggestions when switching back to Inbox tab
   useEffect(() => {
-    if (mode === 'capture') {
+    if (mode === 'inbox') {
       setSuggestionsVisible(true);
     }
   }, [mode]);
@@ -401,9 +414,10 @@ export default function MobileApp() {
       // Import the API client
       const { apiClient } = await import('@/lib/api')
 
-      // Get agent context for capture and search modes
-      const agentContext = (mode === 'capture' || mode === 'search') && AGENT_CONFIG[mode]
-        ? { agent_type: mode, agent_name: AGENT_CONFIG[mode].name }
+      // Get agent context for inbox and search modes
+      const agentMode = mode === 'inbox' ? 'capture' : mode; // Map inbox to capture for API
+      const agentContext = (agentMode === 'capture' || agentMode === 'search') && AGENT_CONFIG[agentMode]
+        ? { agent_type: agentMode, agent_name: AGENT_CONFIG[agentMode].name }
         : undefined
 
       const response = await apiClient.quickCapture({
@@ -561,7 +575,7 @@ export default function MobileApp() {
   const handleStartNow = () => {
     console.log('Starting task now')
     setShowBreakdown(false)
-    setMode('hunt') // Switch to Hunt mode to start working
+    setMode('today') // Switch to Today mode to start working
   }
 
   const handleViewTasks = () => {
@@ -599,8 +613,8 @@ export default function MobileApp() {
 
   return (
     <div style={{ minHeight: '100vh', background: semanticColors.bg.primary, color: semanticColors.text.primary }}>
-      {/* Top bar with capture textarea - only show for non-capture modes (Search, Hunt, Rest, Plan) */}
-      {mode !== 'capture' && (
+      {/* Top bar with capture textarea - only show for non-inbox modes (Today, Progress) */}
+      {mode !== 'inbox' && (
       <div style={{ position: 'sticky', top: 0, zIndex: zIndex.sticky, padding: spacing[3] }}>
         <div style={{ position: 'relative' }}>
           <textarea
@@ -681,24 +695,7 @@ export default function MobileApp() {
         </div>
         {/* Toggle chips */}
         <div style={{ display: 'flex', gap: spacing[1], marginTop: spacing[1] }}>
-          {/* Active Agent Indicator (always on) - shows only for capture and scout */}
-          {mode === 'capture' && AGENT_CONFIG.capture && (
-            <div
-              className="flex items-center"
-              style={{
-                gap: spacing[1],
-                padding: `${spacing[1]} ${spacing[2]}`,
-                borderRadius: borderRadius.pill,
-                backgroundColor: AGENT_CONFIG.capture.color,
-                color: semanticColors.text.inverse,
-                border: `1px solid ${AGENT_CONFIG.capture.color}`,
-                boxShadow: coloredShadow(AGENT_CONFIG.capture.color),
-                fontWeight: 'bold'
-              }}
-            >
-              {React.createElement(AGENT_CONFIG.capture.icon, { size: iconSize.xs })}
-            </div>
-          )}
+          {/* Active Agent Indicator for search mode */}
           {mode === 'search' && AGENT_CONFIG.search && (
             <div
               className="flex items-center"
@@ -871,7 +868,7 @@ export default function MobileApp() {
       )}
 
       {/* Main content area */}
-      <div style={{ height: mode === 'capture' ? 'calc(100vh - 200px)' : 'calc(100vh - 170px)', overflowY: 'auto' }}>
+      <div style={{ height: mode === 'inbox' ? 'calc(100vh - 200px)' : 'calc(100vh - 170px)', overflowY: 'auto' }}>
         {/* Thin progress bar at top - messenger style */}
         {showCaptureJob && captureProgress > 0 && captureProgress < 100 && (
           <div style={{
@@ -912,7 +909,8 @@ export default function MobileApp() {
         )}
 
         <ErrorBoundary>
-          {mode === 'capture' && (
+          {/* MVP Simplified Modes */}
+          {mode === 'inbox' && (
             <CaptureMode
               onTaskCaptured={() => setRefreshTrigger(prev => prev + 1)}
               onExampleClick={(text) => setChat(text)}
@@ -927,33 +925,23 @@ export default function MobileApp() {
               refreshTrigger={refreshTrigger}
             />
           )}
-          {mode === 'hunt' && (
-            <HunterMode
+          {mode === 'today' && (
+            <TodayMode
               onSwipeLeft={handleSwipeLeft}
               onSwipeRight={handleSwipeRight}
               onTaskTap={handleTaskTap}
               refreshTrigger={refreshTrigger}
-            />
-          )}
-          {mode === 'rest' && (
-            <MenderMode
               energy={energy}
-              onTaskTap={handleTaskTap}
-              refreshTrigger={refreshTrigger}
             />
           )}
-          {mode === 'plan' && (
-            <MapperMode
-              xp={xp}
-              level={level}
-              streakDays={streakDays}
-            />
+          {mode === 'progress' && (
+            <ProgressView userId="mobile-user" />
           )}
         </ErrorBoundary>
       </div>
 
-      {/* Capture mode: Simple messaging-app style layout */}
-      {mode === 'capture' && (
+      {/* Inbox mode: Simple messaging-app style layout */}
+      {mode === 'inbox' && (
         <div style={{
           position: 'fixed',
           left: 0,
@@ -1064,15 +1052,16 @@ export default function MobileApp() {
         </div>
       )}
 
-      {/* Bottom tabs */}
-      <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, padding: `${spacing[1]} 0`, backgroundColor: semanticColors.bg.primary, borderTop: `1px solid ${semanticColors.border.default}`, zIndex: zIndex.fixed }}>
-        <BiologicalTabs
-          activeTab={mode}
-          onTabChange={(t) => setMode(t as Mode)}
-          energy={energy}
-          timeOfDay={timeOfDay}
-        />
-      </div>
+      {/* Bottom tabs - MVP Simplified */}
+      <SimpleTabs
+        activeTab={mode === 'search' ? 'inbox' : mode as SimpleTab} // Map search to inbox for display
+        onChange={(tab) => setMode(tab)}
+        showBadges={{
+          inbox: undefined, // Could show unprocessed task count
+          today: undefined, // Could show remaining tasks count
+          progress: completedCount > 0 // Show indicator if user has completed tasks
+        }}
+      />
 
       {/* Task Breakdown Modal - Slide-up modal with TaskCardBig */}
       <TaskBreakdownModal

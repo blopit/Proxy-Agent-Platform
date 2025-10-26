@@ -1,0 +1,332 @@
+/* ChevronProgress - Classic Chevron Arrow Shapes */
+
+:root {
+  --chevron-done: #859900;        /* Solarized green */
+  --chevron-active: #268bd2;      /* Solarized blue */
+  --chevron-pending: #073642;     /* Solarized base02 */
+  --chevron-text-light: #fdf6e3;  /* Solarized base3 */
+  --chevron-text-dark: #586e75;   /* Solarized base01 */
+  --chevron-bg: #002b36;          /* Solarized base03 */
+  --chevron-gap: 10px;            /* White gap between chevrons */
+  --chevron-height: 72px;
+  --chevron-arrow: 26px;          /* Width of arrow point */
+  --chevron-radius: 6px;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: light) {
+  :root {
+    --chevron-pending: #eee8d5;
+    --chevron-bg: #ffffff;
+    --chevron-text-dark: #657b83;
+  }
+}
+
+/* Wrapper */
+.chevron-wrapper {
+  width: 100%;
+}
+
+/* Chevron route container */
+.chevron-route {
+  display: flex;
+  align-items: stretch;
+  overflow: hidden;
+  border-radius: var(--chevron-radius);
+  isolation: isolate;
+}
+
+.chevron-route--compact {
+  --chevron-height: 64px;
+  --chevron-arrow: 22px;
+}
+
+/* Each chevron step */
+.chevron-step {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 140px;
+  height: var(--chevron-height);
+  display: flex;
+  align-items: center;
+  padding-left: calc(var(--chevron-arrow) + 8px); /* Space after left indent */
+  padding-right: calc(var(--chevron-arrow) + 8px); /* Space before right point */
+  font: 500 14px/1.2 system-ui, sans-serif;
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  clip-path: polygon(
+    0 0,                              /* top left */
+    calc(100% - var(--chevron-arrow)) 0,  /* top right before point */
+    100% 50%,                         /* chevron point (middle right) */
+    calc(100% - var(--chevron-arrow)) 100%, /* bottom right before point */
+    0 100%,                           /* bottom left */
+    var(--chevron-arrow) 50%          /* left indent point */
+  );
+}
+
+/* Compact variant */
+.chevron-route--compact .chevron-step {
+  font-size: 13px;
+  min-width: 120px;
+}
+
+/* Status colors */
+.chevron-step--done {
+  background: var(--chevron-done);
+  color: var(--chevron-text-light);
+}
+
+.chevron-step--active {
+  background: var(--chevron-active);
+  color: var(--chevron-text-light);
+  animation: chevron-pulse 2s ease-in-out infinite;
+}
+
+.chevron-step--pending {
+  background: var(--chevron-pending);
+  color: var(--chevron-text-dark);
+}
+
+/* First step: no left indent, straight left edge */
+.chevron-step:first-child {
+  padding-left: 16px;
+  clip-path: polygon(
+    0 0,                              /* top left */
+    calc(100% - var(--chevron-arrow)) 0,  /* top right before point */
+    100% 50%,                         /* chevron point (middle right) */
+    calc(100% - var(--chevron-arrow)) 100%, /* bottom right before point */
+    0 100%                            /* bottom left */
+  );
+}
+
+/* Add gap between chevrons */
+.chevron-step:not(:last-child) {
+  margin-right: var(--chevron-gap);
+}
+
+/* Step content */
+.chevron-step__body {
+  position: relative;
+  z-index: 2;  /* Above pseudo-elements */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chevron-step__icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.chevron-route--compact .chevron-step__icon {
+  font-size: 16px;
+}
+
+.chevron-step__content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chevron-step__label {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.chevron-step__detail {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
+/* Pulse animation for active step */
+@keyframes chevron-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Progress bar underneath */
+.chevron-progress-bar {
+  margin-top: 8px;
+  height: 6px;
+  background: var(--chevron-pending);
+  border-radius: 3px;
+  overflow: hidden;
+  opacity: 0.5;
+}
+
+.chevron-progress-bar__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--chevron-done) 0%, var(--chevron-active) 100%);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 3px;
+}
+
+/* Screen reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ============================================================================
+   VERTICAL VARIANT (Mobile)
+   ============================================================================ */
+
+.chevron-vertical {
+  width: 100%;
+}
+
+.chevron-vertical__step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+}
+
+.chevron-vertical__step--done {
+  background: var(--chevron-done);
+  color: var(--chevron-text-light);
+}
+
+.chevron-vertical__step--active {
+  background: var(--chevron-active);
+  color: var(--chevron-text-light);
+}
+
+.chevron-vertical__step--pending {
+  background: var(--chevron-pending);
+  color: var(--chevron-text-dark);
+}
+
+.chevron-vertical__icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.chevron-vertical__content {
+  flex: 1;
+}
+
+.chevron-vertical__label {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.chevron-vertical__detail {
+  font-size: 12px;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+.chevron-vertical__check {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.chevron-vertical__pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--chevron-text-light);
+  flex-shrink: 0;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+}
+
+.chevron-vertical__connector {
+  width: 2px;
+  height: 8px;
+  background: var(--chevron-text-dark);
+  margin-left: 28px;
+  opacity: 0.3;
+}
+
+.chevron-vertical__summary {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--chevron-text-dark);
+  font-size: 12px;
+  color: var(--chevron-text-dark);
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+/* Hide detail text on narrow screens */
+@media (max-width: 700px) {
+  .chevron-step__detail {
+    display: none;
+  }
+}
+
+/* Switch to vertical layout on very small screens */
+@media (max-width: 500px) {
+  .chevron-route {
+    flex-direction: column;
+    border-radius: var(--chevron-radius);
+  }
+
+  .chevron-step {
+    height: 48px;
+    padding-left: 12px;
+  }
+
+  /* Remove chevron shapes in vertical mode - use rectangles */
+  .chevron-step,
+  .chevron-step:first-child {
+    clip-path: none;
+  }
+
+  .chevron-step:not(:last-child) {
+    margin-right: 0;
+    margin-bottom: 2px;
+  }
+
+  .chevron-step:first-child {
+    border-top-left-radius: var(--chevron-radius);
+    border-top-right-radius: var(--chevron-radius);
+  }
+
+  .chevron-step:last-child {
+    border-bottom-left-radius: var(--chevron-radius);
+    border-bottom-right-radius: var(--chevron-radius);
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION (Accessibility)
+   ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron-step,
+  .chevron-progress-bar__fill,
+  .chevron-vertical__step {
+    transition: none;
+    animation: none;
+  }
+}

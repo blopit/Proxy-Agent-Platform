@@ -8,7 +8,7 @@ interface TickerProps {
   askForClarity?: boolean;
   className?: string;
   isPaused?: boolean;
-  mode?: 'capture' | 'scout' | 'hunter' | 'mender' | 'mapper';
+  mode?: 'inbox' | 'today' | 'progress' | 'search' | 'capture' | 'scout' | 'hunter' | 'mender' | 'mapper'; // Support both old and new MVP modes
   messages?: string[];
   intervalMin?: number; // Minimum interval in milliseconds
   intervalMax?: number; // Maximum interval in milliseconds
@@ -19,7 +19,7 @@ const Ticker: React.FC<TickerProps> = ({
   askForClarity = false,
   className = '',
   isPaused = false,
-  mode = 'capture',
+  mode = 'inbox', // MVP: Default to inbox
   messages: customMessages,
   intervalMin = 4000,
   intervalMax = 8000
@@ -33,6 +33,44 @@ const Ticker: React.FC<TickerProps> = ({
   const getTickerMessages = () => {
     // Mode-specific agent messages
     const agentMessages = {
+      // MVP Modes
+      inbox: {
+        autoClarity: [
+          "Inbox: Drop your thoughts, I'll organize them...",
+          "Brain dump mode - AI cleanup included",
+          "Your thoughts → Actionable tasks",
+          "Instant capture with smart follow-up"
+        ],
+        autoOnly: [
+          "Inbox: I'll handle the details automatically...",
+          "Just type it - I'll process it",
+          "Auto-capture mode active",
+          "Thoughts → Tasks (instantly)"
+        ],
+        clarityOnly: [
+          "Inbox: I'll ask questions to clarify...",
+          "Interactive capture with follow-up",
+          "Let's refine your thoughts together"
+        ],
+        manual: [
+          "Inbox: Ready for manual entry...",
+          "Direct task capture mode",
+          "Type your task as-is"
+        ]
+      },
+      today: {
+        autoClarity: [],
+        autoOnly: [],
+        clarityOnly: [],
+        manual: []
+      },
+      progress: {
+        autoClarity: [],
+        autoOnly: [],
+        clarityOnly: [],
+        manual: []
+      },
+      // Legacy modes
       capture: {
         autoClarity: [
           "Capture Agent: Drop your thoughts, I'll organize them...",
@@ -91,7 +129,7 @@ const Ticker: React.FC<TickerProps> = ({
       }
     };
 
-    const currentAgentMessages = agentMessages[mode] || agentMessages.capture;
+    const currentAgentMessages = agentMessages[mode as keyof typeof agentMessages] || agentMessages.inbox;
 
     const baseMessages = {
       autoClarity: currentAgentMessages.autoClarity,

@@ -496,7 +496,7 @@ class TestProjectService:
         created_project = Project(
             name="New Project",
             description="A new project for testing",
-            owner="user123",
+            owner_id="user123",
         )
         mock_project_repo.create.return_value = created_project
 
@@ -508,7 +508,7 @@ class TestProjectService:
 
         # Verify result
         assert result.name == "New Project"
-        assert result.owner == "user123"
+        assert result.owner_id == "user123"
 
     def test_get_project_analytics(
         self, task_service, mock_project_repo, mock_task_repo, sample_project

@@ -76,6 +76,9 @@ class GraphService:
         conn = self.db.get_connection()
         cursor = conn.cursor()
 
+        # Get string value of entity_type (handle both string and enum)
+        entity_type_value = entity.entity_type.value if isinstance(entity.entity_type, EntityType) else entity.entity_type
+
         cursor.execute(
             """
             INSERT INTO kg_entities (entity_id, entity_type, name, user_id, metadata, created_at, updated_at)
@@ -86,7 +89,7 @@ class GraphService:
             """,
             (
                 entity.entity_id,
-                entity.entity_type.value,
+                entity_type_value,
                 entity.name,
                 entity.user_id,
                 json.dumps(entity.metadata),
@@ -218,6 +221,9 @@ class GraphService:
         conn = self.db.get_connection()
         cursor = conn.cursor()
 
+        # Get string value of relationship_type (handle both string and enum)
+        relationship_type_value = relationship.relationship_type.value if isinstance(relationship.relationship_type, RelationshipType) else relationship.relationship_type
+
         cursor.execute(
             """
             INSERT INTO kg_relationships (relationship_id, from_entity_id, to_entity_id, relationship_type, metadata, created_at)
@@ -228,7 +234,7 @@ class GraphService:
                 relationship.relationship_id,
                 relationship.from_entity_id,
                 relationship.to_entity_id,
-                relationship.relationship_type.value,
+                relationship_type_value,
                 json.dumps(relationship.metadata),
                 relationship.created_at.isoformat(),
             ),

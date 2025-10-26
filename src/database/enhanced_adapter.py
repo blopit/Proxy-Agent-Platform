@@ -104,7 +104,7 @@ class EnhancedDatabaseAdapter:
             )
         """)
 
-        # Tasks table (with Epic 7 task splitting fields)
+        # Tasks table (with Epic 7 task splitting fields and progressive hierarchy)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS tasks (
                 task_id TEXT PRIMARY KEY,
@@ -112,6 +112,7 @@ class EnhancedDatabaseAdapter:
                 description TEXT NOT NULL,
                 project_id TEXT NOT NULL,
                 parent_id TEXT,
+                capture_type TEXT DEFAULT 'task',
                 status TEXT DEFAULT 'todo',
                 priority TEXT DEFAULT 'medium',
                 estimated_hours DECIMAL(10,2),
@@ -128,6 +129,13 @@ class EnhancedDatabaseAdapter:
                 delegation_mode TEXT DEFAULT 'do',
                 is_micro_step BOOLEAN DEFAULT 0,
                 micro_steps TEXT DEFAULT '[]',
+                level INTEGER DEFAULT 0,
+                custom_emoji TEXT,
+                decomposition_state TEXT DEFAULT 'stub',
+                children_ids TEXT DEFAULT '[]',
+                total_minutes INTEGER DEFAULT 0,
+                is_leaf BOOLEAN DEFAULT 0,
+                leaf_type TEXT,
                 FOREIGN KEY (project_id) REFERENCES projects(project_id) ON DELETE CASCADE,
                 FOREIGN KEY (parent_id) REFERENCES tasks(task_id) ON DELETE CASCADE,
                 FOREIGN KEY (assignee_id) REFERENCES users(user_id) ON DELETE SET NULL
@@ -192,9 +200,16 @@ class EnhancedDatabaseAdapter:
                 delegation_mode TEXT DEFAULT 'do',
                 status TEXT DEFAULT 'todo',
                 actual_minutes INTEGER,
+                parent_step_id TEXT,
+                level INTEGER DEFAULT 0,
+                is_leaf INTEGER DEFAULT 1,
+                decomposition_state TEXT DEFAULT 'atomic',
+                short_label TEXT,
+                icon TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 completed_at TIMESTAMP,
-                FOREIGN KEY (parent_task_id) REFERENCES tasks(task_id) ON DELETE CASCADE
+                FOREIGN KEY (parent_task_id) REFERENCES tasks(task_id) ON DELETE CASCADE,
+                FOREIGN KEY (parent_step_id) REFERENCES micro_steps(step_id) ON DELETE CASCADE
             )
         """)
 

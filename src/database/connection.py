@@ -118,3 +118,7 @@ def drop_db() -> None:
     Only use in development/testing
     """
     Base.metadata.drop_all(bind=engine)
+
+
+# Alias for consistency with naming convention
+get_db_session = get_db

@@ -10,6 +10,7 @@ from src.api.routes.schemas.task_schemas import (
     TaskListResponse,
     TaskResponse,
     TaskSearchResponse,
+    TaskSearchResultItem,
     TaskStatsResponse,
     TaskStatusUpdateRequest,
     TaskUpdateRequest,
@@ -22,6 +23,7 @@ __all__ = [
     "TaskResponse",
     "TaskListResponse",
     "TaskSearchResponse",
+    "TaskSearchResultItem",
     "TaskStatsResponse",
     "ErrorResponse",
 ]

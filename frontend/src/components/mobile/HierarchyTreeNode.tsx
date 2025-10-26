@@ -19,6 +19,7 @@ interface HierarchyTreeNodeProps {
   onExpand?: (nodeId: string) => Promise<void>;
   onCollapse?: (nodeId: string) => void;
   onStartWork?: (nodeId: string) => void;
+  onDecompose?: (nodeId: string) => Promise<void>;
   showChildren?: boolean;
   className?: string;
 }
@@ -34,6 +35,7 @@ export default function HierarchyTreeNode({
   onExpand,
   onCollapse,
   onStartWork,
+  onDecompose,
   showChildren = true,
   className = '',
 }: HierarchyTreeNodeProps) {
@@ -47,6 +49,12 @@ export default function HierarchyTreeNode({
   const canExpand =
     !node.is_leaf &&
     node.decomposition_state !== 'atomic' &&
+    node.level < 6;
+
+  // Determine if node can be decomposed
+  const canDecompose =
+    node.decomposition_state === 'stub' &&
+    !node.is_leaf &&
     node.level < 6;
 
   // Handle expand/collapse
@@ -68,6 +76,19 @@ export default function HierarchyTreeNode({
       } else if (onExpand) {
         await onExpand(node.task_id);
       }
+    }
+  };
+
+  // Handle explicit decompose button click
+  const handleDecompose = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isDecomposing || !onDecompose) return;
+
+    setIsDecomposing(true);
+    try {
+      await onDecompose(node.task_id);
+    } finally {
+      setIsDecomposing(false);
     }
   };
 
@@ -195,7 +216,34 @@ export default function HierarchyTreeNode({
           )}
         </div>
 
-        {/* Action Buttons (for leaves) */}
+        {/* Action Buttons */}
+        {/* Decompose button for stub nodes */}
+        {canDecompose && onDecompose && (
+          <button
+            className="flex-shrink-0 px-3 py-1 rounded-lg font-medium text-xs transition-all hover:scale-105 active:scale-95 flex items-center gap-1"
+            style={{
+              backgroundColor: '#268bd2',
+              color: '#fff',
+              opacity: isDecomposing ? 0.6 : 1,
+            }}
+            onClick={handleDecompose}
+            disabled={isDecomposing}
+          >
+            {isDecomposing ? (
+              <>
+                <Loader2 size={12} className="animate-spin" />
+                <span>Decomposing...</span>
+              </>
+            ) : (
+              <>
+                <span>🔨</span>
+                <span>Decompose</span>
+              </>
+            )}
+          </button>
+        )}
+
+        {/* Start button for leaves */}
         {node.is_leaf && onStartWork && (
           <button
             className="flex-shrink-0 px-3 py-1 rounded-lg font-medium text-xs transition-all hover:scale-105 active:scale-95"
@@ -229,6 +277,7 @@ export default function HierarchyTreeNode({
               onExpand={onExpand}
               onCollapse={onCollapse}
               onStartWork={onStartWork}
+              onDecompose={onDecompose}
             />
           ))}
         </div>
