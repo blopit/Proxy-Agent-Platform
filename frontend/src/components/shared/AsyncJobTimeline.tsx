@@ -30,7 +30,7 @@ import OpenMoji from './OpenMoji';
 // Types
 // ============================================================================
 
-export type JobStepStatus = 'pending' | 'active' | 'done' | 'error';
+export type JobStepStatus = 'pending' | 'active' | 'done' | 'error' | 'next';
 export type JobStepType = 'DIGITAL' | 'HUMAN' | 'unknown';
 export type TimelineSize = 'full' | 'micro' | 'nano';
 
@@ -72,58 +72,6 @@ export interface AsyncJobTimelineProps {
 }
 
 // ============================================================================
-// Width Calculation
-// ============================================================================
-
-function calculateStepWidths(
-  steps: JobStep[],
-  expandedStepId: string | null
-): Map<string, number> {
-  const widths = new Map<string, number>();
-
-  // If no step is expanded, all steps fill the width equally
-  if (!expandedStepId) {
-    const equalWidth = 100 / steps.length;
-    steps.forEach(step => {
-      widths.set(step.id, equalWidth);
-    });
-    return widths;
-  }
-
-  // One step is expanded to 50%, others share remaining 50%
-  steps.forEach(step => {
-    if (step.id === expandedStepId) {
-      widths.set(step.id, 50);
-    }
-  });
-
-  // Calculate collapsed widths proportionally
-  const collapsedSteps = steps.filter(s => s.id !== expandedStepId);
-  const humanCollapsed = collapsedSteps.filter(s => s.leafType === 'HUMAN');
-  const digitalCollapsed = collapsedSteps.filter(s => s.leafType === 'DIGITAL');
-
-  const totalCollapsedHumanTime = humanCollapsed.reduce((sum, s) => sum + s.estimatedMinutes, 0);
-  const digitalCollapsedCount = digitalCollapsed.length;
-
-  const remainingSpace = 50;
-  const digitalCollapsedSpace = Math.min(digitalCollapsedCount * 2, remainingSpace * 0.2);
-  const humanCollapsedSpace = remainingSpace - digitalCollapsedSpace;
-
-  collapsedSteps.forEach(step => {
-    if (step.leafType === 'DIGITAL') {
-      widths.set(step.id, digitalCollapsedCount > 0 ? digitalCollapsedSpace / digitalCollapsedCount : 0);
-    } else {
-      const proportion = totalCollapsedHumanTime > 0
-        ? (step.estimatedMinutes / totalCollapsedHumanTime) * humanCollapsedSpace
-        : humanCollapsedSpace / humanCollapsed.length;
-      widths.set(step.id, proportion);
-    }
-  });
-
-  return widths;
-}
-
-// ============================================================================
 // Step Component
 // ============================================================================
 
@@ -131,7 +79,6 @@ interface StepSectionProps {
   step: JobStep;
   index: number;
   totalSteps: number;
-  width: number;
   isExpanded: boolean;
   size: TimelineSize;
   tab: boolean;
@@ -139,65 +86,46 @@ interface StepSectionProps {
   stepProgressPercent?: number; // 0-100 for this specific step
   onRetry?: () => void;
   effectiveExpandedId: string | null;
-  totalDurationText: string;
   loadingChildren?: Set<string>; // For expand indicator
   hasNestedContent?: boolean; // True if showing decomposition job or children
 }
 
-function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, onClick, stepProgressPercent, onRetry, effectiveExpandedId, totalDurationText, loadingChildren, hasNestedContent }: StepSectionProps) {
+function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, stepProgressPercent, onRetry, effectiveExpandedId, loadingChildren, hasNestedContent }: StepSectionProps) {
   // Text colors for modern white backgrounds
   const textColors = {
     pending: '#6b7280',      // Gray 500
     active: '#3b82f6',       // Blue 500
     done: '#22c55e',         // Green 500
     error: '#ef4444',        // Red 500
+    next: '#f59e0b',         // Amber 500
   };
 
-  const getStepIcon = () => {
-    const iconSize = isExpanded ? 32 : 24;
-
-    // Determine which emoji to show
-    const getEmoji = () => {
-      // Priority: custom icon > leaf type > default
-      if (step.icon) return step.icon;
-      if (step.leafType === 'DIGITAL') return '🤖';
-      if (step.leafType === 'HUMAN') return '👤';
-      return '📋'; // Default
-    };
-
-    return (
-      <OpenMoji
-        emoji={getEmoji()}
-        size={iconSize}
-        variant="color"
-      />
-    );
+  // Get emoji for the step
+  const getEmoji = () => {
+    if (step.icon) return step.icon;
+    if (step.leafType === 'DIGITAL') return '🤖';
+    if (step.leafType === 'HUMAN') return '👤';
+    return '📋';
   };
 
+  // Get text label for the step
   const getLabel = () => {
-    if (size === 'nano') return `${index + 1}`;
-
     const label = step.shortLabel || step.description;
 
+    if (size === 'nano') {
+      return isExpanded ? (label.length > 15 ? `${label.slice(0, 15)}...` : label) : `${index + 1}`;
+    }
+
     if (size === 'micro') {
-      // Micro size: very short (10 chars max)
-      return label.length > 10 ? `${label.slice(0, 10)}...` : label;
+      return isExpanded ? (label.length > 18 ? `${label.slice(0, 18)}...` : label) : (label.length > 10 ? `${label.slice(0, 10)}...` : label);
     }
 
-    // Full size collapsed: short (12 chars max)
-    if (!isExpanded) {
-      return label.length > 12 ? `${label.slice(0, 12)}...` : label;
-    }
-
-    // Full size expanded: longer but still limited (25 chars max)
-    return label.length > 25 ? `${label.slice(0, 25)}...` : label;
+    // Full size
+    return isExpanded ? (label.length > 25 ? `${label.slice(0, 25)}...` : label) : (label.length > 12 ? `${label.slice(0, 12)}...` : label);
   };
 
-  const getDurationText = () => {
-    if (step.estimatedMinutes === 0) return '⚡';
-    if (step.estimatedMinutes < 60) return `${step.estimatedMinutes}m`;
-    return `${Math.round(step.estimatedMinutes / 60)}h`;
-  };
+  // Determine if we should show icon or text inside chevron
+  const isCollapsed = effectiveExpandedId !== null && !isExpanded;
 
   // Determine chevron position
   const getChevronPosition = () => {
@@ -231,87 +159,27 @@ function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, on
         isExpanded={isExpanded}
         width="100%"
       >
-        {/* Content inside chevron */}
-        {size === 'nano' && (
-          <div
+        {/* Content inside chevron - simplified */}
+        {isCollapsed ? (
+          // Collapsed state: Show OpenMoji black icon
+          <OpenMoji
+            emoji={getEmoji()}
+            size={size === 'nano' ? 16 : size === 'micro' ? 18 : 20}
+            variant="black"
+          />
+        ) : (
+          // Expanded or base state: Show label
+          <span
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '100%',
-              height: '100%',
+              fontSize: size === 'nano' ? '10px' : size === 'micro' ? '11px' : '12px',
+              fontWeight: step.status === 'active' || step.status === 'next' ? 600 : 500,
+              color: textColors[step.status],
+              lineHeight: 1,
+              whiteSpace: 'nowrap',
             }}
           >
-            {step.status === 'active' ? (
-              <span
-                style={{
-                  fontSize: '10px',
-                  fontWeight: 500,
-                  color: textColors[step.status],
-                  lineHeight: 1,
-                }}
-              >
-                {getLabel()}
-              </span>
-            ) : step.icon ? (
-              <OpenMoji
-                emoji={step.icon}
-                size={16}
-                variant="black"
-              />
-            ) : (
-              <span
-                style={{
-                  fontSize: '10px',
-                  fontWeight: 500,
-                  color: textColors[step.status],
-                  lineHeight: 1,
-                }}
-              >
-                {getLabel()}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Micro size - icon inside when collapsed */}
-        {size === 'micro' && effectiveExpandedId && !isExpanded && step.icon && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '100%',
-              height: '100%',
-              marginLeft: getChevronPosition() === 'middle' ? '4px' : '0',
-            }}
-          >
-            <OpenMoji
-              emoji={step.icon}
-              size={18}
-              variant="black"
-            />
-          </div>
-        )}
-
-        {/* Full size - icon inside when collapsed */}
-        {size === 'full' && effectiveExpandedId && !isExpanded && step.icon && (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '100%',
-              height: '100%',
-              marginLeft: getChevronPosition() === 'middle' ? '4px' : '0',
-            }}
-          >
-            <OpenMoji
-              emoji={step.icon}
-              size={24}
-              variant="black"
-            />
-          </div>
+            {getLabel()}
+          </span>
         )}
 
         {/* Error state overlay with retry button */}
@@ -377,36 +245,6 @@ function StepSection({ step, index, totalSteps, width, isExpanded, size, tab, on
           </div>
         )}
       </ChevronStep>
-
-      {/* Icon + title floating above when NOT collapsed (micro and full sizes) */}
-      {(size === 'micro' || size === 'full') && !(effectiveExpandedId && !isExpanded) && (
-        <div
-          style={{
-            position: 'absolute',
-            top: size === 'full' ? '-22px' : '-16px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 30,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: size === 'full' ? '2px' : '1px',
-          }}
-        >
-          {getStepIcon()}
-          <span
-            style={{
-              fontSize: size === 'full' ? '10px' : '8px',
-              fontWeight: 500,
-              whiteSpace: 'nowrap',
-              color: textColors[step.status],
-              lineHeight: 1.2,
-            }}
-          >
-            {getLabel()}
-          </span>
-        </div>
-      )}
     </div>
   );
 }
@@ -647,26 +485,6 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
   };
 
   const effectiveExpandedId = manualExpandId || expandedStepId;
-  const stepWidths = calculateStepWidths(steps, effectiveExpandedId);
-  const totalMinutes = steps.reduce((sum, s) => sum + (s.estimatedMinutes || 0), 0);
-  const totalDurationText = totalMinutes < 60 ? `${totalMinutes}m` : `${Math.round(totalMinutes / 60)}h`;
-
-  const getDurationText = (step: JobStep) => {
-    if (step.estimatedMinutes === 0) return '⚡';
-    if (step.estimatedMinutes < 60) return `${step.estimatedMinutes}m`;
-    return `${Math.round(step.estimatedMinutes / 60)}h`;
-  };
-
-  const getDurationPrompt = (step: JobStep) => {
-    const minutes = step.estimatedMinutes;
-    if (minutes === 0) return 'AI will handle this automatically';
-    if (minutes <= 2) return 'Quick task - under 2 minutes';
-    if (minutes <= 5) return 'Short task - 2-5 minutes';
-    if (minutes <= 15) return 'Medium task - 5-15 minutes';
-    if (minutes <= 30) return 'Longer task - 15-30 minutes';
-    if (minutes <= 60) return 'Extended task - 30-60 minutes';
-    return 'Major task - over 1 hour';
-  };
 
   const isComplete = currentProgress >= 100;
   const allDone = steps.every(s => s.status === 'done');
@@ -716,7 +534,6 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
                 step={step}
                 index={index}
                 totalSteps={steps.length}
-                width={stepWidths.get(step.id) || 0}
                 isExpanded={effectiveExpandedId === step.id}
                 size={size}
                 tab={tab}
@@ -724,7 +541,6 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
                 stepProgressPercent={stepProgress?.get(step.id)}
                 onRetry={onRetryStep ? () => onRetryStep(step.id) : undefined}
                 effectiveExpandedId={effectiveExpandedId}
-                totalDurationText={totalDurationText}
                 loadingChildren={loadingChildren}
                 hasNestedContent={hasNestedContent}
               />

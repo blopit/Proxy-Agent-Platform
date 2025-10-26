@@ -365,14 +365,25 @@ export default function ChevronStep({
             <stop offset="100%" stopColor={tipHighlight} stopOpacity="0.3" />
           </linearGradient>
 
-          {/* Progress shimmer gradient - animated sweep */}
+          {/* Progress shimmer gradient - animated sweep with glow */}
           <linearGradient id={`shimmer-gradient-${gradientId}`} x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="rgba(255, 255, 255, 0)" />
-            <stop offset="40%" stopColor="rgba(255, 255, 255, 0)" />
-            <stop offset="50%" stopColor="rgba(255, 255, 255, 0.5)" />
-            <stop offset="60%" stopColor="rgba(255, 255, 255, 0)" />
+            <stop offset="30%" stopColor="rgba(255, 255, 255, 0.1)" />
+            <stop offset="45%" stopColor="rgba(255, 255, 255, 0.6)" />
+            <stop offset="50%" stopColor="rgba(255, 255, 255, 0.8)" />
+            <stop offset="55%" stopColor="rgba(255, 255, 255, 0.6)" />
+            <stop offset="70%" stopColor="rgba(255, 255, 255, 0.1)" />
             <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
           </linearGradient>
+
+          {/* Shimmer glow filter for enhanced effect */}
+          <filter id={`shimmer-glow-${gradientId}`} x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
 
           {/* Inset shadow filter for border effect */}
           <filter id={`inset-border-${gradientId}`} x="-20%" y="-20%" width="140%" height="140%">
@@ -389,6 +400,11 @@ export default function ChevronStep({
             {/* Step 4: Color it with the status color */}
             <feFlood floodColor={finalStroke} floodOpacity="0.6" result="shadow-color"/>
             <feComposite in="shadow-color" in2="inset-shadow" operator="in" result="colored-inset"/>
+          </filter>
+
+          {/* Subtle blur filter for soft borders */}
+          <filter id={`border-blur-${gradientId}`} x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="0.5" result="blurred"/>
           </filter>
         </defs>
 
@@ -420,6 +436,7 @@ export default function ChevronStep({
             d={getSVGPath(position, containerWidth, h, isCollapsed)}
             fill={`url(#shimmer-gradient-${gradientId})`}
             shapeRendering="geometricPrecision"
+            filter={`url(#shimmer-glow-${gradientId})`}
             className="shimmer-flow"
           />
         )}
@@ -443,7 +460,7 @@ export default function ChevronStep({
           />
         )}
 
-        {/* Layer 7: Inset shadow border */}
+        {/* Layer 7: Inset shadow (adds depth) */}
         <g filter={`url(#inset-border-${gradientId})`}>
           <path
             d={getSVGPath(position, containerWidth, h, isCollapsed)}
@@ -453,20 +470,22 @@ export default function ChevronStep({
           />
         </g>
 
-        {/* Layer 8: Visible border stroke */}
+        {/* Layer 8: Subtle blurred border stroke */}
         <path
           d={getSVGPath(position, containerWidth, h, isCollapsed)}
           fill="none"
           stroke={finalStroke}
-          strokeWidth={config.borderWidth}
+          strokeWidth={config.borderWidth * 0.8}
+          strokeOpacity={0.4}
           shapeRendering="geometricPrecision"
-          strokeLinejoin="miter"
-          strokeLinecap="butt"
-          style={{ strokeWidth: `${config.borderWidth}px` }}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+          filter={`url(#border-blur-${gradientId})`}
         />
       </svg>
 
-      {/* Content Layer */}
+      {/* Content Layer - Engraved text effect */}
       <div
         style={{
           position: 'absolute',
@@ -480,6 +499,9 @@ export default function ChevronStep({
           lineHeight: 1,
           zIndex: 2,
           pointerEvents: 'none',
+          // Engraved/debossed text effect: light highlight below, dark shadow above
+          textShadow: '0 1px 1px rgba(255, 255, 255, 0.4), 0 -1px 0px rgba(0, 0, 0, 0.3)',
+          fontWeight: 500,
         }}
       >
         {children}
@@ -498,17 +520,23 @@ export default function ChevronStep({
 
         @keyframes shimmer-flow {
           0% {
-            transform: translateX(-100%);
+            transform: translateX(-120%);
             opacity: 0;
           }
-          10% {
+          5% {
+            opacity: 0.8;
+          }
+          15% {
             opacity: 1;
           }
-          90% {
+          85% {
             opacity: 1;
+          }
+          95% {
+            opacity: 0.8;
           }
           100% {
-            transform: translateX(200%);
+            transform: translateX(220%);
             opacity: 0;
           }
         }
@@ -548,7 +576,7 @@ export default function ChevronStep({
         }
 
         :global(.shimmer-flow) {
-          animation: shimmer-flow 2.5s ease-in-out infinite;
+          animation: shimmer-flow 2s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
           transform-origin: center;
         }
 

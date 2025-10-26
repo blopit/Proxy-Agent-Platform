@@ -773,7 +773,7 @@ export const ProgressAnimation: Story = {
 
     const animatedSteps = basicSteps.map((step, i) => ({
       ...step,
-      status: (i < stepIndex ? 'done' : i === stepIndex ? 'active' : 'pending') as const,
+      status: (i < stepIndex ? 'done' : i === stepIndex ? 'active' : 'pending') as JobStepStatus,
     }));
 
     return (
