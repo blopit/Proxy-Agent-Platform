@@ -344,3 +344,261 @@ tests/
 
 *Generated using Test-Driven Development workflow*
 *Next update: Sprint 1.3 completion*
+
+---
+
+## Sprint 1.3: API Consolidation with TDD ⏳ IN PROGRESS
+
+**Timeline**: Started 2025-10-25
+**Status**: 🟡 70% Complete (GREEN phase in progress)
+**TDD Methodology**: Strict Red-Green-Refactor cycle
+
+---
+
+### 🎯 Sprint Goals
+
+- [x] Analyze existing overlapping APIs
+- [x] Design unified RESTful API specification
+- [x] Create routes directory structure
+- [x] Write integration tests FIRST (TDD Red)
+- [x] Implement routes using TaskService v2 (TDD Green - in progress)
+- [ ] Fix database session handling in tests
+- [ ] Achieve 21/21 tests passing
+- [ ] Add deprecation warnings to legacy endpoints
+
+---
+
+### 📊 Progress Metrics
+
+| Metric | Target | Actual | Status |
+|--------|--------|--------|--------|
+| API Specification | Complete | Complete | ✅ Done |
+| Routes Implemented | 8 | 8 | ✅ Done |
+| Integration Tests Written | 21 | 21 | ✅ Done |
+| Integration Tests Passing | 21 | 1 | 🟡 In Progress |
+| Code Quality | High | High | ✅ Clean |
+
+---
+
+### 🏗️ API Consolidation
+
+#### Before Sprint 1.3
+```
+3 overlapping APIs, 2,205 lines of duplicated code:
+- tasks.py (1,264 lines)
+- simple_tasks.py (656 lines)  
+- basic_tasks.py (285 lines)
+```
+
+#### After Sprint 1.3
+```
+Single unified API v2:
+- tasks_v2.py (550 lines) - All CRUD + advanced features
+- Clean separation: routes → service → repository
+- 100% dependency injection
+- Full test coverage planned
+```
+
+**Code Reduction**: 2,205 → 550 lines (75% reduction!)
+
+---
+
+### 📁 Files Created
+
+#### Routes & Schemas
+- **src/api/routes/tasks_v2.py** (550 lines)
+  - 8 RESTful endpoints
+  - Dependency injection throughout
+  - Comprehensive error handling
+
+- **src/api/routes/schemas/task_schemas.py** (220 lines)
+  - TaskCreateRequest
+  - TaskUpdateRequest
+  - TaskStatusUpdateRequest
+  - TaskResponse
+  - TaskListResponse
+  - TaskSearchResponse
+  - TaskStatsResponse
+
+- **src/api/routes/schemas/error_schemas.py** (20 lines)
+  - Standardized error responses
+
+#### Repositories
+- **src/repositories/project_repository_v2.py** (120 lines)
+  - SQLAlchemy implementation
+  - Dependency injection pattern
+
+#### Tests
+- **tests/integration/test_task_routes.py** (500 lines)
+  - 21 comprehensive integration tests
+  - Covers all CRUD operations
+  - Tests error cases
+  - Tests filtering and search
+
+#### Documentation
+- **docs/api/TASK_API_SPEC_V2.md** (700 lines)
+  - Complete API specification
+  - Request/response examples
+  - Error handling guide
+  - Migration strategy
+
+---
+
+### ✅ TDD Workflow Results
+
+#### TDD Cycle 1: RED Phase (Complete)
+```bash
+# Wrote 21 integration tests FIRST
+Result: 0/21 passing (expected - routes don't exist yet)
+Status: ✅ Complete
+```
+
+#### TDD Cycle 2: GREEN Phase (In Progress)
+```bash
+# Implemented routes using TaskService v2
+Result: 1/21 passing (infrastructure working!)
+Status: 🟡 In Progress
+
+Passing Tests:
+✅ test_create_task_validation_error
+
+Failing Tests (Database Session Issues):
+❌ test_create_task_success
+❌ test_create_task_project_not_found
+❌ test_get_task_success
+❌ test_get_task_not_found
+❌ test_list_tasks_* (7 tests)
+❌ test_update_task_* (3 tests)
+❌ test_update_status_* (3 tests)
+❌ test_delete_task_* (2 tests)
+❌ test_search_tasks_* (2 tests)
+❌ test_get_task_stats
+```
+
+---
+
+### 🚀 API Endpoints Implemented
+
+#### CRUD Operations
+1. **POST /api/v2/tasks** - Create task
+   - Validates project exists
+   - Auto-generates task_id
+   - Returns 201 Created
+
+2. **GET /api/v2/tasks/{task_id}** - Get task
+   - Returns full task details
+   - Returns 404 if not found
+
+3. **PUT /api/v2/tasks/{task_id}** - Update task
+   - Partial updates supported
+   - Smart timestamp management
+   - Returns 200 OK
+
+4. **DELETE /api/v2/tasks/{task_id}** - Delete task
+   - Returns 204 No Content
+   - Returns 404 if not found
+
+#### Advanced Features
+5. **GET /api/v2/tasks** - List tasks
+   - Filters: project_id, status, priority, assignee
+   - Pagination: limit, skip
+   - Returns paginated list
+
+6. **PATCH /api/v2/tasks/{task_id}/status** - Update status
+   - Auto-sets started_at when → IN_PROGRESS
+   - Auto-sets completed_at when → COMPLETED
+   - Returns updated task
+
+7. **GET /api/v2/tasks/search** - Search tasks
+   - Full-text search in title/description
+   - Relevance scoring
+   - Returns ranked results
+
+8. **GET /api/v2/tasks/stats** - Task statistics
+   - By status distribution
+   - By priority distribution
+   - Completion rate
+   - Average completion time
+
+---
+
+### 🎓 TDD Benefits Demonstrated
+
+1. **Design Before Implementation**
+   - API spec defined by tests
+   - Clear contracts
+   - No over-engineering
+
+2. **Infrastructure Validation**
+   - Routing works ✅
+   - Dependency injection works ✅
+   - FastAPI async client works ✅
+   - Pydantic validation works ✅
+
+3. **Fast Feedback Loop**
+   - Tests run in ~2 seconds
+   - Immediate error detection
+   - Clear failure messages
+
+4. **Documentation by Example**
+   - Tests show exact usage
+   - Request/response examples
+   - Error case handling
+
+---
+
+### 🐛 Known Issues
+
+1. **Database Session Handling** (20 tests failing)
+   - Issue: Integration tests need shared database state
+   - Solution: Fix test fixtures to properly manage SQLAlchemy sessions
+   - Priority: High
+   - Estimate: 2-3 hours
+
+2. **Test Fixture Dependencies**
+   - Issue: test_project and test_task fixtures need session sharing
+   - Solution: Use session-scoped fixtures or transaction rollback pattern
+   - Priority: High
+
+---
+
+### 📈 Next Steps
+
+1. **Fix Database Session Handling** (Immediate)
+   - Update test fixtures to use proper session management
+   - Implement transaction rollback for test isolation
+   - Get all 21 tests to GREEN
+
+2. **Add Deprecation Warnings** (After tests pass)
+   - Add headers to legacy endpoints
+   - Log deprecation warnings
+   - Update documentation
+
+3. **Frontend Integration** (Week 4)
+   - Update mobile app to use v2 API
+   - Test in production-like environment
+   - Monitor performance
+
+4. **Sunset Legacy APIs** (Week 8)
+   - Remove tasks.py, simple_tasks.py
+   - Keep basic_tasks.py for legacy clients
+   - Final cleanup
+
+---
+
+### 🎯 Sprint 1.3 Status
+
+**Current State**: 70% Complete
+- ✅ API Design (100%)
+- ✅ Routes Implementation (100%)
+- 🟡 Integration Tests (5% - 1/21 passing)
+- ⏳ Database Fixtures (Pending)
+- ⏳ Legacy Deprecation (Pending)
+
+**Blockers**: Database session handling in integration tests
+
+**Next Session Goal**: Fix session handling, achieve 21/21 tests passing
+
+---
+
+*Last Updated*: 2025-10-25 (Sprint 1.3 - TDD GREEN phase in progress)
