@@ -4,17 +4,11 @@ Test API routes and endpoints.
 Comprehensive tests for FastAPI routes to increase coverage.
 """
 
-import os
-import sys
-
 import pytest
 from fastapi.testclient import TestClient
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "agent"))
-
-# Import main app and available routers
-from main import app
-from routers import router as agents_router
+# Import main app from correct location
+from src.api.main import app
 
 # Note: Individual routers (energy, focus, progress, tasks) will be implemented in Epic 2
 
