@@ -52,7 +52,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, CheckCircle2, Circle, Loader2, AlertCircle, User, Bot, FileText } from 'lucide-react';
 import ProgressBar from './ProgressBar';
-import ChevronStep from '@/components/mobile/ChevronStep';
+import ChevronStep, { type ChevronPosition } from '@/components/mobile/ChevronStep';
 import OpenMoji from './OpenMoji';
 
 // ============================================================================
@@ -168,62 +168,6 @@ function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, 
     return 'middle';
   };
 
-  // Get height based on size
-  const getHeight = () => {
-    if (size === 'nano') return 32;
-    if (size === 'micro') return 40;
-    return 64; // full
-  };
-
-  // Generate SVG path for mask (matches ChevronStep exactly)
-  const getSVGMaskPath = (pos: 'first' | 'middle' | 'last' | 'single', width: number, height: number): string => {
-    const arrow = 10; // CHEVRON_ARROW_DEPTH_PX
-    const h = height;
-    const w = width;
-    const half = h / 2;
-
-    if (pos === 'single') {
-      return `M 0,0 L ${w},0 L ${w},${h} L 0,${h} Z`;
-    }
-
-    if (pos === 'first') {
-      return `M 0,0 L ${w - arrow},0 L ${w},${half} L ${w - arrow},${h} L 0,${h} Z`;
-    }
-
-    if (pos === 'middle') {
-      return `M 0,0 L ${w - arrow},0 L ${w},${half} L ${w - arrow},${h} L 0,${h} L ${arrow},${half} Z`;
-    }
-
-    // last
-    return `M 0,0 L ${w},0 L ${w},${h} L 0,${h} L ${arrow},${half} Z`;
-  };
-
-  const maskId = `progress-mask-${step.id}-${index}`;
-  const chevronHeight = getHeight();
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = React.useState(200);
-
-  // Measure actual container width
-  React.useLayoutEffect(() => {
-    if (containerRef.current) {
-      setContainerWidth(containerRef.current.offsetWidth);
-    }
-  }, [isExpanded]);
-
-  // Track width changes
-  React.useEffect(() => {
-    if (!containerRef.current) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setContainerWidth(entry.contentRect.width);
-      }
-    });
-
-    resizeObserver.observe(containerRef.current);
-    return () => resizeObserver.disconnect();
-  }, [isExpanded]);
-
   // === 3 STATES ===
   // Base State: effectiveExpandedId === null → all equal width, show EMOJI + LABEL
   // Accordion Expanded: effectiveExpandedId !== null && isExpanded → wide, show EMOJI + LABEL
@@ -231,6 +175,46 @@ function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, 
 
   const isBaseState = effectiveExpandedId === null;
   const isAccordionCollapsed = effectiveExpandedId !== null && !isExpanded;
+
+  // Generate clip-path for progress overlay - flat right edge, clip left to match chevron
+  const getProgressClipPath = (pos: ChevronPosition): string => {
+    const arrow = '10px'; // Match ChevronStep's CHEVRON_ARROW_DEPTH_PX
+
+    if (pos === 'single') {
+      // Rectangle - no clipping
+      return 'none';
+    }
+
+    if (pos === 'first') {
+      // Straight left edge, FLAT right edge (not pointing)
+      return `polygon(
+        0 0,
+        100% 0,
+        100% 100%,
+        0 100%
+      )`;
+    }
+
+    if (pos === 'middle') {
+      // CONCAVE left notch, FLAT right edge
+      return `polygon(
+        0 0,
+        100% 0,
+        100% 100%,
+        0 100%,
+        ${arrow} 50%
+      )`;
+    }
+
+    // 'last' - CONCAVE left notch, FLAT right edge
+    return `polygon(
+      0 0,
+      100% 0,
+      100% 100%,
+      0 100%,
+      ${arrow} 50%
+    )`;
+  };
 
   // Calculate width based on state
   const getWidth = () => {
@@ -248,7 +232,6 @@ function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, 
 
   return (
     <div
-      ref={containerRef}
       className="relative"
       style={{
         flex: getFlex(),
@@ -258,68 +241,37 @@ function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, 
         marginRight: index !== totalSteps - 1 ? '-2px' : '0',  // -2px overlap between chevrons
       }}
     >
-      {/* SVG Mask for progress overlay */}
-      <svg
-        width={containerWidth}
-        height={chevronHeight}
-        style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', visibility: 'hidden' }}
-      >
-        <defs>
-          <mask id={maskId}>
-            <path
-              d={getSVGMaskPath(getChevronPosition(), containerWidth, chevronHeight)}
-              fill="white"
-            />
-          </mask>
-        </defs>
-      </svg>
-
-      {/* Active progress overlay - positioned over entire chevron */}
+      {/* Active progress overlay - clipped to chevron shape with flat right edge */}
       {step.status === 'active' && activeProgress !== undefined && activeProgress > 0 && (
-        <>
-          {/* Shimmer overlay - masked by SVG chevron shape */}
-          <div
-            className={activeProgressPulse ? 'active-progress-overlay' : ''}
+        <div
+          className={activeProgressPulse ? 'active-progress-overlay' : ''}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: `${activeProgress}%`,
+            background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.25), rgba(210, 240, 255, 0.35) 30%, rgba(255, 255, 255, 0.45) 50%, rgba(210, 240, 255, 0.35) 70%, rgba(255, 255, 255, 0.25))',
+            backgroundSize: '200% 100%',
+            pointerEvents: 'none',
+            overflow: 'hidden',
+            zIndex: 10,
+            clipPath: getProgressClipPath(getChevronPosition()),
+            display: 'flex',
+            alignItems: 'center',
+            paddingLeft: '16px',
+          }}
+        >
+          <span
             style={{
-              position: 'absolute',
-              inset: 0,
-              width: `${activeProgress}%`,
-              background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.25), rgba(210, 240, 255, 0.35) 30%, rgba(255, 255, 255, 0.45) 50%, rgba(210, 240, 255, 0.35) 70%, rgba(255, 255, 255, 0.25))',
-              backgroundSize: '200% 100%',
-              borderRight: activeProgress < 100 ? '1px solid rgba(255, 255, 255, 0.6)' : 'none',
-              pointerEvents: 'none',
-              zIndex: 10,
-              boxShadow: activeProgress < 100 ? 'inset -1px 0 6px rgba(255, 255, 255, 0.3)' : 'none',
-              WebkitMaskImage: `url(#${maskId})`,
-              maskImage: `url(#${maskId})`,
-            }}
-          />
-          {/* Percentage text - not masked, sits above shimmer */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: `${activeProgress}%`,
-              display: 'flex',
-              alignItems: 'center',
-              paddingLeft: getChevronPosition() === 'first' || getChevronPosition() === 'single' ? '16px' : '26px',
-              pointerEvents: 'none',
-              zIndex: 11,
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              color: 'rgba(0, 0, 0, 0.6)',
+              textShadow: '0 1px 0 rgba(255, 255, 255, 0.9), 0 -1px 0 rgba(0, 0, 0, 0.15)',
+              letterSpacing: '0.5px',
             }}
           >
-            <span
-              style={{
-                fontSize: '0.7rem',
-                fontWeight: 700,
-                color: 'rgba(100, 100, 100, 0.9)',
-                textShadow: '1px 1px 0 rgba(255, 255, 255, 0.9), -1px -1px 0 rgba(0, 0, 0, 0.15)',
-                letterSpacing: '0.3px',
-              }}
-            >
-              {Math.round(activeProgress)}%
-            </span>
-          </div>
-        </>
+            {Math.round(activeProgress)}%
+          </span>
+        </div>
       )}
 
       {/* SVG Chevron Step */}

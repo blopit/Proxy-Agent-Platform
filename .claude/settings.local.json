@@ -9,7 +9,8 @@
       "WebFetch(domain:css-tricks.com)",
       "Bash(npm run type-check)",
       "Bash(npm run build-storybook)",
-      "Bash(rg --files -g \"*.css\" -g \"*.scss\" -g \"globals.css\" frontend/src)"
+      "Bash(rg --files -g \"*.css\" -g \"*.scss\" -g \"globals.css\" frontend/src)",
+      "Read(//Users/shrenilpatel/Desktop/**)"
     ],
     "deny": [],
     "ask": []

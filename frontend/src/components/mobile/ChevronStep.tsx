@@ -290,7 +290,7 @@ export default function ChevronStep({
         height: `${h}px`,
         cursor: onClick ? 'pointer' : 'default',
         flexShrink: isExpanded ? 0 : 1,
-        boxShadow: 'rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px',
+        overflow: 'visible',
       }}
       onClick={onClick}
       onMouseEnter={handleMouseEnter}
@@ -323,18 +323,40 @@ export default function ChevronStep({
       >
         {/* Gradient definitions */}
         <defs>
-          {/* Multi-layer drop shadow filter (mimics box-shadow, Button-10 style: colored shadows) */}
-          <filter id={`multi-shadow-${gradientId}`} x="-50%" y="-50%" width="200%" height="200%">
-            {/* Shadow 1: Small tight shadow - 0px 1px 1px (status color) */}
-            <feGaussianBlur in="SourceAlpha" stdDeviation="0.5" result="blur1"/>
-            <feOffset in="blur1" dx="0" dy="1" result="offset1"/>
-            <feFlood floodColor={statusShadowColor} result="color1"/>
+          {/* Multi-layer drop shadow filter (mimics box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px) */}
+          <filter id={`multi-shadow-${gradientId}`} x="-150%" y="-150%" width="400%" height="400%">
+            {/* Shadow 1: rgba(0, 0, 0, 0.16) 0px 3px 6px */}
+            <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur1"/>
+            <feOffset in="blur1" dx="0" dy="3" result="offset1"/>
+            <feFlood floodColor="rgba(0, 0, 0, 0.16)" result="color1"/>
             <feComposite in="color1" in2="offset1" operator="in" result="shadow1"/>
 
-            {/* Shadow 2: Medium soft shadow - 0px 2px 8px (status color) */}
-            <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur2"/>
-            <feOffset in="blur2" dx="0" dy="2" result="offset2"/>
-            <feFlood floodColor={statusShadowColor} result="color2"/>
+            {/* Shadow 2: rgba(0, 0, 0, 0.23) 0px 3px 6px */}
+            <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur2"/>
+            <feOffset in="blur2" dx="0" dy="3" result="offset2"/>
+            <feFlood floodColor="rgba(0, 0, 0, 0.23)" result="color2"/>
+            <feComposite in="color2" in2="offset2" operator="in" result="shadow2"/>
+
+            {/* Merge shadows */}
+            <feMerge result="merged-shadows">
+              <feMergeNode in="shadow2"/>
+              <feMergeNode in="shadow1"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+
+          {/* Hover shadow filter (mimics box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px) */}
+          <filter id={`hover-shadow-${gradientId}`} x="-150%" y="-150%" width="400%" height="400%">
+            {/* Shadow 1: rgba(0, 0, 0, 0.19) 0px 10px 20px */}
+            <feGaussianBlur in="SourceAlpha" stdDeviation="10" result="blur1"/>
+            <feOffset in="blur1" dx="0" dy="10" result="offset1"/>
+            <feFlood floodColor="rgba(0, 0, 0, 0.19)" result="color1"/>
+            <feComposite in="color1" in2="offset1" operator="in" result="shadow1"/>
+
+            {/* Shadow 2: rgba(0, 0, 0, 0.23) 0px 6px 6px */}
+            <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="blur2"/>
+            <feOffset in="blur2" dx="0" dy="6" result="offset2"/>
+            <feFlood floodColor="rgba(0, 0, 0, 0.23)" result="color2"/>
             <feComposite in="color2" in2="offset2" operator="in" result="shadow2"/>
 
             {/* Merge shadows */}
@@ -410,90 +432,115 @@ export default function ChevronStep({
           </filter>
         </defs>
 
-        {/* Layer 1: Base bevel gradient with shadow filter */}
-        <path
-          d={getSVGPath(position, containerWidth, h, isCollapsed)}
-          fill={`url(#bevel-gradient-${gradientId})`}
-          shapeRendering="geometricPrecision"
-          filter={`url(#multi-shadow-${gradientId})`}
-        />
-
-        {/* Layer 2: Thin inset highlight (top edge, like Button-10) */}
-        <path
-          d={getSVGPath(position, containerWidth, h, isCollapsed)}
-          fill={`url(#inset-highlight-${gradientId})`}
-          shapeRendering="geometricPrecision"
-        />
-
-        {/* Layer 3: Tip brightness (lighter = future) */}
-        <path
-          d={getSVGPath(position, containerWidth, h, isCollapsed)}
-          fill={`url(#tip-gradient-${gradientId})`}
-          shapeRendering="geometricPrecision"
-        />
-
-        {/* Layer 4: Progress shimmer (active status only) */}
-        {status === 'active' && (
+        {/* All layers grouped for floating animation */}
+        <g
+          style={{
+            transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
+            transition: 'transform 0.2s ease-out',
+          }}
+        >
+          {/* Layer 1a: Base shadow (always present) */}
           <path
             d={getSVGPath(position, containerWidth, h, isCollapsed)}
-            fill={`url(#shimmer-gradient-${gradientId})`}
+            fill={`url(#bevel-gradient-${gradientId})`}
             shapeRendering="geometricPrecision"
-            filter={`url(#shimmer-glow-${gradientId})`}
-            className="shimmer-flow"
+            filter={`url(#multi-shadow-${gradientId})`}
+            style={{
+              opacity: isHovered ? 0 : 1,
+              transition: 'opacity 0.2s ease-out',
+            }}
           />
-        )}
 
-        {/* Layer 5: Active pulse overlay */}
-        {status === 'active' && (
+          {/* Layer 1b: Hover shadow (fades in on hover) */}
           <path
             d={getSVGPath(position, containerWidth, h, isCollapsed)}
-            fill="rgba(59, 130, 246, 0.12)"
+            fill={`url(#bevel-gradient-${gradientId})`}
             shapeRendering="geometricPrecision"
-            className="pulse-glow"
+            filter={`url(#hover-shadow-${gradientId})`}
+            style={{
+              opacity: isHovered ? 1 : 0,
+              transition: 'opacity 0.2s ease-out',
+            }}
           />
-        )}
 
-        {/* Layer 6: Hover sheen overlay */}
-        {isHovered && (
+          {/* Layer 2: Thin inset highlight (top edge, like Button-10) */}
           <path
             d={getSVGPath(position, containerWidth, h, isCollapsed)}
-            fill="rgba(0, 0, 0, 0.04)"
+            fill={`url(#inset-highlight-${gradientId})`}
             shapeRendering="geometricPrecision"
           />
-        )}
 
-        {/* Layer 7: Inset shadow (adds depth) */}
-        <g filter={`url(#inset-border-${gradientId})`}>
+          {/* Layer 3: Tip brightness (lighter = future) */}
           <path
             d={getSVGPath(position, containerWidth, h, isCollapsed)}
-            fill={finalStroke}
-            fillOpacity="0.4"
+            fill={`url(#tip-gradient-${gradientId})`}
             shapeRendering="geometricPrecision"
+          />
+
+          {/* Layer 4: Progress shimmer (active status only) */}
+          {status === 'active' && (
+            <path
+              d={getSVGPath(position, containerWidth, h, isCollapsed)}
+              fill={`url(#shimmer-gradient-${gradientId})`}
+              shapeRendering="geometricPrecision"
+              filter={`url(#shimmer-glow-${gradientId})`}
+              className="shimmer-flow"
+            />
+          )}
+
+          {/* Layer 5: Active pulse overlay */}
+          {status === 'active' && (
+            <path
+              d={getSVGPath(position, containerWidth, h, isCollapsed)}
+              fill="rgba(59, 130, 246, 0.12)"
+              shapeRendering="geometricPrecision"
+              className="pulse-glow"
+            />
+          )}
+
+          {/* Layer 6: Hover sheen overlay - subtle brightness lift */}
+          {isHovered && (
+            <path
+              d={getSVGPath(position, containerWidth, h, isCollapsed)}
+              fill="rgba(255, 255, 255, 0.1)"
+              shapeRendering="geometricPrecision"
+            />
+          )}
+
+          {/* Layer 7: Inset shadow (adds depth) */}
+          <g filter={`url(#inset-border-${gradientId})`}>
+            <path
+              d={getSVGPath(position, containerWidth, h, isCollapsed)}
+              fill={finalStroke}
+              fillOpacity="0.4"
+              shapeRendering="geometricPrecision"
+            />
+          </g>
+
+          {/* Layer 8: Subtle blurred border stroke */}
+          <path
+            d={getSVGPath(position, containerWidth, h, isCollapsed)}
+            fill="none"
+            stroke={finalStroke}
+            strokeWidth={config.borderWidth * 0.8}
+            strokeOpacity={0.4}
+            shapeRendering="geometricPrecision"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            vectorEffect="non-scaling-stroke"
+            filter={`url(#border-blur-${gradientId})`}
           />
         </g>
-
-        {/* Layer 8: Subtle blurred border stroke */}
-        <path
-          d={getSVGPath(position, containerWidth, h, isCollapsed)}
-          fill="none"
-          stroke={finalStroke}
-          strokeWidth={config.borderWidth * 0.8}
-          strokeOpacity={0.4}
-          shapeRendering="geometricPrecision"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          vectorEffect="non-scaling-stroke"
-          filter={`url(#border-blur-${gradientId})`}
-        />
       </svg>
 
-      {/* Content Layer - Engraved text/icon effect */}
+      {/* Content Layer - Engraved text/icon effect (floats with chevron) */}
       <div
         style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
-          transform: 'translate(-50%, -50%)',
+          transform: isHovered ? 'translate(-50%, calc(-50% - 2px))' : 'translate(-50%, -50%)',
+          transition: 'transform 0.2s ease-out',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

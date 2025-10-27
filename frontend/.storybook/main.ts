@@ -45,6 +45,12 @@ const config: StorybookConfig = {
       os: false,
     };
 
+    // Mock next/config to suppress runtime config deprecation warning
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'next/config': require.resolve('./next-config-mock.js'),
+    };
+
     // Fix for Next.js 15 webpack compatibility
     // Remove problematic plugins that cause "tap" errors
     if (config.plugins) {
@@ -63,14 +69,15 @@ const config: StorybookConfig = {
       ignored: /node_modules/,
     };
 
-    // Fix HMR chunk loading issue
+    // Fix HMR chunk loading issue - use simpler naming to avoid reduce errors
     config.output = config.output || {};
-    config.output.hotUpdateChunkFilename = 'hot/[id].[fullhash].hot-update.js';
-    config.output.hotUpdateMainFilename = 'hot/[runtime].[fullhash].hot-update.json';
+    config.output.hotUpdateChunkFilename = '[id].[fullhash].hot-update.js';
+    config.output.hotUpdateMainFilename = '[runtime].[fullhash].hot-update.json';
 
     // Ensure proper HMR configuration
     config.optimization = config.optimization || {};
-    config.optimization.runtimeChunk = false;
+    config.optimization.runtimeChunk = 'single';
+    config.optimization.moduleIds = 'named';
 
     return config;
   }
