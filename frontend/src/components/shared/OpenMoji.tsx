@@ -18,13 +18,17 @@ export interface OpenMojiProps {
   size?: number;
   className?: string;
   variant?: 'color' | 'black';
+  engraved?: boolean;
+  embossed?: boolean;
 }
 
 export const OpenMoji: React.FC<OpenMojiProps> = ({
   emoji,
   size = 16,
   className = '',
-  variant = 'black'
+  variant = 'black',
+  engraved = false,
+  embossed = false
 }) => {
   // Convert emoji to Unicode hex code point (handles multi-byte emojis)
   const getHexCode = (emoji: string) => {
@@ -39,6 +43,17 @@ export const OpenMoji: React.FC<OpenMojiProps> = ({
   // Use OpenMoji CDN with black (line art) or color version
   const cdnUrl = `https://cdn.jsdelivr.net/npm/openmoji@15.0.0/${variant}/svg/${hexCode}.svg`;
 
+  // Determine which 3D effect to apply
+  let filterEffect: string | undefined;
+
+  if (engraved) {
+    // Engraved/debossed effect (carved in): dark shadow above, light highlight below
+    filterEffect = 'drop-shadow(0 -1px 0px rgba(0, 0, 0, 0.4)) drop-shadow(0 1px 0px rgba(255, 255, 255, 0.4)) opacity(0.7)';
+  } else if (embossed) {
+    // Embossed/raised effect (popping out): light highlight above, dark shadow below
+    filterEffect = 'drop-shadow(0 -1px 1px rgba(255, 255, 255, 0.6)) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3)) brightness(1.1)';
+  }
+
   return (
     <img
       src={cdnUrl}
@@ -49,6 +64,8 @@ export const OpenMoji: React.FC<OpenMojiProps> = ({
       style={{
         display: 'block',
         flexShrink: 0,
+        filter: filterEffect,
+        verticalAlign: 'middle',
       }}
       onError={(e) => {
         // Fallback to showing the emoji text if SVG fails to load

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import AsyncJobTimeline, { type JobStep } from './AsyncJobTimeline';
+import AsyncJobTimeline, { type JobStep, type JobStepStatus } from './AsyncJobTimeline';
 import React from 'react';
 
 const meta: Meta<typeof AsyncJobTimeline> = {
@@ -53,6 +53,14 @@ const meta: Meta<typeof AsyncJobTimeline> = {
     showProgressBar: {
       control: 'boolean',
       description: 'Show progress bar at bottom',
+    },
+    activeProgress: {
+      control: { type: 'range', min: 0, max: 100, step: 1 },
+      description: 'Progress overlay on active step (0-100). Shows semi-transparent fill indicating completion percentage.',
+    },
+    activeProgressPulse: {
+      control: 'boolean',
+      description: 'Whether the active progress overlay should animate (shimmer sweep effect)',
     },
   },
 };
@@ -865,6 +873,152 @@ export const NoIcons: Story = {
 };
 
 // ============================================================================
+// Stories: Active Progress Overlay
+// ============================================================================
+
+export const ActiveProgressPulsing: Story = {
+  args: {
+    jobName: 'Processing data with active progress...',
+    steps: basicSteps,
+    currentProgress: 50,
+    activeProgress: 65,
+    activeProgressPulse: true,
+    size: 'full',
+    showProgressBar: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Active step shows an elegant shimmer gradient overlay at 65% completion. The gradient sweeps across with white and subtle blue hints, creating a sophisticated animated effect.',
+      },
+    },
+  },
+};
+
+export const ActiveProgressStatic: Story = {
+  args: {
+    jobName: 'Processing data with static progress...',
+    steps: basicSteps,
+    currentProgress: 50,
+    activeProgress: 40,
+    activeProgressPulse: false,
+    size: 'full',
+    showProgressBar: true,
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Active step shows a static gradient overlay at 40% completion (no shimmer animation). Use activeProgressPulse={false} to disable the sweep effect.',
+      },
+    },
+  },
+};
+
+export const ActiveProgressAnimated: Story = {
+  render: () => {
+    const [activeProgress, setActiveProgress] = React.useState(0);
+
+    React.useEffect(() => {
+      const interval = setInterval(() => {
+        setActiveProgress((p) => {
+          if (p >= 100) {
+            return 0;
+          }
+          return p + 1;
+        });
+      }, 50);
+
+      return () => clearInterval(interval);
+    }, []);
+
+    return (
+      <div>
+        <AsyncJobTimeline
+          jobName="Watch active step progress fill up..."
+          steps={basicSteps}
+          currentProgress={50}
+          activeProgress={activeProgress}
+          activeProgressPulse={true}
+          size="full"
+          showProgressBar={true}
+        />
+        <div className="mt-4 text-center">
+          <p className="text-[#586e75] text-sm">Active Step Progress: {activeProgress}%</p>
+          <p className="text-[#93a1a1] text-xs">Overlay fills from 0% to 100% with pulsing animation</p>
+        </div>
+      </div>
+    );
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Animated demonstration of active progress overlay filling from 0% to 100%.',
+      },
+    },
+  },
+};
+
+export const ActiveProgressComparison: Story = {
+  render: () => (
+    <div className="space-y-8">
+      <div>
+        <h3 className="text-[#586e75] text-sm font-medium mb-2">With Pulsing (Default)</h3>
+        <AsyncJobTimeline
+          jobName="Processing with pulsing overlay"
+          steps={basicSteps}
+          currentProgress={50}
+          activeProgress={60}
+          activeProgressPulse={true}
+          size="full"
+          showProgressBar={false}
+        />
+        <p className="text-[#93a1a1] text-xs mt-2">
+          Elegant shimmer sweeps across every 3 seconds with white and blue hints
+        </p>
+      </div>
+
+      <div>
+        <h3 className="text-[#586e75] text-sm font-medium mb-2">Without Shimmer</h3>
+        <AsyncJobTimeline
+          jobName="Processing with static overlay"
+          steps={basicSteps}
+          currentProgress={50}
+          activeProgress={60}
+          activeProgressPulse={false}
+          size="full"
+          showProgressBar={false}
+        />
+        <p className="text-[#93a1a1] text-xs mt-2">
+          Static gradient without animation
+        </p>
+      </div>
+
+      <div>
+        <h3 className="text-[#586e75] text-sm font-medium mb-2">No Active Progress</h3>
+        <AsyncJobTimeline
+          jobName="Processing without overlay"
+          steps={basicSteps}
+          currentProgress={50}
+          activeProgress={0}
+          size="full"
+          showProgressBar={false}
+        />
+        <p className="text-[#93a1a1] text-xs mt-2">
+          No overlay shown (activeProgress=0 or undefined)
+        </p>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Side-by-side comparison of active progress states: shimmer animation, static gradient, and none.',
+      },
+    },
+  },
+};
+
+// ============================================================================
 // Interactive Playground
 // ============================================================================
 
@@ -873,6 +1027,8 @@ export const Playground: Story = {
     jobName: 'Interactive playground',
     steps: basicSteps,
     currentProgress: 50,
+    activeProgress: 0,
+    activeProgressPulse: true,
     size: 'full',
     showProgressBar: true,
   },

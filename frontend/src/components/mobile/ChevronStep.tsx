@@ -34,6 +34,7 @@
 'use client';
 
 import React, { ReactNode } from 'react';
+import OpenMoji from '@/components/shared/OpenMoji';
 
 // ============================================================================
 // Types
@@ -48,6 +49,7 @@ export interface ChevronStepProps {
   position: ChevronPosition;
   size: ChevronSize;
   children?: ReactNode;
+  emoji?: string;
   fillColor?: string;
   strokeColor?: string;
   onClick?: () => void;
@@ -59,29 +61,29 @@ export interface ChevronStepProps {
 }
 
 // ============================================================================
-// Default Colors (Modern white with shadows)
+// Default Colors (Solarized theme)
 // ============================================================================
 
 const DEFAULT_COLORS = {
   pending: {
-    fill: '#ffffff',
-    stroke: '#d1d5db',
+    fill: '#fdf6e3',        // Solarized base3 (light cream)
+    stroke: '#93a1a1',      // Solarized base1 (light gray)
   },
   active: {
-    fill: '#ffffff',
-    stroke: '#3b82f6',
+    fill: '#eef4fb',        // Light blue tint
+    stroke: '#268bd2',      // Solarized blue
   },
   done: {
-    fill: '#f0fdf4',
-    stroke: '#22c55e',
+    fill: '#eef2e6',        // Light green tint
+    stroke: '#859900',      // Solarized green
   },
   error: {
-    fill: '#fef2f2',
-    stroke: '#ef4444',
+    fill: '#fae8e8',        // Light red tint
+    stroke: '#dc322f',      // Solarized red
   },
   next: {
-    fill: '#fffbeb',
-    stroke: '#f59e0b',
+    fill: '#fdf2e1',        // Light orange tint
+    stroke: '#cb4b16',      // Solarized orange
   },
 };
 
@@ -107,6 +109,7 @@ export default function ChevronStep({
   position,
   size,
   children,
+  emoji,
   fillColor,
   strokeColor,
   onClick,
@@ -206,22 +209,16 @@ export default function ChevronStep({
     const w = width;
     const half = h / 2;
 
-    // Pull right edge in for collapsed chevrons to ensure border is visible
-    // before next chevron overlaps it (chevrons overlap by -4px)
-    const rightEdgeAdjust = isCollapsed && (pos === 'first' || pos === 'middle') ? 4 : 0;
-
     if (pos === 'single') {
       return `M 0,0 L ${w},0 L ${w},${h} L 0,${h} Z`;
     }
 
     if (pos === 'first') {
-      // Move all three right points in when collapsed
-      return `M 0,0 L ${w - arrow - rightEdgeAdjust},0 L ${w - rightEdgeAdjust},${half} L ${w - arrow - rightEdgeAdjust},${h} L 0,${h} Z`;
+      return `M 0,0 L ${w - arrow},0 L ${w},${half} L ${w - arrow},${h} L 0,${h} Z`;
     }
 
     if (pos === 'middle') {
-      // Move right points in when collapsed, left notch stays at arrow position
-      return `M 0,0 L ${w - arrow - rightEdgeAdjust},0 L ${w - rightEdgeAdjust},${half} L ${w - arrow - rightEdgeAdjust},${h} L 0,${h} L ${arrow},${half} Z`;
+      return `M 0,0 L ${w - arrow},0 L ${w},${half} L ${w - arrow},${h} L 0,${h} L ${arrow},${half} Z`;
     }
 
     // last - straight right edge, left notch stays at arrow position
@@ -289,9 +286,11 @@ export default function ChevronStep({
         position: 'relative',
         width: width,
         minWidth: '40px',
+        maxWidth: width,
         height: `${h}px`,
         cursor: onClick ? 'pointer' : 'default',
         flexShrink: isExpanded ? 0 : 1,
+        boxShadow: 'rgba(0, 0, 0, 0.16) 0px 10px 36px 0px, rgba(0, 0, 0, 0.06) 0px 0px 0px 1px',
       }}
       onClick={onClick}
       onMouseEnter={handleMouseEnter}
@@ -365,22 +364,25 @@ export default function ChevronStep({
             <stop offset="100%" stopColor={tipHighlight} stopOpacity="0.3" />
           </linearGradient>
 
-          {/* Progress shimmer gradient - animated sweep with glow */}
+          {/* Progress shimmer gradient - sleek horizontal sweep */}
           <linearGradient id={`shimmer-gradient-${gradientId}`} x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="rgba(255, 255, 255, 0)" />
-            <stop offset="30%" stopColor="rgba(255, 255, 255, 0.1)" />
-            <stop offset="45%" stopColor="rgba(255, 255, 255, 0.6)" />
-            <stop offset="50%" stopColor="rgba(255, 255, 255, 0.8)" />
-            <stop offset="55%" stopColor="rgba(255, 255, 255, 0.6)" />
-            <stop offset="70%" stopColor="rgba(255, 255, 255, 0.1)" />
+            <stop offset="35%" stopColor="rgba(255, 255, 255, 0)" />
+            <stop offset="45%" stopColor="rgba(255, 255, 255, 0.15)" />
+            <stop offset="50%" stopColor="rgba(255, 255, 255, 0.35)" />
+            <stop offset="55%" stopColor="rgba(255, 255, 255, 0.15)" />
+            <stop offset="65%" stopColor="rgba(255, 255, 255, 0)" />
             <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
           </linearGradient>
 
-          {/* Shimmer glow filter for enhanced effect */}
+          {/* Shimmer glow filter for soft, sleek effect */}
           <filter id={`shimmer-glow-${gradientId}`} x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+            <feComponentTransfer in="blur" result="softBlur">
+              <feFuncA type="linear" slope="0.5"/>
+            </feComponentTransfer>
             <feMerge>
-              <feMergeNode in="blur"/>
+              <feMergeNode in="softBlur"/>
               <feMergeNode in="SourceGraphic"/>
             </feMerge>
           </filter>
@@ -485,7 +487,7 @@ export default function ChevronStep({
         />
       </svg>
 
-      {/* Content Layer - Engraved text effect */}
+      {/* Content Layer - Engraved text/icon effect */}
       <div
         style={{
           position: 'absolute',
@@ -495,16 +497,48 @@ export default function ChevronStep({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          gap: emoji && !isCollapsed ? '8px' : '0',
           fontSize: size === 'nano' ? '18px' : size === 'micro' ? '22px' : '26px',
           lineHeight: 1,
           zIndex: 2,
           pointerEvents: 'none',
           // Engraved/debossed text effect: light highlight below, dark shadow above
-          textShadow: '0 1px 1px rgba(255, 255, 255, 0.4), 0 -1px 0px rgba(0, 0, 0, 0.3)',
+          textShadow: (emoji && !isCollapsed) ? undefined : '0 1px 1px rgba(255, 255, 255, 0.4), 0 -1px 0px rgba(0, 0, 0, 0.3)',
           fontWeight: 500,
+          // Shift content to the right for last chevron to account for straight edge
+          marginLeft: position === 'last' ? '4px' : '0',
         }}
       >
-        {children}
+        {emoji && isCollapsed ? (
+          // Collapsed: show only colored embossed emoji
+          <OpenMoji
+            emoji={emoji}
+            size={size === 'nano' ? 16 : size === 'micro' ? 18 : 20}
+            variant="color"
+            embossed
+          />
+        ) : emoji && !isCollapsed ? (
+          // Expanded: show colored embossed emoji + children
+          <>
+            <OpenMoji
+              emoji={emoji}
+              size={size === 'nano' ? 16 : size === 'micro' ? 18 : 20}
+              variant="color"
+              embossed
+            />
+            <span style={{
+              textShadow: '0 1px 1px rgba(255, 255, 255, 0.4), 0 -1px 0px rgba(0, 0, 0, 0.3)',
+              lineHeight: 1,
+              display: 'flex',
+              alignItems: 'center'
+            }}>
+              {children}
+            </span>
+          </>
+        ) : (
+          // No emoji: just children
+          children
+        )}
       </div>
 
       {/* CSS animations */}
@@ -520,23 +554,26 @@ export default function ChevronStep({
 
         @keyframes shimmer-flow {
           0% {
-            transform: translateX(-120%);
+            transform: translateX(-150%);
             opacity: 0;
           }
-          5% {
+          10% {
+            opacity: 0.5;
+          }
+          20% {
             opacity: 0.8;
           }
-          15% {
+          50% {
             opacity: 1;
           }
-          85% {
-            opacity: 1;
-          }
-          95% {
+          80% {
             opacity: 0.8;
+          }
+          90% {
+            opacity: 0.5;
           }
           100% {
-            transform: translateX(220%);
+            transform: translateX(250%);
             opacity: 0;
           }
         }
@@ -576,8 +613,9 @@ export default function ChevronStep({
         }
 
         :global(.shimmer-flow) {
-          animation: shimmer-flow 2s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+          animation: shimmer-flow 3s linear infinite;
           transform-origin: center;
+          will-change: transform, opacity;
         }
 
         :global(.shake-next) {

@@ -1,19 +1,48 @@
 /**
  * AsyncJobTimeline - Universal progress visualization for async operations
  *
+ * === 3 STATES SYSTEM ===
+ *
+ * 1. BASE STATE (effectiveExpandedId === null)
+ *    - All steps equal width (flex: 1)
+ *    - Shows EMOJI + TEXT LABEL together
+ *    - Example: 🤖 Parse | ⚙️ Process | 📋 Review | 💾 Save
+ *
+ * 2. ACCORDION EXPANDED (effectiveExpandedId !== null && isExpanded)
+ *    - One step takes most space (flex: 1)
+ *    - Shows EMOJI + TEXT LABEL together
+ *    - Example: ⚙️ Processing Data...
+ *
+ * 3. ACCORDION COLLAPSED (effectiveExpandedId !== null && !isExpanded)
+ *    - Step is narrow (40px, flex: 0 0 40px)
+ *    - Shows EMOJI ONLY
+ *    - Example: 🤖 or ⚙️
+ *
+ * === EMOJI STYLING ===
+ * - Pending/Next: Black & white OpenMoji (variant="black", embossed) - not started
+ * - Done: Colorful OpenMoji (variant="color", embossed) - completed!
+ * - Active: Blends between black & white and color OpenMoji - in progress
+ *   • Musical timing: 4/4 time at 120 BPM (1 beat = 500ms)
+ *   • Pattern: 1 beat blend to color, 3 beats stable, 1 beat blend to b&w, 3 beats stable (4s cycle)
+ *   • Uses two overlapping images with opacity crossfade animation
+ * - Error: Colorful OpenMoji (variant="color", embossed) - shows error state
+ *
  * Features:
- * - Shows micro-step descriptions as proportional sections
- * - Auto-expands current step to 50% width
+ * - Chevrons have -2px overlap for tight interlocking appearance
+ * - Auto-expands active step (unless manually collapsed)
  * - Manual toggle for inspection
- * - HUMAN tasks: 2-5 min chunks (proportional width)
- * - DIGITAL tasks: unlimited/auto (minimal width)
+ * - HUMAN tasks: 2-5 min chunks
+ * - DIGITAL tasks: unlimited/auto
  * - Three size variants: full, micro, nano
+ * - Active progress overlay: Elegant shimmer gradient with white and subtle blue hints
  *
  * Usage:
  * <AsyncJobTimeline
  *   jobName="Send email to Sara"
  *   steps={microSteps}
  *   currentProgress={45}
+ *   activeProgress={50}          // Optional: shows 50% filled overlay on active step
+ *   activeProgressPulse={true}   // Optional: whether overlay pulses (default: true)
  *   size="full"
  * />
  */
@@ -69,6 +98,8 @@ export interface AsyncJobTimelineProps {
   showProgressBar?: boolean;        // Default: true
   processingTimeMs?: number;        // Show completion time
   stepProgress?: Map<string, number>; // Individual step progress (0-100)
+  activeProgress?: number;          // Progress overlay on active step (0-100), defaults to 0
+  activeProgressPulse?: boolean;    // Whether active progress overlay should pulse, defaults to true
 }
 
 // ============================================================================
@@ -88,16 +119,18 @@ interface StepSectionProps {
   effectiveExpandedId: string | null;
   loadingChildren?: Set<string>; // For expand indicator
   hasNestedContent?: boolean; // True if showing decomposition job or children
+  activeProgress?: number; // Progress overlay on active step (0-100)
+  activeProgressPulse?: boolean; // Whether to pulse the overlay
 }
 
-function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, stepProgressPercent, onRetry, effectiveExpandedId, loadingChildren, hasNestedContent }: StepSectionProps) {
-  // Text colors for modern white backgrounds
+function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, stepProgressPercent, onRetry, effectiveExpandedId, loadingChildren, hasNestedContent, activeProgress, activeProgressPulse = true }: StepSectionProps) {
+  // Text colors (Solarized theme)
   const textColors = {
-    pending: '#6b7280',      // Gray 500
-    active: '#3b82f6',       // Blue 500
-    done: '#22c55e',         // Green 500
-    error: '#ef4444',        // Red 500
-    next: '#f59e0b',         // Amber 500
+    pending: '#586e75',      // Solarized base01 (gray)
+    active: '#268bd2',       // Solarized blue
+    done: '#859900',         // Solarized green
+    error: '#dc322f',        // Solarized red
+    next: '#cb4b16',         // Solarized orange
   };
 
   // Get emoji for the step
@@ -113,19 +146,16 @@ function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, 
     const label = step.shortLabel || step.description;
 
     if (size === 'nano') {
-      return isExpanded ? (label.length > 15 ? `${label.slice(0, 15)}...` : label) : `${index + 1}`;
+      return label.length > 15 ? `${label.slice(0, 15)}...` : label;
     }
 
     if (size === 'micro') {
-      return isExpanded ? (label.length > 18 ? `${label.slice(0, 18)}...` : label) : (label.length > 10 ? `${label.slice(0, 10)}...` : label);
+      return label.length > 18 ? `${label.slice(0, 18)}...` : label;
     }
 
     // Full size
-    return isExpanded ? (label.length > 25 ? `${label.slice(0, 25)}...` : label) : (label.length > 12 ? `${label.slice(0, 12)}...` : label);
+    return label.length > 25 ? `${label.slice(0, 25)}...` : label;
   };
-
-  // Determine if we should show icon or text inside chevron
-  const isCollapsed = effectiveExpandedId !== null && !isExpanded;
 
   // Determine chevron position
   const getChevronPosition = () => {
@@ -138,18 +168,160 @@ function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, 
     return 'middle';
   };
 
-  // Wrapper controls sizing with flex
-  const wrapperFlexClasses = !effectiveExpandedId
-    ? 'flex-1 basis-0 min-w-0' // base: equal widths
-    : isExpanded
-      ? 'grow basis-0 min-w-0' // expanded: take remaining space
-      : 'basis-[40px] w-[40px] shrink-0 grow-0 min-w-0'; // collapsed: 40px wide
+  // Get height based on size
+  const getHeight = () => {
+    if (size === 'nano') return 32;
+    if (size === 'micro') return 40;
+    return 64; // full
+  };
+
+  // Generate SVG path for mask (matches ChevronStep exactly)
+  const getSVGMaskPath = (pos: 'first' | 'middle' | 'last' | 'single', width: number, height: number): string => {
+    const arrow = 10; // CHEVRON_ARROW_DEPTH_PX
+    const h = height;
+    const w = width;
+    const half = h / 2;
+
+    if (pos === 'single') {
+      return `M 0,0 L ${w},0 L ${w},${h} L 0,${h} Z`;
+    }
+
+    if (pos === 'first') {
+      return `M 0,0 L ${w - arrow},0 L ${w},${half} L ${w - arrow},${h} L 0,${h} Z`;
+    }
+
+    if (pos === 'middle') {
+      return `M 0,0 L ${w - arrow},0 L ${w},${half} L ${w - arrow},${h} L 0,${h} L ${arrow},${half} Z`;
+    }
+
+    // last
+    return `M 0,0 L ${w},0 L ${w},${h} L 0,${h} L ${arrow},${half} Z`;
+  };
+
+  const maskId = `progress-mask-${step.id}-${index}`;
+  const chevronHeight = getHeight();
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = React.useState(200);
+
+  // Measure actual container width
+  React.useLayoutEffect(() => {
+    if (containerRef.current) {
+      setContainerWidth(containerRef.current.offsetWidth);
+    }
+  }, [isExpanded]);
+
+  // Track width changes
+  React.useEffect(() => {
+    if (!containerRef.current) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, [isExpanded]);
+
+  // === 3 STATES ===
+  // Base State: effectiveExpandedId === null → all equal width, show EMOJI + LABEL
+  // Accordion Expanded: effectiveExpandedId !== null && isExpanded → wide, show EMOJI + LABEL
+  // Accordion Collapsed: effectiveExpandedId !== null && !isExpanded → 40px, show EMOJI ONLY
+
+  const isBaseState = effectiveExpandedId === null;
+  const isAccordionCollapsed = effectiveExpandedId !== null && !isExpanded;
+
+  // Calculate width based on state
+  const getWidth = () => {
+    if (isBaseState) return '100%';  // Equal width (flex: 1)
+    if (isExpanded) return '100%';   // Expanded takes remaining space (flex: 1)
+    return '40px';                   // Collapsed is fixed 40px
+  };
+
+  // Calculate flex based on state
+  const getFlex = () => {
+    if (isBaseState) return '1 1 0%';      // Base: all equal
+    if (isExpanded) return '1 1 0%';       // Expanded: takes space
+    return '0 0 40px';                     // Collapsed: fixed 40px
+  };
 
   return (
     <div
-      className={`relative flex flex-col items-center overflow-visible ${wrapperFlexClasses}`}
-      style={{ marginRight: index !== totalSteps - 1 ? '-4px' : '0' }}
+      ref={containerRef}
+      className="relative"
+      style={{
+        flex: getFlex(),
+        minWidth: isBaseState || isExpanded ? 0 : '40px',
+        maxWidth: isBaseState || isExpanded ? '100%' : '40px',
+        overflow: 'visible',
+        marginRight: index !== totalSteps - 1 ? '-2px' : '0',  // -2px overlap between chevrons
+      }}
     >
+      {/* SVG Mask for progress overlay */}
+      <svg
+        width={containerWidth}
+        height={chevronHeight}
+        style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none', visibility: 'hidden' }}
+      >
+        <defs>
+          <mask id={maskId}>
+            <path
+              d={getSVGMaskPath(getChevronPosition(), containerWidth, chevronHeight)}
+              fill="white"
+            />
+          </mask>
+        </defs>
+      </svg>
+
+      {/* Active progress overlay - positioned over entire chevron */}
+      {step.status === 'active' && activeProgress !== undefined && activeProgress > 0 && (
+        <>
+          {/* Shimmer overlay - masked by SVG chevron shape */}
+          <div
+            className={activeProgressPulse ? 'active-progress-overlay' : ''}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: `${activeProgress}%`,
+              background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.25), rgba(210, 240, 255, 0.35) 30%, rgba(255, 255, 255, 0.45) 50%, rgba(210, 240, 255, 0.35) 70%, rgba(255, 255, 255, 0.25))',
+              backgroundSize: '200% 100%',
+              borderRight: activeProgress < 100 ? '1px solid rgba(255, 255, 255, 0.6)' : 'none',
+              pointerEvents: 'none',
+              zIndex: 10,
+              boxShadow: activeProgress < 100 ? 'inset -1px 0 6px rgba(255, 255, 255, 0.3)' : 'none',
+              WebkitMaskImage: `url(#${maskId})`,
+              maskImage: `url(#${maskId})`,
+            }}
+          />
+          {/* Percentage text - not masked, sits above shimmer */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: `${activeProgress}%`,
+              display: 'flex',
+              alignItems: 'center',
+              paddingLeft: getChevronPosition() === 'first' || getChevronPosition() === 'single' ? '16px' : '26px',
+              pointerEvents: 'none',
+              zIndex: 11,
+            }}
+          >
+            <span
+              style={{
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                color: 'rgba(100, 100, 100, 0.9)',
+                textShadow: '1px 1px 0 rgba(255, 255, 255, 0.9), -1px -1px 0 rgba(0, 0, 0, 0.15)',
+                letterSpacing: '0.3px',
+              }}
+            >
+              {Math.round(activeProgress)}%
+            </span>
+          </div>
+        </>
+      )}
+
       {/* SVG Chevron Step */}
       <ChevronStep
         status={step.status}
@@ -157,29 +329,92 @@ function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, 
         size={size}
         onClick={onClick}
         isExpanded={isExpanded}
-        width="100%"
+        width={getWidth()}
       >
-        {/* Content inside chevron - simplified */}
-        {isCollapsed ? (
-          // Collapsed state: Show OpenMoji black icon
-          <OpenMoji
-            emoji={getEmoji()}
-            size={size === 'nano' ? 16 : size === 'micro' ? 18 : 20}
-            variant="black"
-          />
+        {/* Content based on 3 states */}
+        {isAccordionCollapsed ? (
+          // Accordion Collapsed: Show emoji only
+          step.status === 'active' ? (
+            // Active: Blend between black and color
+            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+              <div className="emoji-blend-black">
+                <OpenMoji
+                  emoji={getEmoji()}
+                  size={size === 'nano' ? 18 : size === 'micro' ? 22 : 24}
+                  variant="black"
+                  embossed
+                />
+              </div>
+              <div className="emoji-blend-color" style={{ position: 'absolute', inset: 0 }}>
+                <OpenMoji
+                  emoji={getEmoji()}
+                  size={size === 'nano' ? 18 : size === 'micro' ? 22 : 24}
+                  variant="color"
+                  embossed
+                />
+              </div>
+            </div>
+          ) : (
+            <OpenMoji
+              emoji={getEmoji()}
+              size={size === 'nano' ? 18 : size === 'micro' ? 22 : 24}
+              variant={step.status === 'done' || step.status === 'error' ? 'color' : 'black'}
+              embossed
+            />
+          )
         ) : (
-          // Expanded or base state: Show label
-          <span
+          // Base State or Accordion Expanded: Show emoji + label
+          <div
             style={{
-              fontSize: size === 'nano' ? '10px' : size === 'micro' ? '11px' : '12px',
-              fontWeight: step.status === 'active' || step.status === 'next' ? 600 : 500,
-              color: textColors[step.status],
-              lineHeight: 1,
-              whiteSpace: 'nowrap',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: size === 'nano' ? '4px' : size === 'micro' ? '6px' : '8px',
+              flexWrap: 'nowrap',
             }}
           >
-            {getLabel()}
-          </span>
+            {step.status === 'active' ? (
+              // Active: Blend between black and color
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <div className="emoji-blend-black">
+                  <OpenMoji
+                    emoji={getEmoji()}
+                    size={size === 'nano' ? 16 : size === 'micro' ? 18 : 20}
+                    variant="black"
+                    embossed
+                  />
+                </div>
+                <div className="emoji-blend-color" style={{ position: 'absolute', inset: 0 }}>
+                  <OpenMoji
+                    emoji={getEmoji()}
+                    size={size === 'nano' ? 16 : size === 'micro' ? 18 : 20}
+                    variant="color"
+                    embossed
+                  />
+                </div>
+              </div>
+            ) : (
+              <OpenMoji
+                emoji={getEmoji()}
+                size={size === 'nano' ? 16 : size === 'micro' ? 18 : 20}
+                variant={step.status === 'done' || step.status === 'error' ? 'color' : 'black'}
+                embossed
+              />
+            )}
+            <span
+              style={{
+                fontSize: size === 'nano' ? '10px' : size === 'micro' ? '11px' : '12px',
+                fontWeight: step.status === 'active' || step.status === 'next' ? 600 : 500,
+                color: textColors[step.status],
+                lineHeight: 1,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {getLabel()}
+            </span>
+          </div>
         )}
 
         {/* Error state overlay with retry button */}
@@ -203,7 +438,7 @@ function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, 
                 style={{
                   fontSize: '9px',
                   padding: '2px 8px',
-                  backgroundColor: '#ef4444',
+                  backgroundColor: '#dc322f',  // Solarized red
                   color: 'white',
                   borderRadius: '4px',
                   border: 'none',
@@ -230,14 +465,14 @@ function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, 
               left: 0,
               right: 0,
               height: '2px',
-              backgroundColor: 'rgba(209, 213, 219, 0.5)',
+              backgroundColor: 'rgba(147, 161, 161, 0.3)',  // Solarized base1 with opacity
               overflow: 'hidden',
             }}
           >
             <div
               style={{
                 height: '100%',
-                backgroundColor: '#3b82f6',
+                backgroundColor: '#268bd2',  // Solarized blue
                 width: `${stepProgressPercent}%`,
                 transition: 'width 0.3s ease-out',
               }}
@@ -267,6 +502,8 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
   showProgressBar = true,
   processingTimeMs,
   stepProgress,
+  activeProgress = 0,
+  activeProgressPulse = true,
 }: AsyncJobTimelineProps) {
   const [expandedStepId, setExpandedStepId] = useState<string | null>(null);
   const [manualExpandId, setManualExpandId] = useState<string | null>(null);
@@ -492,25 +729,33 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
   return (
     <div
       className={`
-        bg-gray-50 border border-gray-200 rounded overflow-visible
+        border rounded overflow-visible
         ${size === 'nano' ? 'p-1' : size === 'micro' ? 'p-2' : 'p-2'}
         ${size === 'full' ? 'pt-12' : size === 'micro' ? 'pt-10' : ''}
         ${className}
       `}
       style={{
+        backgroundColor: '#fdf6e3',  // Solarized base3 (light cream)
+        borderColor: '#eee8d5',      // Solarized base2 (slightly darker cream)
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
       }}
     >
       {/* Header - compact */}
       {size !== 'nano' && (
         <div className={`relative flex items-center justify-center mb-0.5 ${size === 'micro' ? '-mt-8' : '-mt-10'}`}>
-          <p className={`line-clamp-1 w-full text-center mb-2 ${size === 'micro' ? 'text-[9px]' : 'text-[10px]'} text-gray-600 font-medium ${effectiveExpandedId ? 'opacity-0' : ''}`}>
+          <p
+            className={`line-clamp-1 w-full text-center mb-2 ${size === 'micro' ? 'text-[9px]' : 'text-[10px]'} font-medium ${effectiveExpandedId ? 'opacity-0' : ''}`}
+            style={{ color: '#586e75' }}  // Solarized base01
+          >
             {jobName}
           </p>
           {(onClose || onDismiss) && (
             <button
               onClick={onDismiss || onClose}
-              className="absolute right-0 text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0"
+              className="absolute right-0 transition-colors flex-shrink-0"
+              style={{ color: '#93a1a1' }}  // Solarized base1
+              onMouseEnter={(e) => e.currentTarget.style.color = '#586e75'}  // Solarized base01
+              onMouseLeave={(e) => e.currentTarget.style.color = '#93a1a1'}  // Solarized base1
               aria-label={onDismiss ? "Dismiss" : "Close"}
             >
               <X size={size === 'micro' ? 10 : 12} />
@@ -521,8 +766,8 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
 
       {/* Timeline */}
       <div className="relative overflow-visible">
-        {/* Steps row */}
-        <div className="flex gap-0 items-end overflow-visible">
+        {/* Steps row - chevrons overlap with -8px margins for tighter fit */}
+        <div className="flex items-end overflow-visible" style={{ gap: 0 }}>
           {steps.map((step, index) => {
             // Calculate if this step has nested content (decomposition job or children)
             const hasNestedContent = effectiveExpandedId === step.id &&
@@ -543,6 +788,8 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
                 effectiveExpandedId={effectiveExpandedId}
                 loadingChildren={loadingChildren}
                 hasNestedContent={hasNestedContent}
+                activeProgress={step.status === 'active' ? activeProgress : undefined}
+                activeProgressPulse={activeProgressPulse}
               />
             );
           })}
@@ -582,12 +829,12 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
               segments={[
                 {
                   percentage: (steps.filter(s => s.leafType === 'DIGITAL').length / steps.length) * 100,
-                  color: '#10b981',
+                  color: '#2aa198',  // Solarized cyan (for digital/automated)
                   label: `${steps.filter(s => s.leafType === 'DIGITAL').length} digital steps`,
                 },
                 {
                   percentage: (steps.filter(s => s.leafType === 'HUMAN').length / steps.length) * 100,
-                  color: '#3b82f6',
+                  color: '#6c71c4',  // Solarized violet (for human)
                   label: `${steps.filter(s => s.leafType === 'HUMAN').length} human steps`,
                 },
               ].filter(seg => seg.percentage > 0)}
@@ -604,6 +851,65 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
         )}
       </div>
 
+      {/* CSS animations for emoji blending (musical timing: 4/4 time at 120 BPM) */}
+      <style jsx>{`
+        @keyframes emoji-show-color {
+          0% {
+            opacity: 0;
+          }
+          12.5% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 1;
+          }
+          62.5% {
+            opacity: 0;
+          }
+          100% {
+            opacity: 0;
+          }
+        }
+
+        @keyframes emoji-show-black {
+          0% {
+            opacity: 1;
+          }
+          12.5% {
+            opacity: 0;
+          }
+          50% {
+            opacity: 0;
+          }
+          62.5% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 1;
+          }
+        }
+
+        @keyframes shimmer-sweep {
+          0% {
+            background-position: 200% 0;
+          }
+          100% {
+            background-position: -200% 0;
+          }
+        }
+
+        :global(.emoji-blend-black) {
+          animation: emoji-show-black 4s ease-in-out infinite;
+        }
+
+        :global(.emoji-blend-color) {
+          animation: emoji-show-color 4s ease-in-out infinite;
+        }
+
+        :global(.active-progress-overlay) {
+          animation: shimmer-sweep 3s linear infinite;
+        }
+      `}</style>
     </div>
   );
 });

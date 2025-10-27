@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs';
 import React from 'react';
 import ChevronStep, { CollapsedChevron } from './ChevronStep';
-import OpenMoji from '@/components/shared/OpenMoji';
 
 const meta: Meta<typeof ChevronStep> = {
   title: 'Components/Mobile/ChevronStep',
@@ -34,19 +33,56 @@ type Story = StoryObj<typeof ChevronStep>;
 
 export const AllPositions: Story = {
   render: () => (
-    <div style={{ display: 'flex', gap: '0', width: '600px' }}>
-      <ChevronStep status="pending" position="first" size="full" width="150px">
-        <span style={{ fontSize: '12px', color: '#073642' }}>First</span>
-      </ChevronStep>
-      <ChevronStep status="active" position="middle" size="full" width="150px">
-        <span style={{ fontSize: '12px', color: '#268bd2', fontWeight: 'bold' }}>Middle</span>
-      </ChevronStep>
-      <ChevronStep status="done" position="middle" size="full" width="150px">
-        <span style={{ fontSize: '12px', color: '#93a1a1' }}>Middle</span>
-      </ChevronStep>
-      <ChevronStep status="pending" position="last" size="full" width="150px">
-        <span style={{ fontSize: '12px', color: '#073642' }}>Last</span>
-      </ChevronStep>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div>
+        <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '8px' }}>
+          Base State - All Positions with Labels
+        </h3>
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="first" size="full" width="120px">
+              <span style={{ fontSize: '11px', color: '#22c55e' }}>First</span>
+            </ChevronStep>
+          </div>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="active" position="middle" size="full" width="140px">
+              <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>Middle</span>
+            </ChevronStep>
+          </div>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="next" position="middle" size="full" width="120px">
+              <span style={{ fontSize: '11px', color: '#d97706', fontWeight: 'bold' }}>Middle</span>
+            </ChevronStep>
+          </div>
+          <div>
+            <ChevronStep status="pending" position="last" size="full" width="100px">
+              <span style={{ fontSize: '11px', color: '#6b7280' }}>Last</span>
+            </ChevronStep>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '8px' }}>
+          Accordion State - One Expanded, Others with Icons
+        </h3>
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="first" size="full" width="40px" emoji="✅" />
+          </div>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="active" position="middle" size="full" width="240px" emoji="⚙️">
+              <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>Processing Step</span>
+            </ChevronStep>
+          </div>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="next" position="middle" size="full" width="40px" emoji="📋" />
+          </div>
+          <div>
+            <ChevronStep status="pending" position="last" size="full" width="40px" emoji="💾" />
+          </div>
+        </div>
+      </div>
     </div>
   ),
 };
@@ -54,64 +90,109 @@ export const AllPositions: Story = {
 export const AllStatuses: Story = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '600px' }}>
-      <div style={{ display: 'flex', gap: '0' }}>
-        <ChevronStep status="pending" position="first" size="full" width="200px">
-          <span style={{ fontSize: '12px', color: '#073642' }}>Pending</span>
-        </ChevronStep>
-        <ChevronStep status="pending" position="middle" size="full" width="200px">
-          <span style={{ fontSize: '12px', color: '#073642' }}>Pending</span>
-        </ChevronStep>
-        <ChevronStep status="pending" position="last" size="full" width="200px">
-          <span style={{ fontSize: '12px', color: '#073642' }}>Pending</span>
-        </ChevronStep>
+      <div>
+        <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '8px' }}>Pending Status</h3>
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="pending" position="first" size="full" width="120px" emoji="⏸️">
+              Pending
+            </ChevronStep>
+          </div>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="pending" position="middle" size="full" width="120px" emoji="⏸️">
+              Pending
+            </ChevronStep>
+          </div>
+          <div>
+            <ChevronStep status="pending" position="last" size="full" width="120px" emoji="⏸️">
+              Pending
+            </ChevronStep>
+          </div>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '0' }}>
-        <ChevronStep status="active" position="first" size="full" width="200px">
-          <span style={{ fontSize: '12px', color: '#268bd2', fontWeight: 'bold' }}>Active</span>
-        </ChevronStep>
-        <ChevronStep status="active" position="middle" size="full" width="200px">
-          <span style={{ fontSize: '12px', color: '#268bd2', fontWeight: 'bold' }}>Active</span>
-        </ChevronStep>
-        <ChevronStep status="active" position="last" size="full" width="200px">
-          <span style={{ fontSize: '12px', color: '#268bd2', fontWeight: 'bold' }}>Active</span>
-        </ChevronStep>
+      <div>
+        <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '8px' }}>Active Status (with shimmer)</h3>
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="active" position="first" size="full" width="120px" emoji="⚙️">
+              <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>Active</span>
+            </ChevronStep>
+          </div>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="active" position="middle" size="full" width="120px" emoji="⚙️">
+              <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>Active</span>
+            </ChevronStep>
+          </div>
+          <div>
+            <ChevronStep status="active" position="last" size="full" width="120px" emoji="⚙️">
+              <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>Active</span>
+            </ChevronStep>
+          </div>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '0' }}>
-        <ChevronStep status="done" position="first" size="full" width="200px">
-          <span style={{ fontSize: '12px', color: '#93a1a1' }}>Done</span>
-        </ChevronStep>
-        <ChevronStep status="done" position="middle" size="full" width="200px">
-          <span style={{ fontSize: '12px', color: '#93a1a1' }}>Done</span>
-        </ChevronStep>
-        <ChevronStep status="done" position="last" size="full" width="200px">
-          <span style={{ fontSize: '12px', color: '#93a1a1' }}>Done</span>
-        </ChevronStep>
+      <div>
+        <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '8px' }}>Done Status</h3>
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="first" size="full" width="120px" emoji="✅">
+              Done
+            </ChevronStep>
+          </div>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="middle" size="full" width="120px" emoji="✅">
+              Done
+            </ChevronStep>
+          </div>
+          <div>
+            <ChevronStep status="done" position="last" size="full" width="120px" emoji="✅">
+              Done
+            </ChevronStep>
+          </div>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '0' }}>
-        <ChevronStep status="error" position="first" size="full" width="200px">
-          <span style={{ fontSize: '12px', color: '#ffffff', fontWeight: 'bold' }}>Error</span>
-        </ChevronStep>
-        <ChevronStep status="error" position="middle" size="full" width="200px">
-          <span style={{ fontSize: '12px', color: '#ffffff', fontWeight: 'bold' }}>Error</span>
-        </ChevronStep>
-        <ChevronStep status="error" position="last" size="full" width="200px">
-          <span style={{ fontSize: '12px', color: '#ffffff', fontWeight: 'bold' }}>Error</span>
-        </ChevronStep>
+      <div>
+        <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '8px' }}>Error Status</h3>
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="error" position="first" size="full" width="120px" emoji="❌">
+              Error
+            </ChevronStep>
+          </div>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="error" position="middle" size="full" width="120px" emoji="❌">
+              Error
+            </ChevronStep>
+          </div>
+          <div>
+            <ChevronStep status="error" position="last" size="full" width="120px" emoji="❌">
+              Error
+            </ChevronStep>
+          </div>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '0' }}>
-        <ChevronStep status="next" position="first" size="full" width="200px">
-          <span style={{ fontSize: '12px', color: '#d97706', fontWeight: 'bold' }}>Next</span>
-        </ChevronStep>
-        <ChevronStep status="next" position="middle" size="full" width="200px">
-          <span style={{ fontSize: '12px', color: '#d97706', fontWeight: 'bold' }}>Next</span>
-        </ChevronStep>
-        <ChevronStep status="next" position="last" size="full" width="200px">
-          <span style={{ fontSize: '12px', color: '#d97706', fontWeight: 'bold' }}>Next</span>
-        </ChevronStep>
+      <div>
+        <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '8px' }}>Next Status (with elastic wiggle)</h3>
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="next" position="first" size="full" width="120px" emoji="📋">
+              <span style={{ fontSize: '11px', color: '#d97706', fontWeight: 'bold' }}>Next</span>
+            </ChevronStep>
+          </div>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="next" position="middle" size="full" width="120px" emoji="📋">
+              <span style={{ fontSize: '11px', color: '#d97706', fontWeight: 'bold' }}>Next</span>
+            </ChevronStep>
+          </div>
+          <div>
+            <ChevronStep status="next" position="last" size="full" width="120px" emoji="📋">
+              <span style={{ fontSize: '11px', color: '#d97706', fontWeight: 'bold' }}>Next</span>
+            </ChevronStep>
+          </div>
+        </div>
       </div>
     </div>
   ),
@@ -204,26 +285,18 @@ export const CollapsedVariant: Story = {
         <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '12px' }}>
           Collapsed with OpenMoji Icons
         </h3>
-        <div style={{ display: 'flex', marginRight: '-4px' }}>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="done" position="first" size="full" width="40px">
-              <OpenMoji emoji="✅" size={20} variant="black" />
-            </ChevronStep>
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="first" size="full" width="40px" emoji="✅" />
           </div>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="active" position="middle" size="full" width="40px">
-              <OpenMoji emoji="⚙️" size={20} variant="black" />
-            </ChevronStep>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="active" position="middle" size="full" width="40px" emoji="⚙️" />
           </div>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="pending" position="middle" size="full" width="40px">
-              <OpenMoji emoji="⏸️" size={20} variant="black" />
-            </ChevronStep>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="pending" position="middle" size="full" width="40px" emoji="⏸️" />
           </div>
           <div>
-            <ChevronStep status="pending" position="last" size="full" width="40px">
-              <OpenMoji emoji="📋" size={20} variant="black" />
-            </ChevronStep>
+            <ChevronStep status="pending" position="last" size="full" width="40px" emoji="📋" />
           </div>
         </div>
       </div>
@@ -238,18 +311,18 @@ export const TightlyKnit: Story = {
         <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '16px' }}>
           Chevrons fitting together with -4px margin - Text Labels
         </h3>
-        <div style={{ display: 'flex', marginRight: '-4px' }}>
-          <div style={{ marginRight: '-4px' }}>
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
+          <div style={{ marginRight: '-2px' }}>
             <ChevronStep status="done" position="first" size="full" width="150px">
               <span style={{ fontSize: '11px', color: '#93a1a1' }}>Parse</span>
             </ChevronStep>
           </div>
-          <div style={{ marginRight: '-4px' }}>
+          <div style={{ marginRight: '-2px' }}>
             <ChevronStep status="done" position="middle" size="full" width="150px">
               <span style={{ fontSize: '11px', color: '#93a1a1' }}>Decompose</span>
             </ChevronStep>
           </div>
-          <div style={{ marginRight: '-4px' }}>
+          <div style={{ marginRight: '-2px' }}>
             <ChevronStep status="active" position="middle" size="full" width="200px">
               <span style={{ fontSize: '11px', color: '#268bd2', fontWeight: 'bold' }}>Classify</span>
             </ChevronStep>
@@ -266,26 +339,20 @@ export const TightlyKnit: Story = {
         <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '16px' }}>
           Chevrons fitting together - OpenMoji Icons (Mixed Widths)
         </h3>
-        <div style={{ display: 'flex', marginRight: '-4px' }}>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="done" position="first" size="full" width="40px">
-              <OpenMoji emoji="✅" size={20} variant="black" />
-            </ChevronStep>
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="first" size="full" width="40px" emoji="✅" />
           </div>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="done" position="middle" size="full" width="40px">
-              <OpenMoji emoji="✅" size={20} variant="black" />
-            </ChevronStep>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="middle" size="full" width="40px" emoji="✅" />
           </div>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="active" position="middle" size="full" width="220px">
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="active" position="middle" size="full" width="220px" emoji="⚙️">
               <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>Classify & Extract</span>
             </ChevronStep>
           </div>
           <div>
-            <ChevronStep status="pending" position="last" size="full" width="40px">
-              <OpenMoji emoji="💾" size={20} variant="black" />
-            </ChevronStep>
+            <ChevronStep status="pending" position="last" size="full" width="40px" emoji="💾" />
           </div>
         </div>
       </div>
@@ -298,71 +365,61 @@ export const OpenMojiShowcase: Story = {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div>
         <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '8px' }}>
-          OpenMoji Black Variant (Line Art)
+          Collapsed States with Emoji Icons
         </h3>
         <p style={{ fontSize: '12px', color: '#586e75', marginBottom: '12px', fontStyle: 'italic' }}>
-          Clean, minimalist black & white line art - ideal for collapsed states
+          Clean emoji icons - ideal for collapsed states
         </p>
-        <div style={{ display: 'flex', marginRight: '-4px' }}>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="done" position="first" size="full" width="40px">
-              <OpenMoji emoji="✅" size={20} variant="black" />
-            </ChevronStep>
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="first" size="full" width="40px" emoji="✅" />
           </div>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="done" position="middle" size="full" width="40px">
-              <OpenMoji emoji="📝" size={20} variant="black" />
-            </ChevronStep>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="middle" size="full" width="40px" emoji="📝" />
           </div>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="active" position="middle" size="full" width="40px">
-              <OpenMoji emoji="⚙️" size={20} variant="black" />
-            </ChevronStep>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="active" position="middle" size="full" width="40px" emoji="⚙️" />
           </div>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="pending" position="middle" size="full" width="40px">
-              <OpenMoji emoji="📋" size={20} variant="black" />
-            </ChevronStep>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="pending" position="middle" size="full" width="40px" emoji="📋" />
           </div>
           <div>
-            <ChevronStep status="pending" position="last" size="full" width="40px">
-              <OpenMoji emoji="💾" size={20} variant="black" />
-            </ChevronStep>
+            <ChevronStep status="pending" position="last" size="full" width="40px" emoji="💾" />
           </div>
         </div>
       </div>
 
       <div>
         <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '8px' }}>
-          OpenMoji Color Variant
+          Expanded States with Emoji + Text
         </h3>
         <p style={{ fontSize: '12px', color: '#586e75', marginBottom: '12px', fontStyle: 'italic' }}>
-          Full-color emojis - adds visual richness and status indication
+          Full-color emojis with labels - adds visual richness and context
         </p>
-        <div style={{ display: 'flex', marginRight: '-4px' }}>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="done" position="first" size="full" width="60px">
-              <OpenMoji emoji="✅" size={24} variant="color" />
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="first" size="full" width="100px" emoji="✅">
+              Done
             </ChevronStep>
           </div>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="done" position="middle" size="full" width="60px">
-              <OpenMoji emoji="📝" size={24} variant="color" />
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="middle" size="full" width="100px" emoji="📝">
+              Parse
             </ChevronStep>
           </div>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="active" position="middle" size="full" width="60px">
-              <OpenMoji emoji="⚙️" size={24} variant="color" />
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="active" position="middle" size="full" width="120px" emoji="⚙️">
+              Process
             </ChevronStep>
           </div>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="pending" position="middle" size="full" width="60px">
-              <OpenMoji emoji="📋" size={24} variant="color" />
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="pending" position="middle" size="full" width="100px" emoji="📋">
+              Review
             </ChevronStep>
           </div>
           <div>
-            <ChevronStep status="pending" position="last" size="full" width="60px">
-              <OpenMoji emoji="💾" size={24} variant="color" />
+            <ChevronStep status="pending" position="last" size="full" width="90px" emoji="💾">
+              Save
             </ChevronStep>
           </div>
         </div>
@@ -375,36 +432,24 @@ export const OpenMojiShowcase: Story = {
         <p style={{ fontSize: '12px', color: '#586e75', marginBottom: '12px', fontStyle: 'italic' }}>
           Using semantic icons to represent different process stages
         </p>
-        <div style={{ display: 'flex', marginRight: '-4px' }}>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="done" position="first" size="full" width="40px">
-              <OpenMoji emoji="📥" size={20} variant="black" />
-            </ChevronStep>
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="first" size="full" width="40px" emoji="📥" />
           </div>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="done" position="middle" size="full" width="40px">
-              <OpenMoji emoji="🔍" size={20} variant="black" />
-            </ChevronStep>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="middle" size="full" width="40px" emoji="🔍" />
           </div>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="done" position="middle" size="full" width="40px">
-              <OpenMoji emoji="🔧" size={20} variant="black" />
-            </ChevronStep>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="middle" size="full" width="40px" emoji="🔧" />
           </div>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="active" position="middle" size="full" width="40px">
-              <OpenMoji emoji="✨" size={20} variant="black" />
-            </ChevronStep>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="active" position="middle" size="full" width="40px" emoji="✨" />
           </div>
-          <div style={{ marginRight: '-4px' }}>
-            <ChevronStep status="next" position="middle" size="full" width="40px">
-              <OpenMoji emoji="✅" size={20} variant="black" />
-            </ChevronStep>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="next" position="middle" size="full" width="40px" emoji="✅" />
           </div>
           <div>
-            <ChevronStep status="pending" position="last" size="full" width="40px">
-              <OpenMoji emoji="📤" size={20} variant="black" />
-            </ChevronStep>
+            <ChevronStep status="pending" position="last" size="full" width="40px" emoji="📤" />
           </div>
         </div>
       </div>
@@ -420,33 +465,23 @@ export const AllCollapsed: Story = {
   render: () => (
     <div>
       <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '16px' }}>
-        All chevrons collapsed with OpenMoji black icons (narrow widths &lt; 60px)
+        All chevrons collapsed with emoji icons (narrow widths &lt; 60px)
       </h3>
-      <div style={{ display: 'flex', marginRight: '-4px' }}>
-        <div style={{ marginRight: '-4px' }}>
-          <ChevronStep status="done" position="first" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="✅" size={20} variant="black" />
-          </ChevronStep>
+      <div style={{ display: 'flex', marginRight: '-2px' }}>
+        <div style={{ marginRight: '-2px' }}>
+          <ChevronStep status="done" position="first" size="full" width="40px" isExpanded={false} emoji="✅" />
         </div>
-        <div style={{ marginRight: '-4px' }}>
-          <ChevronStep status="done" position="middle" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="✅" size={20} variant="black" />
-          </ChevronStep>
+        <div style={{ marginRight: '-2px' }}>
+          <ChevronStep status="done" position="middle" size="full" width="40px" isExpanded={false} emoji="✅" />
         </div>
-        <div style={{ marginRight: '-4px' }}>
-          <ChevronStep status="active" position="middle" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="⚙️" size={20} variant="black" />
-          </ChevronStep>
+        <div style={{ marginRight: '-2px' }}>
+          <ChevronStep status="active" position="middle" size="full" width="40px" isExpanded={false} emoji="⚙️" />
         </div>
-        <div style={{ marginRight: '-4px' }}>
-          <ChevronStep status="pending" position="middle" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="⏸️" size={20} variant="black" />
-          </ChevronStep>
+        <div style={{ marginRight: '-2px' }}>
+          <ChevronStep status="pending" position="middle" size="full" width="40px" isExpanded={false} emoji="⏸️" />
         </div>
         <div>
-          <ChevronStep status="pending" position="last" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="⏸️" size={20} variant="black" />
-          </ChevronStep>
+          <ChevronStep status="pending" position="last" size="full" width="40px" isExpanded={false} emoji="⏸️" />
         </div>
       </div>
     </div>
@@ -457,36 +492,28 @@ export const FirstExpanded: Story = {
   render: () => (
     <div>
       <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '16px' }}>
-        First step expanded, all others collapsed with OpenMoji icons
+        First step expanded, all others collapsed with emoji icons
       </h3>
       <p style={{ fontSize: '12px', color: '#586e75', marginBottom: '12px', fontStyle: 'italic' }}>
         Accordion behavior: When one step is expanded, all others are collapsed
       </p>
-      <div style={{ display: 'flex', marginRight: '-4px' }}>
-        <div style={{ marginRight: '-4px' }}>
-          <ChevronStep status="done" position="first" size="full" width="200px" isExpanded={true}>
+      <div style={{ display: 'flex', marginRight: '-2px' }}>
+        <div style={{ marginRight: '-2px' }}>
+          <ChevronStep status="done" position="first" size="full" width="200px" isExpanded={true} emoji="📝">
             <span style={{ fontSize: '11px', color: '#22c55e' }}>Parse Input</span>
           </ChevronStep>
         </div>
-        <div style={{ marginRight: '-4px' }}>
-          <ChevronStep status="done" position="middle" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="✅" size={20} variant="black" />
-          </ChevronStep>
+        <div style={{ marginRight: '-2px' }}>
+          <ChevronStep status="done" position="middle" size="full" width="40px" isExpanded={false} emoji="✅" />
         </div>
-        <div style={{ marginRight: '-4px' }}>
-          <ChevronStep status="active" position="middle" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="⚙️" size={20} variant="black" />
-          </ChevronStep>
+        <div style={{ marginRight: '-2px' }}>
+          <ChevronStep status="active" position="middle" size="full" width="40px" isExpanded={false} emoji="⚙️" />
         </div>
-        <div style={{ marginRight: '-4px' }}>
-          <ChevronStep status="pending" position="middle" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="⏸️" size={20} variant="black" />
-          </ChevronStep>
+        <div style={{ marginRight: '-2px' }}>
+          <ChevronStep status="pending" position="middle" size="full" width="40px" isExpanded={false} emoji="⏸️" />
         </div>
         <div>
-          <ChevronStep status="pending" position="last" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="💾" size={20} variant="black" />
-          </ChevronStep>
+          <ChevronStep status="pending" position="last" size="full" width="40px" isExpanded={false} emoji="💾" />
         </div>
       </div>
     </div>
@@ -497,33 +524,25 @@ export const MiddleExpanded: Story = {
   render: () => (
     <div>
       <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '16px' }}>
-        Middle step (active) expanded, all others collapsed with OpenMoji icons
+        Middle step (active) expanded, all others collapsed with emoji icons
       </h3>
-      <div style={{ display: 'flex', marginRight: '-4px' }}>
-        <div style={{ marginRight: '-4px' }}>
-          <ChevronStep status="done" position="first" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="📝" size={20} variant="black" />
-          </ChevronStep>
+      <div style={{ display: 'flex', marginRight: '-2px' }}>
+        <div style={{ marginRight: '-2px' }}>
+          <ChevronStep status="done" position="first" size="full" width="40px" isExpanded={false} emoji="📝" />
         </div>
-        <div style={{ marginRight: '-4px' }}>
-          <ChevronStep status="done" position="middle" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="✅" size={20} variant="black" />
-          </ChevronStep>
+        <div style={{ marginRight: '-2px' }}>
+          <ChevronStep status="done" position="middle" size="full" width="40px" isExpanded={false} emoji="✅" />
         </div>
-        <div style={{ marginRight: '-4px' }}>
-          <ChevronStep status="active" position="middle" size="full" width="280px" isExpanded={true}>
+        <div style={{ marginRight: '-2px' }}>
+          <ChevronStep status="active" position="middle" size="full" width="280px" isExpanded={true} emoji="⚙️">
             <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>Classify & Extract Features</span>
           </ChevronStep>
         </div>
-        <div style={{ marginRight: '-4px' }}>
-          <ChevronStep status="pending" position="middle" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="📋" size={20} variant="black" />
-          </ChevronStep>
+        <div style={{ marginRight: '-2px' }}>
+          <ChevronStep status="pending" position="middle" size="full" width="40px" isExpanded={false} emoji="📋" />
         </div>
         <div>
-          <ChevronStep status="pending" position="last" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="💾" size={20} variant="black" />
-          </ChevronStep>
+          <ChevronStep status="pending" position="last" size="full" width="40px" isExpanded={false} emoji="💾" />
         </div>
       </div>
     </div>
@@ -534,31 +553,23 @@ export const LastExpanded: Story = {
   render: () => (
     <div>
       <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '16px' }}>
-        Last step expanded, all others collapsed with OpenMoji icons
+        Last step expanded, all others collapsed with emoji icons
       </h3>
-      <div style={{ display: 'flex', marginRight: '-4px' }}>
-        <div style={{ marginRight: '-4px' }}>
-          <ChevronStep status="done" position="first" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="📝" size={20} variant="black" />
-          </ChevronStep>
+      <div style={{ display: 'flex', marginRight: '-2px' }}>
+        <div style={{ marginRight: '-2px' }}>
+          <ChevronStep status="done" position="first" size="full" width="40px" isExpanded={false} emoji="📝" />
         </div>
-        <div style={{ marginRight: '-4px' }}>
-          <ChevronStep status="done" position="middle" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="🔧" size={20} variant="black" />
-          </ChevronStep>
+        <div style={{ marginRight: '-2px' }}>
+          <ChevronStep status="done" position="middle" size="full" width="40px" isExpanded={false} emoji="🔧" />
         </div>
-        <div style={{ marginRight: '-4px' }}>
-          <ChevronStep status="done" position="middle" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="✅" size={20} variant="black" />
-          </ChevronStep>
+        <div style={{ marginRight: '-2px' }}>
+          <ChevronStep status="done" position="middle" size="full" width="40px" isExpanded={false} emoji="✅" />
         </div>
-        <div style={{ marginRight: '-4px' }}>
-          <ChevronStep status="done" position="middle" size="full" width="40px" isExpanded={false}>
-            <OpenMoji emoji="📋" size={20} variant="black" />
-          </ChevronStep>
+        <div style={{ marginRight: '-2px' }}>
+          <ChevronStep status="done" position="middle" size="full" width="40px" isExpanded={false} emoji="📋" />
         </div>
         <div>
-          <ChevronStep status="pending" position="last" size="full" width="180px" isExpanded={true}>
+          <ChevronStep status="pending" position="last" size="full" width="180px" isExpanded={true} emoji="💾">
             <span style={{ fontSize: '11px', color: '#6b7280' }}>Save to Database</span>
           </ChevronStep>
         </div>
@@ -573,13 +584,13 @@ export const LastExpanded: Story = {
 
 export const InteractiveAccordion: Story = {
   render: function InteractiveAccordionStory() {
-    const [expandedStep, setExpandedStep] = React.useState<number>(3);
+    const [expandedStep, setExpandedStep] = React.useState<number | null>(null);
 
     const steps = [
       { id: 1, label: 'Parse Input', status: 'done' as const, icon: '📝' },
       { id: 2, label: 'Decompose Task', status: 'done' as const, icon: '🔧' },
       { id: 3, label: 'Classify & Extract', status: 'active' as const, icon: '⚙️' },
-      { id: 4, label: 'Generate Plan', status: 'pending' as const, icon: '📋' },
+      { id: 4, label: 'Generate Plan', status: 'next' as const, icon: '📋' },
       { id: 5, label: 'Save Results', status: 'pending' as const, icon: '💾' },
     ];
 
@@ -589,15 +600,55 @@ export const InteractiveAccordion: Story = {
       return 'middle';
     };
 
+    const isBaseState = expandedStep === null;
+
     return (
       <div>
         <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '8px' }}>
-          Interactive Accordion - Click any step to expand it
+          Interactive Accordion - Three States
         </h3>
-        <p style={{ fontSize: '12px', color: '#586e75', marginBottom: '16px', fontStyle: 'italic' }}>
-          Rule: Only one step can be expanded at a time. Collapsed steps show OpenMoji black icons.
+        <p style={{ fontSize: '12px', color: '#586e75', marginBottom: '4px', fontStyle: 'italic' }}>
+          <strong>Base State:</strong> All steps equal width with OpenMoji icons
         </p>
-        <div style={{ display: 'flex', marginRight: '-4px' }}>
+        <p style={{ fontSize: '12px', color: '#586e75', marginBottom: '12px', fontStyle: 'italic' }}>
+          <strong>Accordion State:</strong> Click any step to expand it (shows text), others collapse (show icons)
+        </p>
+
+        <div style={{ marginBottom: '12px' }}>
+          <button
+            onClick={() => setExpandedStep(null)}
+            style={{
+              padding: '6px 12px',
+              marginRight: '8px',
+              backgroundColor: isBaseState ? '#3b82f6' : '#e5e7eb',
+              color: isBaseState ? '#ffffff' : '#374151',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '11px',
+              fontWeight: 500,
+            }}
+          >
+            Base State
+          </button>
+          <button
+            onClick={() => setExpandedStep(3)}
+            style={{
+              padding: '6px 12px',
+              backgroundColor: !isBaseState ? '#3b82f6' : '#e5e7eb',
+              color: !isBaseState ? '#ffffff' : '#374151',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '11px',
+              fontWeight: 500,
+            }}
+          >
+            Accordion State
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
           {steps.map((step, index) => {
             const isExpanded = expandedStep === step.id;
             const position = getPosition(index);
@@ -608,21 +659,20 @@ export const InteractiveAccordion: Story = {
                   status={step.status}
                   position={position}
                   size="full"
-                  width={isExpanded ? '240px' : '40px'}
+                  width={isBaseState ? '120px' : (isExpanded ? '240px' : '40px')}
                   isExpanded={isExpanded}
                   onClick={() => setExpandedStep(step.id)}
                   ariaLabel={`Step ${step.id}: ${step.label}${isExpanded ? ' (expanded)' : ' (collapsed)'}`}
+                  emoji={step.icon}
                 >
-                  {isExpanded ? (
+                  {(isBaseState || isExpanded) && (
                     <span style={{
                       fontSize: '11px',
-                      color: step.status === 'active' ? '#3b82f6' : step.status === 'done' ? '#22c55e' : '#6b7280',
-                      fontWeight: step.status === 'active' ? 'bold' : 'normal'
+                      color: step.status === 'active' ? '#3b82f6' : step.status === 'done' ? '#22c55e' : step.status === 'next' ? '#d97706' : '#6b7280',
+                      fontWeight: step.status === 'active' || step.status === 'next' ? 'bold' : 'normal'
                     }}>
                       {step.label}
                     </span>
-                  ) : (
-                    <OpenMoji emoji={step.icon} size={20} variant="black" />
                   )}
                 </ChevronStep>
               </div>
@@ -631,7 +681,11 @@ export const InteractiveAccordion: Story = {
         </div>
         <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '6px' }}>
           <p style={{ fontSize: '11px', color: '#374151', margin: 0 }}>
-            Currently expanded: <strong>Step {expandedStep} - {steps.find(s => s.id === expandedStep)?.label}</strong>
+            {isBaseState ? (
+              <span><strong>Base State:</strong> All steps showing labels with equal width (120px each)</span>
+            ) : (
+              <span><strong>Accordion State:</strong> Step {expandedStep} expanded - {steps.find(s => s.id === expandedStep)?.label}</span>
+            )}
           </p>
         </div>
       </div>
@@ -652,21 +706,26 @@ export const AnimationShowcase: Story = {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', width: '600px' }}>
       <div>
         <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '8px' }}>
-          Active Status - Enhanced Shimmer Progress Animation
+          Active Status - Sleek Shimmer Progress Animation
         </h3>
         <p style={{ fontSize: '12px', color: '#586e75', marginBottom: '12px', fontStyle: 'italic' }}>
-          Active steps display a smooth, glowing shimmer sweep with soft edges to indicate ongoing progress
+          Active steps display a subtle diagonal shimmer with soft glow - refined and professional
         </p>
-        <div style={{ display: 'flex', gap: '0' }}>
-          <ChevronStep status="done" position="first" size="full" width="150px">
-            <span style={{ fontSize: '12px', color: '#22c55e' }}>Complete</span>
-          </ChevronStep>
-          <ChevronStep status="active" position="middle" size="full" width="200px">
-            <span style={{ fontSize: '12px', color: '#3b82f6', fontWeight: 'bold' }}>In Progress</span>
-          </ChevronStep>
-          <ChevronStep status="pending" position="last" size="full" width="150px">
-            <span style={{ fontSize: '12px', color: '#6b7280' }}>Waiting</span>
-          </ChevronStep>
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="first" size="full" width="40px" emoji="✅" />
+          </div>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="active" position="middle" size="full" width="240px" emoji="⚙️">
+              <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>Processing Data</span>
+            </ChevronStep>
+          </div>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="pending" position="middle" size="full" width="40px" emoji="📋" />
+          </div>
+          <div>
+            <ChevronStep status="pending" position="last" size="full" width="40px" emoji="💾" />
+          </div>
         </div>
       </div>
 
@@ -675,38 +734,54 @@ export const AnimationShowcase: Story = {
           Next Status - Elastic Wiggle Animation
         </h3>
         <p style={{ fontSize: '12px', color: '#586e75', marginBottom: '12px', fontStyle: 'italic' }}>
-          Next steps wiggle left and right with elastic squash-and-stretch every 3 seconds
+          Next steps wiggle left and right with elastic squash-and-stretch every 3 seconds to draw attention
         </p>
-        <div style={{ display: 'flex', gap: '0' }}>
-          <ChevronStep status="done" position="first" size="full" width="150px">
-            <span style={{ fontSize: '12px', color: '#22c55e' }}>Complete</span>
-          </ChevronStep>
-          <ChevronStep status="next" position="middle" size="full" width="200px">
-            <span style={{ fontSize: '12px', color: '#d97706', fontWeight: 'bold' }}>Up Next</span>
-          </ChevronStep>
-          <ChevronStep status="pending" position="last" size="full" width="150px">
-            <span style={{ fontSize: '12px', color: '#6b7280' }}>Later</span>
-          </ChevronStep>
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="first" size="full" width="40px" emoji="✅" />
+          </div>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="middle" size="full" width="40px" emoji="⚙️" />
+          </div>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="next" position="middle" size="full" width="200px" emoji="📋">
+              <span style={{ fontSize: '11px', color: '#d97706', fontWeight: 'bold' }}>Review Results</span>
+            </ChevronStep>
+          </div>
+          <div>
+            <ChevronStep status="pending" position="last" size="full" width="40px" emoji="💾" />
+          </div>
         </div>
       </div>
 
       <div>
         <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '8px' }}>
-          Full Pipeline with All Animation States
+          Full Pipeline with All Animation States (Base State)
         </h3>
-        <div style={{ display: 'flex', gap: '0' }}>
-          <ChevronStep status="done" position="first" size="full" width="120px">
-            <span style={{ fontSize: '11px', color: '#22c55e' }}>Done</span>
-          </ChevronStep>
-          <ChevronStep status="active" position="middle" size="full" width="140px">
-            <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>Active</span>
-          </ChevronStep>
-          <ChevronStep status="next" position="middle" size="full" width="120px">
-            <span style={{ fontSize: '11px', color: '#d97706', fontWeight: 'bold' }}>Next</span>
-          </ChevronStep>
-          <ChevronStep status="pending" position="last" size="full" width="120px">
-            <span style={{ fontSize: '11px', color: '#6b7280' }}>Pending</span>
-          </ChevronStep>
+        <p style={{ fontSize: '12px', color: '#586e75', marginBottom: '12px', fontStyle: 'italic' }}>
+          All steps equal width showing labels - active shimmers, next wiggles
+        </p>
+        <div style={{ display: 'flex', marginRight: '-2px' }}>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="done" position="first" size="full" width="120px" emoji="📝">
+              <span style={{ fontSize: '11px', color: '#22c55e' }}>Parse</span>
+            </ChevronStep>
+          </div>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="active" position="middle" size="full" width="140px" emoji="⚙️">
+              <span style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 'bold' }}>Process</span>
+            </ChevronStep>
+          </div>
+          <div style={{ marginRight: '-2px' }}>
+            <ChevronStep status="next" position="middle" size="full" width="120px" emoji="📋">
+              <span style={{ fontSize: '11px', color: '#d97706', fontWeight: 'bold' }}>Review</span>
+            </ChevronStep>
+          </div>
+          <div>
+            <ChevronStep status="pending" position="last" size="full" width="100px" emoji="💾">
+              <span style={{ fontSize: '11px', color: '#6b7280' }}>Save</span>
+            </ChevronStep>
+          </div>
         </div>
       </div>
     </div>
@@ -716,14 +791,15 @@ export const AnimationShowcase: Story = {
 export const WidthComparison: Story = {
   render: () => {
     const stepIcons = ['📝', '🔧', '⚙️', '📋', '💾'];
+    const stepLabels = ['Parse', 'Build', 'Process', 'Review', 'Save'];
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <div>
           <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '12px' }}>
-            Collapsed Width (40px each) - OpenMoji black icons
+            Collapsed Width (40px each) - Emoji icons only
           </h3>
-          <div style={{ display: 'flex', marginRight: '-4px' }}>
+          <div style={{ display: 'flex', marginRight: '-2px' }}>
             {[1, 2, 3, 4, 5].map((num, idx) => (
               <div key={num} style={{ marginRight: idx < 4 ? '-4px' : '0' }}>
                 <ChevronStep
@@ -732,9 +808,8 @@ export const WidthComparison: Story = {
                   size="full"
                   width="40px"
                   isExpanded={false}
-                >
-                  <OpenMoji emoji={stepIcons[idx]} size={20} variant="black" />
-                </ChevronStep>
+                  emoji={stepIcons[idx]}
+                />
               </div>
             ))}
           </div>
@@ -742,9 +817,9 @@ export const WidthComparison: Story = {
 
         <div>
           <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '12px' }}>
-            Standard Width (120px each) - Text labels
+            Standard Width (120px each) - Emoji + Text labels
           </h3>
-          <div style={{ display: 'flex', marginRight: '-4px' }}>
+          <div style={{ display: 'flex', marginRight: '-2px' }}>
             {[1, 2, 3, 4, 5].map((num, idx) => (
               <div key={num} style={{ marginRight: idx < 4 ? '-4px' : '0' }}>
                 <ChevronStep
@@ -753,8 +828,9 @@ export const WidthComparison: Story = {
                   size="full"
                   width="120px"
                   isExpanded={false}
+                  emoji={stepIcons[idx]}
                 >
-                  <span style={{ fontSize: '11px' }}>Step {num}</span>
+                  <span style={{ fontSize: '11px' }}>{stepLabels[idx]}</span>
                 </ChevronStep>
               </div>
             ))}
@@ -765,7 +841,7 @@ export const WidthComparison: Story = {
           <h3 style={{ fontSize: '14px', color: '#586e75', marginBottom: '12px' }}>
             Accordion Mode - Active expanded (200px), others collapsed with icons
           </h3>
-          <div style={{ display: 'flex', marginRight: '-4px' }}>
+          <div style={{ display: 'flex', marginRight: '-2px' }}>
             {[1, 2, 3, 4, 5].map((num, idx) => {
               const isActive = num === 3;
               return (
@@ -776,13 +852,12 @@ export const WidthComparison: Story = {
                     size="full"
                     width={isActive ? '200px' : '40px'}
                     isExpanded={isActive}
+                    emoji={stepIcons[idx]}
                   >
-                    {isActive ? (
+                    {isActive && (
                       <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#3b82f6' }}>
                         Classify & Extract
                       </span>
-                    ) : (
-                      <OpenMoji emoji={stepIcons[idx]} size={20} variant="black" />
                     )}
                   </ChevronStep>
                 </div>
