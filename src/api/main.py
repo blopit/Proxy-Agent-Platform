@@ -30,6 +30,7 @@ from src.api.tasks import router as comprehensive_task_router
 from src.api.websocket import (
     connection_manager,
 )
+from src.services.delegation.routes import router as delegation_router  # BE-00: Task delegation
 from src.core.models import AgentRequest, AgentResponse
 from src.database.enhanced_adapter import close_enhanced_database, get_enhanced_database
 
@@ -76,6 +77,7 @@ registry = AgentRegistry()
 # Note: v2 router should come first, then comprehensive router for backward compatibility
 app.include_router(tasks_v2_router)  # NEW: v2 API with TaskService DI
 app.include_router(comprehensive_task_router)  # Legacy: v1 task service
+app.include_router(delegation_router)  # BE-00: Task delegation system
 app.include_router(capture_router)  # Capture Mode brain dump system (Epic: Capture)
 app.include_router(auth_router)  # Authentication endpoints
 app.include_router(focus_router)  # Focus & Pomodoro endpoints (MVP Simplified)

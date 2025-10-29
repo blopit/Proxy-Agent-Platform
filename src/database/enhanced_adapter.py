@@ -136,6 +136,9 @@ class EnhancedDatabaseAdapter:
                 total_minutes INTEGER DEFAULT 0,
                 is_leaf BOOLEAN DEFAULT 0,
                 leaf_type TEXT,
+                assigned_to TEXT,
+                agent_type TEXT,
+                is_meta_task BOOLEAN DEFAULT 0,
                 FOREIGN KEY (project_id) REFERENCES projects(project_id) ON DELETE CASCADE,
                 FOREIGN KEY (parent_id) REFERENCES tasks(task_id) ON DELETE CASCADE,
                 FOREIGN KEY (assignee_id) REFERENCES users(user_id) ON DELETE SET NULL
@@ -307,6 +310,39 @@ class EnhancedDatabaseAdapter:
                 agent_type TEXT NOT NULL,
                 metadata TEXT DEFAULT '{}',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+
+        # Task Assignments table (BE-00: Task Delegation)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS task_assignments (
+                assignment_id TEXT PRIMARY KEY,
+                task_id TEXT NOT NULL,
+                assignee_id TEXT NOT NULL,
+                assignee_type TEXT NOT NULL,
+                status TEXT DEFAULT 'pending',
+                assigned_at TIMESTAMP NOT NULL,
+                accepted_at TIMESTAMP,
+                completed_at TIMESTAMP,
+                estimated_hours REAL,
+                actual_hours REAL,
+                FOREIGN KEY (task_id) REFERENCES tasks(task_id)
+            )
+        """)
+
+        # Agent Capabilities table (BE-00: Task Delegation)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS agent_capabilities (
+                capability_id TEXT PRIMARY KEY,
+                agent_id TEXT NOT NULL,
+                agent_name TEXT NOT NULL,
+                agent_type TEXT NOT NULL,
+                skills TEXT NOT NULL,
+                max_concurrent_tasks INTEGER DEFAULT 1,
+                current_task_count INTEGER DEFAULT 0,
+                is_available BOOLEAN DEFAULT 1,
+                created_at TIMESTAMP NOT NULL,
+                updated_at TIMESTAMP NOT NULL
             )
         """)
 
