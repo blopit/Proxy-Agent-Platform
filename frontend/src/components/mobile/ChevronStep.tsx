@@ -41,7 +41,7 @@ import OpenMoji from '@/components/shared/OpenMoji';
 // ============================================================================
 
 export type ChevronPosition = 'first' | 'middle' | 'last' | 'single';
-export type ChevronStatus = 'pending' | 'active' | 'done' | 'error' | 'next';
+export type ChevronStatus = 'pending' | 'active' | 'done' | 'error' | 'next' | 'tab' | 'active_tab';
 export type ChevronSize = 'full' | 'micro' | 'nano';
 
 export interface ChevronStepProps {
@@ -84,6 +84,14 @@ const DEFAULT_COLORS = {
   next: {
     fill: '#fdf2e1',        // Light orange tint
     stroke: '#cb4b16',      // Solarized orange
+  },
+  tab: {
+    fill: '#eee8d5',        // Solarized base2 (neutral light)
+    stroke: '#93a1a1',      // Solarized base1 (gray)
+  },
+  active_tab: {
+    fill: '#d3e4f4',        // Stronger blue tint (more saturated than 'active')
+    stroke: '#268bd2',      // Solarized blue
   },
 };
 
@@ -552,8 +560,8 @@ export default function ChevronStep({
           // Engraved/debossed text effect: light highlight below, dark shadow above
           textShadow: (emoji && !isCollapsed) ? undefined : '0 1px 1px rgba(255, 255, 255, 0.4), 0 -1px 0px rgba(0, 0, 0, 0.3)',
           fontWeight: 500,
-          // Shift content to the right for last chevron to account for straight edge
-          marginLeft: position === 'last' ? '4px' : '0',
+          // Shift content to the right for middle/last chevrons to account for edges
+          marginLeft: position === 'last' ? '4px' : position === 'middle' ? '2px' : '0',
         }}
       >
         {emoji && isCollapsed ? (

@@ -3,7 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Flame, Zap, Target, Calendar, Bot, Moon, Gift } from 'lucide-react';
 import CategoryRow from '../../../components/mobile/CategoryRow';
-import { spacing, fontSize, borderRadius, iconSize, semanticColors } from '@/lib/design-system';
+import SmartRecommendations from '../scout/SmartRecommendations';
+import WorkspaceOverview from '../scout/WorkspaceOverview';
+import ZoneBalanceWidget from '../scout/ZoneBalanceWidget';
+import FilterMatrix, { FilterState } from '../scout/FilterMatrix';
+import DecisionHelper from '../scout/DecisionHelper';
+import TaskInspector from '../scout/TaskInspector';
+import { spacing, fontSize, borderRadius, iconSize, semanticColors, colors } from '@/lib/design-system';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -37,6 +43,11 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
   const [inboxTasks, setInboxTasks] = useState<Task[]>([]);
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
   const [swipedTask, setSwipedTask] = useState<{id: string, direction: 'left' | 'right'} | null>(null);
+
+  // Scout enhancement state
+  const [filterState, setFilterState] = useState<FilterState>({});
+  const [selectedTaskForInspection, setSelectedTaskForInspection] = useState<Task | null>(null);
+  const [comparisonTasks, setComparisonTasks] = useState<Task[]>([]);
 
   useEffect(() => {
     fetchTasks();
@@ -218,6 +229,111 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
     setSelectedTasks(new Set());
   };
 
+  // Scout enhancement handlers
+  const handleTaskInspection = (task: Task) => {
+    setSelectedTaskForInspection(task);
+  };
+
+  const handleCloseInspector = () => {
+    setSelectedTaskForInspection(null);
+  };
+
+  const handleHuntTask = (task: Task) => {
+    console.log('Hunt task:', task.title);
+    setSelectedTaskForInspection(null);
+    onTaskTap(task);
+  };
+
+  // Mock data generators for Scout components
+  const getSmartRecommendations = () => {
+    const highPriorityTasks = tasks.filter(t => t.status !== 'completed' && t.priority === 'high').slice(0, 3);
+    return highPriorityTasks.map(task => ({
+      task,
+      reason: task.estimated_hours && task.estimated_hours < 0.5
+        ? 'Quick win - takes less than 30 minutes!'
+        : task.due_date
+          ? 'Due soon - complete before deadline'
+          : 'High priority - important for your goals',
+      badges: [
+        ...(task.estimated_hours && task.estimated_hours < 0.5 ? ['quick-win'] as const : []),
+        ...(task.priority === 'high' ? ['high-impact'] as const : []),
+        ...(task.due_date ? ['urgent'] as const : []),
+      ],
+      confidence: 85,
+    }));
+  };
+
+  const getZoneData = () => {
+    return [
+      {
+        zone_id: 'z1',
+        name: 'Work',
+        icon: '💼',
+        color: colors.blue,
+        simple_goal: 'Build great products',
+        tasks_completed_today: 3,
+        tasks_completed_this_week: 8,
+        tasks_completed_all_time: 42,
+      },
+      {
+        zone_id: 'z2',
+        name: 'Health',
+        icon: '🏃',
+        color: colors.green,
+        simple_goal: 'Stay physically strong',
+        tasks_completed_today: 1,
+        tasks_completed_this_week: 3,
+        tasks_completed_all_time: 18,
+        days_since_last_task: 2,
+      },
+      {
+        zone_id: 'z3',
+        name: 'Relationships',
+        icon: '❤️',
+        color: colors.magenta,
+        simple_goal: 'Nurture connections',
+        tasks_completed_today: 2,
+        tasks_completed_this_week: 5,
+        tasks_completed_all_time: 25,
+      },
+    ];
+  };
+
+  const getWorkspaceData = () => {
+    return {
+      openFiles: [
+        { id: 'f1', name: 'Project_Plan.pdf', type: 'pdf' as const, lastOpened: '10 min ago' },
+        { id: 'f2', name: 'Budget.xlsx', type: 'sheet' as const, lastOpened: '1 hour ago' },
+      ],
+      inProgressTasks: tasks
+        .filter(t => t.status === 'in_progress')
+        .slice(0, 3)
+        .map(t => ({
+          id: t.task_id || t.id?.toString() || '',
+          title: t.title,
+          progress: 60,
+          lastWorkedOn: '1 hour ago',
+        })),
+      pinnedItems: [
+        { id: 'p1', title: 'Weekly standup notes', type: 'note' as const },
+      ],
+    };
+  };
+
+  const getDecisionHelperComparisons = () => {
+    const topTasks = tasks.filter(t => t.status !== 'completed').slice(0, 2);
+    return topTasks.map(task => ({
+      task,
+      energyCost: task.estimated_hours ? Math.min(10, Math.ceil(task.estimated_hours * 3)) : 5,
+      estimatedReward: {
+        xp: task.priority === 'high' ? 100 : task.priority === 'medium' ? 50 : 25,
+        impact: task.priority === 'high' ? 'high' : 'medium'
+      },
+      readinessStatus: 'ready' as const,
+      completionProbability: 75,
+    }));
+  };
+
   if (isLoading && tasks.length === 0) {
     return (
       <div className="flex items-center justify-center h-full" style={{ backgroundColor: semanticColors.bg.primary }}>
@@ -337,6 +453,64 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
                 </button>
               ))}
             </div>
+
+            {/* Smart Recommendations - AI-powered top picks */}
+            {getSmartRecommendations().length > 0 && (
+              <div style={{ marginBottom: spacing[3] }}>
+                <SmartRecommendations
+                  recommendations={getSmartRecommendations()}
+                  onHunt={handleHuntTask}
+                  onViewTask={handleTaskInspection}
+                />
+              </div>
+            )}
+
+            {/* Workspace Overview - What you're already working on */}
+            <div style={{ marginBottom: spacing[3] }}>
+              <WorkspaceOverview
+                {...getWorkspaceData()}
+                onFileClick={(file) => console.log('File:', file.name)}
+                onTaskClick={(task) => console.log('Task:', task.title)}
+                onPinnedClick={(item) => console.log('Pinned:', item.title)}
+              />
+            </div>
+
+            {/* Zone Balance Widget - Life balance overview */}
+            <div style={{ marginBottom: spacing[3] }}>
+              <ZoneBalanceWidget
+                zones={getZoneData()}
+                insights={[
+                  {
+                    type: 'info',
+                    message: 'Work zone is thriving! You completed 8 tasks this week.',
+                    zoneId: 'z1',
+                  },
+                ]}
+                onZoneSelect={(zoneId) => console.log('Selected zone:', zoneId)}
+                onFilterByZone={(zoneName) => console.log('Filter by zone:', zoneName)}
+              />
+            </div>
+
+            {/* Filter Matrix - Advanced filtering */}
+            <div style={{ marginBottom: spacing[3] }}>
+              <FilterMatrix
+                activeFilters={filterState}
+                onFiltersChange={setFilterState}
+                availableTags={['urgent', 'meeting', 'email', 'creative', 'admin']}
+                availableZones={['Work', 'Health', 'Relationships', 'Growth', 'Home']}
+              />
+            </div>
+
+            {/* Decision Helper - Compare tasks side-by-side */}
+            {getDecisionHelperComparisons().length >= 2 && (
+              <div style={{ marginBottom: spacing[3] }}>
+                <DecisionHelper
+                  comparisons={getDecisionHelperComparisons()}
+                  onChooseTask={handleHuntTask}
+                  onViewDetails={handleTaskInspection}
+                />
+              </div>
+            )}
 
         {/* Progress Bar - 4px grid */}
         <div style={{ marginBottom: spacing[3], padding: spacing[2], backgroundColor: semanticColors.bg.secondary, borderRadius: borderRadius.base, border: `1px solid ${semanticColors.border.default}` }}>
@@ -654,6 +828,48 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
           </div>
         )}
       </div>
+
+      {/* Task Inspector Modal - Bottom Sheet */}
+      {selectedTaskForInspection && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 1000,
+            display: 'flex',
+            alignItems: 'flex-end',
+          }}
+          onClick={handleCloseInspector}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxHeight: '90vh',
+              backgroundColor: semanticColors.bg.primary,
+              borderTopLeftRadius: borderRadius.xl,
+              borderTopRightRadius: borderRadius.xl,
+              overflow: 'auto',
+            }}
+          >
+            <TaskInspector
+              task={selectedTaskForInspection}
+              energyCost={selectedTaskForInspection.estimated_hours ? Math.min(10, Math.ceil(selectedTaskForInspection.estimated_hours * 3)) : 5}
+              estimatedReward={{
+                xp: selectedTaskForInspection.priority === 'high' ? 100 : selectedTaskForInspection.priority === 'medium' ? 50 : 25,
+                impact: selectedTaskForInspection.priority === 'high' ? 'high' : 'medium'
+              }}
+              readinessStatus="ready"
+              onHunt={() => handleHuntTask(selectedTaskForInspection)}
+              onClose={handleCloseInspector}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

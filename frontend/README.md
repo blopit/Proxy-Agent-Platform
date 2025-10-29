@@ -33,13 +33,54 @@ npm test             # Run tests (future)
 
 ## 📚 **ESSENTIAL DOCUMENTATION**
 
-**Before coding, read these documents:**
+**🎯 THE SINGLE ENTRY POINT:** [**Frontend Documentation Hub**](../docs/frontend/FRONTEND_ENTRY_POINT.md)
 
-1. **[DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md)** - 🎯 **START HERE** - Main navigation for all developers
-2. **[DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)** - Design tokens (spacing, colors, animations) - **USE ALWAYS**
-3. **[COMPONENT_CATALOG.md](./COMPONENT_CATALOG.md)** - Index of 50+ existing components - **CHECK BEFORE CREATING**
-4. **[DONT_RECREATE.md](./DONT_RECREATE.md)** - Existing systems checklist - **PREVENT DUPLICATION**
-5. **[API_PATTERNS.md](./API_PATTERNS.md)** - API integration guide - **FOLLOW PATTERNS**
+This master entry point connects **ALL** frontend documentation, code, and workflows. It includes:
+- Role-based quick starts (New Dev, Experienced Dev, UI Dev, Backend Integration, QA)
+- Complete documentation map showing how everything connects
+- Common workflows with step-by-step paths
+- Decision trees for when you're stuck
+- Critical files and their locations
+
+### Quick Access by Role
+
+| I'm a... | Go To | Time |
+|----------|-------|------|
+| **Brand New Developer** | [Entry Point](../docs/frontend/FRONTEND_ENTRY_POINT.md#-im-a-new-developer-never-seen-this-codebase) → [Onboarding](../docs/frontend/NEW_DEVELOPER_ONBOARDING.md) | 2-3 hrs |
+| **Experienced Developer** | [Entry Point](../docs/frontend/FRONTEND_ENTRY_POINT.md#-im-an-experienced-developer-joining-the-team) → [Architecture](../docs/frontend/FRONTEND_ARCHITECTURE.md) | 1-2 hrs |
+| **UI/Component Developer** | [Entry Point](../docs/frontend/FRONTEND_ENTRY_POINT.md#-im-a-uicomponent-developer) | 30 min |
+| **Need Quick Ref** | [Quick Reference](../docs/frontend/QUICK_REFERENCE.md) | Instant |
+
+### Key Documentation Files
+
+1. **[FRONTEND_ENTRY_POINT.md](../docs/frontend/FRONTEND_ENTRY_POINT.md)** ⭐ **START HERE**
+   - The master map connecting everything
+
+2. **[Frontend Architecture](../docs/frontend/FRONTEND_ARCHITECTURE.md)** - System design (30 min)
+   - 4-layer architecture, tech stack, 8 core systems
+
+3. **[New Developer Onboarding](../docs/frontend/NEW_DEVELOPER_ONBOARDING.md)** - 4-day path
+   - Day-by-day learning with hands-on exercises
+
+4. **[Quick Reference](../docs/frontend/QUICK_REFERENCE.md)** - Daily lookup
+   - Design tokens, patterns, API calls, commands
+
+5. **[Component Patterns](../docs/frontend/COMPONENT_PATTERNS.md)** - Implementation guide
+   - Mobile components, biological modes, animations, accessibility
+
+6. **[Storybook Guide](../docs/frontend/STORYBOOK_GUIDE.md)** - Component development
+   - Writing stories, 20+ themes, accessibility testing
+
+7. **[Frontend Complete Guide](../docs/frontend/FRONTEND_COMPLETE_GUIDE.md)** - Full reference (36KB)
+   - Everything from setup to deployment
+
+### Legacy Docs (if they exist)
+
+- [DEVELOPER_GUIDE.md](./DEVELOPER_GUIDE.md) - Original developer guide
+- [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) - Design tokens reference
+- [COMPONENT_CATALOG.md](./COMPONENT_CATALOG.md) - Component inventory
+- [DONT_RECREATE.md](./DONT_RECREATE.md) - Existing systems checklist
+- [API_PATTERNS.md](./API_PATTERNS.md) - API integration patterns
 
 **Golden Rule**: Search documentation first, code second. If it feels like something that should exist, it probably does!
 

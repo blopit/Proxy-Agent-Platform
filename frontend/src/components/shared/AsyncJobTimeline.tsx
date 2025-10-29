@@ -292,15 +292,15 @@ function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, 
               <div className="emoji-blend-black">
                 <OpenMoji
                   emoji={getEmoji()}
-                  size={size === 'nano' ? 18 : size === 'micro' ? 22 : 24}
+                  size={size === 'nano' ? 18 : size === 'micro' ? 24 : 24}
                   variant="black"
-                  embossed
+                  engraved
                 />
               </div>
               <div className="emoji-blend-color" style={{ position: 'absolute', inset: 0 }}>
                 <OpenMoji
                   emoji={getEmoji()}
-                  size={size === 'nano' ? 18 : size === 'micro' ? 22 : 24}
+                  size={size === 'nano' ? 18 : size === 'micro' ? 24 : 24}
                   variant="color"
                   embossed
                 />
@@ -309,9 +309,10 @@ function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, 
           ) : (
             <OpenMoji
               emoji={getEmoji()}
-              size={size === 'nano' ? 18 : size === 'micro' ? 22 : 24}
+              size={size === 'nano' ? 18 : size === 'micro' ? 24 : 24}
               variant={step.status === 'done' || step.status === 'error' ? 'color' : 'black'}
-              embossed
+              engraved={step.status !== 'done' && step.status !== 'error'}
+              embossed={step.status === 'done' || step.status === 'error'}
             />
           )
         ) : (
@@ -331,7 +332,7 @@ function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, 
                 <div className="emoji-blend-black">
                   <OpenMoji
                     emoji={getEmoji()}
-                    size={size === 'nano' ? 16 : size === 'micro' ? 18 : 20}
+                    size={size === 'nano' ? 16 : size === 'micro' ? 24 : 20}
                     variant="black"
                     embossed
                   />
@@ -339,7 +340,7 @@ function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, 
                 <div className="emoji-blend-color" style={{ position: 'absolute', inset: 0 }}>
                   <OpenMoji
                     emoji={getEmoji()}
-                    size={size === 'nano' ? 16 : size === 'micro' ? 18 : 20}
+                    size={size === 'nano' ? 16 : size === 'micro' ? 24 : 20}
                     variant="color"
                     embossed
                   />
@@ -348,7 +349,7 @@ function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, 
             ) : (
               <OpenMoji
                 emoji={getEmoji()}
-                size={size === 'nano' ? 16 : size === 'micro' ? 18 : 20}
+                size={size === 'nano' ? 16 : size === 'micro' ? 24 : 20}
                 variant={step.status === 'done' || step.status === 'error' ? 'color' : 'black'}
                 embossed
               />

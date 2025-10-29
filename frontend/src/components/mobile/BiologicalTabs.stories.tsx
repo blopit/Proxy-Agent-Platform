@@ -10,25 +10,27 @@ const meta: Meta<typeof BiologicalTabs> = {
     docs: {
       description: {
         component: `Bottom navigation tabs based on 5 biological circuits for ADHD task management.
+Built with ChevronStep components for consistent visual language.
 
 **5 Biological Modes**:
-1. **Capture** 📷 - Always available for quick thought capture
-2. **Search** 🔍 - Forager/Primate mode (optimal: morning, high energy)
+1. **Add** ➕ - Always available for quick thought capture
+2. **Scout** 🔍 - Forager/Primate mode (optimal: morning, high energy)
 3. **Hunt** 🎯 - Predator mode (optimal: morning, energy > 70%)
-4. **Rest** 💙 - Herd/Parasympathetic mode (optimal: afternoon, low energy)
-5. **Plan** 🗺️ - Elder/Hippocampal replay (optimal: evening/night)
+4. **Recharge** 💙 - Herd/Parasympathetic mode (optimal: afternoon, low energy)
+5. **Map** 🗺️ - Elder/Hippocampal replay (optimal: evening/night)
 
 **Features**:
+- ChevronStep integration with 'tab' status for inactive tabs
 - Energy-aware optimal circuit detection
 - Time-of-day biasing
 - Pulse animations for optimal modes
-- 5% mutation state (rare achievements)`,
+- Lucide icons for all tabs`,
       },
     },
   },
   decorators: [
     (Story) => (
-      <div style={{ width: '100%', maxWidth: '400px', padding: '20px', backgroundColor: '#002b36' }}>
+      <div style={{ width: '100%', maxWidth: '600px', padding: '20px', backgroundColor: 'transparent' }}>
         <Story />
       </div>
     ),
@@ -36,7 +38,7 @@ const meta: Meta<typeof BiologicalTabs> = {
   argTypes: {
     activeTab: {
       control: 'select',
-      options: ['capture', 'search', 'hunt', 'rest', 'plan'],
+      options: ['add', 'scout', 'hunt', 'recharge', 'map'],
       description: 'Currently active biological circuit',
     },
     energy: {
@@ -47,6 +49,10 @@ const meta: Meta<typeof BiologicalTabs> = {
       control: 'select',
       options: ['morning', 'afternoon', 'evening', 'night'],
       description: 'Current time of day for optimal circuit detection',
+    },
+    showLabels: {
+      control: 'boolean',
+      description: 'Show labels with icons (false = icon-only for mobile)',
     },
   },
 };
@@ -60,40 +66,77 @@ type Story = StoryObj<typeof BiologicalTabs>;
 
 export const Default: Story = {
   args: {
-    activeTab: 'capture',
+    activeTab: 'add',
     energy: 75,
     timeOfDay: 'morning',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
 };
 
-export const CaptureActive: Story = {
+export const IconOnly: Story = {
   args: {
-    activeTab: 'capture',
-    energy: 65,
+    activeTab: 'scout',
+    energy: 75,
     timeOfDay: 'morning',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
     docs: {
       description: {
-        story: 'Capture mode - always optimal for quick thought capture',
+        story: 'Mobile-first: Icon-only display (default behavior)',
       },
     },
   },
 };
 
-export const SearchActive: Story = {
+export const WithLabels: Story = {
   args: {
-    activeTab: 'search',
+    activeTab: 'scout',
     energy: 75,
     timeOfDay: 'morning',
+    showLabels: true,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
     docs: {
       description: {
-        story: 'Search mode - optimal in morning with high energy',
+        story: 'Wider displays: Icon + label display',
+      },
+    },
+  },
+};
+
+export const AddActive: Story = {
+  args: {
+    activeTab: 'add',
+    energy: 65,
+    timeOfDay: 'morning',
+    showLabels: false,
+    onTabChange: (tab: string) => console.log('Tab changed to:', tab),
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Add mode - always optimal for quick thought capture',
+      },
+    },
+  },
+};
+
+export const ScoutActive: Story = {
+  args: {
+    activeTab: 'scout',
+    energy: 75,
+    timeOfDay: 'morning',
+    showLabels: false,
+    onTabChange: (tab: string) => console.log('Tab changed to:', tab),
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Scout mode - optimal in morning with high energy',
       },
     },
   },
@@ -104,6 +147,7 @@ export const HuntActive: Story = {
     activeTab: 'hunt',
     energy: 80,
     timeOfDay: 'morning',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
@@ -115,33 +159,35 @@ export const HuntActive: Story = {
   },
 };
 
-export const RestActive: Story = {
+export const RechargeActive: Story = {
   args: {
-    activeTab: 'rest',
+    activeTab: 'recharge',
     energy: 30,
     timeOfDay: 'afternoon',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
     docs: {
       description: {
-        story: 'Rest mode - optimal in afternoon or when energy < 40%',
+        story: 'Recharge mode - optimal in afternoon or when energy < 40%',
       },
     },
   },
 };
 
-export const PlanActive: Story = {
+export const MapActive: Story = {
   args: {
-    activeTab: 'plan',
+    activeTab: 'map',
     energy: 50,
     timeOfDay: 'evening',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
     docs: {
       description: {
-        story: 'Plan mode - optimal in evening or night for memory consolidation',
+        story: 'Map mode - optimal in evening or night for memory consolidation',
       },
     },
   },
@@ -156,12 +202,13 @@ export const HighEnergy: Story = {
     activeTab: 'hunt',
     energy: 90,
     timeOfDay: 'morning',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
     docs: {
       description: {
-        story: 'High energy (90%) - Hunt and Search modes are optimal',
+        story: 'High energy (90%) - Hunt and Scout modes are optimal',
       },
     },
   },
@@ -169,9 +216,10 @@ export const HighEnergy: Story = {
 
 export const MediumEnergy: Story = {
   args: {
-    activeTab: 'search',
+    activeTab: 'scout',
     energy: 55,
     timeOfDay: 'afternoon',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
@@ -185,15 +233,16 @@ export const MediumEnergy: Story = {
 
 export const LowEnergy: Story = {
   args: {
-    activeTab: 'rest',
+    activeTab: 'recharge',
     energy: 25,
     timeOfDay: 'afternoon',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
     docs: {
       description: {
-        story: 'Low energy (25%) - Rest mode is optimal for recovery',
+        story: 'Low energy (25%) - Recharge mode is optimal for recovery',
       },
     },
   },
@@ -208,12 +257,13 @@ export const Morning: Story = {
     activeTab: 'hunt',
     energy: 80,
     timeOfDay: 'morning',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
     docs: {
       description: {
-        story: 'Morning - Hunt and Search modes highlighted as optimal',
+        story: 'Morning - Hunt and Scout modes highlighted as optimal',
       },
     },
   },
@@ -221,15 +271,16 @@ export const Morning: Story = {
 
 export const Afternoon: Story = {
   args: {
-    activeTab: 'rest',
+    activeTab: 'recharge',
     energy: 45,
     timeOfDay: 'afternoon',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
     docs: {
       description: {
-        story: 'Afternoon - Rest mode optimal, Search viable with high energy',
+        story: 'Afternoon - Recharge mode optimal, Scout viable with high energy',
       },
     },
   },
@@ -237,15 +288,16 @@ export const Afternoon: Story = {
 
 export const Evening: Story = {
   args: {
-    activeTab: 'plan',
+    activeTab: 'map',
     energy: 50,
     timeOfDay: 'evening',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
     docs: {
       description: {
-        story: 'Evening - Plan mode optimal for memory consolidation',
+        story: 'Evening - Map mode optimal for memory consolidation',
       },
     },
   },
@@ -253,15 +305,16 @@ export const Evening: Story = {
 
 export const Night: Story = {
   args: {
-    activeTab: 'plan',
+    activeTab: 'map',
     energy: 35,
     timeOfDay: 'night',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
     docs: {
       description: {
-        story: 'Night - Plan mode optimal, rest recommended',
+        story: 'Night - Map mode optimal, recharge recommended',
       },
     },
   },
@@ -273,9 +326,10 @@ export const Night: Story = {
 
 export const Interactive: Story = {
   render: function InteractiveStory() {
-    const [activeTab, setActiveTab] = React.useState('capture');
+    const [activeTab, setActiveTab] = React.useState('add');
     const [energy, setEnergy] = React.useState(75);
     const [timeOfDay, setTimeOfDay] = React.useState<'morning' | 'afternoon' | 'evening' | 'night'>('morning');
+    const [showLabels, setShowLabels] = React.useState(false);
 
     return (
       <div style={{ width: '100%' }}>
@@ -321,9 +375,21 @@ export const Interactive: Story = {
             </select>
           </div>
 
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ color: '#93a1a1', fontSize: '12px', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={showLabels}
+                onChange={(e) => setShowLabels(e.target.checked)}
+                style={{ marginRight: '8px' }}
+              />
+              Show Labels
+            </label>
+          </div>
+
           <div>
             <p style={{ color: '#93a1a1', fontSize: '11px', marginTop: '12px' }}>
-              Active: <strong style={{ color: '#268bd2' }}>{activeTab}</strong>
+              Active: <strong style={{ color: '#268bd2' }}>{activeTab === 'add' ? 'Add' : activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</strong>
             </p>
           </div>
         </div>
@@ -334,16 +400,17 @@ export const Interactive: Story = {
           onTabChange={setActiveTab}
           energy={energy}
           timeOfDay={timeOfDay}
+          showLabels={showLabels}
         />
 
         {/* Info */}
         <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#073642', borderRadius: '8px' }}>
           <p style={{ color: '#93a1a1', fontSize: '11px', lineHeight: '1.5' }}>
-            {activeTab === 'capture' && 'Capture mode is always available for quick thought dumping'}
-            {activeTab === 'search' && 'Search mode: Seek novelty & identify doable micro-targets'}
+            {activeTab === 'add' && 'Add mode is always available for quick thought capture'}
+            {activeTab === 'scout' && 'Scout mode: Seek novelty & identify doable micro-targets'}
             {activeTab === 'hunt' && 'Hunt mode: Enter pursuit flow and harvest reward'}
-            {activeTab === 'rest' && 'Rest mode: Recover energy & rebuild cognitive tissue'}
-            {activeTab === 'plan' && 'Plan mode: Consolidate memory and recalibrate priorities'}
+            {activeTab === 'recharge' && 'Recharge mode: Recover energy & rebuild cognitive tissue'}
+            {activeTab === 'map' && 'Map mode: Consolidate memory and recalibrate priorities'}
           </p>
         </div>
       </div>
@@ -367,6 +434,7 @@ export const MorningHighEnergy: Story = {
     activeTab: 'hunt',
     energy: 85,
     timeOfDay: 'morning',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
@@ -380,15 +448,16 @@ export const MorningHighEnergy: Story = {
 
 export const AfternoonSlump: Story = {
   args: {
-    activeTab: 'rest',
+    activeTab: 'recharge',
     energy: 35,
     timeOfDay: 'afternoon',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
     docs: {
       description: {
-        story: 'Scenario: Afternoon energy slump - rest and recovery recommended',
+        story: 'Scenario: Afternoon energy slump - recharge and recovery recommended',
       },
     },
   },
@@ -396,15 +465,16 @@ export const AfternoonSlump: Story = {
 
 export const EveningReflection: Story = {
   args: {
-    activeTab: 'plan',
+    activeTab: 'map',
     energy: 50,
     timeOfDay: 'evening',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
     docs: {
       description: {
-        story: 'Scenario: Evening reflection time - ideal for planning and memory consolidation',
+        story: 'Scenario: Evening reflection time - ideal for mapping and memory consolidation',
       },
     },
   },
@@ -412,9 +482,10 @@ export const EveningReflection: Story = {
 
 export const LateNightBurst: Story = {
   args: {
-    activeTab: 'search',
+    activeTab: 'scout',
     energy: 65,
     timeOfDay: 'night',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
@@ -432,15 +503,16 @@ export const LateNightBurst: Story = {
 
 export const VeryLowEnergy: Story = {
   args: {
-    activeTab: 'rest',
+    activeTab: 'recharge',
     energy: 10,
     timeOfDay: 'afternoon',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {
     docs: {
       description: {
-        story: 'Edge case: Very low energy (10%) - only rest is viable',
+        story: 'Edge case: Very low energy (10%) - only recharge is viable',
       },
     },
   },
@@ -451,6 +523,7 @@ export const MaxEnergy: Story = {
     activeTab: 'hunt',
     energy: 100,
     timeOfDay: 'morning',
+    showLabels: false,
     onTabChange: (tab: string) => console.log('Tab changed to:', tab),
   },
   parameters: {

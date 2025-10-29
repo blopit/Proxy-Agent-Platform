@@ -65,6 +65,30 @@ The Proxy Agent Platform is a sophisticated productivity enhancement system buil
 - **Integration Tests**: End-to-end testing of all system components
 - **Quality Assurance**: Automated code quality and standards enforcement
 
+## 🗺️ Current Focus: ADHD Productivity App Integration
+
+**We're actively integrating a comprehensive ADHD-focused productivity system** based on our [Product Requirements Document](./docs/PRD_ADHD_APP.md).
+
+### What's New?
+- **Chevron Progress System**: Step-by-step task completion with visual progress indicators
+- **Mobile-First UX**: Optimized for ADHD users with minimal overwhelm
+- **Enhanced Gamification**: Virtual pets, per-step rewards, and unlockable themes
+- **Streamlined Modes**: Scout (discover), Today (execute), Mapper (reflect/plan)
+
+### Development Roadmap
+📅 **12-week phased rollout** - See [Integration Roadmap](./docs/roadmap/INTEGRATION_ROADMAP.md)
+
+**Current Phase**: Phase 1 (Weeks 1-3) - Chevron-ify Existing Modes
+- Building `ChevronTaskFlow` component for step-by-step task execution
+- Restructuring Mapper mode from 5 tabs → 2 tabs (MAP/PLAN)
+- Integrating with existing Scout/Today modes
+
+**Next Up**: Phase 2 (Weeks 4-6) - Task Templates + Virtual Pet System
+
+👉 **[View Full Roadmap](./docs/roadmap/README.md)** for detailed timeline and specs.
+
+---
+
 ## 🚀 Quick Start
 
 ### Prerequisites

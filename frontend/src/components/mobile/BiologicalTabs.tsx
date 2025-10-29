@@ -1,24 +1,23 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Search, Target, Heart, Map, Camera } from 'lucide-react';
+import { Search, Target, Heart, Map, Plus } from 'lucide-react';
+import ChevronStep, { ChevronPosition } from './ChevronStep';
 
 interface BiologicalTabsProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   energy: number;
   timeOfDay: 'morning' | 'afternoon' | 'evening' | 'night';
+  showLabels?: boolean; // Default false for mobile-first icon-only display
 }
 
 interface BiologicalCircuit {
   id: string;
   name: string;
-  icon: React.ComponentType<{ className?: string; size?: number }>;
+  icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
   description: string;
   purpose: string;
-  color: string;
-  bgColor: string;
-  borderColor: string;
   isOptimal: boolean;
 }
 
@@ -26,32 +25,25 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
   activeTab,
   onTabChange,
   energy,
-  timeOfDay
+  timeOfDay,
+  showLabels = false // Mobile-first: icon-only by default
 }) => {
-  const [pulseAnimation, setPulseAnimation] = useState<string | null>(null);
-
-  // Define the 5 biological circuits (added Capture mode first)
+  // Define the 5 biological circuits in order: Add, Scout, Hunt, Recharge, Map
   const circuits: BiologicalCircuit[] = [
     {
-      id: 'capture',
-      name: 'Capture',
-      icon: Camera,
+      id: 'add',
+      name: 'Add',
+      icon: Plus,
       description: 'Quick Thought Capture',
       purpose: 'Capture thoughts instantly with natural language',
-      color: 'text-cyan-400',
-      bgColor: 'bg-cyan-50',
-      borderColor: 'border-cyan-200',
       isOptimal: true // Always available/optimal
     },
     {
-      id: 'search',
-      name: 'Search',
+      id: 'scout',
+      name: 'Scout',
       icon: Search,
       description: 'Forager / Primate',
       purpose: 'Seek novelty & identify doable micro-targets',
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
-      borderColor: 'border-emerald-200',
       isOptimal: timeOfDay === 'morning' || (timeOfDay === 'afternoon' && energy > 60)
     },
     {
@@ -60,93 +52,120 @@ const BiologicalTabs: React.FC<BiologicalTabsProps> = ({
       icon: Target,
       description: 'Predator',
       purpose: 'Enter pursuit flow and harvest reward',
-      color: 'text-red-600',
-      bgColor: 'bg-red-50',
-      borderColor: 'border-red-200',
       isOptimal: timeOfDay === 'morning' || (energy > 70)
     },
     {
-      id: 'rest',
-      name: 'Rest',
+      id: 'recharge',
+      name: 'Recharge',
       icon: Heart,
       description: 'Herd / Parasympathetic',
       purpose: 'Recover energy & rebuild cognitive tissue',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      borderColor: 'border-blue-200',
       isOptimal: timeOfDay === 'afternoon' || energy < 40
     },
     {
-      id: 'plan',
-      name: 'Plan',
+      id: 'map',
+      name: 'Map',
       icon: Map,
       description: 'Elder / Hippocampal replay',
       purpose: 'Consolidate memory and recalibrate priorities',
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      borderColor: 'border-purple-200',
       isOptimal: timeOfDay === 'evening' || timeOfDay === 'night'
     }
   ];
 
-  // Add optional mutation state (rare)
-  const [showMutation, setShowMutation] = useState(false);
-  
-  useEffect(() => {
-    // Rarely show mutation state after major accomplishments or burnout
-    const shouldShowMutation = Math.random() < 0.05; // 5% chance
-    setShowMutation(shouldShowMutation);
-  }, []);
-
-  // Pulse animation for optimal circuits
-  useEffect(() => {
-    const optimalCircuit = circuits.find(c => c.isOptimal && c.id === activeTab);
-    if (optimalCircuit) {
-      setPulseAnimation(optimalCircuit.id);
-      const timer = setTimeout(() => setPulseAnimation(null), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [activeTab, timeOfDay, energy]);
-
+  // Determine chevron position based on index
+  const getPosition = (index: number, total: number): ChevronPosition => {
+    if (index === 0) return 'first';
+    if (index === total - 1) return 'last';
+    return 'middle';
+  };
 
   return (
     <div className="w-full">
-      {/* Bottom Navigation Tabs - Fill entire row with 5 tabs */}
-      <div className="flex items-center justify-center gap-0.5 px-1.5">
-        {circuits.map((circuit) => {
+      {/* ChevronStep Tab Bar */}
+      <div className="flex items-stretch gap-0" style={{ height: '40px' }}>
+        {circuits.map((circuit, index) => {
           const IconComponent = circuit.icon;
+          const isActive = activeTab === circuit.id;
+
           return (
-            <button
-              key={circuit.id}
-              onClick={() => onTabChange(circuit.id)}
-              className={`
-                relative flex-1 py-1.5 px-0.5 rounded-lg transition-all duration-300
-                ${activeTab === circuit.id
-                  ? 'bg-[#268bd2] text-[#fdf6e3] shadow-lg scale-105'
-                  : 'bg-[#073642] text-[#586e75] border border-[#586e75]'
-                }
-                ${circuit.isOptimal && circuit.id !== 'capture' ? 'ring-1 ring-[#b58900] ring-opacity-50' : ''}
-                ${pulseAnimation === circuit.id ? 'animate-pulse' : ''}
-              `}
-            >
-              {/* Optimal indicator (not for capture since it's always optimal) */}
-              {circuit.isOptimal && circuit.id !== 'capture' && (
-                <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-[#b58900] rounded-full animate-ping" />
+            <div key={circuit.id} style={{ flex: 1, position: 'relative' }}>
+              <ChevronStep
+                status={isActive ? 'active_tab' : 'tab'}
+                position={getPosition(index, circuits.length)}
+                size="micro"
+                onClick={() => onTabChange(circuit.id)}
+                ariaLabel={`${circuit.name} - ${circuit.description}`}
+                width="100%"
+              >
+                {showLabels ? (
+                  // Icon + Label (for wider displays)
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '2px',
+                    padding: '0 4px'
+                  }}>
+                    <IconComponent size={16} strokeWidth={2.5} />
+                    <span style={{
+                      fontSize: '9px',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.025em',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {circuit.name}
+                    </span>
+                  </div>
+                ) : (
+                  // Icon only (mobile-first default)
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <IconComponent size={18} strokeWidth={2.5} />
+                  </div>
+                )}
+              </ChevronStep>
+
+              {/* Optimal indicator - subtle golden dot above chevron */}
+              {circuit.isOptimal && !isActive && circuit.id !== 'add' && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '-4px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '6px',
+                    height: '6px',
+                    background: '#b58900',
+                    borderRadius: '50%',
+                    boxShadow: '0 0 4px rgba(181, 137, 0, 0.6)',
+                    zIndex: 10,
+                    animation: 'pulse-optimal 2s ease-in-out infinite'
+                  }}
+                />
               )}
-
-              {/* Circuit icon */}
-              <div className="flex justify-center mb-0.5">
-                <IconComponent size={14} className="transition-transform duration-300" />
-              </div>
-
-              {/* Circuit name */}
-              <div className="text-[10px] font-medium text-center whitespace-nowrap">
-                {circuit.name}
-              </div>
-            </button>
+            </div>
           );
         })}
       </div>
+
+      {/* CSS for optimal indicator pulse */}
+      <style jsx>{`
+        @keyframes pulse-optimal {
+          0%, 100% {
+            opacity: 0.7;
+            transform: translateX(-50%) scale(1);
+          }
+          50% {
+            opacity: 1;
+            transform: translateX(-50%) scale(1.2);
+          }
+        }
+      `}</style>
     </div>
   );
 };
