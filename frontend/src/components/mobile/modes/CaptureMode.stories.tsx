@@ -3,7 +3,7 @@ import CaptureMode from './CaptureMode';
 import React from 'react';
 
 const meta: Meta<typeof CaptureMode> = {
-  title: 'Components/Mobile/Modes/CaptureMode',
+  title: 'Mobile/Modes/CaptureMode',
   component: CaptureMode,
   parameters: {
     layout: 'fullscreen',

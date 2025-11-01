@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs';
 import MapperMode from './MapperMode';
 
 const meta: Meta<typeof MapperMode> = {
-  title: 'Components/Mobile/Modes/MapperMode',
+  title: 'Mobile/Modes/MapperMode',
   component: MapperMode,
   parameters: {
     layout: 'fullscreen',

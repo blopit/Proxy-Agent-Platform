@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs';
 import MenderMode from './MenderMode';
 
 const meta: Meta<typeof MenderMode> = {
-  title: 'Components/Mobile/Modes/MenderMode',
+  title: 'Mobile/Modes/MenderMode',
   component: MenderMode,
   parameters: {
     layout: 'fullscreen',

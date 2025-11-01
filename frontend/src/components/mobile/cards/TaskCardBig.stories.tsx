@@ -165,7 +165,7 @@ function createTaskCardProps(options: {
 // ============================================================================
 
 const meta: Meta<typeof TaskCardBig> = {
-  title: 'Components/Mobile/Cards/TaskCardBig',
+  title: 'Mobile/Cards/TaskCardBig',
   component: TaskCardBig,
   parameters: {
     layout: 'centered',

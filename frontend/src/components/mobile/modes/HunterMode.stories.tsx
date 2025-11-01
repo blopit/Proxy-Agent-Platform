@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs';
 import HunterMode from './HunterMode';
 
 const meta: Meta<typeof HunterMode> = {
-  title: 'Components/Mobile/Modes/HunterMode',
+  title: 'Mobile/Modes/HunterMode',
   component: HunterMode,
   parameters: {
     layout: 'fullscreen',

@@ -3,7 +3,7 @@ import AsyncJobTimeline, { type JobStep, type JobStepStatus } from './AsyncJobTi
 import React from 'react';
 
 const meta: Meta<typeof AsyncJobTimeline> = {
-  title: 'Components/Shared/AsyncJobTimeline',
+  title: 'Shared/AsyncJobTimeline',
   component: AsyncJobTimeline,
   parameters: {
     layout: 'centered',

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import TaskCheckbox from './TaskCheckbox';
 
 const meta: Meta<typeof TaskCheckbox> = {
-  title: 'Components/Shared/TaskCheckbox',
+  title: 'Shared/TaskCheckbox',
   component: TaskCheckbox,
   parameters: {
     layout: 'centered',

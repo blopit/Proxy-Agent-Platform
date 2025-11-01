@@ -3,7 +3,7 @@ import { StatsCard } from './StatsCard';
 import { CheckCircle, Clock, Target, TrendingUp } from 'lucide-react';
 
 const meta: Meta<typeof StatsCard> = {
-  title: 'Components/Dashboard/StatsCard',
+  title: 'Dashboard/StatsCard',
   component: StatsCard,
   parameters: {
     layout: 'centered',
