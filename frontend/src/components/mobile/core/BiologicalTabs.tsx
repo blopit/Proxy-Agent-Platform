@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import { Search, Target, Heart, Map, Plus } from 'lucide-react';
+import { Search, Target, Heart, Map, Plus, Flame } from 'lucide-react';
 import ChevronStep, { ChevronPosition } from './ChevronStep';
 
 interface BiologicalTabsProps {

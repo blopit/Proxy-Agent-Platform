@@ -64,7 +64,7 @@ const AGENT_ID = 'shrenil';
 type TaskFilter = 'all' | 'coding' | 'personal' | 'unassigned' | 'meta';
 
 export default function DogfoodPage() {
-  const [activeTab, setActiveTab] = useState('hunt');
+  const [activeTab, setActiveTab] = useState('focus'); // Start in focus mode
   const [energy] = useState(75);
   const [timeOfDay] = useState<'morning' | 'afternoon' | 'evening' | 'night'>('morning');
 
@@ -654,6 +654,286 @@ export default function DogfoodPage() {
               taskTitle={selectedTaskForWorkflow ? allTasks.find(t => t.task_id === selectedTaskForWorkflow)?.title : undefined}
               taskDescription={selectedTaskForWorkflow ? allTasks.find(t => t.task_id === selectedTaskForWorkflow)?.description : undefined}
             />
+          </div>
+        )}
+
+        {/* FOCUS MODE - Addiction Recovery & Single-Task Focus */}
+        {activeTab === 'focus' && (
+          <div className="space-y-6">
+            <div className="text-white mb-6">
+              <h1 className="text-3xl font-bold mb-2">🎯 Focus Recovery Mode</h1>
+              <p className="text-gray-400">Break the addiction cycle. One task. One hour.</p>
+            </div>
+
+            {/* Crisis Intervention Card */}
+            <Card className="p-8 bg-gradient-to-br from-red-900/30 to-orange-900/30 border-red-700">
+              <div className="text-center space-y-4">
+                <div className="text-6xl mb-4">🚨</div>
+                <h2 className="text-2xl font-bold text-white">
+                  Feeling Overwhelmed?
+                </h2>
+                <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+                  You're in the right place. This mode is designed specifically for when you're stuck in unproductive patterns.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                  <div className="bg-gray-800/50 p-4 rounded-lg">
+                    <div className="text-3xl mb-2">⏱️</div>
+                    <h3 className="text-white font-semibold mb-1">Just 1 Hour</h3>
+                    <p className="text-gray-400 text-sm">Not the whole day. Just one focused hour.</p>
+                  </div>
+                  <div className="bg-gray-800/50 p-4 rounded-lg">
+                    <div className="text-3xl mb-2">🎯</div>
+                    <h3 className="text-white font-semibold mb-1">One Task Only</h3>
+                    <p className="text-gray-400 text-sm">No multitasking. Close everything else.</p>
+                  </div>
+                  <div className="bg-gray-800/50 p-4 rounded-lg">
+                    <div className="text-3xl mb-2">✨</div>
+                    <h3 className="text-white font-semibold mb-1">Better Dopamine</h3>
+                    <p className="text-gray-400 text-sm">Completion feels better than scrolling.</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Your Current Intervention Task */}
+            <Card className="p-6 bg-gray-800 border-gray-700">
+              <h3 className="text-white text-xl font-semibold mb-4 flex items-center gap-2">
+                <span>🔥</span> Your Focus Task
+              </h3>
+
+              {allTasks.find(t => t.title.includes('Break Addiction') || t.tags?.includes?.('focus-recovery')) ? (
+                <div className="space-y-4">
+                  <TaskCardBig
+                    task={{
+                      ...allTasks.find(t => t.title.includes('Break Addiction') || t.tags?.includes?.('focus-recovery'))!,
+                      micro_steps: [],
+                      tags: ['critical', 'focus-recovery'],
+                    }}
+                  />
+
+                  <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-4">
+                    <h4 className="text-yellow-300 font-semibold mb-2">📋 The Protocol:</h4>
+                    <ol className="text-gray-300 space-y-2 text-sm">
+                      <li>1. Close ALL tabs except this one</li>
+                      <li>2. Put phone in another room</li>
+                      <li>3. Set physical timer: 1 hour</li>
+                      <li>4. Pick the SMALLEST task below</li>
+                      <li>5. When distracted → Use Quick Capture (don't switch tasks)</li>
+                      <li>6. After 1 hour → Mark complete and CELEBRATE</li>
+                    </ol>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      const interventionTask = allTasks.find(t => t.title.includes('Break Addiction'));
+                      if (interventionTask) assignTask(interventionTask.task_id);
+                    }}
+                    className="w-full px-6 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-lg font-bold"
+                  >
+                    ✅ Start My Focus Hour
+                  </button>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-400 mb-4">No focus task found. Let's create one.</p>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(`${API_URL}/api/v1/tasks`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            project_id: 'default-project',
+                            title: '🚨 Focus Recovery - ONE Hour',
+                            description: 'Break the addiction cycle. Pick ONE task. Work for ONE hour.',
+                            status: 'pending',
+                            priority: 'critical',
+                            category: 'personal',
+                            tags: ['focus-recovery', 'intervention'],
+                            estimated_hours: 1.0,
+                          }),
+                        });
+                        if (response.ok) {
+                          await loadAllTasks();
+                        }
+                      } catch (error) {
+                        console.error('Error creating focus task:', error);
+                      }
+                    }}
+                    className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    🚨 Create Focus Task Now
+                  </button>
+                </div>
+              )}
+            </Card>
+
+            {/* Quick Wins - Smallest Tasks to Build Momentum */}
+            <Card className="p-6 bg-gray-800 border-gray-700">
+              <h3 className="text-white text-xl font-semibold mb-4">
+                ⚡ Quick Wins (Start Here)
+              </h3>
+              <p className="text-gray-400 text-sm mb-4">
+                These are the SMALLEST tasks. Pick one. Do it. Get the dopamine hit.
+              </p>
+              <div className="space-y-3">
+                {allTasks
+                  .filter(t => t.estimated_hours <= 2 && t.status !== 'completed')
+                  .sort((a, b) => a.estimated_hours - b.estimated_hours)
+                  .slice(0, 5)
+                  .map(task => (
+                    <div
+                      key={task.task_id}
+                      className="flex justify-between items-center p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors cursor-pointer"
+                      onClick={() => {
+                        assignTask(task.task_id);
+                        setActiveTab('hunt');
+                      }}
+                    >
+                      <div>
+                        <div className="text-white font-medium">{task.title}</div>
+                        <div className="text-gray-400 text-sm">
+                          {task.estimated_hours}h · {task.priority}
+                        </div>
+                      </div>
+                      <button
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          assignTask(task.task_id);
+                          setActiveTab('hunt');
+                        }}
+                      >
+                        Start Now
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            </Card>
+
+            {/* Emergency Capture - For When You're Distracted */}
+            <Card className="p-6 bg-gray-800 border-gray-700">
+              <h3 className="text-white text-xl font-semibold mb-4">
+                💭 Emergency Capture
+              </h3>
+              <p className="text-gray-400 text-sm mb-4">
+                When you feel the urge to switch tasks, capture the thought here instead.
+              </p>
+              <div className="space-y-3">
+                <textarea
+                  placeholder="What's distracting you right now? Write it here, then CLOSE THIS and return to work..."
+                  className="w-full bg-gray-700 text-white border border-gray-600 rounded-lg p-4 min-h-[120px] focus:outline-none focus:border-blue-500"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && e.metaKey) {
+                      // Cmd+Enter to save and close
+                      const textarea = e.currentTarget;
+                      const text = textarea.value;
+                      if (text.trim()) {
+                        fetch(`${API_URL}/api/v1/tasks`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            project_id: 'default-project',
+                            title: text.substring(0, 100),
+                            description: text,
+                            status: 'pending',
+                            priority: 'low',
+                            category: 'personal',
+                            tags: ['captured', 'distraction'],
+                            estimated_hours: 0.5,
+                          }),
+                        }).then(() => {
+                          textarea.value = '';
+                          alert('✅ Captured! Now get back to work.');
+                        });
+                      }
+                    }
+                  }}
+                />
+                <p className="text-gray-500 text-xs">
+                  Press <kbd className="px-2 py-1 bg-gray-600 rounded">⌘</kbd> + <kbd className="px-2 py-1 bg-gray-600 rounded">Enter</kbd> to capture and return to work
+                </p>
+              </div>
+            </Card>
+
+            {/* The Science */}
+            <Card className="p-6 bg-gray-800 border-gray-700">
+              <h3 className="text-white text-xl font-semibold mb-4">
+                🧠 Why This Works (ADHD Science)
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <h4 className="text-green-400 font-semibold">✅ External Working Memory</h4>
+                  <p className="text-gray-400 text-sm">
+                    Capture system offloads thoughts from your brain, freeing up working memory for the task at hand.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-green-400 font-semibold">✅ Dopamine Replacement</h4>
+                  <p className="text-gray-400 text-sm">
+                    Task completion gives better dopamine than scrolling. Build the habit of healthy rewards.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-green-400 font-semibold">✅ Reduced Decision Fatigue</h4>
+                  <p className="text-gray-400 text-sm">
+                    System tells you exactly what to do next. No paralysis from too many choices.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-green-400 font-semibold">✅ Progress Visibility</h4>
+                  <p className="text-gray-400 text-sm">
+                    Visual progress bars give constant feedback. ADHD brains need frequent rewards.
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Your Challenge */}
+            <Card className="p-6 bg-gradient-to-br from-purple-900/30 to-blue-900/30 border-purple-700">
+              <h3 className="text-white text-xl font-semibold mb-4">
+                🏆 7-Day Focus Challenge
+              </h3>
+              <p className="text-gray-300 mb-4">
+                Use this platform to track your recovery from unproductive patterns:
+              </p>
+              <div className="space-y-2 text-gray-300">
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" className="w-5 h-5" />
+                  <span>Day 1: Complete ONE 1-hour focus session</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" className="w-5 h-5" />
+                  <span>Day 2: Use capture system instead of context-switching</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" className="w-5 h-5" />
+                  <span>Day 3: Mark 1 task as complete (any size)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" className="w-5 h-5" />
+                  <span>Day 4: Try 2 focus sessions</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" className="w-5 h-5" />
+                  <span>Day 5: Review progress in Mapper mode</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" className="w-5 h-5" />
+                  <span>Day 6: Complete 3 small tasks</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" className="w-5 h-5" />
+                  <span>Day 7: Celebrate your progress!</span>
+                </div>
+              </div>
+              <div className="mt-6 p-4 bg-gray-800/50 rounded-lg">
+                <p className="text-gray-400 text-sm">
+                  <strong className="text-white">Success metric:</strong> Complete 5 out of 7 days. That's 71% - way better than 0%.
+                </p>
+              </div>
+            </Card>
           </div>
         )}
 
