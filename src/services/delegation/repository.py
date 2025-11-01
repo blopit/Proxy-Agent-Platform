@@ -90,10 +90,10 @@ class DelegationRepository:
         self, agent_id: str, status: Optional[str] = None
     ) -> List[dict]:
         """
-        Get all assignments for a specific agent.
+        Get all assignments for a specific assignee (agent or human).
 
         Args:
-            agent_id: ID of the agent
+            agent_id: ID of the assignee (agent or human)
             status: Optional status filter ('pending', 'in_progress', 'completed')
 
         Returns:
@@ -106,7 +106,6 @@ class DelegationRepository:
             query = """
                 SELECT * FROM task_assignments
                 WHERE assignee_id = ?
-                  AND assignee_type = 'agent'
                   AND status = ?
                 ORDER BY assigned_at DESC
             """
@@ -115,7 +114,6 @@ class DelegationRepository:
             query = """
                 SELECT * FROM task_assignments
                 WHERE assignee_id = ?
-                  AND assignee_type = 'agent'
                 ORDER BY assigned_at DESC
             """
             cursor.execute(query, (agent_id,))

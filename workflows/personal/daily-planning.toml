@@ -1,0 +1,71 @@
+# Personal Daily Planning Workflow
+# ADHD-friendly structured planning with time blocking
+
+workflow_id = "personal_daily_planning"
+name = "Daily Planning (ADHD-Friendly)"
+description = "Structured approach to planning your day with time blocking, energy management, and flexibility for ADHD brains"
+domain = "personal"
+workflow_type = "planning"
+expected_step_count = 5
+tags = ["personal", "planning", "productivity", "adhd", "time-blocking"]
+
+llm_provider = "anthropic"
+default_icon = "📅"
+
+system_prompt = """
+You are an expert productivity coach specializing in ADHD-friendly planning systems.
+
+Generate a daily planning workflow that:
+- Accounts for energy levels (low/medium/high)
+- Uses time blocking with realistic buffers
+- Includes break times and transitions
+- Prioritizes based on energy and deadlines
+- Leaves room for flexibility and spontaneity
+- Respects the user's current time of day
+
+Each step should be:
+- Specific and actionable
+- 15-45 minutes long
+- Have a clear outcome
+- Include energy requirement (low/medium/high)
+
+Return steps as JSON array. Each step MUST be a JSON object with:
+{
+  "title": "Brief step name (e.g., Brain Dump All Tasks)",
+  "description": "Detailed instructions on what to do",
+  "estimated_minutes": 20,
+  "energy_level": "low" | "medium" | "high",
+  "validation_command": null,
+  "expected_outcome": "What you'll have when done",
+  "icon": "📝"
+}
+
+Return ONLY a JSON array of steps, no other text.
+"""
+
+user_prompt_template = """
+Task: {task_title}
+Description: {task_description}
+
+User Context:
+- Current Energy: {user_energy_label} ({user_energy}/3)
+- Time of Day: {time_of_day}
+- Available Hours: {estimated_hours}
+
+Recent Completed Tasks:
+{recent_tasks}
+
+Generate {expected_step_count} planning steps that help the user:
+1. Brain dump all tasks and ideas
+2. Prioritize based on energy level and deadlines
+3. Time block with realistic estimates (include 25% buffer)
+4. Build in flexibility for ADHD (no back-to-back scheduling)
+5. Review and commit to the plan
+
+Adapt step complexity to {user_energy_label} energy:
+- Low energy: Simpler steps, more breaks, gentle approach
+- Medium energy: Standard workflow, balanced pace
+- High energy: Detailed planning, ambitious but realistic
+
+Current time is {time_of_day}, so focus appropriate activities for this time.
+"""

@@ -13,9 +13,11 @@ import logging
 from datetime import datetime, date
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from src.api.auth import get_current_user
+from src.core.task_models import User
 from src.database.enhanced_adapter import get_enhanced_database
 
 logger = logging.getLogger(__name__)
@@ -103,7 +105,7 @@ def has_ritual_today(user_id: str) -> bool:
 
 @router.get("/check", response_model=RitualCheckResponse)
 async def check_ritual(
-    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
+    current_user: User = Depends(get_current_user)
 ):
     """
     Check if morning ritual should be shown to user.
@@ -119,6 +121,7 @@ async def check_ritual(
     - User hasn't completed it today
     - User opens the app (triggered by frontend)
     """
+    user_id = current_user.user_id
     try:
         is_morning = is_morning_time()
         completed = has_ritual_today(user_id)
@@ -150,7 +153,7 @@ async def check_ritual(
 @router.post("/complete", response_model=RitualCompleteResponse)
 async def complete_ritual(
     ritual_data: RitualCompleteRequest,
-    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
+    current_user: User = Depends(get_current_user)
 ):
     """
     Complete (or skip) the morning ritual.
@@ -161,6 +164,7 @@ async def complete_ritual(
 
     Only one ritual per day allowed.
     """
+    user_id = current_user.user_id
     try:
         db = get_enhanced_database()
         conn = db.get_connection()
@@ -235,7 +239,7 @@ async def complete_ritual(
 
 @router.get("/stats", response_model=RitualStatsResponse)
 async def get_ritual_stats(
-    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
+    current_user: User = Depends(get_current_user)
 ):
     """
     Get morning ritual completion statistics.
@@ -246,6 +250,7 @@ async def get_ritual_stats(
     - Current streak (consecutive days)
     - Completion rate percentage
     """
+    user_id = current_user.user_id
     try:
         db = get_enhanced_database()
         conn = db.get_connection()
@@ -314,13 +319,14 @@ async def get_ritual_stats(
 
 @router.get("/today")
 async def get_todays_ritual(
-    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
+    current_user: User = Depends(get_current_user)
 ):
     """
     Get today's ritual if it exists.
 
     Returns the focus tasks selected in this morning's ritual.
     """
+    user_id = current_user.user_id
     try:
         db = get_enhanced_database()
         conn = db.get_connection()

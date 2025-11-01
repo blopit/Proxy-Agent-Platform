@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Clock } from 'lucide-react';
-import { spacing, fontSize, borderRadius, iconSize, semanticColors, colors } from '@/lib/design-system';
-import Ticker from '@/components/mobile/Ticker';
+import { spacing, fontSize, borderRadius, iconSize, semanticColors } from '@/lib/design-system';
+import Ticker from '@/components/mobile/core/Ticker';
 
 interface CapturePageProps {
   onTaskCaptured?: () => void;
@@ -38,19 +38,50 @@ const CapturePage: React.FC<CapturePageProps> = React.memo(({
   }, [recentCaptures.length]);
 
   return (
-    <div className="h-full flex flex-col" style={{ backgroundColor: semanticColors.bg.primary }}>
+    <div
+      className="h-full flex flex-col"
+      style={{ backgroundColor: semanticColors.bg.primary }}
+    >
       {/* Scrollable Content - Recent Captures at top, Suggestions at bottom */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto" style={{ padding: spacing[4], paddingBottom: '200px' }}>
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto"
+        style={{
+          padding: spacing[4],
+          paddingBottom: '200px'
+        }}
+      >
         {/* Recent Captures */}
         {recentCaptures.length > 0 && (
           <div style={{ marginBottom: spacing[6] }}>
-            <div className="flex items-center" style={{ gap: spacing[2], marginBottom: spacing[2] }}>
-              <Clock size={iconSize.sm} style={{ color: semanticColors.text.secondary }} />
-              <h3 style={{ fontSize: fontSize.sm, color: semanticColors.text.secondary, fontWeight: 'bold' }}>
+            <div
+              className="flex items-center"
+              style={{
+                gap: spacing[2],
+                marginBottom: spacing[2]
+              }}
+            >
+              <Clock
+                size={iconSize.sm}
+                style={{ color: semanticColors.text.secondary }}
+              />
+              <h3
+                style={{
+                  fontSize: fontSize.sm,
+                  color: semanticColors.text.secondary,
+                  fontWeight: 'bold'
+                }}
+              >
                 Recent
               </h3>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: spacing[2]
+              }}
+            >
               {recentCaptures.map((capture, index) => (
                 <div
                   key={index}
@@ -61,7 +92,13 @@ const CapturePage: React.FC<CapturePageProps> = React.memo(({
                     border: `1px solid ${semanticColors.border.default}`
                   }}
                 >
-                  <p style={{ fontSize: fontSize.sm, color: semanticColors.text.primary }}>
+                  <p
+                    style={{
+                      fontSize: fontSize.sm,
+                      color: semanticColors.text.primary,
+                      margin: 0
+                    }}
+                  >
                     {capture}
                   </p>
                 </div>
@@ -79,12 +116,24 @@ const CapturePage: React.FC<CapturePageProps> = React.memo(({
                 messages={suggestionLabels}
                 intervalMin={6000}
                 intervalMax={10000}
-                className="text-[#586e75] font-semibold uppercase tracking-wide text-xs"
+                style={{
+                  color: semanticColors.text.secondary,
+                  fontWeight: 600,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  fontSize: fontSize.xs
+                }}
               />
             </div>
 
             {/* Suggestion examples - 3 tickers */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[2] }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: spacing[2]
+              }}
+            >
               {[0, 1, 2].map((index) => (
                 <button
                   key={index}
@@ -94,7 +143,7 @@ const CapturePage: React.FC<CapturePageProps> = React.memo(({
                       onExampleClick(suggestionExamples[randomIndex]);
                     }
                   }}
-                  className="text-left hover:bg-[#002b36] hover:border-[#2aa198] transition-all"
+                  className="text-left"
                   style={{
                     padding: spacing[3],
                     backgroundColor: semanticColors.bg.secondary,
@@ -103,14 +152,26 @@ const CapturePage: React.FC<CapturePageProps> = React.memo(({
                     border: `1px solid ${semanticColors.border.default}`,
                     minHeight: '44px',
                     display: 'flex',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = semanticColors.bg.primary;
+                    e.currentTarget.style.borderColor = semanticColors.border.accent;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = semanticColors.bg.secondary;
+                    e.currentTarget.style.borderColor = semanticColors.border.default;
                   }}
                 >
                   <Ticker
                     messages={suggestionExamples}
                     intervalMin={10000}
                     intervalMax={15000}
-                    className="text-[#93a1a1]"
+                    style={{
+                      color: semanticColors.text.primary
+                    }}
                   />
                 </button>
               ))}

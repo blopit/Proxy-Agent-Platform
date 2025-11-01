@@ -170,6 +170,81 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
         )
 
 
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> User:
+    """
+    Get current authenticated user from JWT token.
+
+    This dependency should be used in all protected endpoints to:
+    1. Verify the JWT token
+    2. Extract user_id from token
+    3. Fetch and return the full User object
+
+    Args:
+        credentials: HTTP Bearer token from request
+
+    Returns:
+        User object for the authenticated user
+
+    Raises:
+        HTTPException 401: If token is invalid or expired
+        HTTPException 401: If user_id missing from token
+        HTTPException 404: If user not found in database
+        HTTPException 403: If user account is inactive
+
+    Example:
+        @router.get("/protected")
+        def protected_route(current_user: User = Depends(get_current_user)):
+            return {"user_id": current_user.user_id}
+    """
+    try:
+        # Decode and verify the token
+        payload = jwt.decode(
+            credentials.credentials,
+            settings.jwt_secret_key,
+            algorithms=[settings.jwt_algorithm],
+            options={"require": ["exp"], "verify_exp": True}
+        )
+
+        # Extract user_id from token
+        user_id: str = payload.get("user_id")
+        if user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        # Fetch user from database
+        user = user_repo.get_by_id(user_id)
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
+            )
+
+        # Check if user is active
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Inactive user account",
+            )
+
+        return user
+
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except jwt.PyJWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
 # Initialize repository
 user_repo = UserRepository()
 

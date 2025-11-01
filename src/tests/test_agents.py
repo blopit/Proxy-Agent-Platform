@@ -11,7 +11,7 @@ from src.agents.focus_agent import FocusAgent
 from src.agents.registry import AgentRegistry
 from src.agents.task_agent import TaskAgent
 from src.core.models import AgentRequest, Message
-from src.database.adapter import DatabaseAdapter
+from src.database.enhanced_adapter import EnhancedDatabaseAdapter
 
 
 @pytest.fixture
@@ -22,7 +22,7 @@ def temp_db():
     os.close(fd)
 
     # Create database adapter
-    db = DatabaseAdapter(path)
+    db = EnhancedDatabaseAdapter(path)
 
     yield db
 

@@ -4,10 +4,12 @@
  * Features:
  * - Smooth SVG checkmark animation (~0.4s)
  * - Strikethrough effect that shoots across label (~0.3s)
- * - Theme-aware using CSS variables (supports Storybook theme switching)
+ * - Theme-aware using design system tokens (supports all 20+ themes)
  * - Size variants: full (24px), micro (18px), nano (14px)
  * - Optimized for dopamine hits on micro-step completion
  * - Accessible with keyboard support and ARIA labels
+ * - Mobile-first with 44×44px touch targets
+ * - Reduced motion support
  *
  * Animation sequence:
  * 1. Click checkbox → SVG checkmark draws (0-0.4s)
@@ -18,6 +20,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import {
+  spacing,
+  fontSize,
+  fontWeight,
+  lineHeight,
+  semanticColors,
+  colors,
+  borderRadius,
+  duration
+} from '@/lib/design-system';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 // ============================================================================
 // Types
@@ -37,33 +50,36 @@ export interface TaskCheckboxProps {
 }
 
 // ============================================================================
-// Size Configurations (matches ChevronStep pattern)
+// Size Configurations - Using Design System Tokens
 // ============================================================================
 
 const SIZE_CONFIG = {
   full: {
     checkboxSize: 24,
-    fontSize: '14px',
-    lineHeight: '20px',
-    padding: '6px',
+    fontSize: fontSize.sm,        // 14px
+    lineHeight: lineHeight.normal, // 1.5
+    padding: spacing[2],          // 8px (mobile-friendly)
     strikeWidth: '2px',
     checkStroke: '2.5px',
+    minTouchTarget: '44px'        // WCAG touch target
   },
   micro: {
     checkboxSize: 18,
-    fontSize: '12px',
-    lineHeight: '16px',
-    padding: '4px',
+    fontSize: fontSize.xs,        // 12px
+    lineHeight: lineHeight.tight, // 1.2
+    padding: spacing[1],          // 4px
     strikeWidth: '1.5px',
     checkStroke: '2px',
+    minTouchTarget: '44px'        // WCAG touch target
   },
   nano: {
     checkboxSize: 14,
-    fontSize: '10px',
-    lineHeight: '14px',
-    padding: '3px',
+    fontSize: fontSize.xs,        // 12px
+    lineHeight: lineHeight.tight, // 1.2
+    padding: spacing[1],          // 4px
     strikeWidth: '1.5px',
     checkStroke: '1.5px',
+    minTouchTarget: '44px'        // WCAG touch target
   },
 };
 
@@ -83,6 +99,7 @@ export default function TaskCheckbox({
 }: TaskCheckboxProps) {
   const [isChecked, setIsChecked] = useState(checked);
   const [showStrikethrough, setShowStrikethrough] = useState(checked);
+  const shouldReduceMotion = useReducedMotion();
 
   const config = SIZE_CONFIG[size];
   const uniqueId = `task-checkbox-${id}`;
@@ -118,21 +135,25 @@ export default function TaskCheckbox({
       className={`task-checkbox-wrapper ${className}`}
       style={{
         display: 'grid',
-        gridTemplateColumns: `${config.checkboxSize}px auto`,
+        gridTemplateColumns: `${config.minTouchTarget} auto`,
         alignItems: 'center',
-        gap: '12px',
+        gap: spacing[3],              // 12px
         padding: config.padding,
         opacity: disabled ? 0.5 : 1,
         cursor: disabled ? 'not-allowed' : 'pointer',
+        minHeight: config.minTouchTarget  // 44px touch target
       }}
     >
-      {/* SVG Checkbox with checkmark animation */}
+      {/* SVG Checkbox with checkmark animation - 44px touch target wrapper */}
       <div
         className="task-checkbox"
         style={{
           position: 'relative',
-          width: `${config.checkboxSize}px`,
-          height: `${config.checkboxSize}px`,
+          width: config.minTouchTarget,
+          height: config.minTouchTarget,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}
       >
         <input
@@ -146,28 +167,28 @@ export default function TaskCheckbox({
             WebkitAppearance: 'none',
             MozAppearance: 'none',
             position: 'absolute',
-            width: '100%',
-            height: '100%',
+            width: `${config.checkboxSize}px`,
+            height: `${config.checkboxSize}px`,
             cursor: disabled ? 'not-allowed' : 'pointer',
-            backgroundColor: 'var(--background, #ffffff)',
+            backgroundColor: semanticColors.bg.primary,
             border: `${isChecked ? '2px' : '1px'} solid`,
             borderColor: isChecked
-              ? 'var(--primary, #268bd2)'
-              : 'var(--border, #d1d6ee)',
-            borderRadius: '4px',
+              ? colors.blue  // Scout mode color for completion
+              : semanticColors.border.default,
+            borderRadius: borderRadius.sm,  // 4px
             outline: 'none',
             margin: 0,
             padding: 0,
-            transition: 'all 0.2s linear',
+            transition: shouldReduceMotion ? 'none' : `all ${duration.fast}`,
           }}
           onMouseEnter={(e) => {
             if (!disabled && !isChecked) {
-              e.currentTarget.style.borderColor = 'var(--muted-foreground, #bbc1e1)';
+              e.currentTarget.style.borderColor = semanticColors.text.secondary;
             }
           }}
           onMouseLeave={(e) => {
             if (!disabled && !isChecked) {
-              e.currentTarget.style.borderColor = 'var(--border, #d1d6ee)';
+              e.currentTarget.style.borderColor = semanticColors.border.default;
             }
           }}
         />
@@ -176,19 +197,22 @@ export default function TaskCheckbox({
         <svg
           style={{
             position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: `${config.checkboxSize}px`,
+            height: `${config.checkboxSize}px`,
             pointerEvents: 'none',
             fill: 'none',
-            stroke: 'var(--primary, #268bd2)',
+            stroke: colors.blue,  // Scout mode color
             strokeDasharray: isChecked ? '16 93' : '93',
             strokeDashoffset: isChecked ? '109' : '94',
             strokeLinecap: 'round',
             strokeLinejoin: 'round',
             strokeWidth: config.checkStroke,
-            transition: 'stroke-dasharray 0.4s, stroke-dashoffset 0.4s',
+            transition: shouldReduceMotion
+              ? 'none'
+              : 'stroke-dasharray 0.4s, stroke-dashoffset 0.4s',
           }}
         >
           <use xlinkHref={`#${symbolId}`} />
@@ -210,11 +234,15 @@ export default function TaskCheckbox({
           cursor: disabled ? 'not-allowed' : 'pointer',
           fontSize: config.fontSize,
           lineHeight: config.lineHeight,
+          fontWeight: fontWeight.regular,
           color: showStrikethrough
-            ? 'var(--muted-foreground, #93a1a1)'
-            : 'var(--foreground, #073642)',
-          transition: 'color 0.3s ease',
+            ? semanticColors.text.muted
+            : semanticColors.text.primary,
+          transition: shouldReduceMotion ? 'none' : `color ${duration.normal}`,
           userSelect: 'none',
+          minHeight: config.minTouchTarget,  // Align with touch target
+          display: 'flex',
+          alignItems: 'center'
         }}
       >
         {/* Strikethrough line (animates from left to right) */}
@@ -225,10 +253,12 @@ export default function TaskCheckbox({
             left: 0,
             top: '50%',
             height: config.strikeWidth,
-            backgroundColor: 'var(--muted-foreground, #93a1a1)',
-            borderRadius: '2px',
+            backgroundColor: semanticColors.text.muted,
+            borderRadius: borderRadius.sm,  // 4px
             width: showStrikethrough ? '100%' : '0%',
-            transition: 'width 0.3s ease 0.1s',
+            transition: shouldReduceMotion
+              ? 'none'
+              : `width ${duration.normal} ease 0.1s`,
             transform: 'translateY(-50%)',
           }}
         />
@@ -239,7 +269,7 @@ export default function TaskCheckbox({
 
       <style jsx>{`
         .task-checkbox input:focus {
-          box-shadow: 0 0 0 2px var(--ring, rgba(38, 139, 210, 0.3));
+          box-shadow: 0 0 0 2px ${colors.blue}4D;
         }
 
         .task-checkbox input:hover:not(:disabled) {

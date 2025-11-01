@@ -104,3 +104,10 @@ backend.pid
 
 # References (cloned repos for inspiration)
 references/
+
+# SQLite WAL (Write-Ahead Logging) files
+*.db-shm
+*.db-wal
+
+# Claude Code PRP Files (auto-generated task instructions)
+.claude/prps/

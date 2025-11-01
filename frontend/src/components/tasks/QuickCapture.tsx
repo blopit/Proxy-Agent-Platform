@@ -1,7 +1,21 @@
+'use client';
+
 import React, { useState, useEffect, useRef } from 'react'
 import { Mic, MicOff, Send, Loader2 } from 'lucide-react'
 import { taskApi, TaskApiError } from '@/services/taskApi'
 import { Task, QuickCaptureRequest } from '@/types/task'
+import {
+  spacing,
+  fontSize,
+  fontWeight,
+  lineHeight,
+  semanticColors,
+  colors,
+  borderRadius,
+  duration,
+  iconSize
+} from '@/lib/design-system'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
 
 interface QuickCaptureProps {
   userId: string
@@ -46,6 +60,7 @@ export function QuickCapture({ userId, onTaskCreated, className = '' }: QuickCap
 
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const shouldReduceMotion = useReducedMotion()
 
   // Get user location on mount
   useEffect(() => {
@@ -186,29 +201,77 @@ export function QuickCapture({ userId, onTaskCreated, className = '' }: QuickCap
   }, [text, isListening])
 
   return (
-    <div className={`glass-card rounded-xl p-6 ${className}`}>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">Quick Capture</h3>
+    <div
+      className={`glass-card ${className}`}
+      style={{
+        borderRadius: borderRadius.lg,  // 12px
+        padding: spacing[6],            // 24px (mobile-friendly)
+      }}
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[4] }}>
+        {/* Header with voice button */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h3
+            style={{
+              fontSize: fontSize.lg,           // 18px
+              fontWeight: fontWeight.semibold, // 600
+              lineHeight: lineHeight.normal,   // 1.5
+              color: semanticColors.text.primary,
+            }}
+          >
+            Quick Capture
+          </h3>
           {recognitionRef.current && (
             <button
               type="button"
               onClick={handleVoiceCapture}
               disabled={isLoading}
-              className={`p-2 rounded-lg transition-colors ${
-                isListening
-                  ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                  : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
               aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
+              style={{
+                minWidth: '44px',   // Touch target
+                minHeight: '44px',  // Touch target
+                padding: spacing[2], // 8px
+                borderRadius: borderRadius.base,  // 8px
+                backgroundColor: isListening
+                  ? semanticColors.error.light
+                  : semanticColors.accent.secondary,
+                color: isListening
+                  ? semanticColors.error.dark
+                  : colors.blue,  // Scout mode (capture)
+                border: 'none',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                opacity: isLoading ? 0.5 : 1,
+                transition: shouldReduceMotion ? 'none' : `all ${duration.fast}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              onMouseEnter={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.opacity = '0.8';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isLoading) {
+                  e.currentTarget.style.opacity = '1';
+                }
+              }}
             >
-              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              {isListening ? (
+                <MicOff style={{ width: iconSize.sm, height: iconSize.sm }} />
+              ) : (
+                <Mic style={{ width: iconSize.sm, height: iconSize.sm }} />
+              )}
             </button>
           )}
         </div>
 
-        <form onSubmit={handleTextSubmit} className="space-y-4">
-          <div className="relative">
+        <form
+          onSubmit={handleTextSubmit}
+          style={{ display: 'flex', flexDirection: 'column', gap: spacing[4] }}
+        >
+          {/* Input field with mobile-first design */}
+          <div style={{ position: 'relative' }}>
             <input
               ref={inputRef}
               type="text"
@@ -216,47 +279,167 @@ export function QuickCapture({ userId, onTaskCreated, className = '' }: QuickCap
               onChange={(e) => setText(e.target.value)}
               placeholder="Quick capture a task..."
               disabled={isLoading || isListening}
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{
+                width: '100%',
+                minHeight: '44px',              // Touch target
+                padding: `${spacing[3]}px ${spacing[4]}px`,  // 12px 16px
+                fontSize: fontSize.base,        // 16px (prevents iOS zoom)
+                fontWeight: fontWeight.regular, // 400
+                lineHeight: lineHeight.normal,  // 1.5
+                color: semanticColors.text.primary,
+                backgroundColor: semanticColors.bg.primary,
+                border: `1px solid ${semanticColors.border.default}`,
+                borderRadius: borderRadius.base,  // 8px
+                outline: 'none',
+                cursor: isLoading || isListening ? 'not-allowed' : 'text',
+                opacity: isLoading || isListening ? 0.5 : 1,
+                transition: shouldReduceMotion ? 'none' : `all ${duration.normal}`,
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = colors.blue;
+                e.currentTarget.style.boxShadow = `0 0 0 2px ${colors.blue}4D`;
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = semanticColors.border.default;
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             />
             {isListening && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div className="flex items-center space-x-2 text-red-600">
-                  <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
-                  <span className="text-sm font-medium">Listening...</span>
+              <div
+                style={{
+                  position: 'absolute',
+                  right: spacing[3],  // 12px
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: spacing[2],  // 8px
+                    color: semanticColors.error.default,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: spacing[2],   // 8px
+                      height: spacing[2],  // 8px
+                      backgroundColor: semanticColors.error.default,
+                      borderRadius: borderRadius.full,
+                      animation: shouldReduceMotion ? 'none' : 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: fontSize.sm,           // 14px
+                      fontWeight: fontWeight.medium,   // 500
+                    }}
+                  >
+                    Listening...
+                  </span>
                 </div>
               </div>
             )}
           </div>
 
+          {/* Submit button with touch target */}
           <button
             type="submit"
             disabled={!text.trim() || isLoading || isListening}
-            className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              width: '100%',
+              minHeight: '44px',              // Touch target
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: spacing[2],                // 8px
+              backgroundColor: colors.cyan,   // Capture mode color
+              color: semanticColors.text.inverse,
+              padding: `${spacing[3]}px ${spacing[4]}px`,  // 12px 16px
+              borderRadius: borderRadius.base,  // 8px
+              border: 'none',
+              fontSize: fontSize.base,        // 16px
+              fontWeight: fontWeight.medium,  // 500
+              cursor: (!text.trim() || isLoading || isListening) ? 'not-allowed' : 'pointer',
+              opacity: (!text.trim() || isLoading || isListening) ? 0.5 : 1,
+              transition: shouldReduceMotion ? 'none' : `all ${duration.normal}`,
+            }}
+            onFocus={(e) => {
+              if (text.trim() && !isLoading && !isListening) {
+                e.currentTarget.style.boxShadow = `0 0 0 2px ${colors.cyan}4D`;
+              }
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+            onMouseEnter={(e) => {
+              if (text.trim() && !isLoading && !isListening) {
+                e.currentTarget.style.opacity = '0.9';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (text.trim() && !isLoading && !isListening) {
+                e.currentTarget.style.opacity = '1';
+              }
+            }}
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 style={{ width: iconSize.sm, height: iconSize.sm, animation: 'spin 1s linear infinite' }} />
                 <span>Capturing...</span>
               </>
             ) : (
               <>
-                <Send className="w-4 h-4" />
+                <Send style={{ width: iconSize.sm, height: iconSize.sm }} />
                 <span>Capture</span>
               </>
             )}
           </button>
         </form>
 
-        {/* Status Messages */}
+        {/* Error message */}
         {error && (
-          <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600 text-sm">{error}</p>
+          <div
+            style={{
+              padding: spacing[3],  // 12px
+              backgroundColor: semanticColors.error.light,
+              border: `1px solid ${semanticColors.error.default}`,
+              borderRadius: borderRadius.base,  // 8px
+            }}
+          >
+            <p
+              style={{
+                color: semanticColors.error.dark,
+                fontSize: fontSize.sm,  // 14px
+                margin: 0,
+              }}
+            >
+              {error}
+            </p>
           </div>
         )}
 
+        {/* Success message */}
         {successMessage && (
-          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-green-600 text-sm font-medium">{successMessage}</p>
+          <div
+            style={{
+              padding: spacing[3],  // 12px
+              backgroundColor: semanticColors.success.light,
+              border: `1px solid ${semanticColors.success.default}`,
+              borderRadius: borderRadius.base,  // 8px
+            }}
+          >
+            <p
+              style={{
+                color: semanticColors.success.dark,
+                fontSize: fontSize.sm,           // 14px
+                fontWeight: fontWeight.medium,   // 500
+                margin: 0,
+              }}
+            >
+              {successMessage}
+            </p>
           </div>
         )}
       </div>

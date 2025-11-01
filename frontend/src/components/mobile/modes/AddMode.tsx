@@ -36,7 +36,7 @@ import {
   Database,
 } from 'lucide-react';
 import { spacing, fontSize, borderRadius, iconSize, semanticColors, colors } from '@/lib/design-system';
-import Ticker from '@/components/mobile/Ticker';
+import Ticker from '@/components/mobile/core/Ticker';
 
 // ============================================================================
 // Types

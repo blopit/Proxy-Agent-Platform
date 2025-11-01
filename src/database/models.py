@@ -424,3 +424,158 @@ class UserAchievement(Base):
 
     def __repr__(self) -> str:
         return f"<UserAchievement(user_id={self.user_id}, achievement_id={self.achievement_id})>"
+
+
+# ============================================================================
+# Provider Integration Models (added for OAuth 2.0 integrations)
+# ============================================================================
+
+
+class UserIntegration(Base):
+    """OAuth provider connection model"""
+
+    __tablename__ = "user_integrations"
+
+    integration_id = Column(String, primary_key=True)
+    user_id = Column(
+        String,
+        ForeignKey("users.user_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # Provider details
+    provider = Column(String, nullable=False, index=True)
+    provider_user_id = Column(String)
+    provider_username = Column(String)
+
+    # Connection status
+    status = Column(String, nullable=False, default="disconnected", index=True)
+    error_message = Column(Text)
+    last_sync_at = Column(DateTime(timezone=True))
+    next_sync_at = Column(DateTime(timezone=True))
+
+    # OAuth credentials (encrypted at rest)
+    access_token = Column(Text)
+    refresh_token = Column(Text)
+    token_type = Column(String)
+    token_expires_at = Column(DateTime(timezone=True))
+    scopes = Column(Text, default="[]")  # JSON array
+
+    # Sync configuration
+    sync_enabled = Column(Boolean, default=True)
+    sync_frequency_minutes = Column(Integer, default=15)
+    auto_generate_tasks = Column(Boolean, default=True)
+
+    # Provider-specific settings
+    settings = Column(Text, default="{}")  # JSON configuration
+    integration_metadata = Column("metadata", Text, default="{}")
+    created_at = Column(DateTime(timezone=True), default=utc_now)
+    updated_at = Column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+    # Relationships
+    integration_tasks = relationship(
+        "IntegrationTask", back_populates="integration", cascade="all, delete-orphan"
+    )
+    sync_logs = relationship(
+        "IntegrationSyncLog", back_populates="integration", cascade="all, delete-orphan"
+    )
+
+    def __repr__(self) -> str:
+        return f"<UserIntegration(integration_id={self.integration_id}, provider={self.provider}, status={self.status})>"
+
+
+class IntegrationTask(Base):
+    """AI-generated task suggestion from provider data"""
+
+    __tablename__ = "integration_tasks"
+
+    integration_task_id = Column(String, primary_key=True)
+    integration_id = Column(
+        String,
+        ForeignKey("user_integrations.integration_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    task_id = Column(String, ForeignKey("tasks.task_id", ondelete="SET NULL"))
+
+    # Provider item details
+    provider_item_id = Column(String, nullable=False, index=True)
+    provider_item_type = Column(String, nullable=False, index=True)
+    provider_url = Column(Text)
+
+    # Suggested task details
+    suggested_title = Column(String, nullable=False)
+    suggested_description = Column(Text)
+    suggested_priority = Column(String, default="medium")
+    suggested_due_date = Column(DateTime(timezone=True))
+    suggested_estimated_hours = Column(Numeric(10, 2))
+    suggested_tags = Column(Text, default="[]")  # JSON array
+
+    # AI generation metadata
+    ai_confidence = Column(Numeric(3, 2))
+    ai_reasoning = Column(Text)
+    generation_model = Column(String)
+
+    # Sync status
+    sync_status = Column(String, nullable=False, default="pending_approval", index=True)
+    reviewed_at = Column(DateTime(timezone=True))
+    reviewed_by = Column(String)
+
+    # Provider item snapshot
+    provider_item_snapshot = Column(Text, default="{}")  # JSON snapshot
+
+    # Metadata
+    item_metadata = Column("metadata", Text, default="{}")
+    created_at = Column(DateTime(timezone=True), default=utc_now)
+    updated_at = Column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+    # Relationships
+    integration = relationship("UserIntegration", back_populates="integration_tasks")
+
+    def __repr__(self) -> str:
+        return f"<IntegrationTask(integration_task_id={self.integration_task_id}, sync_status={self.sync_status})>"
+
+
+class IntegrationSyncLog(Base):
+    """Sync history and error tracking for integrations"""
+
+    __tablename__ = "integration_sync_logs"
+
+    log_id = Column(String, primary_key=True)
+    integration_id = Column(
+        String,
+        ForeignKey("user_integrations.integration_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # Sync details
+    sync_started_at = Column(DateTime(timezone=True), default=utc_now, index=True)
+    sync_completed_at = Column(DateTime(timezone=True))
+    sync_status = Column(String, nullable=False)  # 'success', 'partial_success', 'failed'
+    error_message = Column(Text)
+
+    # Sync stats
+    items_fetched = Column(Integer, default=0)
+    tasks_generated = Column(Integer, default=0)
+    tasks_auto_approved = Column(Integer, default=0)
+    tasks_pending_review = Column(Integer, default=0)
+
+    # Provider API usage
+    api_calls_made = Column(Integer, default=0)
+    quota_remaining = Column(Integer)
+
+    # Metadata
+    log_metadata = Column("metadata", Text, default="{}")
+    created_at = Column(DateTime(timezone=True), default=utc_now)
+
+    # Relationships
+    integration = relationship("UserIntegration", back_populates="sync_logs")
+
+    def __repr__(self) -> str:
+        return f"<IntegrationSyncLog(log_id={self.log_id}, sync_status={self.sync_status})>"

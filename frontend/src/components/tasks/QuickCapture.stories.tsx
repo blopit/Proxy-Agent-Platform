@@ -31,7 +31,7 @@ jest.mock('@/services/taskApi', () => ({
 }));
 
 const meta: Meta<typeof QuickCapture> = {
-  title: 'Components/QuickCapture',
+  title: 'Tasks/QuickCapture',
   component: QuickCapture,
   parameters: {
     layout: 'centered',

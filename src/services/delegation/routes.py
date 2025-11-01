@@ -249,3 +249,249 @@ def get_agents(
         agent_type=agent_type, available_only=available_only or False
     )
     return [AgentCapability(**data) for data in agents_data]
+
+
+# ============================================================================
+# Task Query Endpoints (for dogfooding)
+# ============================================================================
+
+
+@router.get("/tasks", status_code=status.HTTP_200_OK)
+def get_tasks(
+    task_filter: Optional[str] = Query(None, alias="filter"),
+    db: EnhancedDatabaseAdapter = Depends(get_enhanced_database),
+) -> List[dict]:
+    """
+    Get all tasks with optional filtering.
+
+    Args:
+        task_filter: Filter type - 'all', 'coding', 'personal', 'unassigned', 'meta'
+        db: Database adapter
+
+    Returns:
+        List[dict]: List of tasks matching the filter
+    """
+    conn = db.get_connection()
+    cursor = conn.cursor()
+
+    # Base query
+    query = """
+        SELECT
+            task_id,
+            title,
+            description,
+            status,
+            priority,
+            delegation_mode,
+            estimated_hours,
+            created_at,
+            tags,
+            is_meta_task,
+            project_id,
+            scope,
+            capture_type
+        FROM tasks
+        WHERE 1=1
+    """
+
+    params = []
+
+    # Apply filters
+    if task_filter == 'coding':
+        # Coding tasks: backend, frontend, refactor, test, api, database
+        query += """ AND (
+            tags LIKE '%coding%'
+            OR tags LIKE '%backend%'
+            OR tags LIKE '%frontend%'
+            OR tags LIKE '%refactor%'
+            OR tags LIKE '%test%'
+            OR title LIKE '%BE-%'
+            OR title LIKE '%FE-%'
+        )"""
+    elif task_filter == 'personal':
+        # Personal tasks: not coding-related
+        query += """ AND tags NOT LIKE '%coding%'
+                 AND tags NOT LIKE '%backend%'
+                 AND tags NOT LIKE '%frontend%'
+                 AND title NOT LIKE '%BE-%'
+                 AND title NOT LIKE '%FE-%'"""
+    elif task_filter == 'unassigned':
+        # Tasks without assignments
+        query += """ AND task_id NOT IN (
+            SELECT DISTINCT task_id FROM task_assignments WHERE status != 'completed'
+        )"""
+    elif task_filter == 'meta':
+        # Only meta development tasks
+        query += " AND is_meta_task = 1"
+    # 'all' or None - no additional filter
+
+    # Order by priority
+    query += """
+        ORDER BY
+            CASE priority
+                WHEN 'critical' THEN 1
+                WHEN 'high' THEN 2
+                WHEN 'medium' THEN 3
+                ELSE 4
+            END,
+            created_at DESC
+    """
+
+    cursor.execute(query, params)
+    rows = cursor.fetchall()
+
+    tasks = []
+    for row in rows:
+        tasks.append({
+            "task_id": row["task_id"],
+            "title": row["title"],
+            "description": row["description"],
+            "status": row["status"],
+            "priority": row["priority"],
+            "delegation_mode": row["delegation_mode"],
+            "estimated_hours": row["estimated_hours"],
+            "created_at": row["created_at"],
+            "tags": row["tags"],
+            "is_meta_task": row["is_meta_task"],
+            "project_id": row["project_id"],
+            "scope": row["scope"],
+            "capture_type": row["capture_type"],
+        })
+
+    return tasks
+
+
+@router.get("/meta-tasks", status_code=status.HTTP_200_OK)
+def get_meta_tasks(
+    db: EnhancedDatabaseAdapter = Depends(get_enhanced_database),
+) -> List[dict]:
+    """
+    Get all meta development tasks (is_meta_task = true).
+
+    DEPRECATED: Use GET /tasks?filter=meta instead.
+
+    Returns:
+        List[dict]: List of development tasks for dogfooding
+    """
+    # Delegate to new endpoint
+    return get_tasks(task_filter='meta', db=db)
+
+
+# ============================================================================
+# Claude Code AI Assignment Endpoint
+# ============================================================================
+
+
+@router.post("/tasks/{task_id}/assign-to-claude", status_code=status.HTTP_201_CREATED)
+def assign_task_to_claude(
+    task_id: str,
+    repo: DelegationRepository = Depends(get_delegation_repo),
+    db: EnhancedDatabaseAdapter = Depends(get_enhanced_database),
+) -> dict:
+    """
+    Assign a coding task to Claude Code by generating a PRP file.
+
+    This endpoint:
+    1. Fetches the task details from the database
+    2. Validates it's a coding-appropriate task
+    3. Generates a PRP (Product Requirements Prompt) file
+    4. Creates an assignment record for 'claude-code' agent
+    5. Returns the PRP file path for user to execute via /execute-prp
+
+    Args:
+        task_id: Task identifier
+        repo: Delegation repository
+        db: Database adapter
+
+    Returns:
+        dict: Assignment details and PRP file path
+
+    Raises:
+        HTTPException: If task doesn't exist, not suitable for AI, or assignment fails
+    """
+    from pathlib import Path
+    from src.services.delegation.prp_generator import save_prp_file
+
+    # Fetch task from database
+    conn = db.get_connection()
+    cursor = conn.cursor()
+
+    query = """
+        SELECT
+            task_id, title, description, status, priority,
+            delegation_mode, estimated_hours, tags, is_meta_task, capture_type
+        FROM tasks
+        WHERE task_id = ?
+    """
+
+    cursor.execute(query, (task_id,))
+    row = cursor.fetchone()
+
+    if not row:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Task {task_id} not found"
+        )
+
+    task_dict = dict(row)
+
+    # Validate task is suitable for coding (has coding-related tags or title pattern)
+    title = task_dict.get('title', '')
+    tags = task_dict.get('tags', '')
+    coding_tags = ['coding', 'backend', 'frontend', 'refactor', 'test']
+
+    is_coding_task = (
+        any(tag in tags.lower() for tag in coding_tags)
+        or 'BE-' in title
+        or 'FE-' in title
+    )
+
+    if not is_coding_task:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Task '{task_dict['title']}' is not suitable for AI assignment. "
+                   f"Only coding tasks (backend, frontend, api, testing) can be assigned to Claude Code."
+        )
+
+    # Generate PRP file
+    try:
+        # Determine PRP directory (project root / .claude / prps)
+        project_root = Path(__file__).parent.parent.parent.parent
+        prp_dir = project_root / ".claude" / "prps"
+
+        # Convert tags string to list for PRP generator
+        if isinstance(tags, str):
+            task_dict['tags'] = [t.strip() for t in tags.split(',') if t.strip()]
+
+        prp_file_path = save_prp_file(task_dict, prp_dir)
+        relative_path = prp_file_path.relative_to(project_root)
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate PRP file: {str(e)}"
+        )
+
+    # Create assignment for claude-code agent
+    try:
+        assignment_data = repo.create_assignment(
+            task_id=task_id,
+            assignee_id='claude-code',
+            assignee_type='agent',
+            estimated_hours=task_dict.get('estimated_hours', 4.0),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to create assignment: {str(e)}"
+        )
+
+    return {
+        "success": True,
+        "message": f"Task assigned to Claude Code",
+        "task_id": task_id,
+        "task_title": task_dict['title'],
+        "assignment_id": assignment_data['assignment_id'],
+        "prp_file_path": str(relative_path),
+        "next_step": f"Run: /execute-prp {relative_path}",
+    }

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import AchievementGallery from '../../../components/mobile/AchievementGallery';
+import AchievementGallery from '../gamification/AchievementGallery';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -453,7 +453,7 @@ const MapperPage: React.FC<MapperPageProps> = ({ xp, level, streakDays }) => {
               </div>
               <div className="text-right">
                 <div className="text-xs text-[#586e75] uppercase tracking-wide">Total XP</div>
-                <div className="text-2xl font-bold text-[#93a1a1]">{xp.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-[#93a1a1]">{(xp ?? 0).toLocaleString()}</div>
               </div>
             </div>
 

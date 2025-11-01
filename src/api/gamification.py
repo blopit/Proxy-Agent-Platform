@@ -12,9 +12,11 @@ No achievements, leaderboards, or complex motivation algorithms - just core prog
 import logging
 from datetime import datetime, date
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from src.api.auth import get_current_user
+from src.core.task_models import User
 from src.database.enhanced_adapter import get_enhanced_database
 
 logger = logging.getLogger(__name__)
@@ -215,7 +217,7 @@ def update_streak(user_id: str) -> dict:
 
 @router.get("/progress", response_model=UserProgressResponse)
 async def get_user_progress(
-    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
+    current_user: User = Depends(get_current_user)
 ):
     """
     Get your current XP, level, and progress.
@@ -227,6 +229,7 @@ async def get_user_progress(
     - Current and longest streaks
     - Total tasks completed
     """
+    user_id = current_user.user_id
     try:
         progress = get_or_create_user_progress(user_id)
 
@@ -267,11 +270,10 @@ class AddXPRequest(BaseModel):
     """Request model for adding XP"""
     xp_amount: int = Field(..., ge=1, le=1000, description="XP to add")
     reason: str = Field("Task completed", description="Reason for XP")
-    user_id: str = Field("mobile-user", description="User ID")
 
 
 @router.post("/xp/add")
-async def add_xp(request: AddXPRequest):
+async def add_xp(request: AddXPRequest, current_user: User = Depends(get_current_user)):
     """
     Add XP to user (called when completing tasks/sessions).
 
@@ -283,7 +285,7 @@ async def add_xp(request: AddXPRequest):
     """
     xp_amount = request.xp_amount
     reason = request.reason
-    user_id = request.user_id
+    user_id = current_user.user_id
     try:
         db = get_enhanced_database()
         conn = db.get_connection()
@@ -345,7 +347,7 @@ async def add_xp(request: AddXPRequest):
 
 @router.get("/streak", response_model=StreakResponse)
 async def get_streak(
-    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
+    current_user: User = Depends(get_current_user)
 ):
     """
     Get your current streak status.
@@ -353,6 +355,7 @@ async def get_streak(
     Streak = consecutive days completing at least one task.
     Breaks if you skip a day.
     """
+    user_id = current_user.user_id
     try:
         progress = get_or_create_user_progress(user_id)
 

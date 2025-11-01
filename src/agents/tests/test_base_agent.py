@@ -15,13 +15,13 @@ from unittest.mock import Mock, AsyncMock, patch
 
 from src.agents.base import BaseProxyAgent
 from src.core.models import AgentRequest, AgentResponse, Message
-from src.database.adapter import DatabaseAdapter
+from src.database.enhanced_adapter import EnhancedDatabaseAdapter
 
 
 @pytest.fixture
 def mock_db():
     """Create mock database adapter"""
-    db = Mock(spec=DatabaseAdapter)
+    db = Mock(spec=EnhancedDatabaseAdapter)
     db.store_message = AsyncMock(return_value="msg_123")
     db.get_conversation_history = AsyncMock(return_value=[])
     return db

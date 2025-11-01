@@ -2,14 +2,16 @@
  * Utility functions for smooth color blending based on percentage values
  */
 
-// Color points for battery/energy indicators
+import { colors } from '@/lib/design-system';
+
+// Color points for battery/energy indicators (using Solarized colors)
 const COLOR_POINTS = [
-  { percentage: 0, color: '#000000' },    // Black
-  { percentage: 50, color: '#dc322f' },   // Red
-  { percentage: 65, color: '#b58900' },   // Yellow
-  { percentage: 80, color: '#859900' },   // Green
-  { percentage: 95, color: '#268bd2' },   // Blue
-  { percentage: 100, color: '#2aa198' }  // Cyan
+  { percentage: 0, color: colors.base03 },    // Dark background
+  { percentage: 50, color: colors.red },      // Red
+  { percentage: 65, color: colors.yellow },   // Yellow
+  { percentage: 80, color: colors.green },    // Green
+  { percentage: 95, color: colors.blue },     // Blue
+  { percentage: 100, color: colors.cyan }     // Cyan
 ];
 
 /**

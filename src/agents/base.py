@@ -5,7 +5,7 @@ Base Agent - Simple foundation for all proxy agents
 from datetime import datetime
 
 from src.core.models import AgentRequest, AgentResponse, Message
-from src.database.adapter import DatabaseAdapter
+from src.database.enhanced_adapter import EnhancedDatabaseAdapter
 
 
 class BaseProxyAgent:
@@ -14,7 +14,7 @@ class BaseProxyAgent:
     Uses database adapter for easy SQLite -> PostgreSQL migration
     """
 
-    def __init__(self, agent_type: str, db: DatabaseAdapter):
+    def __init__(self, agent_type: str, db: EnhancedDatabaseAdapter):
         self.agent_type = agent_type
         self.db = db
 

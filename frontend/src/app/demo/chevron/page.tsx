@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import ChevronProgress, { ChevronProgressVertical, ChevronStep } from '@/components/mobile/ChevronProgress'
+import ChevronProgress, { ChevronProgressVertical, ChevronStep } from '@/components/mobile/animations/ChevronProgress'
 import { spacing, semanticColors, fontSize } from '@/lib/design-system'
 
 export default function ChevronDemo() {

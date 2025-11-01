@@ -9,14 +9,14 @@ from src.agents.decomposer_agent import DecomposerAgent
 from src.agents.focus_agent import FocusAgent
 from src.agents.task_agent import TaskAgent
 from src.core.models import AgentRequest, AgentResponse
-from src.database.adapter import DatabaseAdapter, get_database
+from src.database.enhanced_adapter import EnhancedDatabaseAdapter, get_enhanced_database
 
 
 class AgentRegistry:
     """Simple registry for managing proxy agents"""
 
-    def __init__(self, db: DatabaseAdapter = None):
-        self.db = db or get_database()
+    def __init__(self, db: EnhancedDatabaseAdapter = None):
+        self.db = db or get_enhanced_database()
         self.agents: dict[str, BaseProxyAgent] = {
             "task": TaskAgent(self.db),
             "focus": FocusAgent(self.db),

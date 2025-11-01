@@ -63,7 +63,7 @@ jest.mock('@/services/taskApi', () => ({
 }));
 
 const meta: Meta<typeof TaskList> = {
-  title: 'Components/TaskList',
+  title: 'Tasks/TaskList',
   component: TaskList,
   parameters: {
     layout: 'padded',

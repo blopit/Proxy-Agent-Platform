@@ -52,8 +52,10 @@
 import React, { useState, useEffect } from 'react';
 import { X, CheckCircle2, Circle, Loader2, AlertCircle, User, Bot, FileText } from 'lucide-react';
 import ProgressBar from './ProgressBar';
-import ChevronStep, { type ChevronPosition } from '@/components/mobile/ChevronStep';
+import ChevronStep, { type ChevronPosition } from '@/components/mobile/core/ChevronStep';
 import OpenMoji from './OpenMoji';
+import { colors, semanticColors } from '@/lib/design-system';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 // ============================================================================
 // Types
@@ -124,13 +126,15 @@ interface StepSectionProps {
 }
 
 function StepSection({ step, index, totalSteps, isExpanded, size, tab, onClick, stepProgressPercent, onRetry, effectiveExpandedId, loadingChildren, hasNestedContent, activeProgress, activeProgressPulse = true }: StepSectionProps) {
-  // Text colors (Solarized theme)
+  const shouldReduceMotion = useReducedMotion();
+
+  // Text colors (design system)
   const textColors = {
-    pending: '#586e75',      // Solarized base01 (gray)
-    active: '#268bd2',       // Solarized blue
-    done: '#859900',         // Solarized green
-    error: '#dc322f',        // Solarized red
-    next: '#cb4b16',         // Solarized orange
+    pending: semanticColors.text.secondary,
+    active: colors.blue,
+    done: colors.green,
+    error: colors.red,
+    next: colors.orange,
   };
 
   // Get emoji for the step
@@ -458,6 +462,7 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
   activeProgress = 0,
   activeProgressPulse = true,
 }: AsyncJobTimelineProps) {
+  const shouldReduceMotion = useReducedMotion();
   const [expandedStepId, setExpandedStepId] = useState<string | null>(null);
   const [manualExpandId, setManualExpandId] = useState<string | null>(null);
   const [forceCollapsed, setForceCollapsed] = useState(false); // Track if user manually collapsed active step
@@ -688,8 +693,8 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
         ${className}
       `}
       style={{
-        backgroundColor: '#fdf6e3',  // Solarized base3 (light cream)
-        borderColor: '#eee8d5',      // Solarized base2 (slightly darker cream)
+        backgroundColor: semanticColors.bg.tertiary,
+        borderColor: semanticColors.border.default,
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
       }}
     >
@@ -698,17 +703,20 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
         <div className={`relative flex items-center justify-center mb-0.5 ${size === 'micro' ? '-mt-8' : '-mt-10'}`}>
           <p
             className={`line-clamp-1 w-full text-center mb-2 ${size === 'micro' ? 'text-[9px]' : 'text-[10px]'} font-medium ${effectiveExpandedId ? 'opacity-0' : ''}`}
-            style={{ color: '#586e75' }}  // Solarized base01
+            style={{ color: semanticColors.text.secondary }}
           >
             {jobName}
           </p>
           {(onClose || onDismiss) && (
             <button
               onClick={onDismiss || onClose}
-              className="absolute right-0 transition-colors flex-shrink-0"
-              style={{ color: '#93a1a1' }}  // Solarized base1
-              onMouseEnter={(e) => e.currentTarget.style.color = '#586e75'}  // Solarized base01
-              onMouseLeave={(e) => e.currentTarget.style.color = '#93a1a1'}  // Solarized base1
+              className="absolute right-0 flex-shrink-0"
+              style={{
+                color: semanticColors.text.primary,
+                transition: shouldReduceMotion ? 'none' : 'color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = semanticColors.text.secondary}
+              onMouseLeave={(e) => e.currentTarget.style.color = semanticColors.text.primary}
               aria-label={onDismiss ? "Dismiss" : "Close"}
             >
               <X size={size === 'micro' ? 10 : 12} />
@@ -782,12 +790,12 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
               segments={[
                 {
                   percentage: (steps.filter(s => s.leafType === 'DIGITAL').length / steps.length) * 100,
-                  color: '#2aa198',  // Solarized cyan (for digital/automated)
+                  color: colors.cyan,
                   label: `${steps.filter(s => s.leafType === 'DIGITAL').length} digital steps`,
                 },
                 {
                   percentage: (steps.filter(s => s.leafType === 'HUMAN').length / steps.length) * 100,
-                  color: '#6c71c4',  // Solarized violet (for human)
+                  color: colors.violet,
                   label: `${steps.filter(s => s.leafType === 'HUMAN').length} human steps`,
                 },
               ].filter(seg => seg.percentage > 0)}
@@ -804,7 +812,7 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
         )}
       </div>
 
-      {/* CSS animations for emoji blending (musical timing: 4/4 time at 120 BPM) */}
+      {/* CSS animations for emoji blending (musical timing: 4/4 time at 120 BPM) - disabled if reduced motion */}
       <style jsx>{`
         @keyframes emoji-show-color {
           0% {
@@ -851,17 +859,19 @@ const AsyncJobTimeline = React.memo(function AsyncJobTimeline({
           }
         }
 
-        :global(.emoji-blend-black) {
-          animation: emoji-show-black 4s ease-in-out infinite;
-        }
+        ${shouldReduceMotion ? '' : `
+          :global(.emoji-blend-black) {
+            animation: emoji-show-black 4s ease-in-out infinite;
+          }
 
-        :global(.emoji-blend-color) {
-          animation: emoji-show-color 4s ease-in-out infinite;
-        }
+          :global(.emoji-blend-color) {
+            animation: emoji-show-color 4s ease-in-out infinite;
+          }
 
-        :global(.active-progress-overlay) {
-          animation: shimmer-sweep 3s linear infinite;
-        }
+          :global(.active-progress-overlay) {
+            animation: shimmer-sweep 3s linear infinite;
+          }
+        `}
       `}</style>
     </div>
   );

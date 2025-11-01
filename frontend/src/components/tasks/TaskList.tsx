@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -15,6 +17,18 @@ import {
 } from 'lucide-react'
 import { taskApi, TaskApiError } from '@/services/taskApi'
 import { Task, TaskStatus, TaskPriority, TaskListResponse } from '@/types/task'
+import {
+  spacing,
+  fontSize,
+  fontWeight,
+  lineHeight,
+  semanticColors,
+  colors,
+  borderRadius,
+  duration,
+  iconSize,
+} from '@/lib/design-system'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
 
 interface TaskListProps {
   projectId: string
@@ -30,21 +44,53 @@ interface FilterState {
   sortOrder: 'asc' | 'desc'
 }
 
-const statusColors = {
-  [TaskStatus.TODO]: 'bg-gray-100 text-gray-700',
-  [TaskStatus.IN_PROGRESS]: 'bg-blue-100 text-blue-700',
-  [TaskStatus.BLOCKED]: 'bg-red-100 text-red-700',
-  [TaskStatus.REVIEW]: 'bg-yellow-100 text-yellow-700',
-  [TaskStatus.COMPLETED]: 'bg-green-100 text-green-700',
-  [TaskStatus.CANCELLED]: 'bg-gray-100 text-gray-500',
-}
+// Status colors using design system - theme-aware
+const getStatusColors = () => ({
+  [TaskStatus.TODO]: {
+    bg: semanticColors.bg.tertiary,
+    text: semanticColors.text.secondary
+  },
+  [TaskStatus.IN_PROGRESS]: {
+    bg: semanticColors.accent.secondary,
+    text: colors.blue
+  },
+  [TaskStatus.BLOCKED]: {
+    bg: semanticColors.error.light,
+    text: semanticColors.error.dark
+  },
+  [TaskStatus.REVIEW]: {
+    bg: semanticColors.warning.light,
+    text: semanticColors.warning.dark
+  },
+  [TaskStatus.COMPLETED]: {
+    bg: semanticColors.success.light,
+    text: semanticColors.success.dark
+  },
+  [TaskStatus.CANCELLED]: {
+    bg: semanticColors.bg.tertiary,
+    text: semanticColors.text.muted
+  },
+});
 
-const priorityColors = {
-  [TaskPriority.LOW]: 'bg-gray-100 text-gray-600',
-  [TaskPriority.MEDIUM]: 'bg-blue-100 text-blue-600',
-  [TaskPriority.HIGH]: 'bg-orange-100 text-orange-600',
-  [TaskPriority.CRITICAL]: 'bg-red-100 text-red-600',
-}
+// Priority colors using design system - theme-aware
+const getPriorityColors = () => ({
+  [TaskPriority.LOW]: {
+    bg: semanticColors.bg.tertiary,
+    text: semanticColors.text.secondary
+  },
+  [TaskPriority.MEDIUM]: {
+    bg: semanticColors.accent.secondary,
+    text: colors.blue  // Scout mode
+  },
+  [TaskPriority.HIGH]: {
+    bg: semanticColors.warning.light,
+    text: colors.orange  // Mend mode (attention)
+  },
+  [TaskPriority.CRITICAL]: {
+    bg: semanticColors.error.light,
+    text: semanticColors.error.dark
+  },
+});
 
 const statusIcons = {
   [TaskStatus.TODO]: Circle,
@@ -68,6 +114,10 @@ export function TaskList({ projectId, onTaskSelect, onTaskUpdate, className = ''
   const [activeTaskMenu, setActiveTaskMenu] = useState<string | null>(null)
   const [deletingTask, setDeletingTask] = useState<string | null>(null)
   const [isMobile, setIsMobile] = useState(false)
+
+  const shouldReduceMotion = useReducedMotion()
+  const statusColors = getStatusColors()
+  const priorityColors = getPriorityColors()
 
   // Check if mobile viewport
   useEffect(() => {
@@ -152,30 +202,83 @@ export function TaskList({ projectId, onTaskSelect, onTaskUpdate, className = ''
     }
   }
 
+  // Progress color using design system tokens
   const getProgressColor = (percentage: number) => {
-    if (percentage === 100) return 'bg-green-500'
-    if (percentage >= 75) return 'bg-blue-500'
-    if (percentage >= 50) return 'bg-yellow-500'
-    if (percentage >= 25) return 'bg-orange-500'
-    return 'bg-gray-300'
+    if (percentage === 100) return colors.green;      // Hunt mode (complete)
+    if (percentage >= 75) return colors.blue;         // Scout mode (active)
+    if (percentage >= 50) return colors.yellow;       // Caution
+    if (percentage >= 25) return colors.orange;       // Mend mode (needs attention)
+    return semanticColors.bg.tertiary;                // Minimal progress
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
-        <span className="ml-2 text-gray-600">Loading tasks...</span>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: `${spacing[12]}px 0`,  // 48px vertical
+        }}
+      >
+        <RefreshCw
+          style={{
+            width: iconSize.md,
+            height: iconSize.md,
+            color: colors.blue,  // Scout mode
+            animation: shouldReduceMotion ? 'none' : 'spin 1s linear infinite',
+          }}
+        />
+        <span
+          style={{
+            marginLeft: spacing[2],  // 8px
+            fontSize: fontSize.base,
+            color: semanticColors.text.secondary,
+          }}
+        >
+          Loading tasks...
+        </span>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <p className="text-red-600 mb-4">{error}</p>
+      <div
+        style={{
+          textAlign: 'center',
+          padding: `${spacing[12]}px 0`,  // 48px vertical
+        }}
+      >
+        <p
+          style={{
+            color: semanticColors.error.default,
+            marginBottom: spacing[4],  // 16px
+            fontSize: fontSize.base,
+          }}
+        >
+          {error}
+        </p>
         <button
           onClick={loadTasks}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          style={{
+            minHeight: '44px',  // Touch target
+            padding: `${spacing[2]}px ${spacing[4]}px`,  // 8px 16px
+            backgroundColor: colors.blue,  // Scout mode
+            color: semanticColors.text.inverse,
+            borderRadius: borderRadius.base,  // 8px
+            border: 'none',
+            fontSize: fontSize.base,
+            fontWeight: fontWeight.medium,
+            cursor: 'pointer',
+            transition: shouldReduceMotion ? 'none' : `all ${duration.normal}`,
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.opacity = '0.9';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.opacity = '1';
+          }}
         >
           Retry
         </button>
@@ -188,98 +291,181 @@ export function TaskList({ projectId, onTaskSelect, onTaskUpdate, className = ''
     'No tasks found'
 
   return (
-    <div className={`space-y-6 ${className}`} data-testid={isMobile ? 'task-list-mobile' : 'task-list-desktop'}>
+    <div
+      className={className}
+      data-testid={isMobile ? 'task-list-mobile' : 'task-list-desktop'}
+      style={{ display: 'flex', flexDirection: 'column', gap: spacing[6] }}
+    >
       {/* Header with Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-900">Tasks</h2>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: spacing[4],
+          alignItems: isMobile ? 'flex-start' : 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <h2
+          style={{
+            fontSize: fontSize.xl,
+            fontWeight: fontWeight.semibold,
+            color: semanticColors.text.primary,
+          }}
+        >
+          Tasks
+        </h2>
 
-        <div className="flex items-center space-x-2">
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2], flexWrap: 'wrap' }}>
           {/* Status Filters */}
-          <div className="flex items-center space-x-1">
-            <button
-              onClick={() => handleStatusFilter(undefined)}
-              className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                !filter.status ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => handleStatusFilter(TaskStatus.TODO)}
-              className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                filter.status === TaskStatus.TODO ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Todo
-            </button>
-            <button
-              onClick={() => handleStatusFilter(TaskStatus.IN_PROGRESS)}
-              className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                filter.status === TaskStatus.IN_PROGRESS ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              In Progress
-            </button>
-            <button
-              onClick={() => handleStatusFilter(TaskStatus.COMPLETED)}
-              className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                filter.status === TaskStatus.COMPLETED ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Completed
-            </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: spacing[1], flexWrap: 'wrap' }}>
+            {[
+              { label: 'All', value: undefined },
+              { label: 'Todo', value: TaskStatus.TODO },
+              { label: 'In Progress', value: TaskStatus.IN_PROGRESS },
+              { label: 'Completed', value: TaskStatus.COMPLETED },
+            ].map(({ label, value }) => (
+              <button
+                key={label}
+                onClick={() => handleStatusFilter(value)}
+                style={{
+                  minHeight: '44px',
+                  padding: `${spacing[1]}px ${spacing[3]}px`,
+                  fontSize: fontSize.sm,
+                  fontWeight: fontWeight.medium,
+                  borderRadius: borderRadius.full,
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: shouldReduceMotion ? 'none' : `all ${duration.normal}`,
+                  backgroundColor: filter.status === value ? colors.blue : semanticColors.bg.tertiary,
+                  color: filter.status === value ? semanticColors.text.inverse : semanticColors.text.secondary,
+                }}
+                onMouseEnter={(e) => {
+                  if (filter.status !== value) {
+                    e.currentTarget.style.backgroundColor = semanticColors.bg.hover;
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (filter.status !== value) {
+                    e.currentTarget.style.backgroundColor = semanticColors.bg.tertiary;
+                  }
+                }}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* Priority Filter */}
-          <div className="relative">
+          <div style={{ position: 'relative' }}>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center space-x-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[1],
+                minHeight: '44px',
+                padding: `${spacing[1]}px ${spacing[3]}px`,
+                fontSize: fontSize.sm,
+                fontWeight: fontWeight.medium,
+                backgroundColor: semanticColors.bg.tertiary,
+                color: semanticColors.text.secondary,
+                borderRadius: borderRadius.full,
+                border: 'none',
+                cursor: 'pointer',
+                transition: shouldReduceMotion ? 'none' : `all ${duration.normal}`,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = semanticColors.bg.hover;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = semanticColors.bg.tertiary;
+              }}
             >
-              <Filter className="w-4 h-4" />
+              <Filter size={16} />
               <span>Priority</span>
-              <ChevronDown className="w-3 h-3" />
+              <ChevronDown size={14} />
             </button>
 
             {showFilters && (
-              <div className="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+              <div
+                style={{
+                  position: 'absolute',
+                  right: 0,
+                  marginTop: spacing[2],
+                  width: '128px',
+                  backgroundColor: semanticColors.bg.primary,
+                  borderRadius: borderRadius.lg,
+                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                  border: `1px solid ${semanticColors.border.default}`,
+                  padding: `${spacing[1]}px 0`,
+                  zIndex: 10,
+                }}
+              >
+                {[
+                  { label: 'All', value: undefined },
+                  { label: 'High', value: TaskPriority.HIGH },
+                  { label: 'Medium', value: TaskPriority.MEDIUM },
+                  { label: 'Low', value: TaskPriority.LOW },
+                ].map(({ label, value }) => (
                   <button
-                    onClick={() => handlePriorityFilter(undefined)}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
+                    key={label}
+                    onClick={() => handlePriorityFilter(value)}
+                    style={{
+                      width: '100%',
+                      minHeight: '44px',
+                      padding: `${spacing[2]}px ${spacing[3]}px`,
+                      textAlign: 'left',
+                      fontSize: fontSize.sm,
+                      color: semanticColors.text.primary,
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      transition: shouldReduceMotion ? 'none' : `background-color ${duration.fast}`,
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = semanticColors.bg.hover;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
                   >
-                    All
+                    {label}
                   </button>
-                  <button
-                    onClick={() => handlePriorityFilter(TaskPriority.HIGH)}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
-                  >
-                    High
-                  </button>
-                  <button
-                    onClick={() => handlePriorityFilter(TaskPriority.MEDIUM)}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
-                  >
-                    Medium
-                  </button>
-                  <button
-                    onClick={() => handlePriorityFilter(TaskPriority.LOW)}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
-                  >
-                    Low
-                  </button>
-                </div>
-              )}
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Sort Menu */}
-          <div className="relative">
+          <div style={{ position: 'relative' }}>
             <button
               onClick={() => setShowSortMenu(!showSortMenu)}
-              className="flex items-center space-x-1 px-3 py-1 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing[1],
+                minHeight: '44px',
+                padding: `${spacing[1]}px ${spacing[3]}px`,
+                fontSize: fontSize.sm,
+                fontWeight: fontWeight.medium,
+                backgroundColor: semanticColors.bg.tertiary,
+                color: semanticColors.text.secondary,
+                borderRadius: borderRadius.full,
+                border: 'none',
+                cursor: 'pointer',
+                transition: shouldReduceMotion ? 'none' : `all ${duration.normal}`,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = semanticColors.bg.hover;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = semanticColors.bg.tertiary;
+              }}
             >
-              <ArrowUpDown className="w-4 h-4" />
+              <ArrowUpDown size={16} />
               <span>Sort</span>
-              <ChevronDown className="w-3 h-3" />
+              <ChevronDown size={14} />
             </button>
 
             <AnimatePresence>
@@ -288,26 +474,49 @@ export function TaskList({ projectId, onTaskSelect, onTaskUpdate, className = ''
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="absolute right-0 mt-2 w-36 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10"
+                  style={{
+                    position: 'absolute',
+                    right: 0,
+                    marginTop: spacing[2],
+                    width: '144px',
+                    backgroundColor: semanticColors.bg.primary,
+                    borderRadius: borderRadius.lg,
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                    border: `1px solid ${semanticColors.border.default}`,
+                    padding: `${spacing[1]}px 0`,
+                    zIndex: 10,
+                  }}
                 >
-                  <button
-                    onClick={() => handleSort('created_at')}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
-                  >
-                    Created Date
-                  </button>
-                  <button
-                    onClick={() => handleSort('priority')}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
-                  >
-                    Priority
-                  </button>
-                  <button
-                    onClick={() => handleSort('title')}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50"
-                  >
-                    Title
-                  </button>
+                  {[
+                    { label: 'Created Date', value: 'created_at' as const },
+                    { label: 'Priority', value: 'priority' as const },
+                    { label: 'Title', value: 'title' as const },
+                  ].map(({ label, value }) => (
+                    <button
+                      key={value}
+                      onClick={() => handleSort(value)}
+                      style={{
+                        width: '100%',
+                        minHeight: '44px',
+                        padding: `${spacing[2]}px ${spacing[3]}px`,
+                        textAlign: 'left',
+                        fontSize: fontSize.sm,
+                        color: semanticColors.text.primary,
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: shouldReduceMotion ? 'none' : `background-color ${duration.fast}`,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = semanticColors.bg.hover;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -317,75 +526,184 @@ export function TaskList({ projectId, onTaskSelect, onTaskUpdate, className = ''
 
       {/* Task List */}
       {tasks.length === 0 ? (
-        <div className="text-center py-12">
-          <Circle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <div
+          style={{
+            textAlign: 'center',
+            padding: `${spacing[12]}px 0`,
+          }}
+        >
+          <Circle
+            size={iconSize.xl}
+            style={{
+              color: semanticColors.text.muted,
+              margin: `0 auto ${spacing[4]}px`,
+            }}
+          />
+          <h3
+            style={{
+              fontSize: fontSize.lg,
+              fontWeight: fontWeight.medium,
+              color: semanticColors.text.primary,
+              marginBottom: spacing[2],
+            }}
+          >
             {filter.status || filter.priority ? filteredMessage : 'No tasks found'}
           </h3>
-          <p className="text-gray-600">
-            {filter.status || filter.priority ?
-              'Try adjusting your filters to see more tasks.' :
-              'Create your first task to get started.'
-            }
+          <p
+            style={{
+              fontSize: fontSize.base,
+              color: semanticColors.text.secondary,
+            }}
+          >
+            {filter.status || filter.priority
+              ? 'Try adjusting your filters to see more tasks.'
+              : 'Create your first task to get started.'}
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing[3] }}>
           <AnimatePresence>
             {tasks.map((task) => {
               const StatusIcon = statusIcons[task.status]
               return (
                 <motion.div
                   key={task.task_id}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="glass-card rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                  exit={shouldReduceMotion ? false : { opacity: 0, x: -20 }}
                   onClick={() => handleTaskClick(task)}
+                  style={{
+                    backgroundColor: semanticColors.bg.secondary,
+                    borderRadius: borderRadius.lg,
+                    padding: spacing[4],
+                    cursor: 'pointer',
+                    transition: shouldReduceMotion ? 'none' : `box-shadow ${duration.normal}`,
+                    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                    border: `1px solid ${semanticColors.border.subtle}`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = '0 1px 2px 0 rgba(0, 0, 0, 0.05)';
+                  }}
                 >
-                  <div className="flex items-start space-x-3">
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: spacing[3] }}>
                     {/* Status Toggle */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation()
                         handleStatusToggle(task)
                       }}
-                      className="mt-1 text-gray-400 hover:text-blue-600 transition-colors"
+                      style={{
+                        marginTop: spacing[1],
+                        color: semanticColors.text.muted,
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        padding: 0,
+                        cursor: 'pointer',
+                        transition: shouldReduceMotion ? 'none' : `color ${duration.fast}`,
+                        minWidth: '44px',
+                        minHeight: '44px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = colors.blue;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = semanticColors.text.muted;
+                      }}
+                      aria-label={`Toggle task status: ${task.title}`}
                     >
-                      <StatusIcon className="w-5 h-5" />
+                      <StatusIcon size={20} />
                     </button>
 
                     {/* Task Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-gray-900 truncate">{task.title}</h3>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                        <div style={{ flex: 1 }}>
+                          <h3
+                            style={{
+                              fontSize: fontSize.base,
+                              fontWeight: fontWeight.medium,
+                              color: semanticColors.text.primary,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {task.title}
+                          </h3>
                           {task.description && (
-                            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{task.description}</p>
+                            <p
+                              style={{
+                                fontSize: fontSize.sm,
+                                color: semanticColors.text.secondary,
+                                marginTop: spacing[1],
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                              }}
+                            >
+                              {task.description}
+                            </p>
                           )}
                         </div>
 
                         {/* Task Actions */}
-                        <div className="flex items-center space-x-2 ml-4">
-                          <div className="relative">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2], marginLeft: spacing[4] }}>
+                          <div style={{ position: 'relative' }}>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation()
                                 setActiveTaskMenu(activeTaskMenu === task.task_id ? null : task.task_id)
                               }}
-                              className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                              style={{
+                                minWidth: '44px',
+                                minHeight: '44px',
+                                padding: spacing[1],
+                                color: semanticColors.text.muted,
+                                backgroundColor: 'transparent',
+                                border: 'none',
+                                borderRadius: borderRadius.base,
+                                cursor: 'pointer',
+                                transition: shouldReduceMotion ? 'none' : `color ${duration.fast}`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.color = semanticColors.text.secondary;
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.color = semanticColors.text.muted;
+                              }}
                               aria-label="More actions"
                             >
-                              <MoreVertical className="w-4 h-4" />
+                              <MoreVertical size={16} />
                             </button>
 
                             <AnimatePresence>
                               {activeTaskMenu === task.task_id && (
                                 <motion.div
-                                  initial={{ opacity: 0, scale: 0.95 }}
+                                  initial={shouldReduceMotion ? false : { opacity: 0, scale: 0.95 }}
                                   animate={{ opacity: 1, scale: 1 }}
-                                  exit={{ opacity: 0, scale: 0.95 }}
-                                  className="absolute right-0 mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10"
+                                  exit={shouldReduceMotion ? false : { opacity: 0, scale: 0.95 }}
+                                  style={{
+                                    position: 'absolute',
+                                    right: 0,
+                                    marginTop: spacing[1],
+                                    width: '128px',
+                                    backgroundColor: semanticColors.bg.primary,
+                                    borderRadius: borderRadius.lg,
+                                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                    border: `1px solid ${semanticColors.border.default}`,
+                                    padding: `${spacing[1]}px 0`,
+                                    zIndex: 10,
+                                  }}
                                 >
                                   <button
                                     onClick={(e) => {
@@ -393,9 +711,29 @@ export function TaskList({ projectId, onTaskSelect, onTaskUpdate, className = ''
                                       // Handle edit
                                       setActiveTaskMenu(null)
                                     }}
-                                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center space-x-2"
+                                    style={{
+                                      width: '100%',
+                                      minHeight: '44px',
+                                      padding: `${spacing[2]}px ${spacing[3]}px`,
+                                      textAlign: 'left',
+                                      fontSize: fontSize.sm,
+                                      color: semanticColors.text.primary,
+                                      backgroundColor: 'transparent',
+                                      border: 'none',
+                                      cursor: 'pointer',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: spacing[2],
+                                      transition: shouldReduceMotion ? 'none' : `background-color ${duration.fast}`,
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.backgroundColor = semanticColors.bg.hover;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.backgroundColor = 'transparent';
+                                    }}
                                   >
-                                    <Edit className="w-3 h-3" />
+                                    <Edit size={14} />
                                     <span>Edit</span>
                                   </button>
                                   <button
@@ -406,9 +744,32 @@ export function TaskList({ projectId, onTaskSelect, onTaskUpdate, className = ''
                                       }
                                     }}
                                     disabled={deletingTask === task.task_id}
-                                    className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 text-red-600 flex items-center space-x-2 disabled:opacity-50"
+                                    style={{
+                                      width: '100%',
+                                      minHeight: '44px',
+                                      padding: `${spacing[2]}px ${spacing[3]}px`,
+                                      textAlign: 'left',
+                                      fontSize: fontSize.sm,
+                                      color: semanticColors.error.default,
+                                      backgroundColor: 'transparent',
+                                      border: 'none',
+                                      cursor: 'pointer',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: spacing[2],
+                                      transition: shouldReduceMotion ? 'none' : `background-color ${duration.fast}`,
+                                      opacity: deletingTask === task.task_id ? 0.5 : 1,
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      if (deletingTask !== task.task_id) {
+                                        e.currentTarget.style.backgroundColor = semanticColors.bg.hover;
+                                      }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.backgroundColor = 'transparent';
+                                    }}
                                   >
-                                    <Trash2 className="w-3 h-3" />
+                                    <Trash2 size={14} />
                                     <span>Delete</span>
                                   </button>
                                 </motion.div>
@@ -419,21 +780,53 @@ export function TaskList({ projectId, onTaskSelect, onTaskUpdate, className = ''
                       </div>
 
                       {/* Task Metadata */}
-                      <div className="flex items-center justify-between mt-3">
-                        <div className="flex items-center space-x-3">
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          marginTop: spacing[3],
+                          flexWrap: 'wrap',
+                          gap: spacing[2],
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: spacing[3], flexWrap: 'wrap' }}>
                           {/* Priority Badge */}
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${priorityColors[task.priority]}`}>
+                          <span
+                            style={{
+                              padding: `${spacing[1]}px ${spacing[2]}px`,
+                              fontSize: fontSize.xs,
+                              fontWeight: fontWeight.medium,
+                              borderRadius: borderRadius.full,
+                              backgroundColor: priorityColors[task.priority].bg,
+                              color: priorityColors[task.priority].text,
+                            }}
+                          >
                             {task.priority.toUpperCase()}
                           </span>
 
                           {/* Status Badge */}
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${statusColors[task.status]}`}>
+                          <span
+                            style={{
+                              padding: `${spacing[1]}px ${spacing[2]}px`,
+                              fontSize: fontSize.xs,
+                              fontWeight: fontWeight.medium,
+                              borderRadius: borderRadius.full,
+                              backgroundColor: statusColors[task.status].bg,
+                              color: statusColors[task.status].text,
+                            }}
+                          >
                             {task.status.replace('_', ' ').toUpperCase()}
                           </span>
 
                           {/* Subtask Count */}
                           {task.subtask_count > 0 && (
-                            <span className="text-xs text-gray-500">
+                            <span
+                              style={{
+                                fontSize: fontSize.xs,
+                                color: semanticColors.text.tertiary,
+                              }}
+                            >
                               {task.subtask_count} subtask{task.subtask_count > 1 ? 's' : ''}
                             </span>
                           )}
@@ -441,14 +834,33 @@ export function TaskList({ projectId, onTaskSelect, onTaskUpdate, className = ''
 
                         {/* Progress Bar */}
                         {task.progress_percentage > 0 && (
-                          <div className="flex items-center space-x-2">
-                            <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: spacing[2] }}>
+                            <div
+                              style={{
+                                width: '64px',
+                                height: '8px',
+                                backgroundColor: semanticColors.bg.tertiary,
+                                borderRadius: borderRadius.full,
+                                overflow: 'hidden',
+                              }}
+                            >
                               <div
-                                className={`h-full transition-all duration-300 ${getProgressColor(task.progress_percentage)}`}
-                                style={{ width: `${task.progress_percentage}%` }}
+                                style={{
+                                  height: '100%',
+                                  width: `${task.progress_percentage}%`,
+                                  backgroundColor: getProgressColor(task.progress_percentage),
+                                  transition: shouldReduceMotion ? 'none' : `width ${duration.slow}`,
+                                }}
                               />
                             </div>
-                            <span className="text-xs text-gray-600">{task.progress_percentage}%</span>
+                            <span
+                              style={{
+                                fontSize: fontSize.xs,
+                                color: semanticColors.text.secondary,
+                              }}
+                            >
+                              {task.progress_percentage}%
+                            </span>
                           </div>
                         )}
                       </div>

@@ -1,9 +1,9 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import EnergyGauge from '../../../components/mobile/EnergyGauge';
-import CategoryRow from '../../../components/mobile/CategoryRow';
-import ExpandableTile from '../../../components/mobile/ExpandableTile';
+import EnergyGauge from '../core/EnergyGauge';
+import CategoryRow from '../task/CategoryRow';
+import ExpandableTile from '../core/ExpandableTile';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 

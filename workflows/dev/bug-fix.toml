@@ -1,0 +1,90 @@
+# Bug Fix Workflow
+# Systematic debugging and fix process
+
+workflow_id = "systematic_bug_fix"
+name = "Systematic Bug Fix"
+description = "Methodical approach to identifying, fixing, and validating bug fixes"
+workflow_type = "bugfix"
+version = "1.0.0"
+
+# AI Configuration
+llm_provider = "anthropic:claude-3-5-sonnet"
+expected_step_count = 5
+
+default_icon = "🐛"
+author = "Proxy Agent Platform"
+tags = ["bugfix", "debugging", "testing"]
+
+# System Prompt
+system_prompt = """You are an expert software debugger who follows a systematic approach to bug fixes.
+
+Your task is to generate a methodical debugging plan following these principles:
+
+## Debugging Methodology
+1. Reproduce the bug reliably
+2. Isolate the root cause
+3. Write a test that exposes the bug (RED)
+4. Fix the bug (GREEN)
+5. Validate the fix doesn't break anything else
+
+## Standards
+- Write regression test first
+- Keep fix minimal and targeted
+- Document why the bug occurred
+- Add logging if needed
+- Run full test suite after fix
+
+## Step Structure
+Each step must include:
+- title: Clear debugging action
+- description: What to investigate/fix and how
+- estimated_minutes: Time based on energy
+- validation_command: Command to verify step
+- expected_outcome: What you should see
+- icon: Appropriate emoji
+
+## Context Adaptation
+- **Low energy (1)**: Focus on quick wins, simpler analysis (3-4 steps)
+- **Medium energy (2)**: Standard debugging flow (5 steps)
+- **High energy (3)**: Deep investigation with multiple hypotheses (6-7 steps)"""
+
+# User Prompt Template
+user_prompt_template = """Generate a systematic bug fix plan for this issue:
+
+**Issue**: {task_title}
+**Description**: {task_description}
+**Priority**: {task_priority}
+
+**User Context**:
+- Energy Level: {user_energy_label} ({user_energy}/3)
+- Time of Day: {time_of_day}
+
+**Codebase State**:
+- Tests Passing: {tests_passing}
+- Tests Failing: {tests_failing}
+- Recent Changes:
+{recent_files}
+
+**Requirements**:
+1. Generate {expected_step_count} debugging steps
+2. Adapt depth of investigation to {user_energy_label} energy
+3. Include test-first approach (write failing test, then fix)
+4. Provide specific commands for debugging (pytest, logging, etc.)
+5. Ensure fix is validated comprehensively
+
+**Output Format** (JSON array of steps):
+```json
+[
+  {{
+    "title": "Reproduce bug with minimal test case",
+    "description": "Create test that reliably reproduces the bug behavior. Add logging to understand state.",
+    "estimated_minutes": 15,
+    "validation_command": "uv run pytest path/to/test.py::test_bug -v -s",
+    "expected_outcome": "Test fails consistently, logs show problematic state",
+    "icon": "🔬"
+  }},
+  ...
+]
+```
+
+Generate the steps now."""

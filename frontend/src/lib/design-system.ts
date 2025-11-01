@@ -70,21 +70,55 @@ export type SpacingKey = keyof typeof spacing;
  *
  * @example
  * fontSize: fontSize.base  // 16px - body text
- * fontSize: fontSize.lg    // 18px - headings
+ * fontSize: fontSize.lg    // 20px - emphasized text
  * fontSize: fontSize.xs    // 12px - captions
  */
 export const fontSize = {
-  xs: '12px',     // 12px
-  sm: '14px',     // 14px
-  base: '16px',   // 16px
-  lg: '18px',     // 18px
-  xl: '20px',     // 20px
-  '2xl': '24px',  // 24px
-  '3xl': '30px',  // 30px
-  '4xl': '36px',  // 36px
+  xs: '12px',     // 12px - Captions, metadata
+  sm: '14px',     // 14px - Secondary information
+  base: '16px',   // 16px - Body text (default)
+  lg: '20px',     // 20px - Emphasized body text
+  xl: '24px',     // 24px - Subsection headers
+  '2xl': '28px',  // 28px - Section headers
+  '3xl': '32px',  // 32px - Page headers
+  '4xl': '36px',  // 36px - Hero text
 } as const;
 
 export type FontSizeKey = keyof typeof fontSize;
+
+/**
+ * Line height scale for typography
+ * Use for consistent text readability
+ *
+ * @example
+ * lineHeight: lineHeight.normal  // 1.5 - body text
+ * lineHeight: lineHeight.tight   // 1.2 - headings
+ */
+export const lineHeight = {
+  tight: 1.2,     // Headers, compact cards
+  normal: 1.5,    // Body text (default)
+  relaxed: 1.75,  // Long-form content
+} as const;
+
+export type LineHeightKey = keyof typeof lineHeight;
+
+/**
+ * Font weight scale
+ * Use for consistent text emphasis
+ *
+ * @example
+ * fontWeight: fontWeight.medium    // 500 - button labels
+ * fontWeight: fontWeight.semibold  // 600 - card headers
+ */
+export const fontWeight = {
+  light: 300,     // Minimal aesthetics
+  regular: 400,   // Body text (default)
+  medium: 500,    // Button labels, emphasized text
+  semibold: 600,  // Card headers, section titles
+  bold: 700,      // Page headers, critical actions
+} as const;
+
+export type FontWeightKey = keyof typeof fontWeight;
 
 // ============================================================================
 // BORDER RADIUS - Rounding
@@ -93,20 +127,20 @@ export type FontSizeKey = keyof typeof fontSize;
  * Border radius scale for consistent rounding
  *
  * @example
- * borderRadius: borderRadius.lg   // 16px - cards
- * borderRadius: borderRadius.pill // 9999px - buttons
- * borderRadius: borderRadius.base // 8px - inputs
+ * borderRadius: borderRadius.base // 8px - default (buttons, inputs, cards)
+ * borderRadius: borderRadius.sm   // 4px - compact elements (badges)
+ * borderRadius: borderRadius.lg   // 12px - large cards, modals
+ * borderRadius: borderRadius.pill // 9999px - fully rounded (avatars)
  */
 export const borderRadius = {
-  none: '0px',
-  sm: '4px',      // 4px
-  base: '8px',    // 8px
-  md: '12px',     // 12px
-  lg: '16px',     // 16px
-  xl: '20px',     // 20px
-  '2xl': '24px',  // 24px
-  '3xl': '32px',  // 32px
-  pill: '9999px', // Pill/capsule shape
+  none: '0px',    // 0px - Sharp corners
+  sm: '4px',      // 4px - Compact elements (badges, pills)
+  base: '8px',    // 8px - Default (buttons, inputs, cards)
+  lg: '12px',     // 12px - Large cards, modals
+  xl: '16px',     // 16px - Hero cards, featured content
+  '2xl': '24px',  // 24px - Extra large features
+  '3xl': '32px',  // 32px - Maximum rounding
+  pill: '9999px', // Fully rounded (avatars, status dots)
   full: '9999px', // Legacy alias for pill
 } as const;
 
@@ -288,19 +322,24 @@ export type ZIndexKey = keyof typeof zIndex;
  * Creates visual hierarchy through depth
  *
  * @example
- * boxShadow: shadow.sm  // Subtle card depth
- * boxShadow: shadow.lg  // Prominent modal depth
+ * boxShadow: shadows.sm   // Subtle elevation (badges, dropdowns)
+ * boxShadow: shadows.base // Card elevation (default state)
+ * boxShadow: shadows.lg   // Modals, popovers (overlays)
  * boxShadow: coloredShadow(colors.cyan, '30')  // Colored glow
  */
-export const shadow = {
+export const shadows = {
   none: 'none',
-  sm: '0 1px 3px rgba(0, 0, 0, 0.2)',
-  md: '0 2px 8px rgba(0, 0, 0, 0.3)',
-  lg: '0 8px 24px rgba(0, 0, 0, 0.4)',
-  xl: '0 12px 32px rgba(0, 0, 0, 0.5)',
+  sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',        // Subtle elevation
+  base: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',       // Card elevation
+  md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',      // Raised cards
+  lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',    // Modals, popovers
+  xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',    // Maximum elevation
 } as const;
 
-export type ShadowKey = keyof typeof shadow;
+// Legacy alias for backwards compatibility
+export const shadow = shadows;
+
+export type ShadowKey = keyof typeof shadows;
 
 /**
  * Helper function for colored shadows (glows)
@@ -384,13 +423,15 @@ export const physics = {
 export type DesignToken = {
   spacing: typeof spacing;
   fontSize: typeof fontSize;
+  lineHeight: typeof lineHeight;
+  fontWeight: typeof fontWeight;
   borderRadius: typeof borderRadius;
   iconSize: typeof iconSize;
   colors: typeof colors;
   semanticColors: typeof semanticColors;
   opacity: typeof opacity;
   zIndex: typeof zIndex;
-  shadow: typeof shadow;
+  shadows: typeof shadows;
   duration: typeof duration;
   animation: typeof animation;
   physics: typeof physics;
@@ -405,6 +446,64 @@ export type SemanticColorPath =
   | `text.${keyof typeof semanticColors.text}`
   | `border.${keyof typeof semanticColors.border}`
   | `accent.${keyof typeof semanticColors.accent}`;
+
+// ============================================================================
+// HOVER COLORS - Lighter versions for hover states
+// ============================================================================
+/**
+ * Pre-calculated hover colors (slightly lighter versions)
+ * Use for consistent hover state styling
+ *
+ * @example
+ * onMouseEnter={(e) => {
+ *   e.currentTarget.style.backgroundColor = hoverColors.cyan;
+ * }}
+ */
+export const hoverColors = {
+  cyan: '#35b5ac',      // Slightly lighter cyan
+  blue: '#3a9ee5',      // Slightly lighter blue
+  green: '#96aa00',     // Slightly lighter green
+  yellow: '#cb9b00',    // Slightly lighter yellow
+  red: '#e64747',       // Slightly lighter red
+  orange: '#d65b2a',    // Slightly lighter orange
+  magenta: '#dc5694',   // Slightly lighter magenta
+  violet: '#8589d4',    // Slightly lighter violet
+  base02: '#0a4553',    // Slightly lighter base02
+} as const;
+
+export type HoverColorKey = keyof typeof hoverColors;
+
+// ============================================================================
+// GRADIENT UTILITIES - Button gradients
+// ============================================================================
+/**
+ * Generate consistent gradient backgrounds
+ * Creates linear gradients from lighter to base color
+ *
+ * @param baseColor - Base color hex code
+ * @param lighterColor - Lighter variant hex code
+ * @returns CSS linear-gradient string
+ *
+ * @example
+ * background: createGradient(colors.cyan, hoverColors.cyan)
+ * // Returns: 'linear-gradient(180deg, #35b5ac 0%, #2aa198 100%)'
+ */
+export function createGradient(baseColor: string, lighterColor: string): string {
+  return `linear-gradient(180deg, ${lighterColor} 0%, ${baseColor} 100%)`;
+}
+
+/**
+ * Pre-built gradients for common use cases
+ */
+export const gradients = {
+  primary: createGradient(colors.blue, hoverColors.blue),
+  success: createGradient(colors.green, hoverColors.green),
+  error: createGradient(colors.red, hoverColors.red),
+  warning: createGradient(colors.yellow, hoverColors.yellow),
+  neutral: createGradient(colors.cyan, hoverColors.cyan),
+} as const;
+
+export type GradientKey = keyof typeof gradients;
 
 // ============================================================================
 // USAGE EXAMPLES
@@ -444,6 +543,40 @@ export type SemanticColorPath =
  *     }}>
  *       Card
  *     </div>
+ *   )
+ * }
+ * ```
+ *
+ * @example Hover Colors
+ * ```tsx
+ * import { colors, hoverColors } from '@/lib/design-system'
+ *
+ * function HoverButton() {
+ *   return (
+ *     <button
+ *       style={{ backgroundColor: colors.cyan }}
+ *       onMouseEnter={(e) => {
+ *         e.currentTarget.style.backgroundColor = hoverColors.cyan;
+ *       }}
+ *       onMouseLeave={(e) => {
+ *         e.currentTarget.style.backgroundColor = colors.cyan;
+ *       }}
+ *     >
+ *       Hover me
+ *     </button>
+ *   )
+ * }
+ * ```
+ *
+ * @example Gradients
+ * ```tsx
+ * import { gradients } from '@/lib/design-system'
+ *
+ * function GradientButton() {
+ *   return (
+ *     <button style={{ background: gradients.primary }}>
+ *       Primary Action
+ *     </button>
  *   )
  * }
  * ```

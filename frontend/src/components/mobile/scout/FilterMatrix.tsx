@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { Filter, X } from 'lucide-react';
-import ExpandableTile from '../ExpandableTile';
-import ChevronButton from '../ChevronButton';
+import ExpandableTile from '../core/ExpandableTile';
+import ChevronButton from '../core/ChevronButton';
 import { spacing, fontSize, borderRadius, iconSize, semanticColors, colors } from '@/lib/design-system';
 
 // ============================================================================

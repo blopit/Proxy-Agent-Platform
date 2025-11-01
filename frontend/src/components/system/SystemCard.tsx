@@ -1,7 +1,8 @@
 'use client'
 
 import React from 'react';
-import { spacing, borderRadius, colors } from '@/lib/design-system';
+import { spacing, borderRadius, semanticColors, shadows } from '@/lib/design-system';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 export type CardVariant = 'default' | 'elevated' | 'outlined' | 'ghost';
 export type CardPadding = 'none' | 'sm' | 'base' | 'lg';
@@ -34,13 +35,14 @@ export const SystemCard: React.FC<SystemCardProps> = ({
   onClick,
   hoverable = false
 }) => {
+  const shouldReduceMotion = useReducedMotion();
   const [isHovered, setIsHovered] = React.useState(false);
 
   const getCardStyles = () => {
     const baseStyles = {
-      backgroundColor: colors.base02,
+      backgroundColor: semanticColors.bg.secondary,
       borderRadius: borderRadius.xl,
-      transition: 'all 0.2s ease-in-out'
+      transition: shouldReduceMotion ? 'none' : 'all 0.2s ease-in-out'
     };
 
     switch (variant) {
@@ -48,17 +50,17 @@ export const SystemCard: React.FC<SystemCardProps> = ({
         return {
           ...baseStyles,
           boxShadow: isHovered && hoverable
-            ? '0 8px 24px rgba(0, 0, 0, 0.4)'
-            : '0 4px 12px rgba(0, 0, 0, 0.3)',
+            ? shadows.xl
+            : shadows.lg,
           border: 'none',
-          transform: isHovered && hoverable ? 'translateY(-2px)' : 'none'
+          transform: isHovered && hoverable && !shouldReduceMotion ? 'translateY(-2px)' : 'none'
         };
       case 'outlined':
         return {
           ...baseStyles,
-          border: `2px solid ${colors.base01}`,
+          border: `2px solid ${semanticColors.border.default}`,
           boxShadow: 'none',
-          transform: isHovered && hoverable ? 'translateY(-2px)' : 'none'
+          transform: isHovered && hoverable && !shouldReduceMotion ? 'translateY(-2px)' : 'none'
         };
       case 'ghost':
         return {
@@ -70,9 +72,9 @@ export const SystemCard: React.FC<SystemCardProps> = ({
       default:
         return {
           ...baseStyles,
-          border: `1px solid ${colors.base01}`,
+          border: `1px solid ${semanticColors.border.default}`,
           boxShadow: 'none',
-          transform: isHovered && hoverable ? 'translateY(-2px)' : 'none'
+          transform: isHovered && hoverable && !shouldReduceMotion ? 'translateY(-2px)' : 'none'
         };
     }
   };
@@ -89,7 +91,7 @@ export const SystemCard: React.FC<SystemCardProps> = ({
         <div
           style={{
             padding: paddingStyles[padding],
-            borderBottom: `1px solid ${colors.base01}`
+            borderBottom: `1px solid ${semanticColors.border.default}`
           }}
         >
           {header}
@@ -102,7 +104,7 @@ export const SystemCard: React.FC<SystemCardProps> = ({
         <div
           style={{
             padding: paddingStyles[padding],
-            borderTop: `1px solid ${colors.base01}`
+            borderTop: `1px solid ${semanticColors.border.default}`
           }}
         >
           {footer}

@@ -1,0 +1,100 @@
+# Backend API Feature Workflow (TDD)
+# Generates context-aware implementation steps for backend API features
+
+workflow_id = "backend_api_feature_tdd"
+name = "Backend API Feature (TDD)"
+description = "Systematic API implementation following CLAUDE.md standards with Test-Driven Development"
+workflow_type = "backend"
+version = "1.0.0"
+
+# AI Configuration
+llm_provider = "anthropic:claude-3-5-sonnet"
+expected_step_count = 6
+
+default_icon = "⚙️"
+author = "Proxy Agent Platform"
+tags = ["backend", "api", "tdd", "python", "fastapi"]
+
+# System Prompt - Defines AI's role and rules
+system_prompt = """You are an expert Python backend developer specializing in Test-Driven Development (TDD) and FastAPI.
+
+Your task is to generate a systematic implementation plan for a backend API feature following these strict guidelines:
+
+## TDD Methodology
+1. RED: Write failing tests first
+2. GREEN: Write minimum code to pass tests
+3. REFACTOR: Improve code while keeping tests green
+
+## Code Standards (from CLAUDE.md)
+- Functions under 50 lines
+- Files under 500 lines
+- Type hints on all functions
+- 95%+ test coverage
+- Follow PEP8, line length 100 chars
+- Use Pydantic v2 for models
+- Repository pattern for data access
+- Use `uv` for Python commands
+
+## Step Structure
+Each step must include:
+- title: Clear, action-oriented title
+- description: What to do and why
+- estimated_minutes: Realistic time estimate based on user energy
+- tdd_phase: "red", "green", or "refactor"
+- validation_command: Actual command to validate step
+- expected_outcome: What success looks like
+- icon: Appropriate emoji
+
+## Context Adaptation
+- **Low energy (1)**: Fewer, simpler steps (3-4 steps, 15-20 min each)
+- **Medium energy (2)**: Standard flow (5-6 steps, 20-30 min each)
+- **High energy (3)**: Detailed breakdown (7-8 steps, 30-45 min each)
+
+Consider user's recent work and codebase state to make steps relevant."""
+
+# User Prompt Template - Filled with context at execution time
+user_prompt_template = """Generate a TDD implementation plan for this backend API feature:
+
+**Task**: {task_title}
+**Description**: {task_description}
+**Priority**: {task_priority}
+**Estimated Total Time**: {estimated_hours} hours
+
+**User Context**:
+- Energy Level: {user_energy_label} ({user_energy}/3)
+- Time of Day: {time_of_day}
+- Current Branch: {current_branch}
+
+**Codebase State**:
+- Tests Passing: {tests_passing}
+- Tests Failing: {tests_failing}
+- Recent Files Modified:
+{recent_files}
+
+**Recent Completed Tasks**:
+{recent_tasks}
+
+**Requirements**:
+1. Generate {expected_step_count} steps following TDD (RED-GREEN-REFACTOR)
+2. Adapt step complexity to user's {user_energy_label} energy level
+3. Include specific validation commands using `uv run pytest`
+4. Reference existing patterns from recent files
+5. Each step should be independently testable
+
+**Output Format** (JSON array of steps):
+```json
+[
+  {{
+    "title": "Write failing test for endpoint",
+    "description": "Create test file src/api/tests/test_feature.py with failing test for POST /api/v1/feature endpoint",
+    "estimated_minutes": 20,
+    "tdd_phase": "red",
+    "validation_command": "uv run pytest src/api/tests/test_feature.py -v",
+    "expected_outcome": "Test fails with 'endpoint not found' error",
+    "icon": "🔴"
+  }},
+  ...
+]
+```
+
+Generate the steps now."""

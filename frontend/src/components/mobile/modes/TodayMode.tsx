@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
-import SwipeableTaskCard from '../SwipeableTaskCard';
+import SwipeableTaskCard from '../cards/SwipeableTaskCard';
 import { Target, Zap, TrendingUp } from 'lucide-react';
 import { colors, semanticColors, spacing, fontSize, borderRadius } from '@/lib/design-system';
 

@@ -13,9 +13,11 @@ import logging
 from datetime import datetime
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from src.api.auth import get_current_user
+from src.core.task_models import User
 from src.database.enhanced_adapter import get_enhanced_database
 
 logger = logging.getLogger(__name__)
@@ -193,13 +195,14 @@ def get_or_create_default_zones(user_id: str) -> list[dict]:
 
 @router.get("/zones", response_model=list[ZoneResponse])
 async def get_zones(
-    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
+    current_user: User = Depends(get_current_user)
 ):
     """
     Get all compass zones for user.
 
     Creates default 3 zones (Work, Life, Self) on first access.
     """
+    user_id = current_user.user_id
     try:
         zones = get_or_create_default_zones(user_id)
 
@@ -230,13 +233,14 @@ async def get_zones(
 @router.post("/zones", response_model=ZoneResponse, status_code=status.HTTP_201_CREATED)
 async def create_zone(
     zone_data: ZoneCreate,
-    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
+    current_user: User = Depends(get_current_user)
 ):
     """
     Create a new compass zone.
 
     Note: MVP limits to 5 zones max. Default 3 zones already created.
     """
+    user_id = current_user.user_id
     try:
         db = get_enhanced_database()
         conn = db.get_connection()
@@ -307,11 +311,12 @@ async def create_zone(
 async def update_zone(
     zone_id: str,
     zone_data: ZoneUpdate,
-    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
+    current_user: User = Depends(get_current_user)
 ):
     """
     Update a compass zone.
     """
+    user_id = current_user.user_id
     try:
         db = get_enhanced_database()
         conn = db.get_connection()
@@ -401,7 +406,7 @@ async def update_zone(
 
 @router.get("/progress", response_model=list[ZoneProgressResponse])
 async def get_zone_progress(
-    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
+    current_user: User = Depends(get_current_user)
 ):
     """
     Get task completion counts per zone.
@@ -411,6 +416,7 @@ async def get_zone_progress(
     - Tasks completed this week
     - Tasks completed all time
     """
+    user_id = current_user.user_id
     try:
         db = get_enhanced_database()
         conn = db.get_connection()

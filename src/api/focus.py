@@ -13,9 +13,11 @@ import logging
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from src.api.auth import get_current_user
+from src.core.task_models import User
 from src.database.enhanced_adapter import get_enhanced_database
 
 logger = logging.getLogger(__name__)
@@ -155,7 +157,7 @@ def calculate_progress(started_at_str: str, ends_at_str: str):
 @router.post("/start", response_model=PomodoroResponse, status_code=status.HTTP_201_CREATED)
 async def start_pomodoro(
     request: PomodoroStartRequest,
-    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
+    current_user: User = Depends(get_current_user)
 ):
     """
     Start a Pomodoro session (25 minutes of focused work).
@@ -167,6 +169,7 @@ async def start_pomodoro(
 
     Only one active session allowed at a time.
     """
+    user_id = current_user.user_id
     try:
         db = get_enhanced_database()
         conn = db.get_connection()
@@ -231,7 +234,7 @@ async def start_pomodoro(
 
 @router.get("/status", response_model=SessionStatusResponse)
 async def get_pomodoro_status(
-    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
+    current_user: User = Depends(get_current_user)
 ):
     """
     Get status of your current Pomodoro session.
@@ -242,6 +245,7 @@ async def get_pomodoro_status(
     - What you're working on
     - Whether it's work time or break time
     """
+    user_id = current_user.user_id
     try:
         session = get_active_session(user_id)
 
@@ -306,7 +310,7 @@ async def get_pomodoro_status(
 @router.post("/complete", response_model=SessionCompleteResponse)
 async def complete_pomodoro(
     request: SessionCompleteRequest,
-    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
+    current_user: User = Depends(get_current_user)
 ):
     """
     Mark your Pomodoro session as complete and earn XP.
@@ -317,6 +321,7 @@ async def complete_pomodoro(
 
     This also updates your daily streak if applicable.
     """
+    user_id = current_user.user_id
     try:
         db = get_enhanced_database()
         conn = db.get_connection()

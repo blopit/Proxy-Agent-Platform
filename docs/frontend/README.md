@@ -6,6 +6,70 @@
 
 ---
 
+## 🎨 NEW: Comprehensive Design System Documentation
+
+We've created three detailed guides for consistent, ADHD-friendly design:
+
+### 1. [Design Principles](./DESIGN_PRINCIPLES.md) ⭐ DESIGN PHILOSOPHY
+**The "why" behind every design decision**
+- ADHD-friendly design philosophy
+- 5 biological workflow modes (Capture, Scout, Hunt, Map, Mend)
+- Component design patterns (buttons, cards, modals, etc.)
+- Accessibility standards (WCAG AA minimum)
+- 20+ pre-configured themes
+- Responsive design approach
+- Performance & optimization guidelines
+
+**Read this first if**: You're designing features or creating components
+
+### 2. [Visual Style Guide](./VISUAL_STYLE_GUIDE.md) 📐 IMPLEMENTATION GUIDE
+**The "how" - practical styling reference**
+- Complete color palette with semantic tokens
+- Typography scale (12px - 36px with line heights & weights)
+- Spacing system (4px grid)
+- Border radius, shadows, and elevation
+- Icon usage guidelines
+- Component styling patterns (with code examples)
+- Layout patterns (grid, flex, responsive)
+- Common mistakes to avoid
+
+**Reference this when**: Writing component styles, checking spacing/colors
+
+### 3. [Interaction Patterns](./INTERACTION_PATTERNS.md) ⚡ ANIMATION GUIDE
+**The "feel" - micro-animations and interactions**
+- Animation timing & easing functions (150ms/300ms/500ms)
+- Motion accessibility (`prefers-reduced-motion`)
+- Button, card, modal, list interactions
+- Loading states & skeletons
+- Celebration animations (task completion, level up)
+- Page transitions
+- Mobile gestures (swipe, long-press, pull-to-refresh)
+- Performance optimization techniques
+
+**Use this for**: Adding animations, implementing interactions, gesture support
+
+---
+
+**Quick Design System Reference:**
+```typescript
+import { spacing, fontSize, fontWeight, semanticColors, borderRadius, shadows } from '@/lib/design-system'
+
+// ✅ Good: Using design tokens
+<button style={{
+  padding: `${spacing[2]} ${spacing[4]}`,     // 8px 16px
+  fontSize: fontSize.base,                     // 16px
+  fontWeight: fontWeight.medium,               // 500
+  color: semanticColors.text.inverse,
+  background: semanticColors.accent.primary,
+  borderRadius: borderRadius.base,             // 8px
+  boxShadow: shadows.sm
+}}>
+  Click Me
+</button>
+```
+
+---
+
 ## ⚡ Quick Start by Role
 
 | I'm a... | Start Here | Time to Productive |

@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import TaskBreakdownModal from '../TaskBreakdownModal';
+import TaskBreakdownModal from '../modals/TaskBreakdownModal';
 import type { CaptureResponse } from '@/types/capture';
 import { taskApi } from '@/services/taskApi';
 

@@ -13,9 +13,11 @@ import logging
 from datetime import datetime
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from src.api.auth import get_current_user
+from src.core.task_models import User
 from src.database.enhanced_adapter import get_enhanced_database
 
 logger = logging.getLogger(__name__)
@@ -81,7 +83,7 @@ ENERGY_EMOJIS = {
 @router.post("/set", response_model=EnergyResponse)
 async def set_energy_level(
     energy_data: EnergySetRequest,
-    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
+    current_user: User = Depends(get_current_user)
 ):
     """
     Set your current energy level (1-3).
@@ -93,6 +95,7 @@ async def set_energy_level(
 
     This helps filter tasks to match your current state.
     """
+    user_id = current_user.user_id
     try:
         db = get_enhanced_database()
         conn = db.get_connection()
@@ -151,7 +154,7 @@ async def set_energy_level(
 
 @router.get("/current", response_model=CurrentEnergyResponse)
 async def get_current_energy(
-    user_id: str = "mobile-user"  # TODO: Get from auth when enabled
+    current_user: User = Depends(get_current_user)
 ):
     """
     Get your most recent energy level.
@@ -159,6 +162,7 @@ async def get_current_energy(
     Returns the last energy level you set, or defaults to Medium (2)
     if you haven't set it yet.
     """
+    user_id = current_user.user_id
     try:
         db = get_enhanced_database()
         conn = db.get_connection()
@@ -211,7 +215,7 @@ async def get_current_energy(
 
 @router.get("/history")
 async def get_energy_history(
-    user_id: str = "mobile-user",  # TODO: Get from auth when enabled
+    current_user: User = Depends(get_current_user),
     limit: int = 10
 ):
     """
@@ -220,6 +224,7 @@ async def get_energy_history(
     Returns up to {limit} most recent energy snapshots.
     Useful for seeing patterns in your energy throughout the day.
     """
+    user_id = current_user.user_id
     try:
         db = get_enhanced_database()
         conn = db.get_connection()

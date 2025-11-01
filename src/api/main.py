@@ -31,8 +31,14 @@ from src.api.websocket import (
     connection_manager,
 )
 from src.services.delegation.routes import router as delegation_router  # BE-00: Task delegation
+from src.services.templates.routes import router as templates_router  # BE-01: Task templates
+from src.services.chatgpt_prompts.routes import router as chatgpt_prompts_router  # ChatGPT video task prompts
+from src.api.routes.workflows import router as workflows_router  # AI-powered workflow execution
+from src.api.routes.integrations import router as integrations_router  # Provider integration system
+from src.api.dogfooding import router as dogfooding_router  # Mobile-first task execution (swipe interactions)
 from src.core.models import AgentRequest, AgentResponse
 from src.database.enhanced_adapter import close_enhanced_database, get_enhanced_database
+from datetime import datetime
 
 
 @asynccontextmanager
@@ -78,6 +84,11 @@ registry = AgentRegistry()
 app.include_router(tasks_v2_router)  # NEW: v2 API with TaskService DI
 app.include_router(comprehensive_task_router)  # Legacy: v1 task service
 app.include_router(delegation_router)  # BE-00: Task delegation system
+app.include_router(templates_router)  # BE-01: Task templates service
+app.include_router(chatgpt_prompts_router)  # ChatGPT video task prompt generator
+app.include_router(workflows_router)  # AI-powered workflow execution (dogfooding)
+app.include_router(integrations_router)  # Provider integration system (Gmail, Calendar, etc.)
+app.include_router(dogfooding_router)  # Mobile-first task execution with swipe interactions
 app.include_router(capture_router)  # Capture Mode brain dump system (Epic: Capture)
 app.include_router(auth_router)  # Authentication endpoints
 app.include_router(focus_router)  # Focus & Pomodoro endpoints (MVP Simplified)
@@ -100,8 +111,58 @@ async def root():
 
 @app.get("/health")
 async def health():
-    """Health check"""
-    return {"status": "healthy"}
+    """
+    Health check endpoint - returns app health status.
+
+    Used by load balancers and monitoring tools to verify the app is running.
+    Always returns 200 OK if the app is responding to requests.
+    """
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "version": "0.1.0"
+    }
+
+
+@app.get("/ready")
+async def readiness():
+    """
+    Readiness check endpoint - returns whether app is ready to serve traffic.
+
+    Checks:
+    - Database connectivity
+    - App initialization status
+
+    Returns 200 OK if ready, 503 Service Unavailable if not ready.
+    """
+    try:
+        # Test database connection
+        db = get_enhanced_database()
+        conn = db.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1")
+        cursor.fetchone()
+
+        return {
+            "status": "ready",
+            "timestamp": datetime.now().isoformat(),
+            "checks": {
+                "database": "ok"
+            }
+        }
+    except Exception as e:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "not_ready",
+                "timestamp": datetime.now().isoformat(),
+                "checks": {
+                    "database": "failed",
+                    "error": str(e)
+                }
+            }
+        )
 
 
 @app.post("/api/agents/task", response_model=AgentResponse)

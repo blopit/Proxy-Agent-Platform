@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Search, Flame, Zap, Target, Calendar, Bot, Moon, Gift } from 'lucide-react';
-import CategoryRow from '../../../components/mobile/CategoryRow';
+import CategoryRow from '../task/CategoryRow';
 import SmartRecommendations from '../scout/SmartRecommendations';
 import WorkspaceOverview from '../scout/WorkspaceOverview';
 import ZoneBalanceWidget from '../scout/ZoneBalanceWidget';
@@ -85,14 +85,16 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
 
   // Filter tasks by category
   const getMainFocus = () => {
-    return tasks
+    const taskArray = Array.isArray(tasks) ? tasks : [];
+    return taskArray
       .filter(t => t.status !== 'completed' && t.priority === 'high')
       .slice(0, 3);
   };
 
   const getUrgentToday = () => {
+    const taskArray = Array.isArray(tasks) ? tasks : [];
     const today = new Date().toISOString().split('T')[0];
-    return tasks.filter(t => {
+    return taskArray.filter(t => {
       if (t.status === 'completed') return false;
       if (!t.due_date) return false;
       return t.due_date <= today;
@@ -100,20 +102,22 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
   };
 
   const getQuickWins = () => {
-    return tasks.filter(t =>
+    const taskArray = Array.isArray(tasks) ? tasks : [];
+    return taskArray.filter(t =>
       t.status !== 'completed' &&
       (t.estimated_hours || 0) <= 0.25
     ).slice(0, 8);
   };
 
   const getThisWeek = () => {
+    const taskArray = Array.isArray(tasks) ? tasks : [];
     const today = new Date();
     const nextWeek = new Date(today);
     nextWeek.setDate(today.getDate() + 7);
     const weekEnd = nextWeek.toISOString().split('T')[0];
     const todayStr = today.toISOString().split('T')[0];
 
-    return tasks.filter(t => {
+    return taskArray.filter(t => {
       if (t.status === 'completed') return false;
       if (!t.due_date) return false;
       return t.due_date > todayStr && t.due_date <= weekEnd;
@@ -121,14 +125,16 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
   };
 
   const getSomedayMaybe = () => {
-    return tasks.filter(t =>
+    const taskArray = Array.isArray(tasks) ? tasks : [];
+    return taskArray.filter(t =>
       t.status !== 'completed' &&
       (t.priority === 'low' || !t.due_date)
     ).slice(0, 10);
   };
 
   const getCanDelegate = () => {
-    return tasks.filter(t =>
+    const taskArray = Array.isArray(tasks) ? tasks : [];
+    return taskArray.filter(t =>
       t.status !== 'completed' &&
       (t.is_digital ||
        t.tags?.some(tag => ['digital', 'online', 'email', 'research', 'coding'].includes(tag.toLowerCase())))
@@ -136,7 +142,8 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
   };
 
   const getMysteryTask = () => {
-    const incompleteTasks = tasks.filter(t => t.status !== 'completed');
+    const taskArray = Array.isArray(tasks) ? tasks : [];
+    const incompleteTasks = taskArray.filter(t => t.status !== 'completed');
     if (incompleteTasks.length === 0) return [];
     const randomIndex = Math.floor(Math.random() * incompleteTasks.length);
     return [incompleteTasks[randomIndex]];
@@ -246,7 +253,9 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
 
   // Mock data generators for Scout components
   const getSmartRecommendations = () => {
-    const highPriorityTasks = tasks.filter(t => t.status !== 'completed' && t.priority === 'high').slice(0, 3);
+    // Ensure tasks is always an array
+    const taskArray = Array.isArray(tasks) ? tasks : [];
+    const highPriorityTasks = taskArray.filter(t => t.status !== 'completed' && t.priority === 'high').slice(0, 3);
     return highPriorityTasks.map(task => ({
       task,
       reason: task.estimated_hours && task.estimated_hours < 0.5
@@ -300,12 +309,13 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
   };
 
   const getWorkspaceData = () => {
+    const taskArray = Array.isArray(tasks) ? tasks : [];
     return {
       openFiles: [
         { id: 'f1', name: 'Project_Plan.pdf', type: 'pdf' as const, lastOpened: '10 min ago' },
         { id: 'f2', name: 'Budget.xlsx', type: 'sheet' as const, lastOpened: '1 hour ago' },
       ],
-      inProgressTasks: tasks
+      inProgressTasks: taskArray
         .filter(t => t.status === 'in_progress')
         .slice(0, 3)
         .map(t => ({
@@ -321,7 +331,8 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
   };
 
   const getDecisionHelperComparisons = () => {
-    const topTasks = tasks.filter(t => t.status !== 'completed').slice(0, 2);
+    const taskArray = Array.isArray(tasks) ? tasks : [];
+    const topTasks = taskArray.filter(t => t.status !== 'completed').slice(0, 2);
     return topTasks.map(task => ({
       task,
       energyCost: task.estimated_hours ? Math.min(10, Math.ceil(task.estimated_hours * 3)) : 5,
@@ -517,13 +528,13 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
           <div className="flex items-center justify-between" style={{ marginBottom: spacing[1] }}>
             <span style={{ fontSize: fontSize.xs, color: semanticColors.text.secondary }}>Progress</span>
             <span style={{ fontSize: fontSize.xs, color: semanticColors.text.primary, fontWeight: 'bold' }}>
-              {tasks.filter(t => t.status !== 'completed').length} tasks
+              {Array.isArray(tasks) ? tasks.filter(t => t.status !== 'completed').length : 0} tasks
             </span>
           </div>
           <div className="w-full rounded-full overflow-hidden" style={{ height: spacing[1], backgroundColor: semanticColors.bg.primary }}>
             <div
               className="h-full bg-gradient-to-r from-[#859900] to-[#268bd2] transition-all duration-500"
-              style={{ width: `${Math.min((tasks.length / 50) * 100, 100)}%` }}
+              style={{ width: `${Math.min((Array.isArray(tasks) ? tasks.length : 0) / 50 * 100, 100)}%` }}
             />
           </div>
         </div>
@@ -620,7 +631,7 @@ const ScoutPage: React.FC<ScoutPageProps> = ({ onTaskTap, refreshTrigger }) => {
       </div>
 
       {/* Empty State - 4px grid */}
-      {tasks.length === 0 && (
+      {(!Array.isArray(tasks) || tasks.length === 0) && (
         <div className="flex flex-col items-center justify-center" style={{ padding: spacing[4], minHeight: '60vh' }}>
           <Search size={64} className="mb-4" style={{ color: semanticColors.text.secondary }} />
           <h3 style={{ fontSize: fontSize.xl, fontWeight: 'bold', color: semanticColors.text.primary, marginBottom: spacing[2] }}>

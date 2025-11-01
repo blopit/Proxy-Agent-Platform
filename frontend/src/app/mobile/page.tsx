@@ -3,16 +3,16 @@
 import React, { useState, useEffect } from 'react'
 import { ArrowUp, MessageCircle, Bot, Camera, Search, Mic, X, Square } from 'lucide-react'
 import ErrorBoundary from '@/components/ErrorBoundary'
-import SimpleTabs from '@/components/mobile/SimpleTabs'
-import type { SimpleTab } from '@/components/mobile/SimpleTabs'
+import SimpleTabs from '@/components/mobile/core/SimpleTabs'
+import type { SimpleTab } from '@/components/mobile/core/SimpleTabs'
 import CaptureMode from '@/components/mobile/modes/CaptureMode'
 import ScoutMode from '@/components/mobile/modes/ScoutMode'
 import TodayMode from '@/components/mobile/modes/TodayMode'
-import ProgressView from '@/components/mobile/ProgressView'
-import MorningRitualModal from '@/components/mobile/MorningRitualModal'
+import ProgressView from '@/components/mobile/views/ProgressView'
+import MorningRitualModal from '@/components/mobile/modals/MorningRitualModal'
 import MenderMode from '@/components/mobile/modes/MenderMode'
 import MapperMode from '@/components/mobile/modes/MapperMode'
-import Ticker from '@/components/mobile/Ticker'
+import Ticker from '@/components/mobile/core/Ticker'
 import {
   spacing,
   semanticColors,
@@ -26,11 +26,11 @@ import {
   animation,
   duration,
 } from '@/lib/design-system'
-import CaptureLoading from '@/components/mobile/CaptureLoading'
-import TaskDropAnimation from '@/components/mobile/TaskDropAnimation'
-import MicroStepsBreakdown from '@/components/mobile/MicroStepsBreakdown'
-import TaskBreakdownModal from '@/components/mobile/TaskBreakdownModal'
-import { QuickCelebration } from '@/components/mobile/RewardCelebration'
+import CaptureLoading from '@/components/mobile/modals/CaptureLoading'
+import TaskDropAnimation from '@/components/mobile/animations/TaskDropAnimation'
+import MicroStepsBreakdown from '@/components/mobile/task/MicroStepsBreakdown'
+import TaskBreakdownModal from '@/components/mobile/modals/TaskBreakdownModal'
+import { QuickCelebration } from '@/components/mobile/animations/RewardCelebration'
 import AsyncJobTimeline, { type JobStep } from '@/components/shared/AsyncJobTimeline'
 import type { QuickCaptureResponse } from '@/lib/api'
 import type { LoadingStage } from '@/types/capture'

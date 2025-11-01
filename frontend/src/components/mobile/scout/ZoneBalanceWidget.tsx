@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Compass, AlertTriangle, TrendingUp, Target } from 'lucide-react';
-import ChevronButton from '../ChevronButton';
+import ChevronButton from '../core/ChevronButton';
 import { spacing, fontSize, borderRadius, iconSize, semanticColors, colors } from '@/lib/design-system';
 
 // ============================================================================
