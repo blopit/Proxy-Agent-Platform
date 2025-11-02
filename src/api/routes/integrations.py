@@ -159,6 +159,7 @@ class DismissTaskResponse(BaseModel):
 @router.post("/{provider}/authorize", response_model=AuthorizationResponse)
 async def authorize_provider(
     provider: ProviderType,
+    mobile: bool = Query(False, description="Add mobile=true to callback URL"),
     current_user: User = Depends(get_current_user),
     service: IntegrationService = Depends(get_integration_service),
 ):
@@ -170,6 +171,7 @@ async def authorize_provider(
 
     Args:
         provider: Provider type (gmail, google_calendar, etc.)
+        mobile: Whether to include mobile=true in callback URL (for deep links)
         current_user: Current authenticated user
         service: Integration service (injected)
 
@@ -181,7 +183,21 @@ async def authorize_provider(
         500: OAuth flow initialization failed
     """
     try:
-        auth_url = service.initiate_oauth(provider, current_user.user_id)
+        # Create custom redirect URI with mobile parameter if needed
+        redirect_uri = None
+        if mobile:
+            import os
+            base_redirect = os.getenv(
+                f"{provider.upper()}_REDIRECT_URI",
+                f"http://localhost:8000/api/v1/integrations/{provider}/callback"
+            )
+            redirect_uri = f"{base_redirect}?mobile=true"
+
+        auth_url = service.initiate_oauth(
+            provider,
+            current_user.user_id,
+            redirect_uri=redirect_uri
+        )
 
         return AuthorizationResponse(
             authorization_url=auth_url,
@@ -204,6 +220,7 @@ async def oauth_callback(
     provider: ProviderType,
     code: str = Query(..., description="Authorization code from OAuth provider"),
     state: str = Query(..., description="CSRF state parameter"),
+    mobile: bool = Query(False, description="Redirect to mobile deep link"),
     service: IntegrationService = Depends(get_integration_service),
 ):
     """
@@ -217,10 +234,11 @@ async def oauth_callback(
         provider: Provider type
         code: Authorization code
         state: CSRF state parameter
+        mobile: Whether to redirect to mobile deep link (default: False)
         service: Integration service (injected)
 
     Returns:
-        Redirect to frontend with integration_id
+        Redirect to frontend or mobile app with integration_id
 
     Raises:
         400: Invalid OAuth state or code
@@ -230,32 +248,57 @@ async def oauth_callback(
     try:
         integration = await service.handle_callback(provider, code, state)
 
-        # Redirect to frontend with success message
-        # TODO: Configure frontend redirect URL from environment
-        frontend_url = "http://localhost:3000"
-        return RedirectResponse(
-            url=f"{frontend_url}/integrations?success=true&integration_id={integration['integration_id']}&provider={provider}"
-        )
+        # Determine redirect URL based on mobile flag
+        if mobile:
+            # Redirect to mobile deep link
+            redirect_url = (
+                f"proxyagent://oauth/callback"
+                f"?success=true"
+                f"&integration_id={integration['integration_id']}"
+                f"&provider={provider}"
+            )
+        else:
+            # Redirect to web frontend
+            # TODO: Configure frontend redirect URL from environment
+            frontend_url = "http://localhost:3000"
+            redirect_url = (
+                f"{frontend_url}/integrations"
+                f"?success=true"
+                f"&integration_id={integration['integration_id']}"
+                f"&provider={provider}"
+            )
+
+        return RedirectResponse(url=redirect_url)
 
     except OAuthFlowError as e:
         logger.warning(f"OAuth callback failed: {e}")
-        # Redirect to frontend with error
-        frontend_url = "http://localhost:3000"
-        return RedirectResponse(
-            url=f"{frontend_url}/integrations?success=false&error={str(e)}"
-        )
+        # Redirect with error
+        if mobile:
+            redirect_url = f"proxyagent://oauth/callback?success=false&error={str(e)}"
+        else:
+            frontend_url = "http://localhost:3000"
+            redirect_url = f"{frontend_url}/integrations?success=false&error={str(e)}"
+        return RedirectResponse(url=redirect_url)
+
     except ProviderNotFoundError as e:
         logger.error(f"Provider not found in callback: {e}")
-        frontend_url = "http://localhost:3000"
-        return RedirectResponse(
-            url=f"{frontend_url}/integrations?success=false&error=Provider+not+configured"
-        )
+        error_msg = "Provider+not+configured"
+        if mobile:
+            redirect_url = f"proxyagent://oauth/callback?success=false&error={error_msg}"
+        else:
+            frontend_url = "http://localhost:3000"
+            redirect_url = f"{frontend_url}/integrations?success=false&error={error_msg}"
+        return RedirectResponse(url=redirect_url)
+
     except Exception as e:
         logger.error(f"OAuth callback exception: {e}", exc_info=True)
-        frontend_url = "http://localhost:3000"
-        return RedirectResponse(
-            url=f"{frontend_url}/integrations?success=false&error=OAuth+failed"
-        )
+        error_msg = "OAuth+failed"
+        if mobile:
+            redirect_url = f"proxyagent://oauth/callback?success=false&error={error_msg}"
+        else:
+            frontend_url = "http://localhost:3000"
+            redirect_url = f"{frontend_url}/integrations?success=false&error={error_msg}"
+        return RedirectResponse(url=redirect_url)
 
 
 # ============================================================================
