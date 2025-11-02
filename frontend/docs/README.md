@@ -1,8 +1,15 @@
 # Frontend Documentation Index
 
-## 📚 Complete Documentation for ADHD Task Management Mobile Frontend
+## 📚 Next.js Web Dashboard Documentation
 
-Welcome to the comprehensive documentation for the ADHD Task Management System frontend. This guide is designed for **future AI agents** and developers to quickly understand and work with the codebase.
+Welcome to the documentation for the **Next.js Web Dashboard** - the desktop power user interface for the Proxy Agent Platform.
+
+> **⚠️ Note**: This is the **SECONDARY** frontend. The **PRIMARY** frontend is the Expo mobile app located in `/mobile/`.
+> This web dashboard is optimized for desktop users who need advanced features, analytics, and admin controls.
+
+### Frontend Architecture
+- **Primary Frontend**: `/mobile/` - Expo/React Native universal app (iOS, Android, Web)
+- **Secondary Frontend**: `/frontend/` - Next.js web dashboard (you are here)
 
 ---
 

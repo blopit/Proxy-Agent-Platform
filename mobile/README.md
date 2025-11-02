@@ -17,6 +17,21 @@ npm run ios     # iOS simulator (macOS only)
 npm run android # Android emulator
 ```
 
+### View Storybook
+
+Access the component library and design system:
+
+```bash
+# Start Expo
+npm start
+
+# Navigate to Storybook in your app
+# URL: exp://localhost:8081/--/storybook
+
+# Or regenerate stories after adding new components
+npm run storybook-generate
+```
+
 ## Project Structure
 
 ```
@@ -24,14 +39,31 @@ mobile/
 ├── app/                        # Expo Router file-based routing
 │   ├── _layout.tsx            # Root layout with SafeAreaProvider
 │   ├── index.tsx              # Redirects to /(tabs)/capture
+│   ├── storybook.tsx          # Storybook route (/storybook)
 │   └── (tabs)/                # Tab navigation group
 │       ├── _layout.tsx        # Tab bar configuration
-│       ├── capture.tsx        # ⚡ Capture Mode
+│       ├── capture/           # ⚡ Capture Mode
 │       ├── scout.tsx          # 🔍 Scout Mode
 │       ├── today.tsx          # 📅 Today Mode
 │       ├── mapper.tsx         # 🗺️ Mapper Mode
 │       └── hunter.tsx         # 🎯 Hunter Mode
+├── components/                # React Native components
+│   ├── ui/                    # Reusable UI primitives
+│   │   ├── Card.tsx           # Card component (replaces shadcn)
+│   │   ├── Button.tsx
+│   │   └── Badge.tsx
+│   ├── cards/                 # Card components
+│   │   ├── TaskCardBig.tsx
+│   │   └── TaskCardBig.stories.tsx
+│   ├── modals/                # Modal components
+│   └── modes/                 # Mode-specific components
+├── .rnstorybook/              # Storybook React Native config
+│   ├── main.ts
+│   ├── preview.tsx
+│   └── stories/               # Example stories
 ├── assets/                    # Images, fonts, icons
+├── metro.config.js            # Metro bundler + Storybook integration
+├── MIGRATION_GUIDE.md         # Web → RN migration guide
 └── package.json
 ```
 
@@ -84,6 +116,99 @@ const colors = {
 - **4px grid system**: All spacing in multiples of 4 (8, 12, 16, 24, etc.)
 - **Font sizes**: 12 (label), 14 (body), 18 (subtitle), 32 (title), 72 (emoji)
 - **Font weights**: 600 (semibold labels), 'bold' (titles)
+
+## Storybook Component Library
+
+This app uses **Storybook React Native** for component development and testing.
+
+### Why Separate Storybooks?
+
+The platform has TWO Storybooks:
+
+1. **Next.js Storybook** (`frontend/.storybook/`) - Web dashboard components
+2. **React Native Storybook** (`mobile/.rnstorybook/`) - Mobile app components ← **You are here**
+
+They CANNOT share components due to platform differences (web uses HTML/CSS, mobile uses React Native primitives).
+
+### Using Storybook
+
+**Option 1: View in App**
+
+```bash
+npm start
+# Navigate to /storybook in your Expo app
+# URL: exp://localhost:8081/--/storybook
+```
+
+**Option 2: Access via Route**
+
+The Storybook UI is available at the `/storybook` route in the app. You can navigate to it from any screen or add a dev menu button.
+
+### Creating New Stories
+
+1. Create a component in `components/`:
+
+```tsx
+// components/ui/Button.tsx
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+
+export function Button({ title, onPress }) {
+  return (
+    <TouchableOpacity onPress={onPress} style={styles.button}>
+      <Text style={styles.text}>{title}</Text>
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  button: { backgroundColor: '#2aa198', padding: 12, borderRadius: 8 },
+  text: { color: '#002b36', fontWeight: '600' },
+});
+```
+
+2. Create a story file:
+
+```tsx
+// components/ui/Button.stories.tsx
+import type { Meta, StoryObj } from '@storybook/react';
+import { Button } from './Button';
+
+const meta = {
+  title: 'UI/Button',
+  component: Button,
+  argTypes: {
+    onPress: { action: 'pressed' },
+  },
+} satisfies Meta<typeof Button>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {
+    title: 'Click Me',
+  },
+};
+```
+
+3. Regenerate stories list:
+
+```bash
+npm run storybook-generate
+```
+
+4. Restart Expo to see your new story!
+
+### Migration from Web Components
+
+See **[MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)** for detailed instructions on converting web components from `frontend/src/components/mobile/` to React Native.
+
+**Key differences:**
+- `<div>` → `<View>`
+- `<span>`/`<p>` → `<Text>`
+- `className` → `style` (StyleSheet)
+- `lucide-react` → `lucide-react-native`
+- shadcn/ui → Custom components (see `components/ui/`)
 
 ## Development
 

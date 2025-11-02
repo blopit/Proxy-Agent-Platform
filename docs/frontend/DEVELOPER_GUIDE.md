@@ -1,6 +1,14 @@
-# Frontend Developer Guide
+# Next.js Web Dashboard Developer Guide
 
-Welcome to the Proxy Agent Platform frontend! This guide will help you navigate the codebase, discover existing systems, and follow our development standards.
+Welcome to the Proxy Agent Platform web dashboard! This guide covers the **Next.js web interface** for desktop power users.
+
+> **⚠️ Important**: This is the **SECONDARY** frontend. For mobile development, see `/mobile/README.md`.
+>
+> **Frontend Architecture**:
+> - **Primary**: `/mobile/` - Expo/React Native app (iOS, Android, Web)
+> - **Secondary**: `/frontend/` - Next.js web dashboard (this guide)
+
+This guide will help you navigate the web dashboard codebase, discover existing systems, and follow development standards.
 
 ## 🚀 Quick Start
 

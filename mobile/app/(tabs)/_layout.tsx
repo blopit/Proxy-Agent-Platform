@@ -1,10 +1,155 @@
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { Plus, Search, Target, Calendar } from 'lucide-react-native';
+import { View, Text } from 'react-native';
+import { useProfile } from '@/src/contexts/ProfileContext';
+import { Svg, Path } from 'react-native-svg';
 
-// Icon components - we'll use emojis for now, later replace with lucide-react-native
-const TabBarIcon = ({ emoji, focused }: { emoji: string; focused: boolean }) => (
-  <Text style={{ fontSize: 24, opacity: focused ? 1 : 0.5 }}>{emoji}</Text>
-);
+// Arrow-shaped tab icon (|>)
+const TabBarIcon = ({
+  Icon,
+  color,
+  focused
+}: {
+  Icon: React.ComponentType<{ color: string; size: number }>;
+  color: string;
+  focused: boolean;
+}) => {
+  const width = 60;
+  const height = 44;
+
+  return (
+    <View style={{ width, height, alignItems: 'center', justifyContent: 'center' }}>
+      <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        {/* Arrow shape: |> */}
+        <Path
+          d={`
+            M 4 4
+            L ${width - 10} 4
+            L ${width - 4} ${height / 2}
+            L ${width - 10} ${height - 4}
+            L 4 ${height - 4}
+            Z
+          `}
+          fill={focused ? `${color}33` : 'transparent'}
+          stroke={color}
+          strokeWidth={focused ? 2 : 1}
+        />
+      </Svg>
+      <View style={{ position: 'absolute' }}>
+        <Icon color={color} size={20} />
+      </View>
+    </View>
+  );
+};
+
+// Calendar icon with current day number overlaid - with arrow shape
+const CalendarWithDate = ({ color, focused }: { color: string; focused: boolean }) => {
+  const currentDay = new Date().getDate();
+  const width = 60;
+  const height = 44;
+
+  return (
+    <View style={{ width, height, alignItems: 'center', justifyContent: 'center' }}>
+      <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        {/* Arrow shape: |> */}
+        <Path
+          d={`
+            M 4 4
+            L ${width - 10} 4
+            L ${width - 4} ${height / 2}
+            L ${width - 10} ${height - 4}
+            L 4 ${height - 4}
+            Z
+          `}
+          fill={focused ? `${color}33` : 'transparent'}
+          stroke={color}
+          strokeWidth={focused ? 2 : 1}
+        />
+      </Svg>
+      <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
+        <Calendar color={color} size={20} />
+        <Text
+          style={{
+            position: 'absolute',
+            color: color,
+            fontSize: 8,
+            fontWeight: '700',
+            top: 7,
+          }}
+        >
+          {currentDay}
+        </Text>
+      </View>
+    </View>
+  );
+};
+
+// Profile avatar with initials - with arrow shape
+const ProfileAvatar = ({ color, focused }: { color: string; focused: boolean }) => {
+  const { activeProfile } = useProfile();
+  const width = 60;
+  const height = 44;
+
+  const getInitials = (profile: string) => {
+    switch (profile) {
+      case 'personal':
+        return 'P';
+      case 'lionmotel':
+        return 'LM';
+      case 'aiservice':
+        return 'AI';
+      default:
+        return 'P';
+    }
+  };
+
+  const initials = getInitials(activeProfile);
+
+  return (
+    <View style={{ width, height, alignItems: 'center', justifyContent: 'center' }}>
+      <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        {/* Arrow shape: |> */}
+        <Path
+          d={`
+            M 4 4
+            L ${width - 10} 4
+            L ${width - 4} ${height / 2}
+            L ${width - 10} ${height - 4}
+            L 4 ${height - 4}
+            Z
+          `}
+          fill={focused ? `${color}33` : 'transparent'}
+          stroke={color}
+          strokeWidth={focused ? 2 : 1}
+        />
+      </Svg>
+      <View
+        style={{
+          position: 'absolute',
+          width: 22,
+          height: 22,
+          borderRadius: 11,
+          borderWidth: 1.5,
+          borderColor: color,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: 'transparent',
+        }}
+      >
+        <Text
+          style={{
+            color: color,
+            fontSize: 9,
+            fontWeight: '700',
+            textAlign: 'center',
+          }}
+        >
+          {initials}
+        </Text>
+      </View>
+    </View>
+  );
+};
 
 export default function TabLayout() {
   return (
@@ -18,45 +163,42 @@ export default function TabLayout() {
           borderTopColor: '#586e75',
           borderTopWidth: 1,
         },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-        },
+        tabBarShowLabel: false,
       }}
     >
       <Tabs.Screen
         name="capture"
         options={{
           title: 'Capture',
-          tabBarIcon: ({ focused }) => <TabBarIcon emoji="⚡" focused={focused} />,
+          tabBarIcon: ({ color, focused }) => <TabBarIcon Icon={Plus} color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="scout"
         options={{
           title: 'Scout',
-          tabBarIcon: ({ focused }) => <TabBarIcon emoji="🔍" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="today"
-        options={{
-          title: 'Today',
-          tabBarIcon: ({ focused }) => <TabBarIcon emoji="📅" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="mapper"
-        options={{
-          title: 'Mapper',
-          tabBarIcon: ({ focused }) => <TabBarIcon emoji="🗺️" focused={focused} />,
+          tabBarIcon: ({ color, focused }) => <TabBarIcon Icon={Search} color={color} focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="hunter"
         options={{
           title: 'Hunter',
-          tabBarIcon: ({ focused }) => <TabBarIcon emoji="🎯" focused={focused} />,
+          tabBarIcon: ({ color, focused }) => <TabBarIcon Icon={Target} color={color} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="today"
+        options={{
+          title: 'Today',
+          tabBarIcon: ({ color, focused }) => <CalendarWithDate color={color} focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="mapper"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, focused }) => <ProfileAvatar color={color} focused={focused} />,
         }}
       />
     </Tabs>

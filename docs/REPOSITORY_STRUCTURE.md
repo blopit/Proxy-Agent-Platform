@@ -6,21 +6,32 @@ The Proxy Agent Platform repository is now organized for optimal development wor
 
 ```
 Proxy-Agent-Platform/
-├── 📋 Project Management
-│   ├── tasks/                          # Epic and task management
-│   │   ├── README.md                   # Task system overview
-│   │   └── epics/                      # Epic breakdown
-│   │       ├── EPIC_BREAKDOWN.md       # High-level epic summary
-│   │       ├── epic-1-core-proxy-agents/
-│   │       ├── epic-2-gamification-system/
-│   │       ├── epic-3-mobile-integration/
-│   │       ├── epic-4-realtime-dashboard/
-│   │       ├── epic-5-learning-optimization/
-│   │       └── epic-6-testing-quality/
-│   └── docs/                           # Project documentation
-│       ├── PROJECT_STRUCTURE.md        # This file
-│       ├── MASTER_TASK_LIST.md         # Overall progress tracking
-│       └── architecture/               # Technical specifications
+├── 📱 Mobile Frontend (PRIMARY)
+│   └── mobile/                         # Expo/React Native Universal App
+│       ├── app/                        # Expo Router (file-based navigation)
+│       │   ├── (tabs)/                 # Tab navigation group
+│       │   │   ├── capture.tsx         # ⚡ Capture Mode
+│       │   │   ├── scout.tsx           # 🔍 Scout Mode
+│       │   │   ├── today.tsx           # 📅 Today Mode
+│       │   │   ├── mapper.tsx          # 🗺️ Mapper Mode
+│       │   │   └── hunter.tsx          # 🎯 Hunter Mode
+│       │   ├── _layout.tsx             # Root layout
+│       │   └── index.tsx               # Entry point
+│       ├── assets/                     # Images, fonts, icons
+│       ├── package.json                # Dependencies
+│       └── README.md                   # Mobile app documentation
+│
+├── 🖥️ Web Dashboard (SECONDARY)
+│   └── frontend/                       # Next.js Web Application
+│       ├── src/
+│       │   ├── app/                    # App router pages
+│       │   │   ├── mobile/             # Mobile UI components (legacy)
+│       │   │   └── dashboard/          # Desktop dashboard
+│       │   ├── components/             # React components
+│       │   └── lib/                    # Utilities and API clients
+│       ├── public/                     # Static assets
+│       ├── package.json                # Node.js dependencies
+│       └── docs/                       # Frontend documentation
 │
 ├── 🐍 Python Backend
 │   ├── agent/                          # FastAPI server (PydanticAI)
@@ -34,17 +45,20 @@ Proxy-Agent-Platform/
 │       ├── agents/                     # Agent type definitions
 │       ├── api/                        # API layer
 │       ├── gamification/               # XP and rewards system
-│       ├── mobile/                     # Mobile integration
+│       ├── mobile/                     # Mobile-specific API endpoints
 │       ├── models/                     # Data models
 │       └── services/                   # Business logic
 │
-├── ⚛️ React Frontend
-│   └── frontend/                       # Next.js application
-│       ├── src/
-│       │   ├── app/                    # App router pages
-│       │   └── components/             # React components
-│       ├── public/                     # Static assets
-│       └── package.json                # Node.js dependencies
+├── 📋 Project Management
+│   ├── tasks/                          # Epic and task management
+│   │   ├── README.md                   # Task system overview
+│   │   └── epics/                      # Epic breakdown
+│   └── docs/                           # Project documentation
+│       ├── REPOSITORY_STRUCTURE.md     # This file
+│       ├── MASTER_TASK_LIST.md         # Overall progress tracking
+│       ├── mobile/                     # Mobile app documentation
+│       ├── frontend/                   # Web dashboard documentation
+│       └── architecture/               # Technical specifications
 │
 ├── 🧪 Testing & Quality
 │   └── tests/                          # Test suite
@@ -65,6 +79,7 @@ Proxy-Agent-Platform/
 │
 └── 📄 Configuration
     ├── CLAUDE.md                       # Development guidelines
+    ├── EXPO_MIGRATION_PLAN.md          # Mobile app migration plan
     ├── IDEA.md                         # Project vision
     ├── README.md                       # Project overview
     ├── package.json                    # Node.js workspace config
@@ -76,16 +91,28 @@ Proxy-Agent-Platform/
 
 ## 🎯 Directory Purposes
 
-### **📋 Project Management**
-- **`tasks/`**: Comprehensive epic and task breakdown system
-- **`docs/`**: Technical documentation and architecture specs
+### **📱 Mobile Frontend (PRIMARY)**
+- **`mobile/`**: Expo/React Native universal app for iOS, Android, and Web
+- Built with Expo SDK 54+ and React Native 0.81+
+- File-based routing with Expo Router
+- 5 biological modes optimized for ADHD productivity
+
+### **🖥️ Web Dashboard (SECONDARY)**
+- **`frontend/`**: Next.js web application for desktop users
+- Desktop power user interface with advanced features
+- Admin console and analytics dashboard
+- CopilotKit AI chat integration
 
 ### **🐍 Backend Development**
 - **`agent/`**: FastAPI server with PydanticAI proxy agents
 - **`proxy_agent_platform/`**: Core platform modules and business logic
+- **`proxy_agent_platform/mobile/`**: Mobile-specific API endpoints
 
-### **⚛️ Frontend Development**
-- **`frontend/`**: Next.js application with CopilotKit integration
+### **📋 Project Management**
+- **`tasks/`**: Comprehensive epic and task breakdown system
+- **`docs/`**: Technical documentation and architecture specs
+- **`docs/mobile/`**: Mobile app-specific documentation
+- **`docs/frontend/`**: Web dashboard documentation
 
 ### **🧪 Quality Assurance**
 - **`tests/`**: Comprehensive test suite with multiple test types
@@ -97,20 +124,41 @@ Proxy-Agent-Platform/
 
 ## 🚀 Development Workflow
 
-### **1. Task Management**
+### **1. Mobile App Development (Primary)**
+```bash
+cd mobile
+npm install
+npm start           # Start Expo dev server
+npm run web         # Test in browser (fastest)
+npm run ios         # Test on iOS simulator
+npm run android     # Test on Android emulator
+```
+
+### **2. Web Dashboard Development (Secondary)**
+```bash
+cd frontend
+npm install
+npm run dev         # Start Next.js dev server
+```
+
+### **3. Backend Development**
+```bash
+# Follow CLAUDE.md standards for all Python code
+uv venv
+source .venv/bin/activate
+uv sync
+uv run uvicorn proxy_agent_platform.api.main:app --reload
+```
+
+### **4. Task Management**
 - Start with `tasks/README.md` for epic overview
 - Follow epic-specific task lists for detailed implementation
 - Use TodoWrite tool for daily task tracking
 
-### **2. Implementation**
-- Follow CLAUDE.md standards for all code
-- Implement agents in `agent/agents/`
-- Build frontend components in `frontend/src/components/`
-- Write tests in parallel with implementation
-
-### **3. Quality Assurance**
+### **5. Quality Assurance**
 - Run tests with `uv run pytest`
 - Check code quality with `uv run ruff check`
+- Test mobile app on real devices
 - Ensure documentation stays current
 
 ## 🎯 Epic System Integration with Claude Code

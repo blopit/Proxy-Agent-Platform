@@ -122,7 +122,7 @@ class TestSplitTaskEndpoint:
             assert "step_number" in step
             assert "description" in step
             assert "estimated_minutes" in step
-            assert 1 <= step["estimated_minutes"] <= 10  # 2-5 min target, 1-10 max
+            assert 2 <= step["estimated_minutes"] <= 5  # 2-5 min ADHD-optimized range
             assert "delegation_mode" in step
             assert step["delegation_mode"] in ["do", "do_with_me", "delegate", "delete"]
 

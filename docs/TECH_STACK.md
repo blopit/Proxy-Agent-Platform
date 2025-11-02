@@ -22,17 +22,32 @@
   - Version: `>=2.0.0`
   - Rationale: Type safety, validation, seamless FastAPI integration
 
-### **⚛️ Frontend Stack (LOCKED)**
+### **📱 Mobile Frontend Stack (PRIMARY - LOCKED)**
+- **Expo SDK 54+**: Universal React Native framework
+  - Version: `>=54.0.0`
+  - Rationale: Cross-platform iOS/Android/Web from single codebase, excellent developer experience
+- **React Native 0.81+**: Native mobile framework
+  - Version: `>=0.81.5`
+  - Rationale: True native performance, access to device APIs, mature ecosystem
+- **Expo Router**: File-based navigation
+  - Version: Latest stable
+  - Rationale: Type-safe navigation, deep linking, automatic route generation
+- **React Native Reanimated**: High-performance animations
+  - Version: Latest stable
+  - Rationale: 60 FPS animations, gesture handling, smooth UX
+- **TypeScript**: Type-safe mobile development
+  - Version: Latest stable
+  - Rationale: Developer experience, maintainability, error prevention
+
+### **🖥️ Web Dashboard Stack (SECONDARY - LOCKED)**
 - **Next.js 14+**: React framework with App Router
   - Version: `>=14.0.0`
   - Rationale: Server components, optimized performance, TypeScript support
-- **TypeScript**: Type-safe frontend development
-  - Version: Latest stable
-  - Rationale: Developer experience, maintainability, error prevention
+  - Use Case: Desktop power users, admin console, analytics dashboard
 - **Tailwind CSS**: Utility-first styling
   - Version: Latest stable
   - Rationale: Rapid development, consistent design system
-- **CopilotKit**: AI chat integration
+- **CopilotKit**: AI chat integration (web-only)
   - Version: Latest stable
   - Rationale: Natural language interaction with proxy agents
 
@@ -50,16 +65,22 @@
   - Version: Latest
   - Rationale: Catch type errors at development time
 
-### **📱 Mobile Integration (LOCKED)**
-- **iOS Shortcuts**: Native iOS integration
+### **📱 Native Mobile Features (LOCKED)**
+- **Expo File-Based Routing**: Navigation system
+  - Feature: Automatic route generation from file structure
+  - Rationale: Type-safe navigation, deep linking support
+- **Expo Modules**: Native API access
+  - Features: Camera, location, notifications, sensors
+  - Rationale: Access to device hardware and OS features
+- **Universal App Support**: True cross-platform
+  - Platforms: iOS native, Android native, Web (PWA)
+  - Rationale: Single codebase runs everywhere with native performance
+- **iOS Shortcuts**: Native iOS integration (future)
   - Platform: iOS 14+
   - Rationale: Siri integration, system-level automation
-- **Android Quick Settings**: Native Android integration
+- **Android Quick Settings**: Native Android integration (future)
   - Platform: Android 7+
   - Rationale: One-tap access, notification panel integration
-- **PWA Support**: Cross-platform mobile app
-  - Standard: Latest PWA standards
-  - Rationale: Single codebase, native-like experience
 
 ### **🗄️ Database Architecture (LOCKED)**
 - **Primary Database**: PostgreSQL
@@ -187,26 +208,30 @@ Each epic now includes:
 ### **Performance Focus**
 - **UV**: 10-100x faster package management
 - **Ruff**: Extremely fast Python tooling
-- **Next.js**: Optimized React performance
+- **Expo**: Hot reload, fast refresh, optimized bundling
+- **React Native**: True native performance (60 FPS)
 - **PostgreSQL**: Proven scalability and performance
 
 ### **Developer Experience**
-- **TypeScript**: Type safety across frontend and backend
+- **TypeScript**: Type safety across mobile, web, and backend
 - **Pydantic**: Structured data validation
 - **FastAPI**: Automatic API documentation
-- **Tailwind**: Rapid UI development
+- **Expo Router**: File-based navigation with type safety
+- **Hot Reload**: Instant feedback during development
 
 ### **AI-First Design**
 - **PydanticAI**: Built for structured AI applications
-- **CopilotKit**: Seamless AI chat integration
+- **CopilotKit**: Seamless AI chat integration (web dashboard)
 - **FastAPI**: Easy AI model serving
 - **Type Safety**: Reduces AI hallucination impact
 
-### **Mobile-First**
-- **PWA Support**: Cross-platform mobile experience
-- **Native Integrations**: iOS Shortcuts, Android tiles
+### **True Mobile-First**
+- **Expo Universal App**: Single codebase for iOS, Android, and Web
+- **Native Performance**: 60 FPS animations, instant interactions
+- **Device APIs**: Full access to camera, sensors, notifications
 - **Offline Capability**: Works without internet connection
 - **Performance**: 2-second task capture requirement
+- **App Store Ready**: Deploy to iOS App Store and Google Play Store
 
 ---
 

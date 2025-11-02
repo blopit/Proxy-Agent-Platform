@@ -129,7 +129,7 @@ class MicroStep(BaseModel):
     step_number: int = Field(..., ge=1, description="Order in sequence")
     description: str = Field(..., min_length=1, max_length=500)
     short_label: str | None = Field(None, max_length=20, description="1-2 word label for UI display")
-    estimated_minutes: int = Field(..., ge=1, le=15, description="1-15 minutes (target 2-5)")
+    estimated_minutes: int = Field(..., ge=2, le=5, description="2-5 minutes (ADHD-optimized micro-steps)")
     icon: str | None = Field(None, description="Emoji icon representing this step")
 
     # Delegation
@@ -173,8 +173,8 @@ class MicroStep(BaseModel):
     @field_validator("estimated_minutes")
     @classmethod
     def validate_estimated_minutes(cls, v: int) -> int:
-        if v < 1 or v > 15:
-            raise ValueError("Estimated minutes must be between 1 and 15")
+        if v < 2 or v > 5:
+            raise ValueError("Estimated minutes must be between 2 and 5 (ADHD-optimized)")
         return v
 
     def mark_completed(self) -> None:

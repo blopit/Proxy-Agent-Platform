@@ -201,6 +201,87 @@ export const taskApi = {
       method: 'POST',
     })
   },
+
+  // ==================== Epic 7: Task Splitting API ====================
+
+  /**
+   * Split a task into 2-5 minute micro-steps using AI
+   * @param taskId - Task ID to split
+   * @returns Split response with micro-steps and next action
+   */
+  async splitTask(taskId: string): Promise<{
+    task_id: string
+    scope: 'simple' | 'multi' | 'project'
+    micro_steps: Array<{
+      step_id: string
+      step_number: number
+      description: string
+      short_label?: string
+      estimated_minutes: number
+      delegation_mode: 'do' | 'do_with_me' | 'delegate' | 'delete'
+      icon?: string
+      status: string
+    }>
+    next_action: {
+      step_number: number
+      description: string
+      estimated_minutes: number
+    }
+  }> {
+    return apiRequest(`/api/v1/tasks/${taskId}/split`, {
+      method: 'POST',
+    })
+  },
+
+  /**
+   * Get task with all its micro-steps included
+   * @param taskId - Task ID to retrieve
+   * @returns Task with micro_steps array populated
+   */
+  async getTaskWithMicroSteps(taskId: string): Promise<Task & {
+    micro_steps: Array<{
+      step_id: string
+      step_number: number
+      description: string
+      estimated_minutes: number
+      status: string
+      delegation_mode: string
+      completed_at?: string
+    }>
+  }> {
+    return apiRequest(`/api/v1/tasks/${taskId}`)
+  },
+
+  /**
+   * Mark a micro-step as completed
+   * @param taskId - Parent task ID
+   * @param stepId - Micro-step ID to complete
+   * @returns Completion result with XP awarded
+   */
+  async completeMicroStep(taskId: string, stepId: string): Promise<{
+    step_id: string
+    status: string
+    completed_at: string
+    xp_awarded: number
+  }> {
+    return apiRequest(`/api/v1/tasks/${taskId}/micro-steps/${stepId}/complete`, {
+      method: 'POST',
+    })
+  },
+
+  /**
+   * Get progress for all micro-steps of a task
+   * @param taskId - Task ID
+   * @returns Progress statistics
+   */
+  async getMicroStepProgress(taskId: string): Promise<{
+    total_steps: number
+    completed_steps: number
+    completion_percentage: number
+    estimated_remaining_minutes: number
+  }> {
+    return apiRequest(`/api/v1/tasks/${taskId}/micro-steps/progress`)
+  },
 }
 
 export { TaskApiError }

@@ -64,7 +64,7 @@ const preview: Preview = {
     test: {
       disable: false,
     },
-    layout: 'fullscreen',
+    layout: 'padded', // Changed from 'fullscreen' to show Storybook header
     viewport: {
       viewports: {
         mobile: {

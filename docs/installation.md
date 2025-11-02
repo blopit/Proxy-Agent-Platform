@@ -21,20 +21,59 @@ Complete installation guide for the Proxy Agent Platform - get up and running in
 
 ## 🛠️ Quick Installation
 
-### Option 1: One-Command Setup (Recommended)
+### For Mobile App Users (Recommended)
 
 ```bash
-# Install and set up everything automatically
-curl -sSL https://install.proxyagent.dev | bash
+# Clone the repository
+git clone https://github.com/yourusername/proxy-agent-platform.git
+cd proxy-agent-platform
+
+# Install mobile app dependencies
+cd mobile
+npm install
+
+# Start the app
+npm start
+# Then press 'w' for web, 'i' for iOS, or 'a' for Android
 ```
 
-This script will:
-- Install UV package manager
-- Clone the repository
-- Set up virtual environment
-- Install all dependencies
-- Configure basic settings
-- Run initial setup
+### For Backend Developers
+
+```bash
+# Install UV package manager
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Set up Python backend
+cd proxy-agent-platform
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv sync
+
+# Start backend server
+uv run uvicorn proxy_agent_platform.api.main:app --reload
+```
+
+### Full Stack Setup (Mobile + Backend)
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/proxy-agent-platform.git
+cd proxy-agent-platform
+
+# 1. Set up backend first
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv venv && source .venv/bin/activate
+uv sync
+uv run alembic upgrade head
+
+# 2. Start backend in one terminal
+uv run uvicorn proxy_agent_platform.api.main:app --reload
+
+# 3. Start mobile app in another terminal
+cd mobile
+npm install
+npm start
+```
 
 ### Option 2: Manual Installation
 
@@ -469,38 +508,73 @@ curl http://localhost:8000/health
 curl http://localhost:8000/metrics
 ```
 
-## 📱 Mobile Setup
+## 📱 Mobile App Setup (Expo)
 
-### iOS Integration
+### Running on Different Platforms
 
-1. **Install iOS Shortcuts App** (pre-installed on iOS 13+)
+#### Web (Fastest for Development)
+```bash
+cd mobile
+npm run web
+# Opens in browser at http://localhost:8081
+```
 
-2. **Import Proxy Agent Shortcuts:**
-   ```bash
-   # Generate iOS shortcuts
-   uv run python scripts/generate_ios_shortcuts.py
+#### iOS Simulator (macOS Only)
+```bash
+cd mobile
+npm run ios
+# Requires Xcode and iOS Simulator installed
+```
 
-   # This creates shortcuts.json with importable shortcuts
-   ```
+#### Android Emulator
+```bash
+cd mobile
+npm run android
+# Requires Android Studio and emulator configured
+```
 
-3. **Add shortcuts to iOS:**
-   - Open the generated shortcuts file
-   - Import each shortcut to the Shortcuts app
-   - Configure with your API endpoint and token
+#### Physical Device (iOS/Android)
+```bash
+cd mobile
+npm start
+# Scan QR code with:
+# - iOS: Camera app or Expo Go app
+# - Android: Expo Go app
+```
 
-### Android Integration
+### Building for Production
 
-1. **Install Tasker** (or use built-in Google Assistant)
+#### iOS App Store
+```bash
+cd mobile
+# Install EAS CLI
+npm install -g eas-cli
 
-2. **Import Tasker Profiles:**
-   ```bash
-   # Generate Tasker profiles
-   uv run python scripts/generate_android_profiles.py
-   ```
+# Build for App Store
+eas build --platform ios
+```
 
-3. **Configure Google Assistant:**
-   - Set up custom phrases in Google Assistant
-   - Link to webhook endpoints provided by the platform
+#### Android Play Store
+```bash
+cd mobile
+# Build for Play Store
+eas build --platform android
+```
+
+### Mobile App Configuration
+
+Create `mobile/.env`:
+```bash
+API_URL=http://localhost:8000
+WS_URL=ws://localhost:8000/ws
+```
+
+### Native Features Integration (Future)
+
+- **iOS Shortcuts**: Siri integration for voice capture
+- **Android Quick Settings**: One-tap task capture
+- **Push Notifications**: Real-time task reminders
+- **Biometric Auth**: Fingerprint/Face ID login
 
 ## 🔧 Troubleshooting
 

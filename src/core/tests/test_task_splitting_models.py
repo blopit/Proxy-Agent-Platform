@@ -116,8 +116,8 @@ class TestMicroStep:
         assert step.status == TaskStatus.TODO
 
     def test_microstep_estimated_minutes_range(self):
-        """Test that estimated_minutes must be between 1-10 minutes"""
-        # Valid: 2-5 minutes (target range)
+        """Test that estimated_minutes must be between 2-5 minutes (ADHD-optimized)"""
+        # Valid: 2-5 minutes (ADHD-optimized range)
         step = MicroStep(
             parent_task_id="task_123",
             step_number=1,
@@ -126,22 +126,22 @@ class TestMicroStep:
         )
         assert step.estimated_minutes == 3
 
-        # Valid: edge cases (1-10 minutes allowed)
+        # Valid: edge cases (2-5 minutes allowed)
         step_min = MicroStep(
             parent_task_id="task_123",
             step_number=1,
-            description="Very quick task",
-            estimated_minutes=1
+            description="Minimum duration task",
+            estimated_minutes=2
         )
-        assert step_min.estimated_minutes == 1
+        assert step_min.estimated_minutes == 2
 
         step_max = MicroStep(
             parent_task_id="task_123",
             step_number=1,
-            description="Longer micro-step",
-            estimated_minutes=10
+            description="Maximum duration micro-step",
+            estimated_minutes=5
         )
-        assert step_max.estimated_minutes == 10
+        assert step_max.estimated_minutes == 5
 
     def test_microstep_estimated_minutes_validation_fails_below_minimum(self):
         """Test that estimated_minutes < 1 raises validation error"""
