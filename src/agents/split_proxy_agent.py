@@ -406,7 +406,7 @@ Focus on CLARITY and IMMEDIATE ACTION. Keep steps substantial - don't break triv
             steps.append({
                 "description": f"Go to the store and find items for: {task.title}",
                 "short_label": "Shop",
-                "estimated_minutes": 8,
+                "estimated_minutes": 5,  # Max 5 min (ADHD-optimized)
                 "delegation_mode": "do",
                 "icon": "🛒"
             })
@@ -422,7 +422,7 @@ Focus on CLARITY and IMMEDIATE ACTION. Keep steps substantial - don't break triv
             steps.append({
                 "description": f"Work on the main part of: {task.title}",
                 "short_label": "Work",
-                "estimated_minutes": 6,
+                "estimated_minutes": 4,  # Max 5 min (ADHD-optimized)
                 "delegation_mode": "do",
                 "icon": "⚙️"
             })
