@@ -314,8 +314,8 @@ async def get_task(
     cursor.execute("""
         SELECT step_id, description, estimated_minutes,
                delegation_mode, completed, completed_at, created_at,
-               leaf_type, tags, parent_step_id, level, is_leaf,
-               decomposition_state, short_label, icon
+               parent_step_id, level, is_leaf,
+               decomposition_state, short_label, icon, status
         FROM micro_steps
         WHERE parent_task_id = ?
         ORDER BY created_at ASC
@@ -335,18 +335,18 @@ async def get_task(
             description=row[1],
             estimated_minutes=row[2],
             delegation_mode=DelegationMode(row[3]) if row[3] else DelegationMode.DO,
-            status=TaskStatus.DONE if row[4] else TaskStatus.TODO,  # completed boolean
+            status=TaskStatus(row[13]) if row[13] else TaskStatus.TODO,  # status from row[13]
             actual_minutes=None,  # Not stored in current schema
             created_at=datetime.fromisoformat(row[6]) if row[6] else datetime.utcnow(),
             completed_at=datetime.fromisoformat(row[5]) if row[5] else None,
-            leaf_type=row[7] if row[7] else "HUMAN",
-            tags=json.loads(row[8]) if row[8] else [],
-            parent_step_id=row[9],
-            level=row[10] if row[10] is not None else 0,
-            is_leaf=bool(row[11]) if row[11] is not None else True,
-            decomposition_state=row[12] if row[12] else "atomic",
-            short_label=row[13],
-            icon=row[14]
+            leaf_type="human",  # Default value (not in query) - lowercase for LeafType enum
+            tags=[],  # Default value (not in query)
+            parent_step_id=row[7],
+            level=row[8] if row[8] is not None else 0,
+            is_leaf=bool(row[9]) if row[9] is not None else True,
+            decomposition_state=row[10] if row[10] else "atomic",
+            short_label=row[11],
+            icon=row[12]
         )
         micro_steps.append(micro_step)
 

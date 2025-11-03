@@ -4,7 +4,7 @@ import { Text, View, StyleSheet } from 'react-native';
 import { ChevronElement } from './ChevronElement';
 
 const meta = {
-  title: 'Shared/Core/ChevronElement',
+  title: 'Core/ChevronElement',
   component: ChevronElement,
   argTypes: {
     backgroundColor: {
@@ -45,11 +45,88 @@ export const Basic: Story = {
     height: 60,
     chevronDepth: 20,
     shadow: false,
+    position: 'single',
   },
   render: (args) => (
     <ChevronElement {...args}>
       <Text style={styles.text}>Basic Chevron</Text>
     </ChevronElement>
+  ),
+};
+
+/**
+ * START position - Left edge straight, right edge angled
+ */
+export const StartPosition: Story = {
+  args: {
+    backgroundColor: '#3B82F6',
+    height: 60,
+    chevronDepth: 20,
+    position: 'start',
+  },
+  render: (args) => (
+    <ChevronElement {...args}>
+      <Text style={styles.text}>Start</Text>
+    </ChevronElement>
+  ),
+};
+
+/**
+ * MIDDLE position - Both edges angled
+ */
+export const MiddlePosition: Story = {
+  args: {
+    backgroundColor: '#8B5CF6',
+    height: 60,
+    chevronDepth: 20,
+    position: 'middle',
+  },
+  render: (args) => (
+    <ChevronElement {...args}>
+      <Text style={styles.text}>Middle</Text>
+    </ChevronElement>
+  ),
+};
+
+/**
+ * END position - Left edge angled, right edge straight
+ */
+export const EndPosition: Story = {
+  args: {
+    backgroundColor: '#10B981',
+    height: 60,
+    chevronDepth: 20,
+    position: 'end',
+  },
+  render: (args) => (
+    <ChevronElement {...args}>
+      <Text style={styles.text}>End</Text>
+    </ChevronElement>
+  ),
+};
+
+/**
+ * Chained flow showing all three positions together
+ */
+export const ChainedFlow: Story = {
+  render: () => (
+    <View style={styles.column}>
+      <ChevronElement backgroundColor="#3B82F6" height={50} chevronDepth={20} position="start">
+        <Text style={styles.text}>Step 1: Start</Text>
+      </ChevronElement>
+      <View style={{ height: 5 }} />
+      <ChevronElement backgroundColor="#8B5CF6" height={50} chevronDepth={20} position="middle">
+        <Text style={styles.text}>Step 2: Process</Text>
+      </ChevronElement>
+      <View style={{ height: 5 }} />
+      <ChevronElement backgroundColor="#EC4899" height={50} chevronDepth={20} position="middle">
+        <Text style={styles.text}>Step 3: Review</Text>
+      </ChevronElement>
+      <View style={{ height: 5 }} />
+      <ChevronElement backgroundColor="#10B981" height={50} chevronDepth={20} position="end">
+        <Text style={styles.text}>Step 4: Complete</Text>
+      </ChevronElement>
+    </View>
   ),
 };
 
@@ -67,6 +144,31 @@ export const WithShadow: Story = {
     <ChevronElement {...args}>
       <Text style={styles.text}>Chevron with Shadow</Text>
     </ChevronElement>
+  ),
+};
+
+/**
+ * Sharp vs Rounded corners comparison
+ */
+export const RoundedComparison: Story = {
+  render: () => (
+    <View style={styles.column}>
+      <ChevronElement backgroundColor="#3B82F6" height={60} chevronDepth={15} borderRadius={0}>
+        <Text style={styles.text}>Sharp Angles (radius=0)</Text>
+      </ChevronElement>
+      <View style={{ height: 10 }} />
+      <ChevronElement backgroundColor="#8B5CF6" height={60} chevronDepth={15} borderRadius={3}>
+        <Text style={styles.text}>Subtle Rounding (radius=3)</Text>
+      </ChevronElement>
+      <View style={{ height: 10 }} />
+      <ChevronElement backgroundColor="#EC4899" height={60} chevronDepth={15} borderRadius={6}>
+        <Text style={styles.text}>Moderate Rounding (radius=6)</Text>
+      </ChevronElement>
+      <View style={{ height: 10 }} />
+      <ChevronElement backgroundColor="#10B981" height={60} chevronDepth={15} borderRadius={10}>
+        <Text style={styles.text}>Smooth Rounding (radius=10)</Text>
+      </ChevronElement>
+    </View>
   ),
 };
 
