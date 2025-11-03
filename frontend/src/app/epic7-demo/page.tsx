@@ -41,7 +41,7 @@ export default function Epic7DemoPage() {
       const newTask = await taskApi.createTask({
         title: taskTitle,
         description: taskDescription || taskTitle,
-        project_id: 'demo-project', // Use a demo project ID
+        project_id: 'default-project', // Use existing default project
         status: 'todo',
         priority: 'medium',
       });
