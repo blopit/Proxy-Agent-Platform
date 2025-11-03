@@ -204,12 +204,19 @@ class SplitProxyAgent:
         # Convert to MicroStep objects
         micro_steps = []
         for i, step_data in enumerate(steps_data, 1):
+            # Clamp estimated_minutes to valid range (2-5 minutes)
+            estimated_minutes = step_data["estimated_minutes"]
+            if estimated_minutes < 2:
+                estimated_minutes = 2
+            elif estimated_minutes > 5:
+                estimated_minutes = 5
+
             step = MicroStep(
                 parent_task_id=task.task_id,
                 step_number=i,
                 description=step_data["description"],
                 short_label=step_data.get("short_label"),
-                estimated_minutes=step_data["estimated_minutes"],
+                estimated_minutes=estimated_minutes,
                 icon=step_data.get("icon"),
                 delegation_mode=step_data.get("delegation_mode", DelegationMode.DO)
             )
@@ -241,7 +248,7 @@ Priority: {task.priority}
 
 Requirements:
 1. Create 3-5 substantial micro-steps (not too granular, ADHD-friendly)
-2. Each step should take 3-10 minutes (sweet spot for focus and progress)
+2. Each step MUST take 2-5 minutes ONLY (ADHD-optimized, strictly enforced)
 3. Steps must be SPECIFIC and ACTIONABLE (not vague)
 4. Combine related actions into single steps - avoid over-splitting trivial tasks
 5. Provide a short_label (1-2 words) for each step - this appears in the UI

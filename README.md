@@ -16,7 +16,7 @@ An ADHD-optimized productivity platform that helps users manage tasks, maintain 
 
 **Want the full status?** [Platform Status Report](reports/current/PLATFORM_STATUS_2025-11-02.md)
 
-**Ready to build?** [Next Tasks Prioritized](NEXT_TASKS_PRIORITIZED.md)
+**Ready to build?** [Next Tasks Prioritized](docs/status/NEXT_TASKS_PRIORITIZED.md)
 
 ## 🎯 Current Status (November 2, 2025)
 

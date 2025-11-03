@@ -33,7 +33,6 @@
     "production:start": "npm start"
   },
   "devDependencies": {
-    "@storybook/react": "^9.1.15",
     "concurrently": "^8.2.2"
   },
   "workspaces": [
