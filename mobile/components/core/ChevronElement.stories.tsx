@@ -318,6 +318,116 @@ export const Minimal: Story = {
   ),
 };
 
+/**
+ * Shadow Testing - All positions with shadows
+ * Tests how shadows render on different chevron positions
+ */
+export const ShadowTesting: Story = {
+  render: () => (
+    <View style={styles.column}>
+      <Text style={styles.sectionTitle}>With Shadows (shadow=true)</Text>
+
+      <ChevronElement backgroundColor="#3B82F6" height={60} chevronDepth={15} shadow position="start">
+        <Text style={styles.text}>Start + Shadow</Text>
+      </ChevronElement>
+      <View style={{ height: 15 }} />
+
+      <ChevronElement backgroundColor="#8B5CF6" height={60} chevronDepth={15} shadow position="middle">
+        <Text style={styles.text}>Middle + Shadow</Text>
+      </ChevronElement>
+      <View style={{ height: 15 }} />
+
+      <ChevronElement backgroundColor="#EC4899" height={60} chevronDepth={15} shadow position="end">
+        <Text style={styles.text}>End + Shadow</Text>
+      </ChevronElement>
+      <View style={{ height: 15 }} />
+
+      <ChevronElement backgroundColor="#10B981" height={60} chevronDepth={15} shadow position="single">
+        <Text style={styles.text}>Single + Shadow</Text>
+      </ChevronElement>
+
+      <View style={{ height: 30 }} />
+      <Text style={styles.sectionTitle}>Without Shadows (shadow=false)</Text>
+
+      <ChevronElement backgroundColor="#3B82F6" height={60} chevronDepth={15} shadow={false} position="middle">
+        <Text style={styles.text}>No Shadow (Flat)</Text>
+      </ChevronElement>
+    </View>
+  ),
+};
+
+/**
+ * Shadow Flow - Chained chevrons with shadows
+ * Tests shadows in a realistic flow visualization
+ */
+export const ShadowFlow: Story = {
+  render: () => (
+    <View style={styles.column}>
+      <Text style={styles.sectionTitle}>Task Flow with Shadows</Text>
+
+      <ChevronElement backgroundColor="#3B82F6" height={50} chevronDepth={15} shadow position="start">
+        <Text style={styles.text}>1. Capture</Text>
+      </ChevronElement>
+      <View style={{ height: 8 }} />
+
+      <ChevronElement backgroundColor="#8B5CF6" height={50} chevronDepth={15} shadow position="middle">
+        <Text style={styles.text}>2. Scout</Text>
+      </ChevronElement>
+      <View style={{ height: 8 }} />
+
+      <ChevronElement backgroundColor="#EC4899" height={50} chevronDepth={15} shadow position="middle">
+        <Text style={styles.text}>3. Hunter</Text>
+      </ChevronElement>
+      <View style={{ height: 8 }} />
+
+      <ChevronElement backgroundColor="#F59E0B" height={50} chevronDepth={15} shadow position="middle">
+        <Text style={styles.text}>4. Today</Text>
+      </ChevronElement>
+      <View style={{ height: 8 }} />
+
+      <ChevronElement backgroundColor="#10B981" height={50} chevronDepth={15} shadow position="end">
+        <Text style={styles.text}>5. Mapper</Text>
+      </ChevronElement>
+    </View>
+  ),
+};
+
+/**
+ * Shadow Depth Comparison
+ * Same chevron with and without shadow side-by-side
+ */
+export const ShadowComparison: Story = {
+  render: () => (
+    <View style={styles.column}>
+      <Text style={styles.sectionTitle}>Without Shadow</Text>
+      <ChevronElement backgroundColor="#3B82F6" height={70} chevronDepth={20} shadow={false}>
+        <View>
+          <Text style={[styles.text, { fontSize: 16, fontWeight: '700' }]}>
+            Flat Design
+          </Text>
+          <Text style={[styles.text, { fontSize: 12, opacity: 0.8 }]}>
+            shadow=false
+          </Text>
+        </View>
+      </ChevronElement>
+
+      <View style={{ height: 30 }} />
+
+      <Text style={styles.sectionTitle}>With Shadow</Text>
+      <ChevronElement backgroundColor="#3B82F6" height={70} chevronDepth={20} shadow>
+        <View>
+          <Text style={[styles.text, { fontSize: 16, fontWeight: '700' }]}>
+            3D Depth
+          </Text>
+          <Text style={[styles.text, { fontSize: 12, opacity: 0.8 }]}>
+            shadow=true
+          </Text>
+        </View>
+      </ChevronElement>
+    </View>
+  ),
+};
+
 const styles = StyleSheet.create({
   decorator: {
     flex: 1,
@@ -344,5 +454,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#6B7280',
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });
