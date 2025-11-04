@@ -142,19 +142,19 @@ const styles = StyleSheet.create({
   tab: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     opacity: 0.6,
     position: 'relative',
+    paddingTop: 4,
   },
   tabActive: {
     opacity: 1,
-    transform: [{ translateY: -2 }],
   },
   chevronBackground: {
     position: 'absolute',
-    top: 0,
+    top: 4,
     left: '50%',
-    marginLeft: -40, // Half of width (80/2) to center
+    marginLeft: -40, // Half of width (80/2) to center horizontally
   },
   chevronContent: {
     width: '100%',
@@ -166,6 +166,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1, // Above chevron background
+    height: 40, // Match chevron height
   },
   label: {
     fontSize: 10,
