@@ -165,7 +165,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1, // Above chevron background
-    height: 54, // Match chevron height (includes padding space)
   },
   label: {
     fontSize: 10,
