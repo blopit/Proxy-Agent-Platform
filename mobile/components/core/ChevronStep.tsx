@@ -12,6 +12,7 @@
 import React, { ReactNode } from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { THEME } from '../../src/theme/colors';
 
 export type ChevronPosition = 'first' | 'middle' | 'last' | 'single';
 export type ChevronStatus = 'pending' | 'active' | 'done' | 'error' | 'next' | 'tab' | 'active_tab';
@@ -30,15 +31,15 @@ export interface ChevronStepProps {
   ariaLabel?: string;
 }
 
-// Default colors (Solarized theme)
+// Default colors (Solarized Dark theme)
 const DEFAULT_COLORS = {
-  pending: { fill: '#fdf6e3', stroke: '#93a1a1' },
-  active: { fill: '#eef4fb', stroke: '#268bd2' },
-  done: { fill: '#eef2e6', stroke: '#859900' },
-  error: { fill: '#fae8e8', stroke: '#dc322f' },
-  next: { fill: '#fdf2e1', stroke: '#cb4b16' },
-  tab: { fill: '#eee8d5', stroke: '#93a1a1' },
-  active_tab: { fill: '#d3e4f4', stroke: '#268bd2' },
+  pending: { fill: `${THEME.base02}`, stroke: THEME.base01 },
+  active: { fill: `${THEME.blue}20`, stroke: THEME.blue },
+  done: { fill: `${THEME.green}20`, stroke: THEME.green },
+  error: { fill: `${THEME.red}20`, stroke: THEME.red },
+  next: { fill: `${THEME.orange}20`, stroke: THEME.orange },
+  tab: { fill: THEME.base02, stroke: THEME.base01 },
+  active_tab: { fill: `${THEME.blue}30`, stroke: THEME.blue },
 };
 
 // Size configurations
@@ -106,7 +107,7 @@ const ChevronStep: React.FC<ChevronStepProps> = ({
       <View style={styles.content}>
         {emoji && <Text style={[styles.emoji, { fontSize: config.fontSize + 4 }]}>{emoji}</Text>}
         {typeof children === 'string' ? (
-          <Text style={[styles.text, { fontSize: config.fontSize, color: finalStrokeColor }]}>
+          <Text style={[styles.text, { fontSize: config.fontSize, color: THEME.base0 }]}>
             {children}
           </Text>
         ) : (

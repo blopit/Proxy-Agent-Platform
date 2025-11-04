@@ -15,6 +15,7 @@ import { Check, AlertCircle } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
 import ChevronStep from '../core/ChevronStep';
 import ChevronButton from '../core/ChevronButton';
+import { THEME } from '../../src/theme/colors';
 
 export type ConnectionStatus = 'disconnected' | 'connected' | 'error' | 'connecting';
 
@@ -64,8 +65,8 @@ const ConnectionElement: React.FC<ConnectionElementProps> = ({
         return (
           <ChevronButton variant="success" position="single" width={120}>
             <View style={styles.statusContent}>
-              <Check size={14} color="#002b36" strokeWidth={2.5} />
-              <Text style={[styles.statusText, { color: '#002b36' }]}>Connected</Text>
+              <Check size={14} color={THEME.base03} strokeWidth={2.5} />
+              <Text style={[styles.statusText, { color: THEME.base03 }]}>Connected</Text>
             </View>
           </ChevronButton>
         );
@@ -74,8 +75,8 @@ const ConnectionElement: React.FC<ConnectionElementProps> = ({
         return (
           <ChevronButton variant="error" position="single" width={120}>
             <View style={styles.statusContent}>
-              <AlertCircle size={14} color="#fdf6e3" strokeWidth={2.5} />
-              <Text style={[styles.statusText, { color: '#fdf6e3' }]}>Error</Text>
+              <AlertCircle size={14} color={THEME.base3} strokeWidth={2.5} />
+              <Text style={[styles.statusText, { color: THEME.base3 }]}>Error</Text>
             </View>
           </ChevronButton>
         );
@@ -84,8 +85,8 @@ const ConnectionElement: React.FC<ConnectionElementProps> = ({
         return (
           <ChevronButton variant="neutral" position="single" width={120}>
             <View style={styles.statusContent}>
-              <ActivityIndicator size="small" color="#002b36" />
-              <Text style={[styles.statusText, { color: '#002b36' }]}>Connecting...</Text>
+              <ActivityIndicator size="small" color={THEME.base03} />
+              <Text style={[styles.statusText, { color: THEME.base03 }]}>Connecting...</Text>
             </View>
           </ChevronButton>
         );
@@ -140,7 +141,7 @@ const styles = StyleSheet.create({
   providerName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#93a1a1',
+    color: THEME.base1,
   },
   statusContent: {
     flexDirection: 'row',
