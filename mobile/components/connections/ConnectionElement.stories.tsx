@@ -84,10 +84,30 @@ export const NotionConnecting: Story = {
 export const AllStates: Story = {
   render: () => (
     <View style={{ gap: 8 }}>
-      <ConnectionElement {...GmailDisconnected.args!} />
-      <ConnectionElement {...SlackConnected.args!} />
-      <ConnectionElement {...GitHubError.args!} />
-      <ConnectionElement {...NotionConnecting.args!} />
+      <ConnectionElement
+        provider="Gmail"
+        iconSvg={gmailIcon.iconSvg}
+        iconColor={gmailIcon.iconColor}
+        status="disconnected"
+      />
+      <ConnectionElement
+        provider="Slack"
+        iconSvg={slackIcon.iconSvg}
+        iconColor={slackIcon.iconColor}
+        status="connected"
+      />
+      <ConnectionElement
+        provider="GitHub"
+        iconSvg={githubIcon.iconSvg}
+        iconColor={githubIcon.iconColor}
+        status="error"
+      />
+      <ConnectionElement
+        provider="Notion"
+        iconSvg={notionIcon.iconSvg}
+        iconColor={notionIcon.iconColor}
+        status="connecting"
+      />
     </View>
   ),
 };
