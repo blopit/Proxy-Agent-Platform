@@ -69,11 +69,11 @@ export function Tabs<T extends string = string>({
             activeOpacity={0.7}
             accessibilityLabel={tab.description}
           >
-            {/* Chevron background for active tab */}
+            {/* Chevron background for active tab - extends into padding */}
             {isFocused && (
               <ChevronElement
                 backgroundColor={`${tab.color}20`}
-                height={40}
+                height={54}
                 width={80}
                 chevronDepth={10}
                 position={chevronPosition}
@@ -136,6 +136,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     backgroundColor: '#002b36', // Solarized base03
+    paddingTop: 6,
+    paddingBottom: 8,
   },
   tab: {
     flex: 1,
@@ -143,14 +145,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     opacity: 0.6,
     position: 'relative',
-    paddingTop: 4,
   },
   tabActive: {
     opacity: 1,
   },
   chevronBackground: {
     position: 'absolute',
-    top: 4,
+    top: -6, // Extend into top padding
     left: '50%',
     marginLeft: -40, // Half of width (80/2) to center horizontally
   },
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1, // Above chevron background
-    height: 40, // Match chevron height
+    height: 54, // Match chevron height (includes padding space)
   },
   label: {
     fontSize: 10,
