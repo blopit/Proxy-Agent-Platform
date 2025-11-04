@@ -73,7 +73,7 @@ export function Tabs<T extends string = string>({
             {isFocused && (
               <ChevronElement
                 backgroundColor={`${tab.color}20`}
-                height={44}
+                height={54}
                 width={80}
                 chevronDepth={10}
                 position={chevronPosition}
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   },
   chevronBackground: {
     position: 'absolute',
-    top: 0,
+    top: -6, // Extend into top padding
     left: '50%',
     marginLeft: -40, // Half of width (80/2) to center horizontally
   },
