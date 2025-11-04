@@ -123,12 +123,12 @@ export const ChevronElement: React.FC<ChevronElementProps> = ({
 
   return (
     <View style={[styles.container, style, { height }]}>
-      {/* SVG Chevron Shape */}
+      {/* SVG Chevron Shape - Extended viewBox for shadow space */}
       <Svg
         height={height}
         width={numericWidth}
         style={StyleSheet.absoluteFill}
-        viewBox={`0 0 ${numericWidth} ${height}`}
+        viewBox={shadow ? `-10 -10 ${numericWidth + 20} ${height + 20}` : `0 0 ${numericWidth} ${height}`}
       >
         {shadow && (
           <Defs>
@@ -141,6 +141,7 @@ export const ChevronElement: React.FC<ChevronElementProps> = ({
           d={getChevronPath(position, numericWidth, height, chevronDepth)}
           fill={backgroundColor}
           filter={shadow ? 'url(#chevron-shadow)' : undefined}
+          transform={shadow ? 'translate(10, 10)' : undefined}
         />
       </Svg>
 
@@ -157,6 +158,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'visible', // Allow shadows to render outside bounds
   },
   content: {
     zIndex: 1,
