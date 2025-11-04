@@ -431,7 +431,7 @@ export const ShadowComparison: Story = {
 /**
  * Golden Ratio Proportions
  * Width-to-height ratio = 1.618 (φ)
- * Creates perfect golden rectangle chevrons
+ * All with consistent 10px chevron depth
  */
 export const GoldenRatioSizes: Story = {
   render: () => {
@@ -439,34 +439,67 @@ export const GoldenRatioSizes: Story = {
 
     return (
       <View style={styles.column}>
-        <Text style={styles.sectionTitle}>Golden Ratio: width = 1.618 × height</Text>
+        <Text style={styles.sectionTitle}>Golden Ratio: width = 1.618 × height (depth=10px)</Text>
 
         <ChevronElement backgroundColor="#3B82F6" height={50} width={Math.round(50 * phi)} chevronDepth={10} shadow>
-          <Text style={styles.text}>50 × 81 (φ)</Text>
+          <Text style={styles.text}>50h × 81w</Text>
         </ChevronElement>
         <View style={{ height: 10 }} />
 
-        <ChevronElement backgroundColor="#8B5CF6" height={75} width={Math.round(75 * phi)} chevronDepth={12} shadow>
-          <Text style={styles.text}>75 × 121 (φ)</Text>
+        <ChevronElement backgroundColor="#8B5CF6" height={75} width={Math.round(75 * phi)} chevronDepth={10} shadow>
+          <Text style={styles.text}>75h × 121w</Text>
         </ChevronElement>
         <View style={{ height: 10 }} />
 
-        <ChevronElement backgroundColor="#EC4899" height={100} width={Math.round(100 * phi)} chevronDepth={15} shadow>
-          <Text style={styles.text}>100 × 162 (φ)</Text>
+        <ChevronElement backgroundColor="#EC4899" height={100} width={Math.round(100 * phi)} chevronDepth={10} shadow>
+          <Text style={styles.text}>100h × 162w</Text>
         </ChevronElement>
         <View style={{ height: 10 }} />
 
-        <ChevronElement backgroundColor="#10B981" height={150} width={Math.round(150 * phi)} chevronDepth={20} shadow>
-          <Text style={styles.text}>150 × 243 (φ)</Text>
+        <ChevronElement backgroundColor="#10B981" height={150} width={Math.round(150 * phi)} chevronDepth={10} shadow>
+          <Text style={styles.text}>150h × 243w</Text>
         </ChevronElement>
 
         <View style={{ height: 20 }} />
         <Text style={[styles.sectionTitle, { fontSize: 12, opacity: 0.7 }]}>
-          Perfect golden rectangles (1.618:1)
+          Perfect golden rectangles (1.618:1) · 10px depth
         </Text>
       </View>
     );
   },
+};
+
+/**
+ * Standard iOS Tab Bar Size
+ * 44px height × 72px width (≈1.636 ratio, close to φ)
+ * Perfect for mobile tab bar chevrons with 10px depth
+ */
+export const StandardTabBarSize: Story = {
+  args: {
+    backgroundColor: '#3B82F6',
+    height: 44,
+    width: 72,
+    chevronDepth: 10,
+    shadow: true,
+    position: 'single',
+  },
+  render: (args) => (
+    <View style={styles.column}>
+      <Text style={styles.sectionTitle}>iOS Tab Bar Standard (44×72)</Text>
+
+      <ChevronElement {...args}>
+        <Text style={styles.text}>Tab</Text>
+      </ChevronElement>
+
+      <View style={{ height: 20 }} />
+      <Text style={[styles.sectionTitle, { fontSize: 12, opacity: 0.7 }]}>
+        44px height · 72px width · 10px depth
+      </Text>
+      <Text style={[styles.sectionTitle, { fontSize: 11, opacity: 0.6 }]}>
+        Ratio: 1.636 (≈φ golden ratio)
+      </Text>
+    </View>
+  ),
 };
 
 const styles = StyleSheet.create({
