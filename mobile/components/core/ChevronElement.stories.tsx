@@ -37,7 +37,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /**
- * Basic chevron element with default blue background
+ * Basic chevron with sharp angles
+ * Clean geometric design inspired by CSS chevron bars
  */
 export const Basic: Story = {
   args: {
@@ -49,7 +50,7 @@ export const Basic: Story = {
   },
   render: (args) => (
     <ChevronElement {...args}>
-      <Text style={styles.text}>Basic Chevron</Text>
+      <Text style={styles.text}>Sharp Chevron</Text>
     </ChevronElement>
   ),
 };
@@ -148,25 +149,26 @@ export const WithShadow: Story = {
 };
 
 /**
- * Sharp vs Rounded corners comparison
+ * Sharp angles showcase
+ * All chevrons use clean, geometric shapes with no rounding
  */
-export const RoundedComparison: Story = {
+export const SharpAngles: Story = {
   render: () => (
     <View style={styles.column}>
-      <ChevronElement backgroundColor="#3B82F6" height={60} chevronDepth={15} borderRadius={0}>
-        <Text style={styles.text}>Sharp Angles (radius=0)</Text>
+      <ChevronElement backgroundColor="#3B82F6" height={60} chevronDepth={15}>
+        <Text style={styles.text}>Sharp Geometric Design</Text>
       </ChevronElement>
       <View style={{ height: 10 }} />
-      <ChevronElement backgroundColor="#8B5CF6" height={60} chevronDepth={15} borderRadius={3}>
-        <Text style={styles.text}>Subtle Rounding (radius=3)</Text>
+      <ChevronElement backgroundColor="#8B5CF6" height={60} chevronDepth={20}>
+        <Text style={styles.text}>Clean Angles</Text>
       </ChevronElement>
       <View style={{ height: 10 }} />
-      <ChevronElement backgroundColor="#EC4899" height={60} chevronDepth={15} borderRadius={6}>
-        <Text style={styles.text}>Moderate Rounding (radius=6)</Text>
+      <ChevronElement backgroundColor="#EC4899" height={60} chevronDepth={25}>
+        <Text style={styles.text}>Bold Chevron</Text>
       </ChevronElement>
       <View style={{ height: 10 }} />
-      <ChevronElement backgroundColor="#10B981" height={60} chevronDepth={15} borderRadius={10}>
-        <Text style={styles.text}>Smooth Rounding (radius=10)</Text>
+      <ChevronElement backgroundColor="#10B981" height={60} chevronDepth={30}>
+        <Text style={styles.text}>Dramatic Angle</Text>
       </ChevronElement>
     </View>
   ),

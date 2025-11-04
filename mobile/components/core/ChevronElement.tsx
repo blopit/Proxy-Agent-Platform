@@ -45,11 +45,6 @@ export interface ChevronElementProps {
   position?: ChevronPosition;
 
   /**
-   * Border radius for rounding the angle points (0 = sharp angles)
-   */
-  borderRadius?: number;
-
-  /**
    * Additional styles for the container
    */
   style?: ViewStyle;
@@ -57,114 +52,61 @@ export interface ChevronElementProps {
 
 /**
  * Generate SVG path for chevron shape based on position
+ * All chevrons use sharp angles (no rounding)
+ * Left side is CONCAVE pointing RIGHT, right side is CONVEX pointing RIGHT
  */
 const getChevronPath = (
   position: ChevronPosition,
   width: number,
   height: number,
-  depth: number,
-  radius: number = 0
+  depth: number
 ): string => {
   const halfHeight = height / 2;
 
-  // If no radius, use sharp angles
-  if (radius === 0) {
-    switch (position) {
-      case 'start':
-        return `
-          M 0 0
-          L ${width - depth} 0
-          L ${width} ${halfHeight}
-          L ${width - depth} ${height}
-          L 0 ${height}
-          Z
-        `;
-
-      case 'middle':
-      case 'single':
-        return `
-          M 0 0
-          L ${width - depth} 0
-          L ${width} ${halfHeight}
-          L ${width - depth} ${height}
-          L 0 ${height}
-          L ${depth} ${halfHeight}
-          L 0 0
-          Z
-        `;
-
-      case 'end':
-        return `
-          M 0 0
-          L ${width} 0
-          L ${width} ${height}
-          L 0 ${height}
-          L ${depth} ${halfHeight}
-          L 0 0
-          Z
-        `;
-    }
-  }
-
-  // With radius, use rounded angles
   switch (position) {
     case 'start':
-      // Left edge straight, right edge rounded
+      // Left edge straight, right edge angled pointing RIGHT (>)
       return `
         M 0 0
-        L ${width - depth - radius} 0
-        Q ${width - depth} 0, ${width - depth + radius} ${radius}
-        L ${width - radius} ${halfHeight - radius}
-        Q ${width} ${halfHeight}, ${width - radius} ${halfHeight + radius}
-        L ${width - depth + radius} ${height - radius}
-        Q ${width - depth} ${height}, ${width - depth - radius} ${height}
+        L ${width - depth} 0
+        L ${width} ${halfHeight}
+        L ${width - depth} ${height}
         L 0 ${height}
         Z
       `;
 
     case 'middle':
     case 'single':
-      // Both edges rounded
+      // Left concave pointing RIGHT, right convex pointing RIGHT (both point -->)
+      // Shape like: <| bar |>  becomes <|>
       return `
         M 0 0
-        L ${width - depth - radius} 0
-        Q ${width - depth} 0, ${width - depth + radius} ${radius}
-        L ${width - radius} ${halfHeight - radius}
-        Q ${width} ${halfHeight}, ${width - radius} ${halfHeight + radius}
-        L ${width - depth + radius} ${height - radius}
-        Q ${width - depth} ${height}, ${width - depth - radius} ${height}
-        L ${depth + radius} ${height}
-        Q ${depth} ${height}, ${depth - radius} ${height - radius}
-        L ${radius} ${halfHeight + radius}
-        Q 0 ${halfHeight}, ${radius} ${halfHeight - radius}
-        L ${depth - radius} ${radius}
-        Q ${depth} 0, ${depth + radius} 0
-        L 0 0
+        L ${width - depth} 0
+        L ${width} ${halfHeight}
+        L ${width - depth} ${height}
+        L 0 ${height}
+        L ${depth} ${halfHeight}
         Z
       `;
 
     case 'end':
-      // Left edge rounded, right edge straight
+      // Left edge concave pointing RIGHT, right edge straight
       return `
         M 0 0
         L ${width} 0
         L ${width} ${height}
-        L ${depth + radius} ${height}
-        Q ${depth} ${height}, ${depth - radius} ${height - radius}
-        L ${radius} ${halfHeight + radius}
-        Q 0 ${halfHeight}, ${radius} ${halfHeight - radius}
-        L ${depth - radius} ${radius}
-        Q ${depth} 0, ${depth + radius} 0
-        L 0 0
+        L 0 ${height}
+        L ${depth} ${halfHeight}
         Z
       `;
   }
 };
 
 /**
- * ChevronElement - A container that adds chevron styling
+ * ChevronElement - A container with sharp chevron styling
  *
- * Creates a div-like element with angled edges for creating flow/step visualizations.
+ * Creates a div-like element with sharp angled edges for flow/step visualizations.
+ * Inspired by CSS chevron bars with clean, geometric shapes.
  * Supports 'start', 'middle', and 'end' positions for chaining multiple chevrons.
  */
 export const ChevronElement: React.FC<ChevronElementProps> = ({
@@ -172,10 +114,9 @@ export const ChevronElement: React.FC<ChevronElementProps> = ({
   backgroundColor = '#3B82F6',
   height = 60,
   width = '100%',
-  chevronDepth = 10,
+  chevronDepth = 20,
   shadow = false,
   position = 'single',
-  borderRadius = 3,
   style,
 }) => {
   const numericWidth = typeof width === 'number' ? width : 300;
@@ -197,7 +138,7 @@ export const ChevronElement: React.FC<ChevronElementProps> = ({
           </Defs>
         )}
         <Path
-          d={getChevronPath(position, numericWidth, height, chevronDepth, borderRadius)}
+          d={getChevronPath(position, numericWidth, height, chevronDepth)}
           fill={backgroundColor}
           filter={shadow ? 'url(#chevron-shadow)' : undefined}
         />
