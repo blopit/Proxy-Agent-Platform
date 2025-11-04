@@ -95,3 +95,10 @@ global.SpeechRecognition = jest.fn().mockImplementation(() => ({
 global.webkitSpeechRecognition = global.SpeechRecognition
 
 // Don't mock design-system - use the real one since we just fixed it
+
+// Mock OpenMoji component (renders emoji as image, mock as text for testing)
+jest.mock('@/components/shared/OpenMoji', () => {
+  return function OpenMoji({ emoji, ...props }) {
+    return <span data-testid="openmoji" {...props}>{emoji}</span>
+  }
+})

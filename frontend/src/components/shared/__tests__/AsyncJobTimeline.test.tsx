@@ -83,9 +83,15 @@ describe('AsyncJobTimeline', () => {
     it('renders step icons', () => {
       render(<AsyncJobTimeline {...defaultProps} />)
 
-      expect(screen.getByText('🧠')).toBeInTheDocument()
-      expect(screen.getByText('🔨')).toBeInTheDocument()
-      expect(screen.getByText('💾')).toBeInTheDocument()
+      // Emojis appear multiple times due to blend animation (black + color variants)
+      const brainEmojis = screen.getAllByText('🧠')
+      expect(brainEmojis.length).toBeGreaterThan(0)
+
+      const hammerEmojis = screen.getAllByText('🔨')
+      expect(hammerEmojis.length).toBeGreaterThan(0)
+
+      const diskEmojis = screen.getAllByText('💾')
+      expect(diskEmojis.length).toBeGreaterThan(0)
     })
 
     it('renders step status indicators', () => {
@@ -161,7 +167,9 @@ describe('AsyncJobTimeline', () => {
 
       rerender(<AsyncJobTimeline {...defaultProps} steps={newSteps} />)
 
-      expect(screen.getByText('New')).toBeInTheDocument()
+      // New step should be present (check via getAllByText since "New" might be duplicated)
+      const newLabels = screen.getAllByText('New')
+      expect(newLabels.length).toBeGreaterThan(0)
     })
 
     it('does re-render when progress changes', () => {
@@ -175,31 +183,38 @@ describe('AsyncJobTimeline', () => {
   })
 
   describe('Step Expansion/Collapse', () => {
-    it('expands step when clicked', () => {
+    it('expands step when clicked', async () => {
       render(<AsyncJobTimeline {...defaultProps} />)
 
-      const step = screen.getByText('Parse')
-      fireEvent.click(step)
+      // Click first occurrence of "Parse" text (may be in SVG or hidden, use queryOptions)
+      const parseElements = screen.queryAllByText('Parse', { hidden: true })
+      expect(parseElements.length).toBeGreaterThan(0)
+      fireEvent.click(parseElements[0])
 
-      // Check for expanded state (tags should be visible)
-      expect(screen.getByText('🎯 Focused')).toBeInTheDocument()
-      expect(screen.getByText('⚡ Quick Win')).toBeInTheDocument()
+      // Check for expanded state (tags should be visible) - wait for async state update
+      await waitFor(() => {
+        expect(screen.getByText('🎯 Focused')).toBeInTheDocument()
+        expect(screen.getByText('⚡ Quick Win')).toBeInTheDocument()
+      })
     })
 
-    it('collapses step when clicked again', () => {
+    it('collapses step when clicked again', async () => {
       render(<AsyncJobTimeline {...defaultProps} />)
 
-      const step = screen.getByText('Parse')
+      const parseElements = screen.getAllByText('Parse')
+      const firstStep = parseElements[0]
 
       // Expand
-      fireEvent.click(step)
-      expect(screen.getByText('🎯 Focused')).toBeInTheDocument()
+      fireEvent.click(firstStep)
+      await waitFor(() => {
+        expect(screen.getByText('🎯 Focused')).toBeInTheDocument()
+      })
 
       // Collapse
-      fireEvent.click(step)
+      fireEvent.click(firstStep)
 
       // Tags should not be visible when collapsed
-      waitFor(() => {
+      await waitFor(() => {
         expect(screen.queryByText('🎯 Focused')).not.toBeInTheDocument()
       })
     })
@@ -208,32 +223,36 @@ describe('AsyncJobTimeline', () => {
       render(<AsyncJobTimeline {...defaultProps} />)
 
       // Step 2 is decomposable (isLeaf: false)
-      const step2 = screen.getByText('Decompose')
+      const decomposeElements = screen.getAllByText('Decompose')
+      const step2 = decomposeElements[0].closest('div') // Get container div
 
       // Should have expand indicator (▶ or similar)
-      expect(step2.closest('button')).toContainHTML('▶')
+      expect(step2).toContainHTML('▶')
     })
 
     it('does not show expand indicator for atomic steps', () => {
       render(<AsyncJobTimeline {...defaultProps} />)
 
       // Step 1 is atomic (isLeaf: true)
-      const step1 = screen.getByText('Parse')
+      const parseElements = screen.getAllByText('Parse')
+      const step1 = parseElements[0].closest('div') // Get container div
 
       // Should not have expand indicator
-      expect(step1.closest('button')).not.toContainHTML('▶')
+      expect(step1).not.toContainHTML('▶')
     })
   })
 
   describe('Tags Display', () => {
-    it('shows tags when step is expanded', () => {
+    it('shows tags when step is expanded', async () => {
       render(<AsyncJobTimeline {...defaultProps} />)
 
-      const step = screen.getByText('Parse')
-      fireEvent.click(step)
+      const parseElements = screen.getAllByText('Parse')
+      fireEvent.click(parseElements[0])
 
-      expect(screen.getByText('🎯 Focused')).toBeInTheDocument()
-      expect(screen.getByText('⚡ Quick Win')).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('🎯 Focused')).toBeInTheDocument()
+        expect(screen.getByText('⚡ Quick Win')).toBeInTheDocument()
+      })
     })
 
     it('does not show tags when step is collapsed', () => {
@@ -244,7 +263,7 @@ describe('AsyncJobTimeline', () => {
       expect(screen.queryByText('⚡ Quick Win')).not.toBeInTheDocument()
     })
 
-    it('shows maximum of 5 tags', () => {
+    it('shows maximum of 5 tags', async () => {
       const stepWithManyTags = {
         ...mockSteps[0],
         tags: ['Tag1', 'Tag2', 'Tag3', 'Tag4', 'Tag5', 'Tag6', 'Tag7'],
@@ -252,15 +271,18 @@ describe('AsyncJobTimeline', () => {
 
       render(<AsyncJobTimeline {...defaultProps} steps={[stepWithManyTags]} />)
 
-      const step = screen.getByText('Parse')
-      fireEvent.click(step)
+      const steps = screen.getAllByRole('button')
+      fireEvent.click(steps[0]) // First (and only) step with many tags
 
-      // Should show first 5 tags
-      expect(screen.getByText('Tag1')).toBeInTheDocument()
-      expect(screen.getByText('Tag5')).toBeInTheDocument()
+      // Wait for expansion and tag display
+      await waitFor(() => {
+        // Should show first 5 tags
+        expect(screen.getByText('Tag1')).toBeInTheDocument()
+        expect(screen.getByText('Tag5')).toBeInTheDocument()
 
-      // Should show "+2" indicator for remaining tags
-      expect(screen.getByText('+2')).toBeInTheDocument()
+        // Should show "+2" indicator for remaining tags
+        expect(screen.getByText('+2')).toBeInTheDocument()
+      })
 
       // Should not show 6th and 7th tag
       expect(screen.queryByText('Tag6')).not.toBeInTheDocument()
@@ -270,7 +292,8 @@ describe('AsyncJobTimeline', () => {
     it('handles steps with no tags gracefully', () => {
       render(<AsyncJobTimeline {...defaultProps} />)
 
-      const step = screen.getByText('Save') // Step 3 has no tags
+      const steps = screen.getAllByRole('button')
+      const step = steps[2] // Save step (Step 3 has no tags)
       fireEvent.click(step)
 
       // Should render without errors and show nbsp placeholder
@@ -318,9 +341,9 @@ describe('AsyncJobTimeline', () => {
 
       render(<AsyncJobTimeline {...defaultProps} />)
 
-      // Click decomposable step (step-2)
-      const decompStep = screen.getByText('Decompose')
-      fireEvent.click(decompStep)
+      // Click decomposable step (step-2, index 1)
+      const steps = screen.getAllByRole('button')
+      fireEvent.click(steps[1]) // Decompose step
 
       // Should show decomposition job timeline
       await waitFor(() => {
@@ -337,8 +360,8 @@ describe('AsyncJobTimeline', () => {
     it('does not load children for atomic steps', () => {
       render(<AsyncJobTimeline {...defaultProps} />)
 
-      const atomicStep = screen.getByText('Parse') // Atomic step
-      fireEvent.click(atomicStep)
+      const steps = screen.getAllByRole('button')
+      fireEvent.click(steps[0]) // Parse step (atomic)
 
       // Should not attempt to fetch (no decomposition)
       expect(global.fetch).not.toHaveBeenCalled()
@@ -352,8 +375,8 @@ describe('AsyncJobTimeline', () => {
 
       render(<AsyncJobTimeline {...defaultProps} />)
 
-      const decompStep = screen.getByText('Decompose')
-      fireEvent.click(decompStep)
+      const steps = screen.getAllByRole('button')
+      fireEvent.click(steps[1]) // Decompose step
 
       // Should show decomposition job first
       await waitFor(() => {
@@ -391,7 +414,8 @@ describe('AsyncJobTimeline', () => {
 
       render(<AsyncJobTimeline {...defaultProps} />)
 
-      const decompStep = screen.getByText('Decompose')
+      const steps = screen.getAllByRole('button')
+      const decompStep = steps[1] // Decompose step
 
       // First expansion - should load
       fireEvent.click(decompStep)
@@ -413,24 +437,28 @@ describe('AsyncJobTimeline', () => {
   })
 
   describe('Leaf Type Visual Indicators', () => {
-    it('shows DIGITAL leaf type badge', () => {
+    it('shows DIGITAL leaf type badge', async () => {
       render(<AsyncJobTimeline {...defaultProps} />)
 
-      const digitalStep = screen.getByText('Parse')
-      fireEvent.click(digitalStep)
+      const steps = screen.getAllByRole('button')
+      fireEvent.click(steps[0]) // Parse step (DIGITAL)
 
-      // Should show DIGITAL indicator
-      expect(screen.getByText(/digital/i)).toBeInTheDocument()
+      // Should show DIGITAL indicator - wait for async expansion
+      await waitFor(() => {
+        expect(screen.getByText(/digital/i)).toBeInTheDocument()
+      })
     })
 
-    it('shows HUMAN leaf type badge', () => {
+    it('shows HUMAN leaf type badge', async () => {
       render(<AsyncJobTimeline {...defaultProps} />)
 
-      const humanStep = screen.getByText('Decompose')
-      fireEvent.click(humanStep)
+      const steps = screen.getAllByRole('button')
+      fireEvent.click(steps[1]) // Decompose step (HUMAN)
 
-      // Should show HUMAN indicator
-      expect(screen.getByText(/human/i)).toBeInTheDocument()
+      // Should show HUMAN indicator - wait for async expansion
+      await waitFor(() => {
+        expect(screen.getByText(/human/i)).toBeInTheDocument()
+      })
     })
   })
 
@@ -444,18 +472,21 @@ describe('AsyncJobTimeline', () => {
       })
     })
 
-    it('supports keyboard navigation', () => {
+    it('supports keyboard navigation', async () => {
       render(<AsyncJobTimeline {...defaultProps} />)
 
-      const step = screen.getByText('Parse')
+      const steps = screen.getAllByRole('button')
+      const step = steps[0] // Parse step
       step.focus()
 
       // Should be focusable
       expect(step).toHaveFocus()
 
-      // Should expand on Enter
+      // Should expand on Enter - wait for async expansion
       fireEvent.keyDown(step, { key: 'Enter' })
-      expect(screen.getByText('🎯 Focused')).toBeInTheDocument()
+      await waitFor(() => {
+        expect(screen.getByText('🎯 Focused')).toBeInTheDocument()
+      })
     })
   })
 
@@ -475,8 +506,9 @@ describe('AsyncJobTimeline', () => {
 
       render(<AsyncJobTimeline {...defaultProps} steps={stepsWithoutLabel} />)
 
-      // Should use description as fallback
-      expect(screen.getByText('Parse natural language')).toBeInTheDocument()
+      // Should use description as fallback (may be duplicated due to blend animation)
+      const descriptionElements = screen.getAllByText('Parse natural language')
+      expect(descriptionElements.length).toBeGreaterThan(0)
     })
 
     it('handles steps without icons', () => {
@@ -487,8 +519,9 @@ describe('AsyncJobTimeline', () => {
 
       render(<AsyncJobTimeline {...defaultProps} steps={stepsWithoutIcon} />)
 
-      // Should render without errors
-      expect(screen.getByText('Parse')).toBeInTheDocument()
+      // Should render without errors (may be duplicated due to blend animation)
+      const parseElements = screen.getAllByText('Parse')
+      expect(parseElements.length).toBeGreaterThan(0)
     })
 
     it('handles very long step descriptions gracefully', () => {
@@ -500,9 +533,9 @@ describe('AsyncJobTimeline', () => {
 
       render(<AsyncJobTimeline {...defaultProps} steps={stepWithLongDesc} />)
 
-      // Should render with text truncation/ellipsis
-      const longDescElement = screen.getByText('Long')
-      expect(longDescElement).toBeInTheDocument()
+      // Should render with text truncation/ellipsis (may be duplicated due to blend animation)
+      const longElements = screen.getAllByText('Long')
+      expect(longElements.length).toBeGreaterThan(0)
     })
   })
 })
