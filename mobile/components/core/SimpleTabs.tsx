@@ -10,6 +10,7 @@
 import React from 'react';
 import { Inbox, Target, TrendingUp } from 'lucide-react-native';
 import { Tabs, TabItem } from './Tabs';
+import { THEME } from '../../src/theme/colors';
 
 export type SimpleTab = 'inbox' | 'today' | 'progress';
 
@@ -22,15 +23,6 @@ interface SimpleTabsProps {
     progress?: boolean;
   };
 }
-
-// Theme colors - Solarized Dark palette
-const THEME = {
-  cyan: '#2aa198',
-  orange: '#cb4b16',
-  violet: '#6c71c4',
-  base01: '#586e75', // Emphasized content
-  base03: '#002b36', // Background
-};
 
 const SIMPLE_TAB_CONFIG: TabItem<SimpleTab>[] = [
   {

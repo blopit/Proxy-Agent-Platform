@@ -6,26 +6,7 @@
 import React, { ReactNode } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { ChevronElement, ChevronPosition } from './ChevronElement';
-
-// Theme colors - Solarized Dark palette
-const THEME = {
-  base03: '#002b36', // Background highlights
-  base02: '#073642', // Background
-  base01: '#586e75', // Optional emphasized content
-  base00: '#657b83', // Body text / default code / primary content
-  base0: '#839496',  // Comments / secondary content
-  base1: '#93a1a1',  // De-emphasized content
-  base2: '#eee8d5',  // Background highlights (light)
-  base3: '#fdf6e3',  // Background (light)
-  yellow: '#b58900',
-  orange: '#cb4b16',
-  red: '#dc322f',
-  magenta: '#d33682',
-  violet: '#6c71c4',
-  blue: '#268bd2',
-  cyan: '#2aa198',
-  green: '#859900',
-};
+import { THEME } from '../../src/theme/colors';
 
 export interface TabItem<T extends string = string> {
   id: T;
