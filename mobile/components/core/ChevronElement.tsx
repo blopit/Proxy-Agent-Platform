@@ -114,7 +114,7 @@ export const ChevronElement: React.FC<ChevronElementProps> = ({
   backgroundColor = '#3B82F6',
   height = 60,
   width = '100%',
-  chevronDepth = 20,
+  chevronDepth = 10,
   shadow = false,
   position = 'single',
   style,
