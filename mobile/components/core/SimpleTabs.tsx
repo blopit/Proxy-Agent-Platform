@@ -23,26 +23,35 @@ interface SimpleTabsProps {
   };
 }
 
+// Theme colors - Solarized Dark palette
+const THEME = {
+  cyan: '#2aa198',
+  orange: '#cb4b16',
+  violet: '#6c71c4',
+  base01: '#586e75', // Emphasized content
+  base03: '#002b36', // Background
+};
+
 const SIMPLE_TAB_CONFIG: TabItem<SimpleTab>[] = [
   {
     id: 'inbox',
     icon: Inbox,
     label: 'Inbox',
-    color: '#2aa198', // Solarized cyan
+    color: THEME.cyan,
     description: 'Capture & organize tasks',
   },
   {
     id: 'today',
     icon: Target,
     label: 'Today',
-    color: '#cb4b16', // Solarized orange
+    color: THEME.orange,
     description: 'Focus on current task',
   },
   {
     id: 'progress',
     icon: TrendingUp,
     label: 'Progress',
-    color: '#6c71c4', // Solarized violet
+    color: THEME.violet,
     description: 'View XP, streaks & goals',
   },
 ];
@@ -63,7 +72,7 @@ export default function SimpleTabs({ activeTab, onChange, showBadges }: SimpleTa
       showActiveIndicator={false}
       containerStyle={{
         borderTopWidth: 1,
-        borderTopColor: '#586e75',
+        borderTopColor: THEME.base01,
       }}
     />
   );

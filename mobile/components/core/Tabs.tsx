@@ -7,6 +7,26 @@ import React, { ReactNode } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { ChevronElement, ChevronPosition } from './ChevronElement';
 
+// Theme colors - Solarized Dark palette
+const THEME = {
+  base03: '#002b36', // Background highlights
+  base02: '#073642', // Background
+  base01: '#586e75', // Optional emphasized content
+  base00: '#657b83', // Body text / default code / primary content
+  base0: '#839496',  // Comments / secondary content
+  base1: '#93a1a1',  // De-emphasized content
+  base2: '#eee8d5',  // Background highlights (light)
+  base3: '#fdf6e3',  // Background (light)
+  yellow: '#b58900',
+  orange: '#cb4b16',
+  red: '#dc322f',
+  magenta: '#d33682',
+  violet: '#6c71c4',
+  blue: '#268bd2',
+  cyan: '#2aa198',
+  green: '#859900',
+};
+
 export interface TabItem<T extends string = string> {
   id: T;
   icon: React.ComponentType<{ color: string; size: number }>;
@@ -53,7 +73,7 @@ export function Tabs<T extends string = string>({
       {tabs.map((tab, index) => {
         const Icon = tab.icon;
         const isFocused = activeTab === tab.id;
-        const color = isFocused ? tab.color : '#586e75';
+        const color = isFocused ? tab.color : THEME.base01;
         const badge = tab.badge;
         const chevronPosition = getChevronPosition(index);
 
@@ -135,7 +155,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#002b36', // Solarized base03
+    backgroundColor: THEME.base03,
     paddingTop: 6,
     paddingBottom: 8,
   },
@@ -169,7 +189,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 10,
     fontWeight: '400',
-    color: '#586e75',
+    color: THEME.base01,
     marginTop: 4,
   },
   activeIndicator: {
@@ -184,7 +204,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -4,
     right: -4,
-    backgroundColor: '#dc322f', // Solarized red
+    backgroundColor: THEME.red,
     borderRadius: 10,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -193,7 +213,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   badgeText: {
-    color: 'white',
+    color: THEME.base3,
     fontSize: 10,
     fontWeight: '700',
     textAlign: 'center',
@@ -202,11 +222,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -2,
     right: -2,
-    backgroundColor: '#859900', // Solarized green
+    backgroundColor: THEME.green,
     width: 8,
     height: 8,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: '#002b36',
+    borderColor: THEME.base03,
   },
 });
