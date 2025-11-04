@@ -187,7 +187,7 @@ const fiveTabStyles = StyleSheet.create({
     position: 'absolute',
     fontSize: 9,
     fontWeight: '700',
-    top: 18,
+    top: 14,
   },
   label: {
     fontSize: 10,
