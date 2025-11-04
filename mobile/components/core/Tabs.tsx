@@ -136,8 +136,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     backgroundColor: '#002b36', // Solarized base03
-    paddingTop: 6,
-    paddingBottom: 8,
   },
   tab: {
     flex: 1,
