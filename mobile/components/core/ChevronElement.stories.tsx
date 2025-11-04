@@ -428,6 +428,184 @@ export const ShadowComparison: Story = {
   ),
 };
 
+/**
+ * Golden Ratio Fibonacci Heights
+ * Chevrons sized using Fibonacci sequence (34, 55, 89, 144)
+ * Each height ≈ 1.618x the previous (phi ratio)
+ */
+export const GoldenRatioFibonacci: Story = {
+  render: () => (
+    <View style={styles.column}>
+      <Text style={styles.sectionTitle}>Fibonacci Sequence Heights</Text>
+
+      <ChevronElement backgroundColor="#3B82F6" height={34} chevronDepth={10} shadow>
+        <Text style={[styles.text, { fontSize: 11 }]}>34px (Fibonacci)</Text>
+      </ChevronElement>
+      <View style={{ height: 8 }} />
+
+      <ChevronElement backgroundColor="#8B5CF6" height={55} chevronDepth={12} shadow>
+        <Text style={[styles.text, { fontSize: 13 }]}>55px (Fibonacci)</Text>
+      </ChevronElement>
+      <View style={{ height: 8 }} />
+
+      <ChevronElement backgroundColor="#EC4899" height={89} chevronDepth={15} shadow>
+        <Text style={[styles.text, { fontSize: 16 }]}>89px (Fibonacci)</Text>
+      </ChevronElement>
+      <View style={{ height: 8 }} />
+
+      <ChevronElement backgroundColor="#10B981" height={144} chevronDepth={20} shadow>
+        <Text style={[styles.text, { fontSize: 20 }]}>144px (Fibonacci)</Text>
+      </ChevronElement>
+
+      <View style={{ height: 20 }} />
+      <Text style={[styles.sectionTitle, { fontSize: 12, opacity: 0.7 }]}>
+        Each height ≈ 1.618× previous (φ ratio)
+      </Text>
+    </View>
+  ),
+};
+
+/**
+ * Golden Ratio Proportions
+ * Height-to-chevronDepth ratio using phi (1.618)
+ * Creates visually harmonious angles
+ */
+export const GoldenRatioProportions: Story = {
+  render: () => {
+    // Golden ratio (phi)
+    const phi = 1.618;
+
+    return (
+      <View style={styles.column}>
+        <Text style={styles.sectionTitle}>φ (Phi) Height-to-Depth Ratios</Text>
+
+        <ChevronElement
+          backgroundColor="#3B82F6"
+          height={55}
+          chevronDepth={Math.round(55 / phi)} // 34
+          shadow
+        >
+          <Text style={styles.text}>55px : 34px (φ)</Text>
+        </ChevronElement>
+        <View style={{ height: 10 }} />
+
+        <ChevronElement
+          backgroundColor="#8B5CF6"
+          height={89}
+          chevronDepth={Math.round(89 / phi)} // 55
+          shadow
+        >
+          <Text style={styles.text}>89px : 55px (φ)</Text>
+        </ChevronElement>
+        <View style={{ height: 10 }} />
+
+        <ChevronElement
+          backgroundColor="#EC4899"
+          height={144}
+          chevronDepth={Math.round(144 / phi)} // 89
+          shadow
+        >
+          <Text style={styles.text}>144px : 89px (φ)</Text>
+        </ChevronElement>
+
+        <View style={{ height: 20 }} />
+        <Text style={[styles.sectionTitle, { fontSize: 12, opacity: 0.7 }]}>
+          height / depth = 1.618 (golden ratio)
+        </Text>
+      </View>
+    );
+  },
+};
+
+/**
+ * Golden Spiral Flow
+ * Chevrons arranged in golden ratio sizes creating visual rhythm
+ * Fibonacci sequence: 21, 34, 55, 89, 144
+ */
+export const GoldenSpiralFlow: Story = {
+  render: () => (
+    <View style={styles.column}>
+      <Text style={styles.sectionTitle}>Golden Spiral Workflow</Text>
+
+      <ChevronElement backgroundColor="#F59E0B" height={21} chevronDepth={8} shadow position="start">
+        <Text style={[styles.text, { fontSize: 9 }]}>Capture (21)</Text>
+      </ChevronElement>
+      <View style={{ height: 5 }} />
+
+      <ChevronElement backgroundColor="#3B82F6" height={34} chevronDepth={10} shadow position="middle">
+        <Text style={[styles.text, { fontSize: 11 }]}>Scout (34)</Text>
+      </ChevronElement>
+      <View style={{ height: 5 }} />
+
+      <ChevronElement backgroundColor="#8B5CF6" height={55} chevronDepth={12} shadow position="middle">
+        <Text style={[styles.text, { fontSize: 13 }]}>Hunter (55)</Text>
+      </ChevronElement>
+      <View style={{ height: 5 }} />
+
+      <ChevronElement backgroundColor="#EC4899" height={89} chevronDepth={15} shadow position="middle">
+        <Text style={[styles.text, { fontSize: 16 }]}>Today (89)</Text>
+      </ChevronElement>
+      <View style={{ height: 5 }} />
+
+      <ChevronElement backgroundColor="#10B981" height={144} chevronDepth={20} shadow position="end">
+        <Text style={[styles.text, { fontSize: 20 }]}>Mapper (144)</Text>
+      </ChevronElement>
+
+      <View style={{ height: 20 }} />
+      <Text style={[styles.sectionTitle, { fontSize: 12, opacity: 0.7 }]}>
+        Each step grows by φ = 1.618
+      </Text>
+    </View>
+  ),
+};
+
+/**
+ * Phi-Based Micro to Macro
+ * Complete Fibonacci scale from tiny to large
+ * 8, 13, 21, 34, 55, 89
+ */
+export const PhiMicroToMacro: Story = {
+  render: () => (
+    <View style={styles.column}>
+      <Text style={styles.sectionTitle}>Fibonacci Scale: Micro → Macro</Text>
+
+      <ChevronElement backgroundColor="#6366F1" height={8} chevronDepth={5} shadow>
+        <Text style={[styles.text, { fontSize: 7 }]}>8</Text>
+      </ChevronElement>
+      <View style={{ height: 3 }} />
+
+      <ChevronElement backgroundColor="#8B5CF6" height={13} chevronDepth={6} shadow>
+        <Text style={[styles.text, { fontSize: 8 }]}>13</Text>
+      </ChevronElement>
+      <View style={{ height: 3 }} />
+
+      <ChevronElement backgroundColor="#A855F7" height={21} chevronDepth={8} shadow>
+        <Text style={[styles.text, { fontSize: 9 }]}>21</Text>
+      </ChevronElement>
+      <View style={{ height: 3 }} />
+
+      <ChevronElement backgroundColor="#C084FC" height={34} chevronDepth={10} shadow>
+        <Text style={[styles.text, { fontSize: 11 }]}>34</Text>
+      </ChevronElement>
+      <View style={{ height: 3 }} />
+
+      <ChevronElement backgroundColor="#D8B4FE" height={55} chevronDepth={12} shadow>
+        <Text style={[styles.text, { fontSize: 13 }]}>55</Text>
+      </ChevronElement>
+      <View style={{ height: 3 }} />
+
+      <ChevronElement backgroundColor="#E9D5FF" height={89} chevronDepth={15} shadow>
+        <Text style={[styles.text, { fontSize: 16, color: '#6B21A8' }]}>89</Text>
+      </ChevronElement>
+
+      <View style={{ height: 20 }} />
+      <Text style={[styles.sectionTitle, { fontSize: 12, opacity: 0.7 }]}>
+        Natural scaling: 8→13→21→34→55→89
+      </Text>
+    </View>
+  ),
+};
+
 const styles = StyleSheet.create({
   decorator: {
     flex: 1,
