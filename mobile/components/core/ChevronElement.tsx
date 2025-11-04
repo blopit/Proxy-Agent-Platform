@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
-import Svg, { Path, Defs, Filter, FeDropShadow } from 'react-native-svg';
+import Svg, { Path } from 'react-native-svg';
 
 export type ChevronPosition = 'start' | 'middle' | 'end' | 'single';
 
@@ -121,27 +121,30 @@ export const ChevronElement: React.FC<ChevronElementProps> = ({
 }) => {
   const numericWidth = typeof width === 'number' ? width : 300;
 
+  // Shadow wrapper style (outside the chevron, doesn't shrink it)
+  const shadowStyle = shadow
+    ? {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3,
+        elevation: 4, // Android shadow
+      }
+    : {};
+
   return (
-    <View style={[styles.container, style, { height }]}>
-      {/* SVG Chevron Shape - Extended viewBox for shadow space */}
+    <View style={[styles.container, style, { height }, shadowStyle]}>
+      {/* SVG Chevron Shape with antialiasing */}
       <Svg
         height={height}
         width={numericWidth}
         style={StyleSheet.absoluteFill}
-        viewBox={shadow ? `-10 -10 ${numericWidth + 20} ${height + 20}` : `0 0 ${numericWidth} ${height}`}
+        viewBox={`0 0 ${numericWidth} ${height}`}
       >
-        {shadow && (
-          <Defs>
-            <Filter id="chevron-shadow" x="-50%" y="-50%" width="200%" height="200%">
-              <FeDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.25" />
-            </Filter>
-          </Defs>
-        )}
         <Path
           d={getChevronPath(position, numericWidth, height, chevronDepth)}
           fill={backgroundColor}
-          filter={shadow ? 'url(#chevron-shadow)' : undefined}
-          transform={shadow ? 'translate(10, 10)' : undefined}
+          shapeRendering="geometricPrecision" // Antialiasing for smooth edges
         />
       </Svg>
 
