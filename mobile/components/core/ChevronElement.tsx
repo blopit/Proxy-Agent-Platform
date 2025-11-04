@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, ViewStyle, LayoutChangeEvent } from 'react-native';
 import Svg, { Path, Defs, Filter, FeDropShadow } from 'react-native-svg';
 
 export type ChevronPosition = 'start' | 'middle' | 'end' | 'single';
@@ -119,16 +119,28 @@ export const ChevronElement: React.FC<ChevronElementProps> = ({
   position = 'single',
   style,
 }) => {
-  const numericWidth = typeof width === 'number' ? width : 300;
+  const [measuredWidth, setMeasuredWidth] = useState<number>(
+    typeof width === 'number' ? width : 300
+  );
+
+  const handleLayout = (event: LayoutChangeEvent) => {
+    const { width: layoutWidth } = event.nativeEvent.layout;
+    if (layoutWidth > 0) {
+      setMeasuredWidth(layoutWidth);
+    }
+  };
 
   return (
-    <View style={[styles.container, style, { height }]}>
+    <View
+      style={[styles.container, style, { height, width }]}
+      onLayout={handleLayout}
+    >
       {/* SVG Chevron Shape with shape-accurate shadow */}
       <Svg
         height={height}
-        width={numericWidth}
+        width={measuredWidth}
         style={StyleSheet.absoluteFill}
-        viewBox={`0 0 ${numericWidth} ${height}`}
+        viewBox={`0 0 ${measuredWidth} ${height}`}
       >
         {shadow && (
           <Defs>
@@ -138,7 +150,7 @@ export const ChevronElement: React.FC<ChevronElementProps> = ({
           </Defs>
         )}
         <Path
-          d={getChevronPath(position, numericWidth, height, chevronDepth)}
+          d={getChevronPath(position, measuredWidth, height, chevronDepth)}
           fill={backgroundColor}
           filter={shadow ? 'url(#chevron-shadow)' : undefined}
           shapeRendering="geometricPrecision" // Antialiasing for smooth edges

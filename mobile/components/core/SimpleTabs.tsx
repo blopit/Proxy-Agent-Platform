@@ -62,10 +62,6 @@ export default function SimpleTabs({ activeTab, onChange, showBadges }: SimpleTa
       onChange={onChange}
       showLabels={true}
       showActiveIndicator={false}
-      containerStyle={{
-        borderTopWidth: 1,
-        borderTopColor: THEME.base01,
-      }}
     />
   );
 }

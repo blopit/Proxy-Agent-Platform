@@ -74,8 +74,8 @@ export function Tabs<T extends string = string>({
             {isFocused && (
               <ChevronElement
                 backgroundColor={`${tab.color}20`}
-                height={44}
-                width={80}
+                height={52}
+                width={'100%'}
                 chevronDepth={10}
                 position={chevronPosition}
                 style={styles.chevronBackground}
@@ -135,26 +135,28 @@ export function Tabs<T extends string = string>({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
     backgroundColor: THEME.base03,
-    paddingTop: 6,
-    paddingBottom: 8,
+    paddingTop: 4,
+    paddingBottom: 4,
+    paddingHorizontal: 0,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     opacity: 0.6,
     position: 'relative',
+    minHeight: 44,
   },
   tabActive: {
     opacity: 1,
   },
   chevronBackground: {
     position: 'absolute',
-    top: -6, // Extend into top padding
-    left: '50%',
-    marginLeft: -40, // Half of width (80/2) to center horizontally
+    top: -4, // Extend into top padding (4px)
+    bottom: -4, // Extend into bottom padding (4px)
+    left: 0,
+    right: 0,
   },
   chevronContent: {
     width: '100%',

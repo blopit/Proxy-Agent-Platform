@@ -3,10 +3,12 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useState } from 'react';
 import { Plus, Search, Target, Calendar, Map } from 'lucide-react-native';
 import SimpleTabs, { SimpleTab } from './SimpleTabs';
+import { Tabs, TabItem } from './Tabs';
+import { THEME } from '../../src/theme/colors';
 
 const meta = {
   title: 'Core/SimpleTabs',
@@ -105,102 +107,100 @@ export const Interactive: Story = {
 };
 
 /**
- * 5-Tab Layout Demo
- * Shows SimpleTabs-style component with 5 actual app tabs:
- * Capture, Scout, Hunt, Today (with day number), Map
- * Icons only, no labels
+ * 5-Tab Layout with Chevrons - Actual App Configuration
+ * Matches app/(tabs)/_layout.tsx exactly:
+ * - Capture, Scout, Hunter, Today, Mapper
+ * - Icons only (no labels)
+ * - Chevron backgrounds on active tabs
+ * - Calendar day number overlay
  */
-export const FiveTabLayout: Story = {
-  render: () => {
-    const [activeTab, setActiveTab] = useState<string>('capture');
-    const currentDay = new Date().getDate();
 
-    const tabs = [
-      { id: 'capture', icon: Plus, color: '#2aa198' },
-      { id: 'scout', icon: Search, color: '#268bd2' },
-      { id: 'hunt', icon: Target, color: '#cb4b16' },
-      { id: 'today', icon: Calendar, color: '#d33682', showDay: true },
-      { id: 'map', icon: Map, color: '#6c71c4' },
-    ];
+type FiveTabId = 'capture' | 'scout' | 'hunter' | 'today' | 'mapper';
 
-    return (
-      <View style={fiveTabStyles.container}>
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
+function FiveTabDemo({ initialTab = 'today' }: { initialTab?: FiveTabId }) {
+  const [activeTab, setActiveTab] = useState<FiveTabId>(initialTab);
+  const currentDay = new Date().getDate();
 
-          return (
-            <TouchableOpacity
-              key={tab.id}
-              onPress={() => setActiveTab(tab.id)}
-              style={[fiveTabStyles.tab, isActive && fiveTabStyles.tabActive]}
-              activeOpacity={0.7}
-            >
-              <View style={fiveTabStyles.iconContainer}>
-                {isActive && <View style={[StyleSheet.absoluteFill, { backgroundColor: `${tab.color}20`, borderRadius: 12 }]} />}
-                <Icon size={24} color={isActive ? tab.color : '#586e75'} />
-                {tab.showDay && (
-                  <Text style={[fiveTabStyles.dayNumber, { color: isActive ? tab.color : '#586e75' }]}>
-                    {currentDay}
-                  </Text>
-                )}
-              </View>
-              {isActive && <View style={[fiveTabStyles.activeIndicator, { backgroundColor: tab.color }]} />}
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    );
-  },
+  const fiveTabConfig: TabItem<FiveTabId>[] = [
+    {
+      id: 'capture',
+      icon: Plus,
+      color: THEME.cyan,
+      description: 'Capture new tasks',
+    },
+    {
+      id: 'scout',
+      icon: Search,
+      color: THEME.blue,
+      description: 'Scout for patterns',
+    },
+    {
+      id: 'hunter',
+      icon: Target,
+      color: THEME.orange,
+      description: 'Hunt mode',
+    },
+    {
+      id: 'today',
+      icon: Calendar,
+      color: THEME.magenta,
+      description: 'Today view',
+      renderContent: ({ color, isFocused }) => (
+        <>
+          <Calendar size={24} color={color} />
+          <Text
+            style={{
+              position: 'absolute',
+              fontSize: 9,
+              fontWeight: '700',
+              top: 14,
+              color,
+            }}
+          >
+            {currentDay}
+          </Text>
+        </>
+      ),
+    },
+    {
+      id: 'mapper',
+      icon: Map,
+      color: THEME.violet,
+      description: 'Map progress',
+    },
+  ];
+
+  return (
+    <Tabs
+      tabs={fiveTabConfig}
+      activeTab={activeTab}
+      onChange={setActiveTab}
+      showLabels={false}
+      showActiveIndicator={false}
+    />
+  );
+}
+
+export const FiveTabCaptureActive: Story = {
+  render: () => <FiveTabDemo initialTab="capture" />,
 };
 
-const fiveTabStyles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#002b36',
-    borderTopWidth: 1,
-    borderTopColor: '#586e75',
-    paddingTop: 6,
-    paddingBottom: 8,
-    height: 44,
-  },
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    opacity: 0.6,
-    position: 'relative',
-  },
-  tabActive: {
-    opacity: 1,
-    transform: [{ translateY: -2 }],
-  },
-  iconContainer: {
-    padding: 4,
-    borderRadius: 12,
-    position: 'relative',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  dayNumber: {
-    position: 'absolute',
-    fontSize: 9,
-    fontWeight: '700',
-    top: 14,
-  },
-  label: {
-    fontSize: 10,
-    fontWeight: '400',
-    color: '#586e75',
-    marginTop: 4,
-  },
-  activeIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    width: 32,
-    height: 3,
-    borderTopLeftRadius: 2,
-    borderTopRightRadius: 2,
-  },
-});
+export const FiveTabScoutActive: Story = {
+  render: () => <FiveTabDemo initialTab="scout" />,
+};
+
+export const FiveTabHunterActive: Story = {
+  render: () => <FiveTabDemo initialTab="hunter" />,
+};
+
+export const FiveTabTodayActive: Story = {
+  render: () => <FiveTabDemo initialTab="today" />,
+};
+
+export const FiveTabMapperActive: Story = {
+  render: () => <FiveTabDemo initialTab="mapper" />,
+};
+
+export const FiveTabInteractive: Story = {
+  render: () => <FiveTabDemo />,
+};
