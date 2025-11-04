@@ -140,6 +140,7 @@ class EnhancedDatabaseAdapter:
                 agent_type TEXT,
                 is_meta_task BOOLEAN DEFAULT 0,
                 completed BOOLEAN DEFAULT 0,
+                zone_id TEXT,
                 FOREIGN KEY (project_id) REFERENCES projects(project_id) ON DELETE CASCADE,
                 FOREIGN KEY (parent_id) REFERENCES tasks(task_id) ON DELETE CASCADE,
                 FOREIGN KEY (assignee_id) REFERENCES users(user_id) ON DELETE SET NULL

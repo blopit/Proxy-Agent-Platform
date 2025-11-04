@@ -61,7 +61,13 @@ export default function SimpleTabs({ activeTab, onChange, showBadges }: SimpleTa
       activeTab={activeTab}
       onChange={onChange}
       showLabels={true}
-      showActiveIndicator={false}
+      chevronHeight={60}
+      containerStyle={{
+        paddingVertical: 8,
+      }}
+      tabStyle={{
+        height: 60,
+      }}
     />
   );
 }

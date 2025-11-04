@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Check, AlertCircle } from 'lucide-react-native';
 import { Svg, Path } from 'react-native-svg';
-import ChevronButton, { ChevronVariant } from './ChevronButton';
+import ChevronButton, { ChevronButtonVariant } from './core/ChevronButton';
 
 /**
  * ConnectionElement - React Native version
@@ -60,7 +60,7 @@ const ConnectionElement: React.FC<ConnectionElementProps> = ({
     }
   };
 
-  const getChevronVariant = (): ChevronVariant => {
+  const getChevronVariant = (): ChevronButtonVariant => {
     switch (status) {
       case 'connected':
         return 'success';

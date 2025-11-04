@@ -10,11 +10,11 @@
  */
 
 import React from 'react';
-import { Link2, Plus } from 'lucide-react-native';
+import { Link2, Plus, MessageCircleQuestion } from 'lucide-react-native';
 import { Tabs, TabItem } from './Tabs';
 import { THEME } from '../../src/theme/colors';
 
-export type SubTab = 'connect' | 'add';
+export type SubTab = 'connect' | 'add' | 'clarify';
 
 interface SubTabsProps {
   activeTab: SubTab;
@@ -34,7 +34,14 @@ const SUB_TAB_CONFIG: TabItem<SubTab>[] = [
     icon: Plus,
     label: 'Add',
     color: THEME.cyan,
-    description: 'Add task manually',
+    description: 'Add new task',
+  },
+  {
+    id: 'clarify',
+    icon: MessageCircleQuestion,
+    label: 'Clarify',
+    color: THEME.yellow,
+    description: 'Clarify task details',
   },
 ];
 
@@ -45,14 +52,17 @@ export default function SubTabs({ activeTab, onChange }: SubTabsProps) {
       activeTab={activeTab}
       onChange={onChange}
       showLabels={false}
-      showActiveIndicator={false}
       iconSize={20}
+      chevronHeight={40}
+      minHeight={40}
       containerStyle={{
-        backgroundColor: THEME.base02, // Darker background for subtabs
-        paddingTop: 8,
-        paddingBottom: 6,
-        borderBottomWidth: 1,
-        borderBottomColor: THEME.base01,
+        backgroundColor: THEME.base02,
+        height: 40,
+        paddingTop: 0,
+        paddingBottom: 0,
+      }}
+      tabStyle={{
+        height: 40,
       }}
     />
   );

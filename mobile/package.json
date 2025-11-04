@@ -7,6 +7,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "storybook": "STORYBOOK_ENABLED=true expo start --port 7007",
     "storybook-generate": "sb-rn-get-stories"
   },
   "dependencies": {

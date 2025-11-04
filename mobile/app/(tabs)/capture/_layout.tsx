@@ -1,63 +1,38 @@
-import { Tabs } from 'expo-router';
-import { Link2, Plus } from 'lucide-react-native';
+import { Tabs as ExpoTabs } from 'expo-router';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import SubTabs, { SubTab } from '@/components/core/Subtabs';
+import { View } from 'react-native';
 
-// Icon component for sub-tabs
-const SubTabBarIcon = ({
-  Icon,
-  color
-}: {
-  Icon: React.ComponentType<{ color: string; size: number }>;
-  color: string;
-}) => <Icon color={color} size={20} />;
+// Custom subtab bar using Subtabs component
+function CustomSubTabBar({ state, navigation }: BottomTabBarProps) {
+  const activeSubtabId = state.routes[state.index].name as SubTab;
+
+  const handleSubTabChange = (subtabId: SubTab) => {
+    const index = state.routes.findIndex((route) => route.name === subtabId);
+    if (index !== -1 && state.index !== index) {
+      navigation.navigate(state.routes[index].name);
+    }
+  };
+
+  return (
+    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+      <SubTabs activeTab={activeSubtabId} onChange={handleSubTabChange} />
+    </View>
+  );
+}
 
 export default function CaptureLayout() {
   return (
-    <Tabs
+    <ExpoTabs
       initialRouteName="add"
+      tabBar={(props) => <CustomSubTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#2aa198', // Solarized cyan
-        tabBarInactiveTintColor: '#586e75', // Solarized base01
-        tabBarStyle: {
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          backgroundColor: '#073642', // Solarized base02
-          borderBottomColor: '#586e75',
-          borderBottomWidth: 1,
-          height: 44,
-          paddingTop: 0,
-          paddingBottom: 0,
-          paddingHorizontal: 12,
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-        tabBarShowLabel: false,
-        tabBarItemStyle: {
-          width: 44,
-          height: 44,
-          padding: 0,
-          margin: 0,
-          justifyContent: 'center',
-          alignItems: 'center',
-        },
       }}
     >
-      <Tabs.Screen
-        name="connect"
-        options={{
-          title: 'Connect',
-          tabBarIcon: ({ color }) => <SubTabBarIcon Icon={Link2} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="add"
-        options={{
-          title: 'Add',
-          tabBarIcon: ({ color }) => <SubTabBarIcon Icon={Plus} color={color} />,
-        }}
-      />
-    </Tabs>
+      <ExpoTabs.Screen name="connect" options={{ title: 'Connect' }} />
+      <ExpoTabs.Screen name="add" options={{ title: 'Add' }} />
+      <ExpoTabs.Screen name="clarify" options={{ title: 'Clarify' }} />
+    </ExpoTabs>
   );
 }

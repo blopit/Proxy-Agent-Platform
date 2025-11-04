@@ -1,206 +1,106 @@
-import { Tabs } from 'expo-router';
-import { Plus, Search, Target, Calendar } from 'lucide-react-native';
-import { View, Text } from 'react-native';
-import { useProfile } from '@/src/contexts/ProfileContext';
-import { Svg, Path } from 'react-native-svg';
+import { Tabs as ExpoTabs } from 'expo-router';
+import { Plus, Search, Target, Calendar, Map } from 'lucide-react-native';
+import { Text } from 'react-native';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { Tabs, TabItem } from '@/components/core/Tabs';
 
-// Arrow-shaped tab icon (|>)
-const TabBarIcon = ({
-  Icon,
-  color,
-  focused
-}: {
-  Icon: React.ComponentType<{ color: string; size: number }>;
-  color: string;
-  focused: boolean;
-}) => {
-  const width = 60;
-  const height = 44;
-
-  return (
-    <View style={{ width, height, alignItems: 'center', justifyContent: 'center' }}>
-      <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-        {/* Arrow shape: |> */}
-        <Path
-          d={`
-            M 4 4
-            L ${width - 10} 4
-            L ${width - 4} ${height / 2}
-            L ${width - 10} ${height - 4}
-            L 4 ${height - 4}
-            Z
-          `}
-          fill={focused ? `${color}33` : 'transparent'}
-          stroke={color}
-          strokeWidth={focused ? 2 : 1}
-        />
-      </Svg>
-      <View style={{ position: 'absolute' }}>
-        <Icon color={color} size={20} />
-      </View>
-    </View>
-  );
-};
-
-// Calendar icon with current day number overlaid - with arrow shape
-const CalendarWithDate = ({ color, focused }: { color: string; focused: boolean }) => {
+// Custom tab bar using base Tabs component
+function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const currentDay = new Date().getDate();
-  const width = 60;
-  const height = 44;
 
-  return (
-    <View style={{ width, height, alignItems: 'center', justifyContent: 'center' }}>
-      <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-        {/* Arrow shape: |> */}
-        <Path
-          d={`
-            M 4 4
-            L ${width - 10} 4
-            L ${width - 4} ${height / 2}
-            L ${width - 10} ${height - 4}
-            L 4 ${height - 4}
-            Z
-          `}
-          fill={focused ? `${color}33` : 'transparent'}
-          stroke={color}
-          strokeWidth={focused ? 2 : 1}
-        />
-      </Svg>
-      <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
-        <Calendar color={color} size={20} />
-        <Text
-          style={{
-            position: 'absolute',
-            color: color,
-            fontSize: 8,
-            fontWeight: '700',
-            top: 7,
-          }}
-        >
-          {currentDay}
-        </Text>
-      </View>
-    </View>
-  );
-};
+  const tabItems: TabItem[] = [
+    {
+      id: 'capture',
+      icon: Plus,
+      color: '#2aa198',
+      description: 'Capture tasks',
+    },
+    {
+      id: 'scout',
+      icon: Search,
+      color: '#268bd2',
+      description: 'Scout for tasks',
+    },
+    {
+      id: 'hunter',
+      icon: Target,
+      color: '#cb4b16',
+      description: 'Hunt mode',
+    },
+    {
+      id: 'today',
+      icon: Calendar,
+      color: '#d33682',
+      description: 'Today tasks',
+      renderContent: ({ color }) => (
+        <>
+          <Calendar size={24} color={color} />
+          <Text
+            style={{
+              position: 'absolute',
+              fontSize: 9,
+              fontWeight: '700',
+              top: 11,
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+              color,
+            }}
+          >
+            {currentDay}
+          </Text>
+        </>
+      ),
+    },
+    {
+      id: 'mapper',
+      icon: Map,
+      color: '#6c71c4',
+      description: 'Map view',
+    },
+  ];
 
-// Profile avatar with initials - with arrow shape
-const ProfileAvatar = ({ color, focused }: { color: string; focused: boolean }) => {
-  const { activeProfile } = useProfile();
-  const width = 60;
-  const height = 44;
+  const activeTabId = state.routes[state.index].name;
 
-  const getInitials = (profile: string) => {
-    switch (profile) {
-      case 'personal':
-        return 'P';
-      case 'lionmotel':
-        return 'LM';
-      case 'aiservice':
-        return 'AI';
-      default:
-        return 'P';
+  const handleTabChange = (tabId: string) => {
+    const index = tabItems.findIndex((tab) => tab.id === tabId);
+    if (index !== -1) {
+      const event = navigation.emit({
+        type: 'tabPress',
+        target: state.routes[index].key,
+        canPreventDefault: true,
+      });
+
+      if (state.index !== index && !event.defaultPrevented) {
+        navigation.navigate(state.routes[index].name);
+      }
     }
   };
 
-  const initials = getInitials(activeProfile);
-
   return (
-    <View style={{ width, height, alignItems: 'center', justifyContent: 'center' }}>
-      <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-        {/* Arrow shape: |> */}
-        <Path
-          d={`
-            M 4 4
-            L ${width - 10} 4
-            L ${width - 4} ${height / 2}
-            L ${width - 10} ${height - 4}
-            L 4 ${height - 4}
-            Z
-          `}
-          fill={focused ? `${color}33` : 'transparent'}
-          stroke={color}
-          strokeWidth={focused ? 2 : 1}
-        />
-      </Svg>
-      <View
-        style={{
-          position: 'absolute',
-          width: 22,
-          height: 22,
-          borderRadius: 11,
-          borderWidth: 1.5,
-          borderColor: color,
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: 'transparent',
-        }}
-      >
-        <Text
-          style={{
-            color: color,
-            fontSize: 9,
-            fontWeight: '700',
-            textAlign: 'center',
-          }}
-        >
-          {initials}
-        </Text>
-      </View>
-    </View>
+    <Tabs
+      tabs={tabItems}
+      activeTab={activeTabId}
+      onChange={handleTabChange}
+      showLabels={false}
+      showActiveIndicator={false}
+    />
   );
-};
+}
 
 export default function TabLayout() {
   return (
-    <Tabs
+    <ExpoTabs
+      tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#2aa198', // Solarized cyan
-        tabBarInactiveTintColor: '#586e75', // Solarized base01
-        tabBarStyle: {
-          backgroundColor: '#073642', // Solarized base02
-          borderTopColor: '#586e75',
-          borderTopWidth: 1,
-        },
-        tabBarShowLabel: false,
       }}
     >
-      <Tabs.Screen
-        name="capture"
-        options={{
-          title: 'Capture',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon Icon={Plus} color={color} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="scout"
-        options={{
-          title: 'Scout',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon Icon={Search} color={color} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="hunter"
-        options={{
-          title: 'Hunter',
-          tabBarIcon: ({ color, focused }) => <TabBarIcon Icon={Target} color={color} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="today"
-        options={{
-          title: 'Today',
-          tabBarIcon: ({ color, focused }) => <CalendarWithDate color={color} focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="mapper"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, focused }) => <ProfileAvatar color={color} focused={focused} />,
-        }}
-      />
-    </Tabs>
+      <ExpoTabs.Screen name="capture" options={{ title: 'Capture' }} />
+      <ExpoTabs.Screen name="scout" options={{ title: 'Scout' }} />
+      <ExpoTabs.Screen name="hunter" options={{ title: 'Hunt' }} />
+      <ExpoTabs.Screen name="today" options={{ title: 'Today' }} />
+      <ExpoTabs.Screen name="mapper" options={{ title: 'Map' }} />
+    </ExpoTabs>
   );
 }

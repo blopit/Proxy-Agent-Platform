@@ -1,10 +1,10 @@
 /**
- * Tabs - Base Tab Bar Component
- * Reusable foundation for all tab navigation patterns
+ * Tabs - Simplified Tab Bar Component
+ * Simple icons that get colored when selected with chevron background
  */
 
 import React, { ReactNode } from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { View, TouchableOpacity, Text, StyleSheet, ViewStyle } from 'react-native';
 import { ChevronElement, ChevronPosition } from './ChevronElement';
 import { THEME } from '../../src/theme/colors';
 
@@ -23,24 +23,26 @@ export interface TabsProps<T extends string = string> {
   activeTab: T;
   onChange: (tab: T) => void;
   showLabels?: boolean;
-  showActiveIndicator?: boolean;
   containerStyle?: ViewStyle;
   tabStyle?: ViewStyle;
   iconSize?: number;
+  chevronHeight?: number;
+  minHeight?: number;
 }
 
 /**
- * Base Tabs component with flexible configuration
+ * Simplified Tabs - Just icons with color + chevron when selected
  */
 export function Tabs<T extends string = string>({
   tabs,
   activeTab,
   onChange,
-  showLabels = true,
-  showActiveIndicator = false,
+  showLabels = false,
   containerStyle,
   tabStyle,
   iconSize = 24,
+  chevronHeight = 52,
+  minHeight = 52,
 }: TabsProps<T>) {
   const getChevronPosition = (index: number): ChevronPosition => {
     if (tabs.length === 1) return 'single';
@@ -55,36 +57,30 @@ export function Tabs<T extends string = string>({
         const Icon = tab.icon;
         const isFocused = activeTab === tab.id;
         const color = isFocused ? tab.color : THEME.base01;
-        const badge = tab.badge;
-        const chevronPosition = getChevronPosition(index);
 
         return (
           <TouchableOpacity
             key={tab.id}
             onPress={() => onChange(tab.id)}
-            style={[
-              styles.tab,
-              tabStyle,
-              isFocused && styles.tabActive,
-            ]}
+            style={[styles.tab, { minHeight }, tabStyle]}
             activeOpacity={0.7}
             accessibilityLabel={tab.description}
           >
-            {/* Chevron background for active tab - extends into padding */}
+            {/* Chevron - always present, only visible when selected */}
             {isFocused && (
               <ChevronElement
                 backgroundColor={`${tab.color}20`}
-                height={52}
+                height={chevronHeight}
                 width={'100%'}
                 chevronDepth={10}
-                position={chevronPosition}
+                position={getChevronPosition(index)}
                 style={styles.chevronBackground}
               >
                 <View style={styles.chevronContent} />
               </ChevronElement>
             )}
 
-            {/* Icon container */}
+            {/* Icon - colored when selected */}
             <View style={styles.iconContainer}>
               {tab.renderContent ? (
                 tab.renderContent({ color, isFocused })
@@ -92,38 +88,21 @@ export function Tabs<T extends string = string>({
                 <Icon size={iconSize} color={color} />
               )}
 
-              {/* Numeric badge */}
-              {badge && typeof badge === 'number' && badge > 0 && (
-                <View style={styles.numericBadge}>
+              {/* Badges */}
+              {tab.badge && typeof tab.badge === 'number' && tab.badge > 0 && (
+                <View style={styles.badge}>
                   <Text style={styles.badgeText}>
-                    {badge > 99 ? '99+' : badge}
+                    {tab.badge > 99 ? '99+' : tab.badge}
                   </Text>
                 </View>
               )}
-
-              {/* Boolean badge (dot) */}
-              {badge && typeof badge === 'boolean' && badge && (
-                <View style={styles.booleanBadge} />
-              )}
             </View>
 
-            {/* Label */}
+            {/* Optional label */}
             {showLabels && tab.label && (
-              <Text
-                style={[
-                  styles.label,
-                  isFocused && { color: tab.color, fontWeight: '600' },
-                ]}
-              >
+              <Text style={[styles.label, isFocused && { color }]}>
                 {tab.label}
               </Text>
-            )}
-
-            {/* Active indicator */}
-            {showActiveIndicator && isFocused && (
-              <View
-                style={[styles.activeIndicator, { backgroundColor: tab.color }]}
-              />
             )}
           </TouchableOpacity>
         );
@@ -136,25 +115,18 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     backgroundColor: THEME.base03,
-    paddingTop: 4,
-    paddingBottom: 4,
-    paddingHorizontal: 0,
+    paddingVertical: 4,
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    opacity: 0.6,
     position: 'relative',
-    minHeight: 44,
-  },
-  tabActive: {
-    opacity: 1,
   },
   chevronBackground: {
     position: 'absolute',
-    top: -4, // Extend into top padding (4px)
-    bottom: -4, // Extend into bottom padding (4px)
+    top: 0,
+    bottom: 0,
     left: 0,
     right: 0,
   },
@@ -164,26 +136,14 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     position: 'relative',
-    padding: 4,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1, // Above chevron background
+    zIndex: 1,
   },
   label: {
     fontSize: 10,
-    fontWeight: '400',
     color: THEME.base01,
     marginTop: 4,
   },
-  activeIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    width: 32,
-    height: 3,
-    borderTopLeftRadius: 2,
-    borderTopRightRadius: 2,
-  },
-  numericBadge: {
+  badge: {
     position: 'absolute',
     top: -4,
     right: -4,
@@ -199,17 +159,5 @@ const styles = StyleSheet.create({
     color: THEME.base3,
     fontSize: 10,
     fontWeight: '700',
-    textAlign: 'center',
-  },
-  booleanBadge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    backgroundColor: THEME.green,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: THEME.base03,
   },
 });

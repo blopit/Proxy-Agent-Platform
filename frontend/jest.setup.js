@@ -42,3 +42,56 @@ global.fetch = jest.fn()
 beforeEach(() => {
   fetch.mockClear()
 })
+
+// Mock ResizeObserver
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}))
+
+// Mock window.matchMedia
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(), // Deprecated
+    removeListener: jest.fn(), // Deprecated
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+})
+
+// Mock IntersectionObserver
+global.IntersectionObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+  root: null,
+  rootMargin: '',
+  thresholds: [],
+  takeRecords: jest.fn(() => []),
+}))
+
+// Mock Web Speech API
+global.SpeechRecognition = jest.fn().mockImplementation(() => ({
+  start: jest.fn(),
+  stop: jest.fn(),
+  abort: jest.fn(),
+  addEventListener: jest.fn(),
+  removeEventListener: jest.fn(),
+  continuous: false,
+  interimResults: false,
+  lang: 'en-US',
+  onerror: null,
+  onend: null,
+  onresult: null,
+  onstart: null,
+}))
+
+global.webkitSpeechRecognition = global.SpeechRecognition
+
+// Don't mock design-system - use the real one since we just fixed it

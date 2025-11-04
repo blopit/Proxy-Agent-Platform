@@ -5,7 +5,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useState } from 'react';
-import { Plus, Search, Target, Calendar, Map } from 'lucide-react-native';
+import { Plus, Search, Target, Calendar, Map, MessageCircleQuestion } from 'lucide-react-native';
 import SimpleTabs, { SimpleTab } from './SimpleTabs';
 import { Tabs, TabItem } from './Tabs';
 import { THEME } from '../../src/theme/colors';
@@ -146,20 +146,23 @@ function FiveTabDemo({ initialTab = 'today' }: { initialTab?: FiveTabId }) {
       color: THEME.magenta,
       description: 'Today view',
       renderContent: ({ color, isFocused }) => (
-        <>
+        <View style={{ width: 24, height: 24, position: 'relative' }}>
           <Calendar size={24} color={color} />
           <Text
             style={{
               position: 'absolute',
               fontSize: 9,
               fontWeight: '700',
-              top: 14,
+              top: 12,
+              left: 0,
+              right: 0,
+              textAlign: 'center',
               color,
             }}
           >
             {currentDay}
           </Text>
-        </>
+        </View>
       ),
     },
     {
@@ -176,7 +179,13 @@ function FiveTabDemo({ initialTab = 'today' }: { initialTab?: FiveTabId }) {
       activeTab={activeTab}
       onChange={setActiveTab}
       showLabels={false}
-      showActiveIndicator={false}
+      chevronHeight={52}
+      containerStyle={{
+        paddingVertical: 4,
+      }}
+      tabStyle={{
+        height: 52,
+      }}
     />
   );
 }
@@ -203,4 +212,58 @@ export const FiveTabMapperActive: Story = {
 
 export const FiveTabInteractive: Story = {
   render: () => <FiveTabDemo />,
+};
+
+/**
+ * Capture Subtabs Story
+ * Shows subtabs within the Capture mode:
+ * - Add (Plus icon)
+ * - Clarify (Question bubble icon)
+ */
+type CaptureSubtabId = 'add' | 'clarify';
+
+function CaptureSubtabsDemo({ initialTab = 'add' }: { initialTab?: CaptureSubtabId }) {
+  const [activeSubtab, setActiveSubtab] = useState<CaptureSubtabId>(initialTab);
+
+  const captureSubtabs: TabItem<CaptureSubtabId>[] = [
+    {
+      id: 'add',
+      icon: Plus,
+      color: THEME.cyan,
+      description: 'Add new task',
+      label: 'Add',
+    },
+    {
+      id: 'clarify',
+      icon: MessageCircleQuestion,
+      color: THEME.yellow,
+      description: 'Clarify task details',
+      label: 'Clarify',
+    },
+  ];
+
+  return (
+    <Tabs
+      tabs={captureSubtabs}
+      activeTab={activeSubtab}
+      onChange={setActiveSubtab}
+      showLabels={true}
+      showActiveIndicator={false}
+      containerStyle={{
+        borderTopWidth: 0, // Remove bottom border
+      }}
+    />
+  );
+}
+
+export const CaptureSubtabsAdd: Story = {
+  render: () => <CaptureSubtabsDemo initialTab="add" />,
+};
+
+export const CaptureSubtabsClarify: Story = {
+  render: () => <CaptureSubtabsDemo initialTab="clarify" />,
+};
+
+export const CaptureSubtabsInteractive: Story = {
+  render: () => <CaptureSubtabsDemo />,
 };

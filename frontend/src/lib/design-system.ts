@@ -244,6 +244,22 @@ export const semanticColors = {
     success: colors.green,
     warning: colors.yellow,
     error: colors.red,
+    light: '#93c5fd', // Light blue for accents
+  },
+  success: {
+    light: '#d1fae5', // Light green
+    DEFAULT: colors.green,
+    dark: '#065f46',
+  },
+  error: {
+    light: '#fee2e2', // Light red
+    DEFAULT: colors.red,
+    dark: '#991b1b',
+  },
+  warning: {
+    light: '#fef3c7', // Light yellow
+    DEFAULT: colors.yellow,
+    dark: '#92400e',
   },
 } as const;
 
