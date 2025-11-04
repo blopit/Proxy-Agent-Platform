@@ -23,22 +23,30 @@ const previewAnnotations = [
   require('@storybook/react-native/preview'),
 ];
 
-// Create story entries manually
-const storyList = [
-  SuggestionCardStories,
-  TaskCardBigStories,
-  ConnectionElementStories,
-  ConnectionElementStories2,
-  BiologicalTabsStories,
-  CaptureSubtabsStories,
-  ChevronButtonStories,
-  ChevronElementStories,
-  EnergyGaugeStories,
-  SimpleTabsStories,
-  SubTabsStories,
-  BadgeStories,
-  ButtonStories,
-];
+// Create a mock require.context object that Storybook expects
+const storyModules = {
+  './cards/SuggestionCard.stories.tsx': SuggestionCardStories,
+  './cards/TaskCardBig.stories.tsx': TaskCardBigStories,
+  './ConnectionElement.stories.tsx': ConnectionElementStories,
+  './connections/ConnectionElement.stories.tsx': ConnectionElementStories2,
+  './core/BiologicalTabs.stories.tsx': BiologicalTabsStories,
+  './core/CaptureSubtabs.stories.tsx': CaptureSubtabsStories,
+  './core/ChevronButton.stories.tsx': ChevronButtonStories,
+  './core/ChevronElement.stories.tsx': ChevronElementStories,
+  './core/EnergyGauge.stories.tsx': EnergyGaugeStories,
+  './core/SimpleTabs.stories.tsx': SimpleTabsStories,
+  './core/SubTabs.stories.tsx': SubTabsStories,
+  './ui/Badge.stories.tsx': BadgeStories,
+  './ui/Button.stories.tsx': ButtonStories,
+};
+
+// Create a function that mimics require.context
+function createRequireContext() {
+  const req: any = (key: string) => storyModules[key];
+  req.keys = () => Object.keys(storyModules);
+  req.resolve = (key: string) => key;
+  return req;
+}
 
 // Initialize Storybook view
 const view: View = start({
@@ -46,10 +54,10 @@ const view: View = start({
   storyEntries: [
     {
       titlePrefix: '',
-      directory: './components',
+      directory: '../components',
       files: '**/*.stories.tsx',
       importPathMatcher: /\.stories\.tsx$/,
-      req: () => storyList,
+      req: createRequireContext(),
     },
   ],
 });
