@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
   },
   badge: {
     position: 'absolute',
-    top: -2,
+    top: 10,
     right: -12,
     backgroundColor: THEME.red,
     borderRadius: 10,
