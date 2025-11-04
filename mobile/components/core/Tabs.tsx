@@ -73,7 +73,7 @@ export function Tabs<T extends string = string>({
             {isFocused && (
               <ChevronElement
                 backgroundColor={`${tab.color}20`}
-                height={54}
+                height={44}
                 width={80}
                 chevronDepth={10}
                 position={chevronPosition}
