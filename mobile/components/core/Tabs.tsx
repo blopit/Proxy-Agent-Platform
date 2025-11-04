@@ -116,12 +116,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: THEME.base03,
     paddingVertical: 4,
+    overflow: 'hidden',
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    overflow: 'hidden',
   },
   chevronBackground: {
     position: 'absolute',
@@ -145,8 +147,8 @@ const styles = StyleSheet.create({
   },
   badge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
+    top: -2,
+    right: -12,
     backgroundColor: THEME.red,
     borderRadius: 10,
     paddingHorizontal: 6,

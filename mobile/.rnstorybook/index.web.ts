@@ -5,8 +5,7 @@ import { start, View } from '@storybook/react-native';
 // Manual story imports (web-compatible - no require.context)
 import * as SuggestionCardStories from '../components/cards/SuggestionCard.stories';
 import * as TaskCardBigStories from '../components/cards/TaskCardBig.stories';
-import * as ConnectionElementStories from '../components/ConnectionElement.stories';
-import * as ConnectionElementStories2 from '../components/connections/ConnectionElement.stories';
+import * as ConnectionElementStories from '../components/connections/ConnectionElement.stories';
 import * as BiologicalTabsStories from '../components/core/BiologicalTabs.stories';
 import * as CaptureSubtabsStories from '../components/core/CaptureSubtabs.stories';
 import * as ChevronButtonStories from '../components/core/ChevronButton.stories';
@@ -27,8 +26,7 @@ const previewAnnotations = [
 const storyModules = {
   './cards/SuggestionCard.stories.tsx': SuggestionCardStories,
   './cards/TaskCardBig.stories.tsx': TaskCardBigStories,
-  './ConnectionElement.stories.tsx': ConnectionElementStories,
-  './connections/ConnectionElement.stories.tsx': ConnectionElementStories2,
+  './connections/ConnectionElement.stories.tsx': ConnectionElementStories,
   './core/BiologicalTabs.stories.tsx': BiologicalTabsStories,
   './core/CaptureSubtabs.stories.tsx': CaptureSubtabsStories,
   './core/ChevronButton.stories.tsx': ChevronButtonStories,

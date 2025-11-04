@@ -5,7 +5,7 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useState } from 'react';
-import { Plus, Search, Target, Calendar, Map, MessageCircleQuestion } from 'lucide-react-native';
+import { Plus, Search, Target, Calendar, Map } from 'lucide-react-native';
 import SimpleTabs, { SimpleTab } from './SimpleTabs';
 import { Tabs, TabItem } from './Tabs';
 import { THEME } from '../../src/theme/colors';
@@ -215,55 +215,166 @@ export const FiveTabInteractive: Story = {
 };
 
 /**
- * Capture Subtabs Story
- * Shows subtabs within the Capture mode:
- * - Add (Plus icon)
- * - Clarify (Question bubble icon)
+ * 5-Tab Layout with Badges
+ * Shows notification badges on different tabs
  */
-type CaptureSubtabId = 'add' | 'clarify';
+function FiveTabBadgesDemo({ initialTab = 'today' }: { initialTab?: FiveTabId }) {
+  const [activeTab, setActiveTab] = useState<FiveTabId>(initialTab);
+  const currentDay = new Date().getDate();
 
-function CaptureSubtabsDemo({ initialTab = 'add' }: { initialTab?: CaptureSubtabId }) {
-  const [activeSubtab, setActiveSubtab] = useState<CaptureSubtabId>(initialTab);
-
-  const captureSubtabs: TabItem<CaptureSubtabId>[] = [
+  const fiveTabConfigWithBadges: TabItem<FiveTabId>[] = [
     {
-      id: 'add',
+      id: 'capture',
       icon: Plus,
       color: THEME.cyan,
-      description: 'Add new task',
-      label: 'Add',
+      description: 'Capture new tasks',
+      badge: 3, // 3 items in inbox
     },
     {
-      id: 'clarify',
-      icon: MessageCircleQuestion,
-      color: THEME.yellow,
-      description: 'Clarify task details',
-      label: 'Clarify',
+      id: 'scout',
+      icon: Search,
+      color: THEME.blue,
+      description: 'Scout for patterns',
+      badge: 12, // 12 potential tasks found
+    },
+    {
+      id: 'hunter',
+      icon: Target,
+      color: THEME.orange,
+      description: 'Hunt mode',
+    },
+    {
+      id: 'today',
+      icon: Calendar,
+      color: THEME.magenta,
+      description: 'Today view',
+      badge: 5, // 5 tasks for today
+      renderContent: ({ color, isFocused }) => (
+        <View style={{ width: 24, height: 24, position: 'relative' }}>
+          <Calendar size={24} color={color} />
+          <Text
+            style={{
+              position: 'absolute',
+              fontSize: 9,
+              fontWeight: '700',
+              top: 11,
+              left: 0,
+              right: 0,
+              textAlign: 'center',
+              color,
+            }}
+          >
+            {currentDay}
+          </Text>
+        </View>
+      ),
+    },
+    {
+      id: 'mapper',
+      icon: Map,
+      color: THEME.violet,
+      description: 'Map progress',
     },
   ];
 
   return (
     <Tabs
-      tabs={captureSubtabs}
-      activeTab={activeSubtab}
-      onChange={setActiveSubtab}
-      showLabels={true}
-      showActiveIndicator={false}
+      tabs={fiveTabConfigWithBadges}
+      activeTab={activeTab}
+      onChange={setActiveTab}
+      showLabels={false}
+      chevronHeight={60}
+      minHeight={52}
       containerStyle={{
-        borderTopWidth: 0, // Remove bottom border
+        paddingVertical: 4,
+      }}
+      tabStyle={{
+        height: 52,
       }}
     />
   );
 }
 
-export const CaptureSubtabsAdd: Story = {
-  render: () => <CaptureSubtabsDemo initialTab="add" />,
+export const FiveTabWithBadges: Story = {
+  render: () => <FiveTabBadgesDemo initialTab="today" />,
 };
 
-export const CaptureSubtabsClarify: Story = {
-  render: () => <CaptureSubtabsDemo initialTab="clarify" />,
-};
+export const FiveTabWithLargeBadges: Story = {
+  render: () => {
+    const [activeTab, setActiveTab] = useState<FiveTabId>('scout');
+    const currentDay = new Date().getDate();
 
-export const CaptureSubtabsInteractive: Story = {
-  render: () => <CaptureSubtabsDemo />,
+    const configWithLargeBadges: TabItem<FiveTabId>[] = [
+      {
+        id: 'capture',
+        icon: Plus,
+        color: THEME.cyan,
+        description: 'Capture new tasks',
+        badge: 150, // Should show as "99+"
+      },
+      {
+        id: 'scout',
+        icon: Search,
+        color: THEME.blue,
+        description: 'Scout for patterns',
+        badge: 45,
+      },
+      {
+        id: 'hunter',
+        icon: Target,
+        color: THEME.orange,
+        description: 'Hunt mode',
+        badge: 8,
+      },
+      {
+        id: 'today',
+        icon: Calendar,
+        color: THEME.magenta,
+        description: 'Today view',
+        badge: 23,
+        renderContent: ({ color, isFocused }) => (
+          <View style={{ width: 24, height: 24, position: 'relative' }}>
+            <Calendar size={24} color={color} />
+            <Text
+              style={{
+                position: 'absolute',
+                fontSize: 9,
+                fontWeight: '700',
+                top: 11,
+                left: 0,
+                right: 0,
+                textAlign: 'center',
+                color,
+              }}
+            >
+              {currentDay}
+            </Text>
+          </View>
+        ),
+      },
+      {
+        id: 'mapper',
+        icon: Map,
+        color: THEME.violet,
+        description: 'Map progress',
+      },
+    ];
+
+    return (
+      <Tabs
+        tabs={configWithLargeBadges}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        showLabels={false}
+        chevronHeight={60}
+        minHeight={52}
+        containerStyle={{
+          paddingVertical: 4,
+        }}
+        tabStyle={{
+          height: 52,
+        }}
+      />
+    );
+  },
 };

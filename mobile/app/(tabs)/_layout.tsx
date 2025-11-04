@@ -1,6 +1,6 @@
 import { Tabs as ExpoTabs } from 'expo-router';
 import { Plus, Search, Target, Calendar, Map } from 'lucide-react-native';
-import { Text } from 'react-native';
+import { Text, View } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Tabs, TabItem } from '@/components/core/Tabs';
 
@@ -78,13 +78,15 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   };
 
   return (
-    <Tabs
-      tabs={tabItems}
-      activeTab={activeTabId}
-      onChange={handleTabChange}
-      showLabels={false}
-      showActiveIndicator={false}
-    />
+    <View style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}>
+      <Tabs
+        tabs={tabItems}
+        activeTab={activeTabId}
+        onChange={handleTabChange}
+        showLabels={false}
+        showActiveIndicator={false}
+      />
+    </View>
   );
 }
 
@@ -94,6 +96,8 @@ export default function TabLayout() {
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
         headerShown: false,
+        sceneStyle: { backgroundColor: '#002b36' },
+        animation: 'none',
       }}
     >
       <ExpoTabs.Screen name="capture" options={{ title: 'Capture' }} />

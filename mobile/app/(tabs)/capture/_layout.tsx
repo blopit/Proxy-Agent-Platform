@@ -1,6 +1,6 @@
 import { Tabs as ExpoTabs } from 'expo-router';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import SubTabs, { SubTab } from '@/components/core/Subtabs';
+import SubTabs, { SubTab } from '@/components/core/SubTabs';
 import { View } from 'react-native';
 
 // Custom subtab bar using Subtabs component
@@ -28,6 +28,8 @@ export default function CaptureLayout() {
       tabBar={(props) => <CustomSubTabBar {...props} />}
       screenOptions={{
         headerShown: false,
+        sceneStyle: { backgroundColor: '#002b36' },
+        animation: 'none',
       }}
     >
       <ExpoTabs.Screen name="connect" options={{ title: 'Connect' }} />
