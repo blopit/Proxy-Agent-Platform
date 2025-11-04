@@ -1,7 +1,0 @@
-{
-  "buildCommand": "node build.js || node fallback.mjs",
-  "framework": "nextjs",
-  "devCommand": "npx next dev",
-  "installCommand": "npm install --legacy-peer-deps && npm install next@14.0.4 --no-save",
-  "version": 2
-}
