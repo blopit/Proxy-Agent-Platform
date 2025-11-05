@@ -42,9 +42,9 @@ import '../components/your-component/YourComponent.stories';
 ### Current Stories (13 total):
 
 ```
+components/auth/Authentication.stories.tsx
 components/cards/SuggestionCard.stories.tsx
 components/cards/TaskCardBig.stories.tsx
-components/ConnectionElement.stories.tsx
 components/connections/ConnectionElement.stories.tsx
 components/core/BiologicalTabs.stories.tsx
 components/core/CaptureSubtabs.stories.tsx

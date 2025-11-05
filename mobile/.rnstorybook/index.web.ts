@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { start, View } from '@storybook/react-native';
 
 // Manual story imports (web-compatible - no require.context)
+import * as AuthenticationStories from '../components/auth/Authentication.stories';
 import * as SuggestionCardStories from '../components/cards/SuggestionCard.stories';
 import * as TaskCardBigStories from '../components/cards/TaskCardBig.stories';
 import * as ConnectionElementStories from '../components/connections/ConnectionElement.stories';
@@ -24,6 +25,7 @@ const previewAnnotations = [
 
 // Create a mock require.context object that Storybook expects
 const storyModules = {
+  './auth/Authentication.stories.tsx': AuthenticationStories,
   './cards/SuggestionCard.stories.tsx': SuggestionCardStories,
   './cards/TaskCardBig.stories.tsx': TaskCardBigStories,
   './connections/ConnectionElement.stories.tsx': ConnectionElementStories,
