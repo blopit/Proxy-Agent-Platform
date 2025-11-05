@@ -14,6 +14,8 @@ import * as ChevronElementStories from '../components/core/ChevronElement.storie
 import * as EnergyGaugeStories from '../components/core/EnergyGauge.stories';
 import * as SimpleTabsStories from '../components/core/SimpleTabs.stories';
 import * as SubTabsStories from '../components/core/SubTabs.stories';
+import * as BionicTextStories from '../components/shared/BionicText.stories';
+import * as BionicTextCardStories from '../components/shared/BionicTextCard.stories';
 import * as BadgeStories from '../components/ui/Badge.stories';
 import * as ButtonStories from '../components/ui/Button.stories';
 
@@ -36,6 +38,8 @@ const storyModules = {
   './core/EnergyGauge.stories.tsx': EnergyGaugeStories,
   './core/SimpleTabs.stories.tsx': SimpleTabsStories,
   './core/SubTabs.stories.tsx': SubTabsStories,
+  './shared/BionicText.stories.tsx': BionicTextStories,
+  './shared/BionicTextCard.stories.tsx': BionicTextCardStories,
   './ui/Badge.stories.tsx': BadgeStories,
   './ui/Button.stories.tsx': ButtonStories,
 };

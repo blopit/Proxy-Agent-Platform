@@ -39,7 +39,7 @@ When you create a new `.stories.tsx` file, you **MUST manually add it** to `.rns
 import '../components/your-component/YourComponent.stories';
 ```
 
-### Current Stories (13 total):
+### Current Stories (15 total):
 
 ```
 components/auth/Authentication.stories.tsx
@@ -53,6 +53,8 @@ components/core/ChevronElement.stories.tsx
 components/core/EnergyGauge.stories.tsx
 components/core/SimpleTabs.stories.tsx
 components/core/SubTabs.stories.tsx
+components/shared/BionicText.stories.tsx
+components/shared/BionicTextCard.stories.tsx
 components/ui/Badge.stories.tsx
 components/ui/Button.stories.tsx
 ```
