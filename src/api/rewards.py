@@ -6,6 +6,7 @@ Provides endpoints for:
 - Opening mystery boxes
 - Getting current session multipliers
 - Power hour status
+- Automatic pet feeding integration (BE-02)
 """
 
 import logging
@@ -16,12 +17,14 @@ from pydantic import BaseModel, Field
 
 from src.database.enhanced_adapter import get_enhanced_database
 from src.services.dopamine_reward_service import DopamineRewardService, RewardResult
+from src.services.user_pet_service import UserPetService, UserHasNoPetError
+from src.repositories.user_pet_repository import UserPetRepository
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1/rewards", tags=["rewards"])
 
-# Initialize dopamine reward service
+# Initialize services
 reward_service = DopamineRewardService()
 
 
@@ -35,6 +38,9 @@ class RewardClaimRequest(BaseModel):
     task_id: str | None = Field(None, description="Task ID if applicable")
     action_type: str = Field(..., description="Action type: task|microstep|streak")
     task_priority: str = Field(default="medium", description="Task priority")
+    task_estimated_minutes: int = Field(
+        default=15, description="Task estimated duration in minutes (for pet feeding)"
+    )
     streak_days: int = Field(default=0, description="Current streak in days")
     power_hour_active: bool = Field(default=False, description="Power hour active")
     energy_level: int = Field(default=50, description="Current energy level 0-100")
@@ -57,6 +63,14 @@ class RewardClaimResponse(BaseModel):
     new_total_xp: int
     new_level: int
     level_up: bool
+    # Pet feeding integration (BE-02)
+    pet_fed: bool = Field(
+        default=False, description="Whether user's pet was automatically fed"
+    )
+    pet_response: dict | None = Field(
+        default=None,
+        description="Pet feeding response (xp_gained, leveled_up, evolved, etc.)",
+    )
 
 
 class MysteryBoxRequest(BaseModel):
@@ -126,10 +140,58 @@ async def claim_reward(request: RewardClaimRequest):
             request.task_id,
         )
 
+        # Integrate pet feeding (BE-02)
+        pet_fed = False
+        pet_response = None
+
+        if request.action_type == "task":
+            # Automatically feed user's pet if they have one
+            try:
+                pet_repo = UserPetRepository(db)
+                pet_service = UserPetService(pet_repo=pet_repo)
+
+                feed_result = pet_service.feed_pet_from_task(
+                    user_id=request.user_id,
+                    task_priority=request.task_priority,
+                    task_estimated_minutes=request.task_estimated_minutes,
+                )
+
+                pet_fed = True
+                pet_response = {
+                    "pet_name": feed_result.pet.name,
+                    "pet_species": feed_result.pet.species,
+                    "pet_level": feed_result.pet.level,
+                    "pet_xp": feed_result.pet.xp,
+                    "xp_gained": feed_result.xp_gained,
+                    "leveled_up": feed_result.leveled_up,
+                    "evolved": feed_result.evolved,
+                    "evolution_stage": feed_result.pet.evolution_stage,
+                    "hunger": feed_result.pet.hunger,
+                    "happiness": feed_result.pet.happiness,
+                    "xp_to_next_level": feed_result.xp_to_next_level,
+                }
+
+                logger.info(
+                    f"Pet fed: user={request.user_id}, pet={feed_result.pet.name}, "
+                    f"xp_gained={feed_result.xp_gained}, "
+                    f"leveled_up={feed_result.leveled_up}, evolved={feed_result.evolved}"
+                )
+
+            except UserHasNoPetError:
+                # User has no pet - silently continue without feeding
+                logger.debug(f"User {request.user_id} has no pet - skipping pet feeding")
+
+            except Exception as e:
+                # Log pet feeding errors but don't fail the reward claim
+                logger.warning(
+                    f"Failed to feed pet for user {request.user_id}: {e}", exc_info=True
+                )
+
         # Log reward for analytics
         logger.info(
             f"Reward claimed: user={request.user_id}, xp={reward.total_xp}, "
-            f"tier={reward.tier.value}, mystery={reward.mystery_unlocked}"
+            f"tier={reward.tier.value}, mystery={reward.mystery_unlocked}, "
+            f"pet_fed={pet_fed}"
         )
 
         return RewardClaimResponse(
@@ -147,6 +209,8 @@ async def claim_reward(request: RewardClaimRequest):
             new_total_xp=new_total_xp,
             new_level=new_level,
             level_up=level_up,
+            pet_fed=pet_fed,
+            pet_response=pet_response,
         )
 
     except Exception as e:
