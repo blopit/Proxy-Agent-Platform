@@ -12,7 +12,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { Play, Pause, Square, RotateCcw } from 'lucide-react-native';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, Path, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { THEME } from '../../src/theme/colors';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -31,27 +31,24 @@ export interface FocusTimerProps {
 }
 
 // Constants - defined outside component to avoid recreation on every render
-// Rainbow spectrum order: Yellow -> Green -> Cyan -> Blue -> Violet -> Magenta -> Red
+// Rainbow spectrum order: Yellow -> Green -> Cyan -> Blue -> Violet -> Red
 // Start with yellow for clear visual differentiation
-// Replaced orange with magenta for better color distinction (orange too similar to red)
 const COLOR_SPECTRUM = [
   THEME.yellow,   // 0
   THEME.green,    // 1
   THEME.cyan,     // 2
   THEME.blue,     // 3
   THEME.violet,   // 4
-  THEME.magenta,  // 5
-  THEME.red,      // 6
+  THEME.red,      // 5
 ];
 
 const MIDDLE_SET_COLORS = [
   THEME.red,      // 0
-  THEME.magenta,  // 1
-  THEME.yellow,   // 2
-  THEME.green,    // 3
-  THEME.cyan,     // 4 - goal color placeholder
-  THEME.blue,     // 5
-  THEME.violet,   // 6
+  THEME.yellow,   // 1
+  THEME.green,    // 2
+  THEME.cyan,     // 3
+  THEME.blue,     // 4
+  THEME.violet,   // 5
 ];
 
 const INNER_CYCLE_TIME = 5; // seconds
@@ -82,6 +79,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
   const middleFlashRef = useRef<Animated.Value[]>([]);
   const outerFlashRef = useRef<Animated.Value[]>([]);
   const innerFlashRef = useRef<Animated.Value[]>([]);
+  const innerTopGlowRef = useRef<Animated.Value>(new Animated.Value(0));
 
   // Initialize animated values
   if (middleScalesRef.current.length === 0) {
@@ -242,6 +240,25 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
   // Detect segment completions and trigger elastic pop animation + flash
   useEffect(() => {
     const prev = prevSegmentsRef.current;
+
+    // Inner ring cycle just completed - trigger top glow
+    if (innerCompleteCycles > prev.inner && prev.inner >= 0) {
+      const glow = innerTopGlowRef.current;
+
+      // Glow animation: 0 → 1 → 0 (fade in and out)
+      Animated.sequence([
+        Animated.timing(glow, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(glow, {
+          toValue: 0,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
 
     // Middle segment just completed - trigger elastic animation + white flash
     if (absoluteMiddleSegment > prev.middleAbsolute && prev.middleAbsolute >= 0) {
@@ -445,6 +462,13 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
       {/* Nested Progress Rings */}
       <View style={styles.progressContainer}>
         <Svg width={240} height={240} viewBox="0 0 240 240">
+          {/* Gradient definition for streak effect */}
+          <Defs>
+            <LinearGradient id="streakGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <Stop offset="0%" stopColor={THEME.base3} stopOpacity="0" />
+              <Stop offset="100%" stopColor={THEME.base3} stopOpacity="0.8" />
+            </LinearGradient>
+          </Defs>
           {/* Outer Ring - Current segment white pill-shaped border (renders underneath) - hide at 100% */}
           {!isComplete && (
             <>
@@ -540,9 +564,9 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
           })()}
 
           {/* Middle Ring - 12 arc segments - STACK like inner ring with SET-based color cycling */}
-          {/* Each SET of 12 segments shares the SAME color, sets cycle through 7 colors */}
-          {/* Colors: Red → Orange → Yellow → Green → Cyan → Blue → Violet → (repeat) */}
-          {/* LAST SET is always CYAN (overridden) */}
+          {/* Each SET of 12 segments shares the SAME color, sets cycle through 6 colors */}
+          {/* Colors: Red → Yellow → Green → Cyan → Blue → Violet → (repeat) */}
+          {/* LAST SET always uses the goal color (currently cyan, but overrides cycling) */}
           {/* Radius: 98px (6px gap from outer) */}
           {/* Performance: Only render most recent 12 completed segments (one per position) */}
           {/* Earlier segments are hidden underneath, so we skip rendering them */}
@@ -705,25 +729,51 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                   />
                 )}
 
-                {/* Tip indicator - subtle dot at the current progress position */}
-                <>
-                  {/* Soft glow */}
-                  <Circle
-                    cx={tipPosition.x}
-                    cy={tipPosition.y}
-                    r={5}
-                    fill={tipColor}
-                    opacity={0.3}
-                  />
-                  {/* Core dot */}
-                  <Circle
-                    cx={tipPosition.x}
-                    cy={tipPosition.y}
-                    r={2.5}
-                    fill={tipColor}
-                    opacity={0.9}
-                  />
-                </>
+              </>
+            );
+          })()}
+
+          {/* Inner Ring Tip Glow Streak - smooth white gradient trail that pulses when cycle completes */}
+          {!isComplete && (() => {
+            // Calculate tip position (current progress angle)
+            const totalProgressAngle = (innerProgress / 100) * 360;
+
+            // Streak configuration
+            const streakLengthDegrees = 45;
+            const streakSegments = 20; // More segments = smoother gradient
+
+            return (
+              <>
+                {/* Trailing segments fade from white (at tip) to transparent (at tail) */}
+                {Array.from({ length: streakSegments }).map((_, i) => {
+                  const segmentLengthDegrees = streakLengthDegrees / streakSegments;
+                  // First segment extends slightly past the tip to ensure full coverage
+                  const segmentEndAngle = i === 0
+                    ? totalProgressAngle + 0.5
+                    : totalProgressAngle - i * segmentLengthDegrees;
+                  const segmentStartAngle = totalProgressAngle - (i + 1) * segmentLengthDegrees;
+
+                  // Opacity fades from 0.9 at tip to 0 at tail
+                  const baseFade = 0.9 * (1 - i / streakSegments);
+
+                  // Calculate animated opacity with pulse effect
+                  const animatedOpacity = innerTopGlowRef.current.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [baseFade, Math.min(baseFade * 1.5, 1.0)], // Pulse up to 50% brighter
+                  });
+
+                  return (
+                    <AnimatedPath
+                      key={`streak-${i}`}
+                      d={createArcPath(120, 120, 86, segmentStartAngle, segmentEndAngle)}
+                      stroke={THEME.base3} // White
+                      strokeWidth={6}
+                      fill="none"
+                      strokeLinecap={i === 0 ? "round" : "butt"}
+                      opacity={animatedOpacity}
+                    />
+                  );
+                })}
               </>
             );
           })()}
