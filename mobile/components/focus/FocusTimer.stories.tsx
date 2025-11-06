@@ -97,36 +97,6 @@ export const WithCallbacks: Story = {
   },
 };
 
-// === Energy-Aware Durations ===
-
-export const LowEnergySession: Story = {
-  args: {
-    duration: 15 * 60, // 15 minutes (shorter for low energy)
-    sessionType: 'focus',
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Shorter focus session recommended for low energy levels',
-      },
-    },
-  },
-};
-
-export const HighEnergySession: Story = {
-  args: {
-    duration: 50 * 60, // 50 minutes (longer for high energy)
-    sessionType: 'focus',
-  },
-  parameters: {
-    docs: {
-      description: {
-        story: 'Longer deep work session for high energy levels',
-      },
-    },
-  },
-};
-
 // === ADHD-Optimized Durations ===
 
 export const ADHDMicroFocus: Story = {
