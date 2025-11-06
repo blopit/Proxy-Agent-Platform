@@ -283,7 +283,7 @@ class TestParsedTaskModel:
         task = ParsedTask(title="Test Task", description="Description")
 
         assert task.priority == "medium"
-        assert task.estimated_hours == 0.5
+        assert task.estimated_hours == 0.25  # 15 minutes default
         assert task.tags == []
         assert task.entities == []
         assert task.is_digital is False

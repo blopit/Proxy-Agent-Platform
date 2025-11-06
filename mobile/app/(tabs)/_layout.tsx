@@ -84,7 +84,6 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         activeTab={activeTabId}
         onChange={handleTabChange}
         showLabels={false}
-        showActiveIndicator={false}
       />
     </View>
   );

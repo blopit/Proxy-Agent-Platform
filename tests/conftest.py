@@ -242,18 +242,32 @@ def mock_project_repository():
 # ============================================================================
 
 @pytest_asyncio.fixture(scope="function")
-async def api_client():
+async def api_client(test_db):
     """
     FastAPI test client for integration tests
 
     Uses AsyncClient from httpx for async support.
+    Overrides the database dependency to use test_db.
     """
     from httpx import AsyncClient, ASGITransport
     from src.api.main import app
+    from src.database.connection import get_db_session
+
+    # Override the database dependency to use test_db
+    def override_get_db():
+        try:
+            yield test_db
+        finally:
+            pass
+
+    app.dependency_overrides[get_db_session] = override_get_db
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
+
+    # Clear overrides after test
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture

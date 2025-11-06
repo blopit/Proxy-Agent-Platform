@@ -604,7 +604,6 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
           {/* Performance optimization: previous cycles are hidden underneath, no need to render them */}
           {!isComplete && innerCompleteCycles > 0 && (() => {
             const cycleIndex = innerCompleteCycles - 1; // Most recent completed cycle
-            const flash = innerFlashRef.current[cycleIndex % innerFlashRef.current.length];
 
             // Calculate total cycles needed to reach completion
             const totalCyclesToGoal = Math.ceil(duration / INNER_CYCLE_TIME);
@@ -637,21 +636,6 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
                     />
                   );
                 })}
-
-                {/* White flash overlay (full circle) */}
-                <AnimatedCircle
-                  cx="120"
-                  cy="120"
-                  r={86}
-                  stroke={THEME.base3}
-                  strokeWidth={6}
-                  fill="none"
-                  strokeDasharray={2 * Math.PI * 86}
-                  strokeDashoffset={0}
-                  strokeLinecap="round"
-                  transform="rotate(-90 120 120)"
-                  opacity={flash}
-                />
               </React.Fragment>
             );
           })()}

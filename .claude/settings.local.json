@@ -29,7 +29,9 @@
       "Bash(uv run pytest src/ --tb=no -q)",
       "Bash(curl -s http://localhost:7007/storybook)",
       "Bash(npx react-native-storybook-loader --config .rnstorybook/main.ts)",
-      "Bash(npm ls)"
+      "Bash(npm ls)",
+      "Bash(npm run storybook-generate)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

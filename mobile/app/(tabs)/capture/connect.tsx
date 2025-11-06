@@ -4,7 +4,7 @@ import { Mail, Server } from 'lucide-react-native';
 import { useState, useEffect, useCallback } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
-import ConnectionElement, { ConnectionStatus } from '../../../components/ConnectionElement';
+import ConnectionElement, { ConnectionStatus } from '../../../components/connections/ConnectionElement';
 import { useProfile } from '@/src/contexts/ProfileContext';
 import {
   initiateGmailOAuth,

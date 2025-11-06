@@ -172,8 +172,8 @@ async def create_capture(
                     step_id=step.step_id,
                     description=step.description,
                     estimated_minutes=step.estimated_minutes,
-                    delegation_mode=step.delegation_mode.value,
-                    leaf_type=step.leaf_type.value,
+                    delegation_mode=step.delegation_mode,  # Already a string due to use_enum_values
+                    leaf_type=step.leaf_type,  # Already a string due to use_enum_values
                     automation_plan=step.automation_plan,
                     clarification_needs=step.clarification_needs,
                     tags=step.tags or [],  # Include CHAMPS tags
@@ -182,7 +182,7 @@ async def create_capture(
             ],
             clarifications=result["clarifications"],
             ready_to_save=result["ready_to_save"],
-            mode=result["mode"].value,
+            mode=result["mode"] if isinstance(result["mode"], str) else result["mode"].value,
         )
 
     except Exception as e:
@@ -234,8 +234,8 @@ async def submit_clarifications(
                     step_id=step.step_id,
                     description=step.description,
                     estimated_minutes=step.estimated_minutes,
-                    delegation_mode=step.delegation_mode.value,
-                    leaf_type=step.leaf_type.value,
+                    delegation_mode=step.delegation_mode,  # Already a string due to use_enum_values
+                    leaf_type=step.leaf_type,  # Already a string due to use_enum_values
                     automation_plan=step.automation_plan,
                     clarification_needs=step.clarification_needs,
                 )

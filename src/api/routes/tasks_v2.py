@@ -109,253 +109,8 @@ async def create_task(
         )
 
 
-@router.get("/tasks/{task_id}", response_model=TaskResponse)
-async def get_task(
-    task_id: str,
-    service: TaskService = Depends(get_task_service)
-) -> TaskResponse:
-    """
-    Get task by ID
-
-    Args:
-        task_id: Task identifier
-        service: Task service (injected)
-
-    Returns:
-        Task data
-
-    Raises:
-        404: Task not found
-    """
-    try:
-        task = service.get_task(task_id)
-        return TaskResponse.from_task(task)
-
-    except TaskNotFoundError as e:
-        logger.warning(f"Get task failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "error_code": "task_not_found",
-                "message": str(e),
-                "details": {"task_id": e.task_id},
-            }
-        )
-
-
-@router.put("/tasks/{task_id}", response_model=TaskResponse)
-async def update_task(
-    task_id: str,
-    request: TaskUpdateRequest,
-    service: TaskService = Depends(get_task_service)
-) -> TaskResponse:
-    """
-    Update task
-
-    Args:
-        task_id: Task identifier
-        request: Update data
-        service: Task service (injected)
-
-    Returns:
-        Updated task
-
-    Raises:
-        404: Task not found
-        400: Validation error
-    """
-    try:
-        # Get existing task first to verify it exists
-        task = service.get_task(task_id)
-
-        # Build updates dictionary from request (only non-None fields)
-        updates = {}
-        if request.title is not None:
-            updates["title"] = request.title
-        if request.description is not None:
-            updates["description"] = request.description
-        if request.status is not None:
-            updates["status"] = request.status.value
-        if request.priority is not None:
-            updates["priority"] = request.priority.value
-        if request.estimated_hours is not None:
-            updates["estimated_hours"] = request.estimated_hours
-        if request.actual_hours is not None:
-            updates["actual_hours"] = request.actual_hours
-        if request.tags is not None:
-            updates["tags"] = request.tags
-        if request.assignee is not None:
-            updates["assignee"] = request.assignee
-        if request.due_date is not None:
-            updates["due_date"] = request.due_date
-
-        # If status is being updated, use update_task_status for proper timestamp management
-        if "status" in updates:
-            status_enum = TaskStatus(updates.pop("status"))
-            task = service.update_task_status(task_id, status_enum)
-
-        # Apply other updates if any
-        if updates:
-            from datetime import datetime, timezone
-            updates["updated_at"] = datetime.now(timezone.utc)
-            updated_task = service.task_repo.update(task_id, updates)
-            if not updated_task:
-                raise TaskNotFoundError(task_id)
-            task = updated_task
-
-        return TaskResponse.from_task(task)
-
-    except TaskNotFoundError as e:
-        logger.warning(f"Update task failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "error_code": "task_not_found",
-                "message": str(e),
-                "details": {"task_id": e.task_id},
-            }
-        )
-
-
-@router.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_task(
-    task_id: str,
-    service: TaskService = Depends(get_task_service)
-) -> None:
-    """
-    Delete task
-
-    Args:
-        task_id: Task identifier
-        service: Task service (injected)
-
-    Raises:
-        404: Task not found
-    """
-    try:
-        # Verify task exists first
-        service.get_task(task_id)
-
-        # Delete the task
-        deleted = service.delete_task(task_id)
-        if not deleted:
-            raise TaskNotFoundError(task_id)
-
-    except TaskNotFoundError as e:
-        logger.warning(f"Delete task failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "error_code": "task_not_found",
-                "message": str(e),
-                "details": {"task_id": e.task_id},
-            }
-        )
-
-
-@router.get("/tasks", response_model=TaskListResponse)
-async def list_tasks(
-    project_id: str | None = Query(None, description="Filter by project ID"),
-    status: str | None = Query(None, description="Filter by status"),
-    priority: str | None = Query(None, description="Filter by priority"),
-    assignee: str | None = Query(None, description="Filter by assignee"),
-    limit: int = Query(50, ge=1, le=100, description="Maximum results"),
-    skip: int = Query(0, ge=0, description="Results to skip"),
-    service: TaskService = Depends(get_task_service)
-) -> TaskListResponse:
-    """
-    List tasks with optional filters and pagination
-
-    Args:
-        project_id: Filter by project
-        status: Filter by status
-        priority: Filter by priority
-        assignee: Filter by assignee
-        limit: Max results (1-100)
-        skip: Pagination offset
-        service: Task service (injected)
-
-    Returns:
-        Paginated list of tasks
-    """
-    # Get filtered tasks
-    tasks = []
-
-    if project_id:
-        tasks = service.list_tasks_by_project(project_id)
-    elif status:
-        tasks = service.list_tasks_by_status(TaskStatus(status))
-    elif assignee:
-        tasks = service.list_tasks_by_assignee(assignee)
-    else:
-        # List all tasks (using repository directly for now)
-        tasks = service.task_repo.list_all(skip=skip, limit=limit)
-
-    # Apply additional filters if needed
-    if tasks and status and not any([project_id]):
-        tasks = [t for t in tasks if t.status.value == status]
-    if tasks and priority:
-        tasks = [t for t in tasks if t.priority.value == priority]
-    if tasks and assignee and not any([project_id, status]):
-        tasks = [t for t in tasks if t.assignee == assignee]
-
-    # Apply pagination manually for filtered results
-    total = len(tasks)
-    tasks = tasks[skip:skip + limit]
-
-    # Convert to response models
-    task_responses = [TaskResponse.from_task(task) for task in tasks]
-
-    return TaskListResponse(
-        tasks=task_responses,
-        total=total,
-        limit=limit,
-        skip=skip
-    )
-
-
 # ============================================================================
-# Status Management
-# ============================================================================
-
-@router.patch("/tasks/{task_id}/status", response_model=TaskResponse)
-async def update_task_status(
-    task_id: str,
-    request: TaskStatusUpdateRequest,
-    service: TaskService = Depends(get_task_service)
-) -> TaskResponse:
-    """
-    Update task status with automatic timestamp management
-
-    Args:
-        task_id: Task identifier
-        request: Status update data
-        service: Task service (injected)
-
-    Returns:
-        Updated task
-
-    Raises:
-        404: Task not found
-    """
-    try:
-        task = service.update_task_status(task_id, request.status)
-        return TaskResponse.from_task(task)
-
-    except TaskNotFoundError as e:
-        logger.warning(f"Update task status failed: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "error_code": "task_not_found",
-                "message": str(e),
-                "details": {"task_id": e.task_id},
-            }
-        )
-
-
-# ============================================================================
-# Search & Statistics
+# Search & Statistics (MUST come before /{task_id} route)
 # ============================================================================
 
 @router.get("/tasks/search", response_model=TaskSearchResponse)
@@ -474,3 +229,252 @@ async def get_task_stats(
         completion_rate=completion_rate,
         average_completion_time_hours=avg_completion_time
     )
+
+
+@router.get("/tasks/{task_id}", response_model=TaskResponse)
+async def get_task(
+    task_id: str,
+    service: TaskService = Depends(get_task_service)
+) -> TaskResponse:
+    """
+    Get task by ID
+
+    Args:
+        task_id: Task identifier
+        service: Task service (injected)
+
+    Returns:
+        Task data
+
+    Raises:
+        404: Task not found
+    """
+    try:
+        task = service.get_task(task_id)
+        return TaskResponse.from_task(task)
+
+    except TaskNotFoundError as e:
+        logger.warning(f"Get task failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "error_code": "task_not_found",
+                "message": str(e),
+                "details": {"task_id": e.task_id},
+            }
+        )
+
+
+@router.put("/tasks/{task_id}", response_model=TaskResponse)
+async def update_task(
+    task_id: str,
+    request: TaskUpdateRequest,
+    service: TaskService = Depends(get_task_service)
+) -> TaskResponse:
+    """
+    Update task
+
+    Args:
+        task_id: Task identifier
+        request: Update data
+        service: Task service (injected)
+
+    Returns:
+        Updated task
+
+    Raises:
+        404: Task not found
+        400: Validation error
+    """
+    try:
+        # Get existing task first to verify it exists
+        task = service.get_task(task_id)
+
+        # Build updates dictionary from request (only non-None fields)
+        updates = {}
+        if request.title is not None:
+            updates["title"] = request.title
+        if request.description is not None:
+            updates["description"] = request.description
+        if request.status is not None:
+            # Handle both enum and string (use_enum_values=True makes it a string)
+            updates["status"] = request.status if isinstance(request.status, str) else request.status.value
+        if request.priority is not None:
+            # Handle both enum and string (use_enum_values=True makes it a string)
+            updates["priority"] = request.priority if isinstance(request.priority, str) else request.priority.value
+        if request.estimated_hours is not None:
+            updates["estimated_hours"] = request.estimated_hours
+        if request.actual_hours is not None:
+            updates["actual_hours"] = request.actual_hours
+        if request.tags is not None:
+            updates["tags"] = request.tags
+        if request.assignee is not None:
+            updates["assignee"] = request.assignee
+        if request.due_date is not None:
+            updates["due_date"] = request.due_date
+
+        # If status is being updated, use update_task_status for proper timestamp management
+        if "status" in updates:
+            status_enum = TaskStatus(updates.pop("status"))
+            task = service.update_task_status(task_id, status_enum)
+
+        # Apply other updates if any
+        if updates:
+            from datetime import datetime, timezone
+            updates["updated_at"] = datetime.now(timezone.utc)
+            updated_task = service.task_repo.update(task_id, updates)
+            if not updated_task:
+                raise TaskNotFoundError(task_id)
+            task = updated_task
+
+        return TaskResponse.from_task(task)
+
+    except TaskNotFoundError as e:
+        logger.warning(f"Update task failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "error_code": "task_not_found",
+                "message": str(e),
+                "details": {"task_id": e.task_id},
+            }
+        )
+
+
+@router.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_task(
+    task_id: str,
+    service: TaskService = Depends(get_task_service)
+) -> None:
+    """
+    Delete task
+
+    Args:
+        task_id: Task identifier
+        service: Task service (injected)
+
+    Raises:
+        404: Task not found
+    """
+    try:
+        # Verify task exists first
+        service.get_task(task_id)
+
+        # Delete the task
+        deleted = service.delete_task(task_id)
+        if not deleted:
+            raise TaskNotFoundError(task_id)
+
+    except TaskNotFoundError as e:
+        logger.warning(f"Delete task failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "error_code": "task_not_found",
+                "message": str(e),
+                "details": {"task_id": e.task_id},
+            }
+        )
+
+
+@router.get("/tasks", response_model=TaskListResponse)
+async def list_tasks(
+    project_id: str | None = Query(None, description="Filter by project ID"),
+    status: str | None = Query(None, description="Filter by status"),
+    priority: str | None = Query(None, description="Filter by priority"),
+    assignee: str | None = Query(None, description="Filter by assignee"),
+    limit: int = Query(50, ge=1, le=100, description="Maximum results"),
+    skip: int = Query(0, ge=0, description="Results to skip"),
+    service: TaskService = Depends(get_task_service)
+) -> TaskListResponse:
+    """
+    List tasks with optional filters and pagination
+
+    Args:
+        project_id: Filter by project
+        status: Filter by status
+        priority: Filter by priority
+        assignee: Filter by assignee
+        limit: Max results (1-100)
+        skip: Pagination offset
+        service: Task service (injected)
+
+    Returns:
+        Paginated list of tasks
+    """
+    # Get filtered tasks
+    tasks = []
+
+    if project_id:
+        tasks = service.list_tasks_by_project(project_id)
+    elif status:
+        tasks = service.list_tasks_by_status(TaskStatus(status))
+    elif assignee:
+        tasks = service.list_tasks_by_assignee(assignee)
+    else:
+        # List all tasks (using repository directly for now)
+        tasks = service.task_repo.list_all(skip=skip, limit=limit)
+
+    # Apply additional filters if needed
+    if tasks and status and not any([project_id]):
+        # Handle both enum and string status values
+        tasks = [t for t in tasks if (t.status.value if hasattr(t.status, 'value') else t.status) == status]
+    if tasks and priority:
+        # Handle both enum and string priority values
+        tasks = [t for t in tasks if (t.priority.value if hasattr(t.priority, 'value') else t.priority) == priority]
+    if tasks and assignee and not any([project_id, status]):
+        tasks = [t for t in tasks if t.assignee == assignee]
+
+    # Apply pagination manually for filtered results
+    total = len(tasks)
+    tasks = tasks[skip:skip + limit]
+
+    # Convert to response models
+    task_responses = [TaskResponse.from_task(task) for task in tasks]
+
+    return TaskListResponse(
+        tasks=task_responses,
+        total=total,
+        limit=limit,
+        skip=skip
+    )
+
+
+# ============================================================================
+# Status Management
+# ============================================================================
+
+@router.patch("/tasks/{task_id}/status", response_model=TaskResponse)
+async def update_task_status(
+    task_id: str,
+    request: TaskStatusUpdateRequest,
+    service: TaskService = Depends(get_task_service)
+) -> TaskResponse:
+    """
+    Update task status with automatic timestamp management
+
+    Args:
+        task_id: Task identifier
+        request: Status update data
+        service: Task service (injected)
+
+    Returns:
+        Updated task
+
+    Raises:
+        404: Task not found
+    """
+    try:
+        task = service.update_task_status(task_id, request.status)
+        return TaskResponse.from_task(task)
+
+    except TaskNotFoundError as e:
+        logger.warning(f"Update task status failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "error_code": "task_not_found",
+                "message": str(e),
+                "details": {"task_id": e.task_id},
+            }
+        )

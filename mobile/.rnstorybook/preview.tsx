@@ -23,6 +23,15 @@ const preview: Preview = {
         date: /Date$/,
       },
     },
+    backgrounds: {
+      default: 'dark',
+      values: [
+        { name: 'dark', value: '#002b36' },
+        { name: 'light', value: '#fdf6e3' },
+        { name: 'black', value: '#000000' },
+        { name: 'white', value: '#ffffff' },
+      ],
+    },
   },
   globalTypes: {
     theme: {

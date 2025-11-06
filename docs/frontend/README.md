@@ -1,8 +1,32 @@
 # Frontend Documentation
 
-**🎯 START HERE:** [**FRONTEND_ENTRY_POINT.md**](./FRONTEND_ENTRY_POINT.md)
+**🚨 IMPORTANT: These docs describe the DEPRECATED Next.js web frontend**
 
-**The single source of truth** that connects all frontend documentation, code, and workflows.
+**For CURRENT mobile development:**
+- **[`FRONTEND_CURRENT_STATE.md`](../FRONTEND_CURRENT_STATE.md)** ← **START HERE**
+- **[`mobile/README.md`](../../mobile/README.md)** - Mobile app setup
+
+---
+
+## ⚠️ Historical Reference
+
+These documents describe the **deprecated Next.js web frontend** (removed October 2025).
+
+**Why these docs still exist:**
+- Design patterns that apply to React Native
+- ADHD-friendly UI principles (still relevant)
+- Component architecture lessons learned
+- Historical reference
+
+**For current development:** Use the Expo/React Native mobile app at `mobile/`
+
+---
+
+# Frontend Documentation (DEPRECATED)
+
+**🎯 HISTORICAL REFERENCE:** [**FRONTEND_ENTRY_POINT.md**](./FRONTEND_ENTRY_POINT.md)
+
+**Was the single source of truth** for the old Next.js web frontend.
 
 ---
 

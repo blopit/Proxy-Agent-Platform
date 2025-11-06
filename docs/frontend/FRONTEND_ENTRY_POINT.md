@@ -1,8 +1,32 @@
 # Frontend Development Entry Point
 
-**🎯 THE SINGLE SOURCE OF TRUTH FOR ALL FRONTEND DEVELOPMENT**
+**🚨 DEPRECATION NOTICE: This document describes the OLD Next.js web frontend**
 
-This is your starting point for all frontend work on the Proxy Agent Platform. Everything connects from here.
+**For CURRENT mobile development, go to:**
+- **[`FRONTEND_CURRENT_STATE.md`](../FRONTEND_CURRENT_STATE.md)** - Current architecture explanation
+- **[`mobile/README.md`](../../mobile/README.md)** - Mobile app setup and development
+
+---
+
+## ⚠️ Historical Reference Only
+
+This document describes the **deprecated Next.js web frontend** that was removed in October 2025.
+
+**Why this document still exists:**
+- Historical reference for design decisions
+- Component patterns that were migrated to React Native
+- Architecture principles that still apply
+- Documentation of what was attempted and learned
+
+**This is NOT the current system.**
+
+---
+
+# Frontend Development Entry Point (DEPRECATED)
+
+**🎯 THE SINGLE SOURCE OF TRUTH FOR ALL FRONTEND DEVELOPMENT** (as of October 2025 - now deprecated)
+
+This WAS your starting point for all frontend work on the Proxy Agent Platform. Everything connected from here.
 
 ---
 

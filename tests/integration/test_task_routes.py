@@ -114,8 +114,9 @@ class TestTaskRoutesRead:
         assert data["title"] == test_task.title
         assert data["description"] == test_task.description
         assert data["project_id"] == test_task.project_id
-        assert data["status"] == test_task.status.value
-        assert data["priority"] == test_task.priority.value
+        # Task model has use_enum_values=True, so status and priority are already strings
+        assert data["status"] == test_task.status
+        assert data["priority"] == test_task.priority
 
     async def test_get_task_not_found(self, api_client: AsyncClient):
         """
@@ -237,7 +238,7 @@ class TestTaskRoutesUpdate:
         update_data = {
             "title": "Updated Task Title",
             "description": "Updated description",
-            "priority": "urgent",
+            "priority": "high",  # Valid values: low, medium, high, critical
         }
 
         # Act
@@ -251,7 +252,7 @@ class TestTaskRoutesUpdate:
         assert data["task_id"] == test_task.task_id
         assert data["title"] == "Updated Task Title"
         assert data["description"] == "Updated description"
-        assert data["priority"] == "urgent"
+        assert data["priority"] == "high"
         assert data["updated_at"] != test_task.updated_at.isoformat()
 
     async def test_update_task_not_found(self, api_client: AsyncClient):

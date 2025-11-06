@@ -505,7 +505,8 @@ class GraphService:
         to_entity: Entity,
     ) -> str:
         """Convert a relationship to a human-readable fact"""
-        rel_type = relationship.relationship_type.value
+        # Pydantic use_enum_values=True means relationship_type is already a string
+        rel_type = relationship.relationship_type if isinstance(relationship.relationship_type, str) else relationship.relationship_type.value
 
         # Format based on relationship type
         if rel_type == "worksWith":

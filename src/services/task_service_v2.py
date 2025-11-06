@@ -125,13 +125,13 @@ class TaskService:
             raise TaskNotFoundError(task_id)
         return task
 
-    def update_task_status(self, task_id: str, new_status: TaskStatus) -> Task:
+    def update_task_status(self, task_id: str, new_status: TaskStatus | str) -> Task:
         """
         Update task status with automatic timestamp management
 
         Args:
             task_id: Task ID
-            new_status: New status
+            new_status: New status (TaskStatus enum or string)
 
         Returns:
             Updated task
@@ -141,6 +141,10 @@ class TaskService:
         """
         # Verify task exists
         task = self.get_task(task_id)
+
+        # Convert string to enum if needed (for Pydantic use_enum_values=True)
+        if isinstance(new_status, str):
+            new_status = TaskStatus(new_status)
 
         # Build updates dict
         updates = {
@@ -187,16 +191,20 @@ class TaskService:
         """
         return self.task_repo.get_by_project(project_id)
 
-    def list_tasks_by_status(self, status: TaskStatus) -> List[Task]:
+    def list_tasks_by_status(self, status: TaskStatus | str) -> List[Task]:
         """
         List all tasks with a specific status
 
         Args:
-            status: Task status
+            status: Task status (TaskStatus enum or string)
 
         Returns:
             List of tasks
         """
+        # Convert string to enum if needed
+        if isinstance(status, str):
+            status = TaskStatus(status)
+
         return self.task_repo.get_by_status(status.value)
 
     def list_tasks_by_assignee(self, assignee_id: str) -> List[Task]:

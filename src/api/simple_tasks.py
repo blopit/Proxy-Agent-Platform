@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Query
 
-from src.core.task_models import Project, Task
+from src.core.task_models import Project, Task, TaskFilter
 from src.repositories.enhanced_repositories import (
     EnhancedProjectRepository,
     EnhancedTaskRepository,
@@ -451,10 +451,11 @@ async def quick_capture(request: dict):
 async def get_mobile_dashboard(user_id: str):
     """Get mobile dashboard data"""
     try:
-        # Get user's tasks
+        # Get user's tasks - filter by assignee (user_id)
+        filter_obj = TaskFilter(assignee_id=user_id)
         result = task_repo.list_tasks(
-            filter_obj=None,  # TODO: Build proper filter for user
-            sort_obj=None,  # TODO: Build proper sort object
+            filter_obj=filter_obj,
+            sort_obj=None,  # Could add sorting if needed
             limit=10,
             offset=0,
         )
@@ -486,12 +487,14 @@ async def get_mobile_dashboard(user_id: str):
 
 
 @router.get("/mobile/tasks/{user_id}")
-async def get_mobile_tasks(_user_id: str, limit: int = Query(20, ge=1, le=50)):
+async def get_mobile_tasks(user_id: str, limit: int = Query(20, ge=1, le=50)):
     """Get mobile-optimized task list"""
     try:
+        # Filter tasks by user_id (assignee)
+        filter_obj = TaskFilter(assignee_id=user_id)
         result = task_repo.list_tasks(
-            filter_obj=None,  # TODO: Build proper filter for user_id
-            sort_obj=None,  # TODO: Build proper sort object
+            filter_obj=filter_obj,
+            sort_obj=None,  # Could add sorting if needed
             limit=limit,
             offset=0,
         )

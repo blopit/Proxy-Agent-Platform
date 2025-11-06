@@ -31,7 +31,13 @@
       "expo-router"
     ],
     "extra": {
-      "storybookEnabled": true
+      "storybookEnabled": true,
+      "appScheme": "proxyagent",
+      "apiBaseUrl": "http://localhost:8000/api/v1",
+      "googleClientId": "${EXPO_PUBLIC_GOOGLE_CLIENT_ID}",
+      "githubClientId": "${EXPO_PUBLIC_GITHUB_CLIENT_ID}",
+      "microsoftClientId": "${EXPO_PUBLIC_MICROSOFT_CLIENT_ID}",
+      "microsoftTenant": "${EXPO_PUBLIC_MICROSOFT_TENANT}"
     }
   }
 }

@@ -1,33 +1,70 @@
 # 🎨 Frontend Developer - Quick Start
 
-**Goal**: Pick up a frontend task and build it in Storybook
-**Time to first component**: 30 minutes
-**Approach**: Storybook-first, then integrate
+**🚨 IMPORTANT: Frontend has moved to Expo/React Native mobile app**
+
+**OLD:** Web frontend at `frontend/` (removed)
+**NEW:** Mobile app at `mobile/` ← **START HERE**
 
 ---
 
-## ⚡ 5-Minute Setup
+## ⚡ Quick Navigation
 
-### 1. Clone & Install
+### For Mobile Development (CURRENT - Expo/React Native)
+
+👉 **Go to: [`mobile/README.md`](../mobile/README.md)**
+
+- Expo SDK 54 + React Native
+- Universal app (iOS/Android/Web)
+- React Native Storybook
+- 5 biological mode screens
+- Solarized Dark theme
+
+### For Understanding the Transition
+
+👉 **Go to: [`FRONTEND_CURRENT_STATE.md`](./FRONTEND_CURRENT_STATE.md)**
+
+- Explains "exp" (Expo) vs old web app
+- Architecture evolution
+- Migration status
+- Component conversion guide
+
+### For Historical Reference (OLD Web App)
+
+The documents below describe the **deprecated Next.js web frontend**:
+
+- [`docs/frontend/FRONTEND_ARCHITECTURE.md`](./frontend/FRONTEND_ARCHITECTURE.md) - Old web architecture
+- [`docs/frontend/FRONTEND_PATTERNS.md`](./frontend/FRONTEND_PATTERNS.md) - Design patterns (still relevant)
+- [`docs/frontend/COMPONENT_PATTERNS.md`](./frontend/COMPONENT_PATTERNS.md) - Component patterns (still relevant)
+
+---
+
+## ⚡ 5-Minute Setup (Mobile App)
+
+### 1. Navigate to Mobile Directory
 ```bash
-cd /path/to/Proxy-Agent-Platform/frontend
-pnpm install              # Install dependencies
+cd /path/to/Proxy-Agent-Platform/mobile
+npm install              # Install dependencies
 ```
 
 ### 2. Verify Setup
 ```bash
-pnpm dev                  # Start dev server (http://localhost:3000)
-pnpm storybook            # Start Storybook (http://localhost:6006)
-pnpm type-check           # TypeScript should pass
+npm start                 # Start Expo dev server
+npm run web              # Run on web browser
+npm run ios              # Run on iOS simulator (macOS only)
+npm run android          # Run on Android emulator
 ```
 
-### 3. Design System Check
+### 3. View Storybook
 ```bash
-# Verify design system works
-cat src/lib/design-system/index.ts
+npm start
+# Navigate to /storybook route in your app
+# URL: exp://localhost:8081/--/storybook
 ```
 
-You should see: `colors`, `spacing`, `fontSize`, `borderRadius`, etc.
+Or regenerate stories:
+```bash
+npm run storybook-generate
+```
 
 ---
 

@@ -9,8 +9,9 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from src.agents.registry import AgentRegistry
 from src.api.auth import router as auth_router
@@ -32,6 +33,7 @@ from src.api.websocket import (
 )
 from src.services.delegation.routes import router as delegation_router  # BE-00: Task delegation
 from src.services.templates.routes import router as templates_router  # BE-01: Task templates
+from src.api.pets import router as pets_router  # BE-02: User pets service
 from src.services.chatgpt_prompts.routes import router as chatgpt_prompts_router  # ChatGPT video task prompts
 from src.api.routes.workflows import router as workflows_router  # AI-powered workflow execution
 from src.api.routes.integrations import router as integrations_router  # Provider integration system
@@ -76,6 +78,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+# Custom exception handler to unwrap error detail
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """
+    Custom exception handler that unwraps nested detail dictionaries.
+
+    If exc.detail is a dict with error_code, return it directly without wrapping.
+    Otherwise, return standard FastAPI error format.
+    """
+    if isinstance(exc.detail, dict) and "error_code" in exc.detail:
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=exc.detail
+        )
+
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail}
+    )
+
+
 # Global agent registry
 registry = AgentRegistry()
 
@@ -85,6 +109,7 @@ app.include_router(tasks_v2_router)  # NEW: v2 API with TaskService DI
 app.include_router(comprehensive_task_router)  # Legacy: v1 task service
 app.include_router(delegation_router)  # BE-00: Task delegation system
 app.include_router(templates_router)  # BE-01: Task templates service
+app.include_router(pets_router)  # BE-02: User pets service
 app.include_router(chatgpt_prompts_router)  # ChatGPT video task prompt generator
 app.include_router(workflows_router)  # AI-powered workflow execution (dogfooding)
 app.include_router(integrations_router)  # Provider integration system (Gmail, Calendar, etc.)

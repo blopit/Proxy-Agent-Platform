@@ -1,4 +1,29 @@
-# Frontend Architecture
+# Frontend Architecture (DEPRECATED)
+
+**🚨 DEPRECATION NOTICE: This document describes the OLD Next.js web frontend**
+
+**For CURRENT architecture, see:**
+- **[`FRONTEND_CURRENT_STATE.md`](../FRONTEND_CURRENT_STATE.md)** - Current Expo/React Native architecture
+- **[`mobile/README.md`](../../mobile/README.md)** - Mobile app architecture
+
+---
+
+## ⚠️ Historical Reference Only
+
+This document describes the **deprecated Next.js 15 web frontend** architecture.
+
+The web frontend was **removed in October 2025** and replaced with an Expo/React Native universal app.
+
+**This document is kept for:**
+- Understanding design patterns that were migrated
+- Historical context for architecture decisions
+- Reference for what worked and what didn't
+
+**Do NOT use this as a guide for current development.**
+
+---
+
+# Frontend Architecture (Next.js - DEPRECATED as of October 2025)
 
 Complete system architecture overview for the Proxy Agent Platform frontend.
 
