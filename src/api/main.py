@@ -37,6 +37,7 @@ from src.api.pets import router as pets_router  # BE-02: User pets service
 from src.services.chatgpt_prompts.routes import router as chatgpt_prompts_router  # ChatGPT video task prompts
 from src.api.routes.workflows import router as workflows_router  # AI-powered workflow execution
 from src.api.routes.integrations import router as integrations_router  # Provider integration system
+from src.api.routes.statistics import router as statistics_router  # Task statistics and productivity metrics
 from src.api.dogfooding import router as dogfooding_router  # Mobile-first task execution (swipe interactions)
 from src.core.models import AgentRequest, AgentResponse
 from src.database.enhanced_adapter import close_enhanced_database, get_enhanced_database
@@ -113,6 +114,7 @@ app.include_router(pets_router)  # BE-02: User pets service
 app.include_router(chatgpt_prompts_router)  # ChatGPT video task prompt generator
 app.include_router(workflows_router)  # AI-powered workflow execution (dogfooding)
 app.include_router(integrations_router)  # Provider integration system (Gmail, Calendar, etc.)
+app.include_router(statistics_router)  # Task statistics and productivity metrics
 app.include_router(dogfooding_router)  # Mobile-first task execution with swipe interactions
 app.include_router(capture_router)  # Capture Mode brain dump system (Epic: Capture)
 app.include_router(auth_router)  # Authentication endpoints
