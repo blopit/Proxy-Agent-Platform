@@ -747,7 +747,7 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
 
       {/* Progress Indicator */}
       <View style={styles.progressBar}>
-        <View style={[styles.progressBarFill, { width: `${overallProgress}%`, backgroundColor: THEME.orange }]} />
+        <View style={[styles.progressBarFill, { width: `${overallProgress}%`, backgroundColor: goalColor }]} />
       </View>
 
       {/* Controls */}
