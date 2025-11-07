@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+# ruff: noqa: E402 - Imports after load_dotenv() are intentional
 from datetime import datetime
 
 import structlog
@@ -34,6 +35,7 @@ from src.api.rewards import router as rewards_router
 from src.api.ritual import router as ritual_router  # MVP: Morning ritual
 from src.api.routes import tasks_v2_router  # New v2 API
 from src.api.routes.integrations import router as integrations_router  # Provider integration system
+from src.api.routes.onboarding import router as onboarding_router  # User onboarding system
 from src.api.routes.statistics import (
     router as statistics_router,  # Task statistics and productivity metrics
 )
@@ -56,7 +58,7 @@ logger = structlog.get_logger()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI):  # noqa: ARG001
     """
     Lifespan context manager for startup and shutdown events.
 
@@ -93,7 +95,7 @@ app.add_middleware(
 
 # Custom exception handler to unwrap error detail
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
+async def http_exception_handler(request: Request, exc: HTTPException):  # noqa: ARG001
     """
     Custom exception handler that unwraps nested detail dictionaries.
 
@@ -120,6 +122,7 @@ app.include_router(chatgpt_prompts_router)  # ChatGPT video task prompt generato
 app.include_router(workflows_router)  # AI-powered workflow execution (dogfooding)
 app.include_router(integrations_router)  # Provider integration system (Gmail, Calendar, etc.)
 app.include_router(statistics_router)  # Task statistics and productivity metrics
+app.include_router(onboarding_router)  # User onboarding system
 app.include_router(dogfooding_router)  # Mobile-first task execution with swipe interactions
 app.include_router(capture_router)  # Capture Mode brain dump system (Epic: Capture)
 app.include_router(auth_router)  # Authentication endpoints
@@ -196,7 +199,7 @@ async def task_agent(request: AgentRequest):
         request.agent_type = "task"
         return await registry.process_request(request)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.post("/api/agents/focus", response_model=AgentResponse)
@@ -206,7 +209,7 @@ async def focus_agent(request: AgentRequest):
         request.agent_type = "focus"
         return await registry.process_request(request)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.post("/api/quick-capture")
@@ -225,11 +228,11 @@ async def quick_capture(query: str, user_id: str, session_id: str = "mobile"):
             "processing_time_ms": response.processing_time_ms,
         }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @app.get("/api/history/{session_id}")
-async def get_history(session_id: str, limit: int = 10):
+async def get_history(session_id: str, limit: int = 10):  # noqa: ARG001
     """Get conversation history"""
     try:
         get_enhanced_database()
@@ -240,7 +243,7 @@ async def get_history(session_id: str, limit: int = 10):
             "messages": [],
         }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 # WebSocket endpoints
