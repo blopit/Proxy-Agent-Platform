@@ -11,20 +11,21 @@ Tests for:
 - Optimal scheduling analysis
 """
 
-import pytest
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import Mock, AsyncMock, patch
+from unittest.mock import Mock, patch
 from uuid import uuid4
 
-from src.agents.task_proxy_intelligent import IntelligentTaskAgent, TaskContext
-from src.core.models import AgentRequest, Message
-from src.core.task_models import Task, TaskStatus, TaskPriority
+import pytest
+
+from src.agents.task_proxy_intelligent import IntelligentTaskAgent
+from src.core.models import AgentRequest
+from src.core.task_models import Task
 from src.database.enhanced_adapter import get_enhanced_database
 from src.repositories.enhanced_repositories import (
-    EnhancedTaskRepository,
     EnhancedProjectRepository,
-    UserRepository
+    EnhancedTaskRepository,
+    UserRepository,
 )
 
 
@@ -34,7 +35,7 @@ def generate_test_task(
     priority: str = "medium",
     project_id: str = "test-project",
     assignee_id: str = None,
-    due_date: datetime = None
+    due_date: datetime = None,
 ) -> Task:
     """Generate a test task with default values"""
     return Task(
@@ -46,7 +47,7 @@ def generate_test_task(
         priority=priority,
         due_date=due_date,
         created_at=datetime.now(),
-        updated_at=datetime.now()
+        updated_at=datetime.now(),
     )
 
 
@@ -64,7 +65,7 @@ class TestIntelligentTaskAgent:
             db=self.db,
             task_repo=self.task_repo,
             project_repo=self.project_repo,
-            user_repo=self.user_repo
+            user_repo=self.user_repo,
         )
 
     def teardown_method(self):
@@ -80,7 +81,7 @@ class TestIntelligentTaskAgent:
         request = AgentRequest(
             user_id="test-user-123",
             session_id="test-session",
-            query="Implement user authentication system"
+            query="Implement user authentication system",
         )
 
         response, xp = await self.agent._handle_request(request, [])
@@ -95,7 +96,7 @@ class TestIntelligentTaskAgent:
         request = AgentRequest(
             user_id="test-user-123",
             session_id="test-session",
-            query="Build a comprehensive dashboard with authentication, data visualization, and real-time updates"
+            query="Build a comprehensive dashboard with authentication, data visualization, and real-time updates",
         )
 
         response, xp = await self.agent._handle_request(request, [])
@@ -107,13 +108,11 @@ class TestIntelligentTaskAgent:
     async def test_handle_request_with_ai_failure(self):
         """Test graceful fallback when AI services fail"""
         # Mock AI failure
-        with patch.object(self.agent, 'process_intelligent_task') as mock_process:
+        with patch.object(self.agent, "process_intelligent_task") as mock_process:
             mock_process.side_effect = Exception("AI service unavailable")
 
             request = AgentRequest(
-                user_id="test-user-123",
-                session_id="test-session",
-                query="Simple task"
+                user_id="test-user-123", session_id="test-session", query="Simple task"
             )
 
             response, xp = await self.agent._handle_request(request, [])
@@ -144,7 +143,7 @@ class TestTaskPrioritization:
             generate_test_task("Regular feature", "Normal development task"),
             generate_test_task("Critical bug fix", "Production system is down - urgent!"),
             generate_test_task("Code review", "Review pull request"),
-            generate_test_task("ASAP hotfix", "Critical error needs immediate attention")
+            generate_test_task("ASAP hotfix", "Critical error needs immediate attention"),
         ]
 
         prioritized = await self.agent.prioritize_tasks(tasks)
@@ -152,7 +151,10 @@ class TestTaskPrioritization:
         assert len(prioritized) == 4
         # High urgency tasks should come first
         assert "critical" in prioritized[0].title.lower() or "asap" in prioritized[0].title.lower()
-        assert "urgent" in prioritized[0].description.lower() or "critical" in prioritized[0].description.lower()
+        assert (
+            "urgent" in prioritized[0].description.lower()
+            or "critical" in prioritized[0].description.lower()
+        )
 
     @pytest.mark.asyncio
     async def test_prioritize_tasks_by_deadline(self):
@@ -162,7 +164,7 @@ class TestTaskPrioritization:
             generate_test_task("Future task", due_date=now + timedelta(days=7)),
             generate_test_task("Tomorrow task", due_date=now + timedelta(hours=20)),
             generate_test_task("Overdue task", due_date=now - timedelta(hours=2)),
-            generate_test_task("No deadline", due_date=None)
+            generate_test_task("No deadline", due_date=None),
         ]
 
         prioritized = await self.agent.prioritize_tasks(tasks)
@@ -180,29 +182,37 @@ class TestTaskPrioritization:
             "current_time": "morning",
             "energy_level": "high",
             "available_time": 120,
-            "location": "office"
+            "location": "office",
         }
 
         tasks = [
             generate_test_task("Email responses", "Quick administrative task"),
             generate_test_task("Complex algorithm", "Develop new sorting algorithm"),
             generate_test_task("Meeting preparation", "Prepare for client presentation"),
-            generate_test_task("Code design", "Design new system architecture")
+            generate_test_task("Code design", "Design new system architecture"),
         ]
 
         prioritized = await self.agent.prioritize_tasks_with_context(tasks, context)
 
         assert len(prioritized) == 4
         # High energy context should favor complex tasks
-        complex_tasks_first = any("complex" in task.title.lower() or "design" in task.title.lower()
-                                  for task in prioritized[:2])
+        complex_tasks_first = any(
+            "complex" in task.title.lower() or "design" in task.title.lower()
+            for task in prioritized[:2]
+        )
         assert complex_tasks_first
 
     @pytest.mark.asyncio
     async def test_analyze_task_urgency(self):
         """Test urgency analysis algorithm"""
-        urgent_task = generate_test_task("Critical production bug", "System is completely broken and users can't access", "critical")
-        normal_task = generate_test_task("Add new feature", "Implement user preference settings", "medium")
+        urgent_task = generate_test_task(
+            "Critical production bug",
+            "System is completely broken and users can't access",
+            "critical",
+        )
+        normal_task = generate_test_task(
+            "Add new feature", "Implement user preference settings", "medium"
+        )
         low_task = generate_test_task("Update documentation", "Fix typos in README", "low")
 
         urgent_score = await self.agent._analyze_task_urgency(urgent_task)
@@ -239,11 +249,19 @@ class TestTaskPrioritization:
         morning_context = {"current_time": "morning", "energy_level": "high"}
         evening_context = {"current_time": "evening", "energy_level": "low"}
 
-        complex_task = generate_test_task("Complex development", "Implement complex algorithm with edge cases")
-        simple_task = generate_test_task("Organize emails", "Clean up inbox and respond to messages")
+        complex_task = generate_test_task(
+            "Complex development", "Implement complex algorithm with edge cases"
+        )
+        simple_task = generate_test_task(
+            "Organize emails", "Clean up inbox and respond to messages"
+        )
 
-        complex_morning_fit = await self.agent._analyze_contextual_fit(complex_task, morning_context)
-        complex_evening_fit = await self.agent._analyze_contextual_fit(complex_task, evening_context)
+        complex_morning_fit = await self.agent._analyze_contextual_fit(
+            complex_task, morning_context
+        )
+        complex_evening_fit = await self.agent._analyze_contextual_fit(
+            complex_task, evening_context
+        )
         simple_morning_fit = await self.agent._analyze_contextual_fit(simple_task, morning_context)
         simple_evening_fit = await self.agent._analyze_contextual_fit(simple_task, evening_context)
 
@@ -272,8 +290,12 @@ class TestTaskBreakdown:
     async def test_assess_task_complexity(self):
         """Test task complexity assessment"""
         simple_task = generate_test_task("Send email", "Send update email to team")
-        moderate_task = generate_test_task("Create feature", "Add user profile editing functionality")
-        complex_task = generate_test_task("Build system", "Implement distributed authentication architecture with microservices")
+        moderate_task = generate_test_task(
+            "Create feature", "Add user profile editing functionality"
+        )
+        complex_task = generate_test_task(
+            "Build system", "Implement distributed authentication architecture with microservices"
+        )
 
         simple_complexity = await self.agent._assess_task_complexity(simple_task)
         moderate_complexity = await self.agent._assess_task_complexity(moderate_task)
@@ -297,7 +319,7 @@ class TestTaskBreakdown:
         """Test breaking down authentication-related tasks"""
         auth_task = generate_test_task(
             "Implement user authentication",
-            "Build complete authentication system with JWT, password hashing, and user management"
+            "Build complete authentication system with JWT, password hashing, and user management",
         )
 
         subtasks = await self.agent.break_down_task(auth_task)
@@ -313,7 +335,7 @@ class TestTaskBreakdown:
         """Test breaking down dashboard-related tasks"""
         dashboard_task = generate_test_task(
             "Create analytics dashboard",
-            "Build interactive dashboard with charts, data visualization, and user customization"
+            "Build interactive dashboard with charts, data visualization, and user customization",
         )
 
         subtasks = await self.agent.break_down_task(dashboard_task)
@@ -328,7 +350,7 @@ class TestTaskBreakdown:
         """Test breaking down API-related tasks"""
         api_task = generate_test_task(
             "Build REST API",
-            "Create RESTful API with full CRUD operations, authentication, and documentation"
+            "Create RESTful API with full CRUD operations, authentication, and documentation",
         )
 
         subtasks = await self.agent.break_down_task(api_task)
@@ -344,8 +366,7 @@ class TestTaskBreakdown:
     async def test_create_task_dependencies(self):
         """Test creation of task dependencies for subtasks"""
         complex_task = generate_test_task(
-            "Build authentication system",
-            "Complete user authentication with all components"
+            "Build authentication system", "Complete user authentication with all components"
         )
 
         dependencies = await self.agent.create_task_dependencies(complex_task)
@@ -365,7 +386,7 @@ class TestTaskBreakdown:
             ("Implement user authentication", "authentication"),
             ("Create project dashboard", "dashboard"),
             ("Build REST API endpoints", "api"),
-            ("Develop payment system", "build")
+            ("Develop payment system", "build"),
         ]
 
         for title, expected_keyword in task_types:
@@ -414,7 +435,7 @@ class TestDurationEstimation:
             ("Add new feature", "feature", 8),
             ("Write documentation", "documentation", 3),
             ("Code review", "review", 1),
-            ("Research approach", "research", 4)
+            ("Research approach", "research", 4),
         ]
 
         for title, task_type, expected_hours in task_types:
@@ -428,7 +449,10 @@ class TestDurationEstimation:
     async def test_complexity_based_estimation(self):
         """Test estimation based on task complexity"""
         simple_task = generate_test_task("Quick fix", "Simple one-line change")
-        complex_task = generate_test_task("Major refactor", "Completely restructure the entire codebase with new architecture patterns, comprehensive testing, and detailed documentation covering all edge cases and performance optimizations")
+        complex_task = generate_test_task(
+            "Major refactor",
+            "Completely restructure the entire codebase with new architecture patterns, comprehensive testing, and detailed documentation covering all edge cases and performance optimizations",
+        )
 
         simple_estimation = self.agent._heuristic_estimation(simple_task)
         complex_estimation = self.agent._heuristic_estimation(complex_task)
@@ -460,13 +484,11 @@ class TestDurationEstimation:
         base_estimation = {"hours": 8, "confidence": 0.6}
 
         # Historical data showing tasks took longer than estimated
-        historical_data = [
-            {"actual_duration": 10},
-            {"actual_duration": 12},
-            {"actual_duration": 9}
-        ]
+        historical_data = [{"actual_duration": 10}, {"actual_duration": 12}, {"actual_duration": 9}]
 
-        learned_estimation = await self.agent._learn_from_history(task, historical_data, base_estimation)
+        learned_estimation = await self.agent._learn_from_history(
+            task, historical_data, base_estimation
+        )
 
         # Should adjust estimate based on historical data
         assert learned_estimation["hours"] > base_estimation["hours"]
@@ -476,14 +498,20 @@ class TestDurationEstimation:
     @pytest.mark.asyncio
     async def test_adjust_for_user_skill(self):
         """Test skill-based estimation adjustment"""
-        task = generate_test_task("JavaScript coding", "Implement frontend components in JavaScript")
+        task = generate_test_task(
+            "JavaScript coding", "Implement frontend components in JavaScript"
+        )
         base_estimation = {"hours": 6, "confidence": 0.7}
 
         high_skill_profile = {"skills": {"javascript": 0.9}}
         low_skill_profile = {"skills": {"javascript": 0.3}}
 
-        high_skill_est = await self.agent._adjust_for_user_skill(task, high_skill_profile, base_estimation)
-        low_skill_est = await self.agent._adjust_for_user_skill(task, low_skill_profile, base_estimation)
+        high_skill_est = await self.agent._adjust_for_user_skill(
+            task, high_skill_profile, base_estimation
+        )
+        low_skill_est = await self.agent._adjust_for_user_skill(
+            task, low_skill_profile, base_estimation
+        )
 
         # High skill should reduce time estimate
         # High skill users should generally have lower estimates
@@ -510,7 +538,9 @@ class TestTaskCategorization:
     @pytest.mark.asyncio
     async def test_categorize_bug_fix_task(self):
         """Test categorization of bug fix tasks"""
-        bug_task = generate_test_task("Fix login error", "Users can't login due to authentication bug")
+        bug_task = generate_test_task(
+            "Fix login error", "Users can't login due to authentication bug"
+        )
 
         category = await self.agent.categorize_task(bug_task)
 
@@ -520,7 +550,9 @@ class TestTaskCategorization:
     @pytest.mark.asyncio
     async def test_categorize_feature_development_task(self):
         """Test categorization of feature development tasks"""
-        feature_task = generate_test_task("Implement user profiles", "Create feature for user profile management")
+        feature_task = generate_test_task(
+            "Implement user profiles", "Create feature for user profile management"
+        )
 
         category = await self.agent.categorize_task(feature_task)
 
@@ -540,7 +572,9 @@ class TestTaskCategorization:
     @pytest.mark.asyncio
     async def test_categorize_testing_task(self):
         """Test categorization of testing tasks"""
-        test_task = generate_test_task("Add unit tests", "Write comprehensive test coverage for authentication")
+        test_task = generate_test_task(
+            "Add unit tests", "Write comprehensive test coverage for authentication"
+        )
 
         category = await self.agent.categorize_task(test_task)
 
@@ -560,7 +594,9 @@ class TestTaskCategorization:
     @pytest.mark.asyncio
     async def test_categorize_research_task(self):
         """Test categorization of research tasks"""
-        research_task = generate_test_task("Research frameworks", "Investigate best React frameworks for project")
+        research_task = generate_test_task(
+            "Research frameworks", "Investigate best React frameworks for project"
+        )
 
         category = await self.agent.categorize_task(research_task)
 
@@ -570,7 +606,9 @@ class TestTaskCategorization:
     @pytest.mark.asyncio
     async def test_categorize_with_multiple_keywords(self):
         """Test categorization with multiple relevant keywords"""
-        multi_keyword_task = generate_test_task("Fix bug and test", "Fix authentication bug and add tests")
+        multi_keyword_task = generate_test_task(
+            "Fix bug and test", "Fix authentication bug and add tests"
+        )
 
         category = await self.agent.categorize_task(multi_keyword_task)
 
@@ -626,14 +664,14 @@ class TestContextAwareSuggestions:
             "available_time": 120,
             "location": "office",
             "time_of_day": "morning",
-            "hour": 9
+            "hour": 9,
         }
 
         tasks = [
             generate_test_task("Complex algorithm", "Implement advanced sorting algorithm"),
             generate_test_task("Email responses", "Reply to routine emails"),
             generate_test_task("System design", "Design new microservice architecture"),
-            generate_test_task("File organization", "Clean up project directories")
+            generate_test_task("File organization", "Clean up project directories"),
         ]
 
         suggestions = await self.agent.suggest_tasks_for_context(tasks, context)
@@ -652,14 +690,14 @@ class TestContextAwareSuggestions:
             "available_time": 45,
             "location": "home",
             "time_of_day": "evening",
-            "hour": 16
+            "hour": 16,
         }
 
         tasks = [
             generate_test_task("Complex debugging", "Debug intricate memory leak issue"),
             generate_test_task("Organize files", "Clean up and organize project files"),
             generate_test_task("Review documentation", "Review and update README files"),
-            generate_test_task("Strategic planning", "Plan next quarter architecture")
+            generate_test_task("Strategic planning", "Plan next quarter architecture"),
         ]
 
         suggestions = await self.agent.suggest_tasks_for_context(tasks, context)
@@ -679,8 +717,12 @@ class TestContextAwareSuggestions:
         creative_task = generate_test_task("Design system", "Plan new system architecture")
         routine_task = generate_test_task("Respond to emails", "Reply to team emails")
 
-        creative_morning_fit = await self.agent._calculate_context_fit(creative_task, morning_context)
-        creative_evening_fit = await self.agent._calculate_context_fit(creative_task, evening_context)
+        creative_morning_fit = await self.agent._calculate_context_fit(
+            creative_task, morning_context
+        )
+        creative_evening_fit = await self.agent._calculate_context_fit(
+            creative_task, evening_context
+        )
         routine_morning_fit = await self.agent._calculate_context_fit(routine_task, morning_context)
         routine_evening_fit = await self.agent._calculate_context_fit(routine_task, evening_context)
 
@@ -700,7 +742,11 @@ class TestContextAwareSuggestions:
         assert isinstance(reason, str)
         assert len(reason) > 0
         # Should mention high energy or extended time
-        assert "high energy" in reason.lower() or "extended time" in reason.lower() or "perfect" in reason.lower()
+        assert (
+            "high energy" in reason.lower()
+            or "extended time" in reason.lower()
+            or "perfect" in reason.lower()
+        )
 
     @pytest.mark.asyncio
     async def test_get_recommended_action(self):
@@ -726,7 +772,9 @@ class TestContextAwareSuggestions:
         context = {"available_time": 60}
 
         # Task due soon
-        urgent_task = generate_test_task("Urgent delivery", due_date=datetime.now() + timedelta(hours=10))
+        urgent_task = generate_test_task(
+            "Urgent delivery", due_date=datetime.now() + timedelta(hours=10)
+        )
         suggestions = [{"task": urgent_task, "fit_score": 0.7}]
 
         enhanced = await self.agent._enhance_with_smart_suggestions(suggestions, context)
@@ -764,7 +812,7 @@ class TestLearningAndPersonalization:
             completed_task,
             actual_duration=120,  # 2 hours
             user_satisfaction=0.9,
-            context=context
+            context=context,
         )
 
         # Should update learning data
@@ -777,16 +825,22 @@ class TestLearningAndPersonalization:
         task.status = "completed"
 
         learning_data = self.agent._extract_comprehensive_learning_data(
-            task,
-            actual_duration=180,
-            user_satisfaction=0.8,
-            context={"energy_level": "high"}
+            task, actual_duration=180, user_satisfaction=0.8, context={"energy_level": "high"}
         )
 
         required_fields = [
-            "task_id", "task_type", "complexity_level", "completion_time",
-            "completion_date", "completion_hour", "day_of_week", "success",
-            "user_satisfaction", "priority_level", "context", "keywords"
+            "task_id",
+            "task_type",
+            "complexity_level",
+            "completion_time",
+            "completion_date",
+            "completion_hour",
+            "day_of_week",
+            "success",
+            "user_satisfaction",
+            "priority_level",
+            "context",
+            "keywords",
         ]
 
         for field in required_fields:
@@ -803,7 +857,7 @@ class TestLearningAndPersonalization:
             ("Design UI mockups", "Create user interface design", "design"),
             ("Research frameworks", "Investigate React options", "research"),
             ("Team standup", "Daily team meeting", "meeting"),
-            ("Plan sprint", "Create development roadmap", "planning")
+            ("Plan sprint", "Create development roadmap", "planning"),
         ]
 
         for title, description, expected_category in test_cases:
@@ -818,7 +872,9 @@ class TestLearningAndPersonalization:
         """Test complexity assessment of completed tasks"""
         simple_task = generate_test_task("Fix typo", "Correct spelling error")
         moderate_task = generate_test_task("Add feature", "Implement user settings")
-        complex_task = generate_test_task("Build system", "Implement distributed architecture with microservices")
+        complex_task = generate_test_task(
+            "Build system", "Implement distributed architecture with microservices"
+        )
 
         simple_complexity = self.agent._assess_completed_task_complexity(simple_task)
         moderate_complexity = self.agent._assess_completed_task_complexity(moderate_task)
@@ -835,8 +891,8 @@ class TestLearningAndPersonalization:
         task.estimated_hours = Decimal("2.0")  # 2 hours estimated
 
         perfect_accuracy = self.agent._calculate_duration_accuracy(task, 120)  # Actual 2 hours
-        underestimated = self.agent._calculate_duration_accuracy(task, 180)   # Actual 3 hours
-        overestimated = self.agent._calculate_duration_accuracy(task, 60)     # Actual 1 hour
+        underestimated = self.agent._calculate_duration_accuracy(task, 180)  # Actual 3 hours
+        overestimated = self.agent._calculate_duration_accuracy(task, 60)  # Actual 1 hour
 
         assert perfect_accuracy == 1.0
         # Check underestimation calculation (allow some variance)
@@ -870,7 +926,7 @@ class TestLearningAndPersonalization:
             "actual_duration": 120,
             "user_satisfaction": 0.8,
             "context": {"energy_level": "high"},
-            "completion_time": datetime.now()
+            "completion_time": datetime.now(),
         }
 
         await self.agent._update_advanced_learning_model(learning_data)
@@ -892,7 +948,9 @@ class TestLearningAndPersonalization:
         # Check that user patterns are updated (may use assignee_id)
         assert len(self.agent.user_patterns) > 0
         # Get user patterns - may be stored under different key
-        user_key = list(self.agent.user_patterns.keys())[0] if self.agent.user_patterns else "default_user"
+        user_key = (
+            list(self.agent.user_patterns.keys())[0] if self.agent.user_patterns else "default_user"
+        )
         user_patterns = self.agent.user_patterns.get(user_key, {})
 
         current_hour = datetime.now().hour
@@ -908,7 +966,7 @@ class TestLearningAndPersonalization:
             "productive_contexts": {"energy_level": {"high": 8, "low": 2}},
             "task_preferences": {},
             "completion_velocity": [],
-            "energy_patterns": {}
+            "energy_patterns": {},
         }
 
         self.agent.learning_data["coding"] = {
@@ -917,7 +975,7 @@ class TestLearningAndPersonalization:
             "duration_patterns": {},
             "optimal_times": {},
             "context_preferences": {},
-            "satisfaction_trends": []
+            "satisfaction_trends": [],
         }
 
         context = {"energy_level": "high", "hour": 10}
@@ -941,7 +999,7 @@ class TestLearningAndPersonalization:
             "duration_patterns": {},
             "optimal_times": {},
             "context_preferences": {},
-            "satisfaction_trends": []
+            "satisfaction_trends": [],
         }
 
         probability = await self.agent.predict_task_success_probability(task, context, "test-user")

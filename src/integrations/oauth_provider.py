@@ -8,8 +8,7 @@ and utilities for token management and encryption.
 import logging
 import os
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 from cryptography.fernet import Fernet
 
@@ -32,7 +31,7 @@ logger = logging.getLogger(__name__)
 class TokenEncryption:
     """Handles encryption and decryption of OAuth tokens"""
 
-    def __init__(self, encryption_key: Optional[str] = None):
+    def __init__(self, encryption_key: str | None = None):
         """
         Initialize token encryption.
 
@@ -64,7 +63,7 @@ class TokenEncryption:
 
 
 # Singleton instance
-_token_encryption: Optional[TokenEncryption] = None
+_token_encryption: TokenEncryption | None = None
 
 
 def get_token_encryption() -> TokenEncryption:
@@ -140,9 +139,7 @@ class OAuthProvider(ABC):
         pass
 
     @abstractmethod
-    async def exchange_code_for_tokens(
-        self, code: str
-    ) -> tuple[str, str, datetime, list[str]]:
+    async def exchange_code_for_tokens(self, code: str) -> tuple[str, str, datetime, list[str]]:
         """
         Exchange authorization code for access/refresh tokens.
 
@@ -216,18 +213,14 @@ class OAuthProvider(ABC):
     # Helper Methods (implemented in base class)
     # ========================================================================
 
-    def encrypt_tokens(
-        self, access_token: str, refresh_token: str
-    ) -> tuple[str, str]:
+    def encrypt_tokens(self, access_token: str, refresh_token: str) -> tuple[str, str]:
         """Encrypt access and refresh tokens"""
         return (
             self.token_encryption.encrypt_token(access_token),
             self.token_encryption.encrypt_token(refresh_token),
         )
 
-    def decrypt_tokens(
-        self, encrypted_access: str, encrypted_refresh: str
-    ) -> tuple[str, str]:
+    def decrypt_tokens(self, encrypted_access: str, encrypted_refresh: str) -> tuple[str, str]:
         """Decrypt access and refresh tokens"""
         return (
             self.token_encryption.decrypt_token(encrypted_access),
@@ -239,7 +232,7 @@ class OAuthProvider(ABC):
         if not expires_at:
             return True
         buffer = timedelta(minutes=5)
-        return datetime.now(timezone.utc) >= (expires_at - buffer)
+        return datetime.now(UTC) >= (expires_at - buffer)
 
     async def ensure_valid_token(self, integration: UserIntegration) -> str:
         """
@@ -266,9 +259,7 @@ class OAuthProvider(ABC):
             )
 
             # Refresh the token
-            new_access_token, new_expires_at = await self.refresh_access_token(
-                refresh_token
-            )
+            new_access_token, new_expires_at = await self.refresh_access_token(refresh_token)
 
             # Encrypt the new token
             encrypted_access, _ = self.encrypt_tokens(new_access_token, refresh_token)
@@ -300,26 +291,22 @@ class ProviderRegistry:
     def register(self, provider_class: type[OAuthProvider]) -> None:
         """Register a provider class"""
         # Get provider_type from a temporary instance
-        temp_instance = provider_class(
-            client_id="", client_secret="", redirect_uri="", scopes=[]
-        )
+        temp_instance = provider_class(client_id="", client_secret="", redirect_uri="", scopes=[])
         self._providers[temp_instance.provider_type] = provider_class
         logger.info(f"Registered OAuth provider: {temp_instance.provider_name}")
 
-    def get_provider_class(
-        self, provider_type: ProviderType
-    ) -> Optional[type[OAuthProvider]]:
+    def get_provider_class(self, provider_type: ProviderType) -> type[OAuthProvider] | None:
         """Get provider class by type"""
         return self._providers.get(provider_type)
 
     def create_provider(
         self,
         provider_type: ProviderType,
-        client_id: Optional[str] = None,
-        client_secret: Optional[str] = None,
-        redirect_uri: Optional[str] = None,
-        scopes: Optional[list[str]] = None,
-    ) -> Optional[OAuthProvider]:
+        client_id: str | None = None,
+        client_secret: str | None = None,
+        redirect_uri: str | None = None,
+        scopes: list[str] | None = None,
+    ) -> OAuthProvider | None:
         """
         Create provider instance with credentials from environment.
 
@@ -340,9 +327,7 @@ class ProviderRegistry:
         # Get credentials from environment if not provided
         provider_env_prefix = provider_type.upper()
         client_id = client_id or os.getenv(f"{provider_env_prefix}_CLIENT_ID")
-        client_secret = client_secret or os.getenv(
-            f"{provider_env_prefix}_CLIENT_SECRET"
-        )
+        client_secret = client_secret or os.getenv(f"{provider_env_prefix}_CLIENT_SECRET")
         redirect_uri = redirect_uri or os.getenv(
             f"{provider_env_prefix}_REDIRECT_URI",
             f"http://localhost:8000/api/v1/integrations/{provider_type}/callback",
@@ -356,9 +341,7 @@ class ProviderRegistry:
             return None
 
         # Use provider defaults for scopes if not provided
-        temp_instance = provider_class(
-            client_id="", client_secret="", redirect_uri="", scopes=[]
-        )
+        temp_instance = provider_class(client_id="", client_secret="", redirect_uri="", scopes=[])
         scopes = scopes or temp_instance.scopes
 
         return provider_class(
@@ -384,11 +367,11 @@ def register_provider(provider_class: type[OAuthProvider]) -> None:
 
 def get_provider(
     provider_type: ProviderType,
-    client_id: Optional[str] = None,
-    client_secret: Optional[str] = None,
-    redirect_uri: Optional[str] = None,
-    scopes: Optional[list[str]] = None,
-) -> Optional[OAuthProvider]:
+    client_id: str | None = None,
+    client_secret: str | None = None,
+    redirect_uri: str | None = None,
+    scopes: list[str] | None = None,
+) -> OAuthProvider | None:
     """Get a provider instance from the global registry"""
     return provider_registry.create_provider(
         provider_type, client_id, client_secret, redirect_uri, scopes

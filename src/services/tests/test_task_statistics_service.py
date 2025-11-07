@@ -1,6 +1,9 @@
 """Unit tests for StatisticsService."""
-import pytest
+
 from datetime import datetime, timedelta
+
+import pytest
+
 from src.services.task_statistics_service import StatisticsService
 
 
@@ -51,27 +54,15 @@ class TestStatisticsService:
         # Add 3 completions
         service._add_completion(
             "user_2",
-            {
-                "task_id": "task_1",
-                "completion_time_minutes": 20,
-                "completed_at": datetime.now()
-            }
+            {"task_id": "task_1", "completion_time_minutes": 20, "completed_at": datetime.now()},
         )
         service._add_completion(
             "user_2",
-            {
-                "task_id": "task_2",
-                "completion_time_minutes": 30,
-                "completed_at": datetime.now()
-            }
+            {"task_id": "task_2", "completion_time_minutes": 30, "completed_at": datetime.now()},
         )
         service._add_completion(
             "user_2",
-            {
-                "task_id": "task_3",
-                "completion_time_minutes": 25,
-                "completed_at": datetime.now()
-            }
+            {"task_id": "task_3", "completion_time_minutes": 25, "completed_at": datetime.now()},
         )
 
         stats = await service.get_user_statistics("user_2")
@@ -96,8 +87,8 @@ class TestStatisticsService:
                 {
                     "task_id": f"task_{i}",
                     "completion_time_minutes": 30,
-                    "completed_at": datetime.now()
-                }
+                    "completed_at": datetime.now(),
+                },
             )
 
         stats = await service.get_user_statistics("user_3")
@@ -123,11 +114,7 @@ class TestStatisticsService:
         service._add_task("user_4", {"id": "task_1"})
         service._add_completion(
             "user_4",
-            {
-                "task_id": "task_1",
-                "completion_time_minutes": 30,
-                "completed_at": datetime.now()
-            }
+            {"task_id": "task_1", "completion_time_minutes": 30, "completed_at": datetime.now()},
         )
 
         score = await service.get_productivity_score("user_4")
@@ -187,7 +174,7 @@ class TestStatisticsService:
             completion_rate=100.0,
             avg_completion_time=30.0,  # Optimal time
             streak_days=30,  # Max streak score
-            total_completed=100
+            total_completed=100,
         )
 
         assert 95.0 <= score <= 100.0  # Should be near perfect
@@ -195,10 +182,7 @@ class TestStatisticsService:
     def test_calculate_productivity_score_zero_activity(self, service):
         """Test productivity score with no activity."""
         score = service._calculate_productivity_score(
-            completion_rate=0.0,
-            avg_completion_time=0.0,
-            streak_days=0,
-            total_completed=0
+            completion_rate=0.0, avg_completion_time=0.0, streak_days=0, total_completed=0
         )
 
         assert score == 0.0
@@ -210,7 +194,7 @@ class TestStatisticsService:
             completion_rate=100.0,
             avg_completion_time=1.0,  # Very fast
             streak_days=365,  # Very long streak
-            total_completed=10000  # Huge volume
+            total_completed=10000,  # Huge volume
         )
 
         assert 0.0 <= score <= 100.0
@@ -222,14 +206,14 @@ class TestStatisticsService:
             completion_rate=100.0,
             avg_completion_time=120.0,  # 2 hours per task
             streak_days=0,
-            total_completed=10
+            total_completed=10,
         )
 
         score_fast = service._calculate_productivity_score(
             completion_rate=100.0,
             avg_completion_time=30.0,  # Optimal
             streak_days=0,
-            total_completed=10
+            total_completed=10,
         )
 
         assert score_slow < score_fast
@@ -238,10 +222,7 @@ class TestStatisticsService:
         """Test that productivity score components have correct weights."""
         # Test completion rate weight (40%)
         score_high_completion = service._calculate_productivity_score(
-            completion_rate=100.0,
-            avg_completion_time=0.0,
-            streak_days=0,
-            total_completed=0
+            completion_rate=100.0, avg_completion_time=0.0, streak_days=0, total_completed=0
         )
 
         # Should be around 40 points (40% weight)

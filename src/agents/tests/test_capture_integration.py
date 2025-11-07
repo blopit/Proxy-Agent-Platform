@@ -4,14 +4,15 @@ End-to-End Integration Tests for Capture Pipeline
 Tests the complete flow: raw text → KG context → LLM parsing → decomposition → classification
 """
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.agents.capture_agent import CaptureAgent
 from src.core.task_models import CaptureMode, LeafType
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
 from src.knowledge.graph_service import GraphService
-from src.knowledge.models import Entity, EntityType, Relationship, RelationshipType
+from src.knowledge.models import EntityType, RelationshipType
 
 
 @pytest.fixture
@@ -134,9 +135,7 @@ class TestCaptureWithKnowledgeGraph:
     async def test_capture_auto_mode_with_kg(self, capture_agent, graph_service):
         """Test AUTO mode capture with KG context"""
         # Mock LLM service to avoid API calls
-        with patch(
-            "src.services.quick_capture_service.LLMCaptureService"
-        ) as mock_llm_class:
+        with patch("src.services.quick_capture_service.LLMCaptureService") as mock_llm_class:
             mock_llm = AsyncMock()
             mock_llm_class.return_value = mock_llm
 
@@ -178,14 +177,10 @@ class TestCaptureWithKnowledgeGraph:
             assert result["mode"] == CaptureMode.AUTO
 
     @pytest.mark.asyncio
-    async def test_capture_clarify_mode_reduces_questions(
-        self, capture_agent, graph_service
-    ):
+    async def test_capture_clarify_mode_reduces_questions(self, capture_agent, graph_service):
         """Test CLARIFY mode uses KG to reduce clarification questions"""
         # Mock LLM service
-        with patch(
-            "src.services.quick_capture_service.LLMCaptureService"
-        ) as mock_llm_class:
+        with patch("src.services.quick_capture_service.LLMCaptureService") as mock_llm_class:
             mock_llm = AsyncMock()
             mock_llm_class.return_value = mock_llm
 
@@ -253,9 +248,7 @@ class TestCaptureWithKnowledgeGraph:
         assert result["ready_to_save"] is True
 
     @pytest.mark.asyncio
-    async def test_capture_handles_kg_failure_gracefully(
-        self, capture_agent, graph_service
-    ):
+    async def test_capture_handles_kg_failure_gracefully(self, capture_agent, graph_service):
         """Test capture continues if KG retrieval fails"""
         # Mock graph service to fail
         with patch.object(
@@ -298,9 +291,7 @@ class TestDecompositionWithClassification:
     async def test_digital_task_classification(self, capture_agent, graph_service):
         """Test DIGITAL task classification"""
         # Mock LLM for predictable results
-        with patch(
-            "src.services.quick_capture_service.LLMCaptureService"
-        ) as mock_llm_class:
+        with patch("src.services.quick_capture_service.LLMCaptureService") as mock_llm_class:
             mock_llm = AsyncMock()
             mock_llm_class.return_value = mock_llm
 
@@ -348,9 +339,7 @@ class TestEntityExtraction:
     @pytest.mark.asyncio
     async def test_entities_stored_in_task_metadata(self, capture_agent, graph_service):
         """Test that extracted entities are stored"""
-        with patch(
-            "src.services.quick_capture_service.LLMCaptureService"
-        ) as mock_llm_class:
+        with patch("src.services.quick_capture_service.LLMCaptureService") as mock_llm_class:
             mock_llm = AsyncMock()
             mock_llm_class.return_value = mock_llm
 

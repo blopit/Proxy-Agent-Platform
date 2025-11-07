@@ -9,12 +9,12 @@ Following Epic 2 TDD methodology:
 - Validate timing and metrics
 """
 
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
-from datetime import datetime
-from unittest.mock import Mock, AsyncMock, patch
 
 from src.agents.base import BaseProxyAgent
-from src.core.models import AgentRequest, AgentResponse, Message
+from src.core.models import AgentRequest, Message
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
 
 
@@ -41,7 +41,7 @@ def sample_request():
         session_id="session_456",
         user_id="user_789",
         agent_type="test_agent",
-        query="Test query"
+        query="Test query",
     )
 
 
@@ -66,11 +66,7 @@ class TestMessageStorage:
     @pytest.mark.asyncio
     async def test_store_message_basic(self, base_agent, mock_db):
         """Test basic message storage"""
-        message_id = await base_agent.store_message(
-            "session_123",
-            "user",
-            "Hello, agent!"
-        )
+        message_id = await base_agent.store_message("session_123", "user", "Hello, agent!")
 
         assert message_id == "msg_123"
         mock_db.store_message.assert_called_once()
@@ -88,12 +84,7 @@ class TestMessageStorage:
         """Test message storage with metadata"""
         metadata = {"key": "value", "number": 42}
 
-        await base_agent.store_message(
-            "session_123",
-            "agent",
-            "Response",
-            metadata=metadata
-        )
+        await base_agent.store_message("session_123", "agent", "Response", metadata=metadata)
 
         call_args = mock_db.store_message.call_args[0][0]
         assert call_args.metadata == metadata
@@ -101,11 +92,7 @@ class TestMessageStorage:
     @pytest.mark.asyncio
     async def test_store_message_empty_metadata(self, base_agent, mock_db):
         """Test that empty metadata defaults to empty dict"""
-        await base_agent.store_message(
-            "session_123",
-            "user",
-            "Test"
-        )
+        await base_agent.store_message("session_123", "user", "Test")
 
         call_args = mock_db.store_message.call_args[0][0]
         assert call_args.metadata == {}
@@ -122,14 +109,14 @@ class TestConversationHistory:
                 session_id="session_123",
                 message_type="user",
                 content="First message",
-                agent_type="test_agent"
+                agent_type="test_agent",
             ),
             Message(
                 session_id="session_123",
                 message_type="agent",
                 content="First response",
-                agent_type="test_agent"
-            )
+                agent_type="test_agent",
+            ),
         ]
         mock_db.get_conversation_history.return_value = mock_messages
 
@@ -161,7 +148,7 @@ class TestRequestProcessing:
     async def test_process_request_success(self, base_agent, sample_request):
         """Test successful request processing"""
         # Mock the _handle_request method
-        with patch.object(base_agent, '_handle_request', new_callable=AsyncMock) as mock_handle:
+        with patch.object(base_agent, "_handle_request", new_callable=AsyncMock) as mock_handle:
             mock_handle.return_value = ("Test response", 25)
 
             response = await base_agent.process_request(sample_request)
@@ -176,7 +163,7 @@ class TestRequestProcessing:
     @pytest.mark.asyncio
     async def test_process_request_stores_user_message(self, base_agent, sample_request, mock_db):
         """Test that user message is stored"""
-        with patch.object(base_agent, '_handle_request', new_callable=AsyncMock) as mock_handle:
+        with patch.object(base_agent, "_handle_request", new_callable=AsyncMock) as mock_handle:
             mock_handle.return_value = ("Response", 10)
 
             await base_agent.process_request(sample_request)
@@ -192,7 +179,7 @@ class TestRequestProcessing:
     @pytest.mark.asyncio
     async def test_process_request_stores_agent_response(self, base_agent, sample_request, mock_db):
         """Test that agent response is stored"""
-        with patch.object(base_agent, '_handle_request', new_callable=AsyncMock) as mock_handle:
+        with patch.object(base_agent, "_handle_request", new_callable=AsyncMock) as mock_handle:
             mock_handle.return_value = ("Agent response", 30)
 
             await base_agent.process_request(sample_request)
@@ -206,7 +193,7 @@ class TestRequestProcessing:
     @pytest.mark.asyncio
     async def test_process_request_calculates_timing(self, base_agent, sample_request):
         """Test that processing time is calculated"""
-        with patch.object(base_agent, '_handle_request', new_callable=AsyncMock) as mock_handle:
+        with patch.object(base_agent, "_handle_request", new_callable=AsyncMock) as mock_handle:
             mock_handle.return_value = ("Response", 10)
 
             response = await base_agent.process_request(sample_request)
@@ -221,7 +208,7 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_process_request_handles_errors(self, base_agent, sample_request, mock_db):
         """Test that errors are caught and returned gracefully"""
-        with patch.object(base_agent, '_handle_request', new_callable=AsyncMock) as mock_handle:
+        with patch.object(base_agent, "_handle_request", new_callable=AsyncMock) as mock_handle:
             mock_handle.side_effect = ValueError("Test error")
 
             response = await base_agent.process_request(sample_request)
@@ -233,7 +220,7 @@ class TestErrorHandling:
     @pytest.mark.asyncio
     async def test_error_stored_as_message(self, base_agent, sample_request, mock_db):
         """Test that errors are stored as error messages"""
-        with patch.object(base_agent, '_handle_request', new_callable=AsyncMock) as mock_handle:
+        with patch.object(base_agent, "_handle_request", new_callable=AsyncMock) as mock_handle:
             mock_handle.side_effect = RuntimeError("Critical error")
 
             await base_agent.process_request(sample_request)
@@ -263,6 +250,7 @@ class TestSubclassImplementation:
     @pytest.mark.asyncio
     async def test_custom_handle_request(self, mock_db, sample_request):
         """Test that subclasses can override _handle_request"""
+
         class CustomAgent(BaseProxyAgent):
             async def _handle_request(self, request, history):
                 return f"Custom: {request.query}", 50

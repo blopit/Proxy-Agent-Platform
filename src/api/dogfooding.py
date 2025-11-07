@@ -9,9 +9,8 @@ Provides endpoints for the mobile dogfooding workflow:
 """
 
 import logging
-from datetime import datetime, timezone
-from typing import Optional
-from uuid import UUID, uuid4
+from datetime import UTC, datetime
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -52,10 +51,8 @@ class ArchiveTaskResponse(BaseModel):
 class DelegateTaskRequest(BaseModel):
     """Request to delegate a task."""
 
-    auto_assign: bool = Field(
-        True, description="Let system pick best agent automatically"
-    )
-    agent_id: Optional[str] = Field(None, description="Specific agent to assign to")
+    auto_assign: bool = Field(True, description="Let system pick best agent automatically")
+    agent_id: str | None = Field(None, description="Specific agent to assign to")
 
 
 class DelegateTaskResponse(BaseModel):
@@ -65,16 +62,14 @@ class DelegateTaskResponse(BaseModel):
     status: str
     assigned_agent: str
     delegation_mode: str
-    estimated_completion: Optional[str]
+    estimated_completion: str | None
 
 
 class ExecuteTaskRequest(BaseModel):
     """Request to execute a task with AI assistance."""
 
     mode: str = Field("assisted", description="Execution mode: assisted or solo")
-    workflow_id: str = Field(
-        "auto_detect", description="Workflow to use or auto_detect"
-    )
+    workflow_id: str = Field("auto_detect", description="Workflow to use or auto_detect")
 
 
 class WorkflowStep(BaseModel):
@@ -84,7 +79,7 @@ class WorkflowStep(BaseModel):
     title: str
     estimated_minutes: int
     status: str = "pending"
-    validation_command: Optional[str] = None
+    validation_command: str | None = None
 
 
 class ExecuteTaskResponse(BaseModel):
@@ -100,10 +95,8 @@ class ExecuteTaskResponse(BaseModel):
 class StartSoloRequest(BaseModel):
     """Request to start solo execution with timer."""
 
-    pomodoro_duration: int = Field(
-        25, ge=5, le=60, description="Focus timer duration in minutes"
-    )
-    notes: Optional[str] = Field(None, description="Optional notes before starting")
+    pomodoro_duration: int = Field(25, ge=5, le=60, description="Focus timer duration in minutes")
+    notes: str | None = Field(None, description="Optional notes before starting")
 
 
 class StartSoloResponse(BaseModel):
@@ -119,8 +112,8 @@ class StartSoloResponse(BaseModel):
 class CompleteSoloRequest(BaseModel):
     """Request to complete solo execution."""
 
-    actual_minutes: Optional[int] = Field(None, description="Actual time spent")
-    notes: Optional[str] = Field(None, description="Completion notes")
+    actual_minutes: int | None = Field(None, description="Actual time spent")
+    notes: str | None = Field(None, description="Completion notes")
 
 
 class CompleteSoloResponse(BaseModel):
@@ -175,9 +168,7 @@ async def archive_task(
         task = db.execute_read(task_query, (task_id,))
 
         if not task:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
 
         # Authorization check
         if task[0][1] != current_user.user_id:
@@ -187,7 +178,7 @@ async def archive_task(
             )
 
         # Update task status
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         update_query = """
         UPDATE tasks
         SET status = 'archived', updated_at = ?
@@ -267,9 +258,7 @@ async def delegate_task(
         task = db.execute_read(task_query, (task_id,))
 
         if not task:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
 
         # Authorization check
         if task[0][1] != current_user.user_id:
@@ -282,7 +271,7 @@ async def delegate_task(
         agent_id = request.agent_id or "task_proxy_intelligent"
 
         # Update task status
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         update_query = """
         UPDATE tasks
         SET status = 'delegated', updated_at = ?
@@ -307,9 +296,7 @@ async def delegate_task(
             ),
         )
 
-        logger.info(
-            f"Delegated task {task_id} to {agent_id} for user {current_user.user_id}"
-        )
+        logger.info(f"Delegated task {task_id} to {agent_id} for user {current_user.user_id}")
 
         return DelegateTaskResponse(
             task_id=task_id,
@@ -365,9 +352,7 @@ async def execute_task(
         task = db.execute_read(task_query, (task_id,))
 
         if not task:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
 
         # Authorization check
         if task[0][1] != current_user.user_id:
@@ -382,7 +367,7 @@ async def execute_task(
         workflow_id = "task_execution_basic"
 
         # Update task status
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         update_query = """
         UPDATE tasks
         SET status = 'in_progress', updated_at = ?
@@ -412,9 +397,7 @@ async def execute_task(
             ),
         ]
 
-        logger.info(
-            f"Started assisted execution for task {task_id} (user: {current_user.user_id})"
-        )
+        logger.info(f"Started assisted execution for task {task_id} (user: {current_user.user_id})")
 
         return ExecuteTaskResponse(
             execution_id=execution_id,
@@ -470,9 +453,7 @@ async def start_solo_execution(
         task = db.execute_read(task_query, (task_id,))
 
         if not task:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
 
         # Authorization check
         if task[0][1] != current_user.user_id:
@@ -485,7 +466,7 @@ async def start_solo_execution(
         from datetime import timedelta
 
         session_id = str(uuid4())
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         estimated_end = now + timedelta(minutes=request.pomodoro_duration)
 
         session_query = """
@@ -538,9 +519,7 @@ async def start_solo_execution(
         )
 
 
-@router.post(
-    "/focus-sessions/{session_id}/complete", response_model=CompleteSoloResponse
-)
+@router.post("/focus-sessions/{session_id}/complete", response_model=CompleteSoloResponse)
 async def complete_solo_execution(
     session_id: str,
     request: CompleteSoloRequest,
@@ -573,9 +552,7 @@ async def complete_solo_execution(
         session = db.execute_read(session_query, (session_id,))
 
         if not session:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Session not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
 
         # Authorization check
         if session[0][1] != current_user.user_id:
@@ -585,7 +562,7 @@ async def complete_solo_execution(
             )
 
         task_id = session[0][2]
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Calculate actual minutes if not provided
         if request.actual_minutes:

@@ -6,8 +6,6 @@ Provides endpoints for:
 - Importing task lists from ChatGPT responses
 """
 
-from typing import Dict
-
 from fastapi import APIRouter, HTTPException, status
 
 from src.services.chatgpt_prompts.import_service import TaskImportService
@@ -133,7 +131,7 @@ def import_task_list(request: TaskListImportRequest) -> TaskImportResult:
     response_model=TaskImportResult,
     status_code=status.HTTP_201_CREATED,
 )
-def parse_and_import_chatgpt_response(request: Dict[str, str]) -> TaskImportResult:
+def parse_and_import_chatgpt_response(request: dict[str, str]) -> TaskImportResult:
     """
     Parse ChatGPT response text and import as tasks.
 
@@ -192,7 +190,7 @@ def parse_and_import_chatgpt_response(request: Dict[str, str]) -> TaskImportResu
 
 
 @router.get("/health", status_code=status.HTTP_200_OK)
-def health_check() -> Dict[str, str]:
+def health_check() -> dict[str, str]:
     """
     Health check endpoint.
 

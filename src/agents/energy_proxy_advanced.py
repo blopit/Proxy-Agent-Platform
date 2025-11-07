@@ -299,9 +299,9 @@ Current State:
 - Current energy: {current_energy:.1f}/10
 - Time: {hour}:00
 - Primary factors: {factors_str}
-- Sleep quality: {inds['sleep_quality']}/10
-- Stress level: {inds['stress_level']}/10
-- Recent activity: {inds['recent_activity']}
+- Sleep quality: {inds["sleep_quality"]}/10
+- Stress level: {inds["stress_level"]}/10
+- Recent activity: {inds["recent_activity"]}
 
 Consider:
 - Natural circadian rhythms (morning rise, post-lunch dip, evening decline)
@@ -875,10 +875,10 @@ Example: {{"direction": "declining", "predicted_level": 6.2, "confidence": 0.8}}
 Current State:
 - Energy level: {energy_level:.1f}/10
 - Primary factors: {factors_str}
-- Sleep quality: {inds.get('sleep_quality', 7)}/10
-- Stress: {inds.get('stress_level', 5)}/10
-- Hydration: {inds.get('hydration', 5)}/10
-- Recent activity: {inds.get('recent_activity', 'unknown')}
+- Sleep quality: {inds.get("sleep_quality", 7)}/10
+- Stress: {inds.get("stress_level", 5)}/10
+- Hydration: {inds.get("hydration", 5)}/10
+- Recent activity: {inds.get("recent_activity", "unknown")}
 
 Requirements:
 - 3 specific, actionable recommendations

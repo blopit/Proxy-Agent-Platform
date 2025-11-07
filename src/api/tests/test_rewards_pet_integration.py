@@ -4,22 +4,21 @@ Integration test for Rewards API with Pet Feeding (BE-02)
 Tests automatic pet feeding when rewards are claimed after task completion.
 """
 
-import pytest
 from unittest import mock
+
+import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime, timezone
 
 from src.api.main import app
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
 from src.repositories.user_pet_repository import UserPetRepository
-from src.core.pet_models import UserPetCreate
 
 
 @pytest.fixture(scope="function")
 def test_db_with_pets():
     """Create isolated test database with user_pets table"""
-    import tempfile
     import os
+    import tempfile
 
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_file.close()
@@ -68,8 +67,12 @@ def test_client_with_pets(test_db_with_pets):
     test_repo = UserPetRepository(test_db_with_pets)
 
     # Mock get_enhanced_database to return test database
-    with mock.patch('src.database.enhanced_adapter.get_enhanced_database', return_value=test_db_with_pets), \
-         mock.patch('src.api.rewards.get_enhanced_database', return_value=test_db_with_pets):
+    with (
+        mock.patch(
+            "src.database.enhanced_adapter.get_enhanced_database", return_value=test_db_with_pets
+        ),
+        mock.patch("src.api.rewards.get_enhanced_database", return_value=test_db_with_pets),
+    ):
 
         def override_get_pet_repository():
             return test_repo
@@ -93,11 +96,7 @@ class TestRewardsPetIntegration:
         # Create a pet for user
         client.post(
             "/api/v1/pets/create",
-            json={
-                "user_id": "user-reward-test",
-                "species": "dog",
-                "name": "Buddy"
-            }
+            json={"user_id": "user-reward-test", "species": "dog", "name": "Buddy"},
         )
 
         # Get initial pet state
@@ -116,8 +115,8 @@ class TestRewardsPetIntegration:
                 "task_estimated_minutes": 30,
                 "streak_days": 0,
                 "power_hour_active": False,
-                "energy_level": 50
-            }
+                "energy_level": 50,
+            },
         )
 
         assert response.status_code == 200
@@ -162,8 +161,8 @@ class TestRewardsPetIntegration:
                 "task_estimated_minutes": 15,
                 "streak_days": 0,
                 "power_hour_active": False,
-                "energy_level": 50
-            }
+                "energy_level": 50,
+            },
         )
 
         assert response.status_code == 200
@@ -184,11 +183,7 @@ class TestRewardsPetIntegration:
         # Create pet
         client.post(
             "/api/v1/pets/create",
-            json={
-                "user_id": "user-levelup-test",
-                "species": "cat",
-                "name": "Whiskers"
-            }
+            json={"user_id": "user-levelup-test", "species": "cat", "name": "Whiskers"},
         )
 
         # Complete multiple high-priority tasks to accumulate XP
@@ -202,8 +197,8 @@ class TestRewardsPetIntegration:
                     "task_estimated_minutes": 30,
                     "streak_days": 0,
                     "power_hour_active": False,
-                    "energy_level": 50
-                }
+                    "energy_level": 50,
+                },
             )
 
             assert response.status_code == 200
@@ -223,11 +218,7 @@ class TestRewardsPetIntegration:
         # Create pet
         client.post(
             "/api/v1/pets/create",
-            json={
-                "user_id": "user-evolve-test",
-                "species": "dragon",
-                "name": "Drake"
-            }
+            json={"user_id": "user-evolve-test", "species": "dragon", "name": "Drake"},
         )
 
         # Get initial pet state
@@ -250,8 +241,8 @@ class TestRewardsPetIntegration:
                     "task_estimated_minutes": 30,
                     "streak_days": 0,
                     "power_hour_active": False,
-                    "energy_level": 50
-                }
+                    "energy_level": 50,
+                },
             )
 
             assert response.status_code == 200
@@ -274,11 +265,7 @@ class TestRewardsPetIntegration:
         # Create pet
         client.post(
             "/api/v1/pets/create",
-            json={
-                "user_id": "user-microstep-test",
-                "species": "fox",
-                "name": "Foxy"
-            }
+            json={"user_id": "user-microstep-test", "species": "fox", "name": "Foxy"},
         )
 
         # Get initial pet XP
@@ -295,8 +282,8 @@ class TestRewardsPetIntegration:
                 "task_estimated_minutes": 5,
                 "streak_days": 0,
                 "power_hour_active": False,
-                "energy_level": 50
-            }
+                "energy_level": 50,
+            },
         )
 
         assert response.status_code == 200
@@ -317,11 +304,7 @@ class TestRewardsPetIntegration:
         # Create pet
         client.post(
             "/api/v1/pets/create",
-            json={
-                "user_id": "user-hunger-test",
-                "species": "owl",
-                "name": "Hoot"
-            }
+            json={"user_id": "user-hunger-test", "species": "owl", "name": "Hoot"},
         )
 
         # Manually decrease hunger/happiness
@@ -329,6 +312,7 @@ class TestRewardsPetIntegration:
         pet = repo.get_by_user_id("user-hunger-test")
 
         from src.core.pet_models import UserPetUpdate
+
         repo.update(pet.pet_id, UserPetUpdate(hunger=20, happiness=20))
 
         # Claim reward
@@ -341,8 +325,8 @@ class TestRewardsPetIntegration:
                 "task_estimated_minutes": 15,
                 "streak_days": 0,
                 "power_hour_active": False,
-                "energy_level": 50
-            }
+                "energy_level": 50,
+            },
         )
 
         assert response.status_code == 200
@@ -364,11 +348,7 @@ class TestRewardsPetEdgeCases:
         # Create pet and level to 10
         client.post(
             "/api/v1/pets/create",
-            json={
-                "user_id": "user-maxlevel",
-                "species": "dragon",
-                "name": "Maximus"
-            }
+            json={"user_id": "user-maxlevel", "species": "dragon", "name": "Maximus"},
         )
 
         # Level pet to 10
@@ -390,8 +370,8 @@ class TestRewardsPetEdgeCases:
                 "task_estimated_minutes": 30,
                 "streak_days": 0,
                 "power_hour_active": False,
-                "energy_level": 50
-            }
+                "energy_level": 50,
+            },
         )
 
         assert response.status_code == 200

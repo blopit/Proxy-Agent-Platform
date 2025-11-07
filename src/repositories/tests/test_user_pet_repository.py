@@ -5,12 +5,10 @@ Following TDD: Write tests FIRST, then implement repository.
 """
 
 import pytest
-from datetime import datetime, timezone
-from uuid import uuid4
 
-from src.core.pet_models import UserPet, UserPetCreate, UserPetUpdate
-from src.repositories.user_pet_repository import UserPetRepository
+from src.core.pet_models import UserPetCreate, UserPetUpdate
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
+from src.repositories.user_pet_repository import UserPetRepository
 
 
 @pytest.fixture
@@ -56,11 +54,7 @@ def repository(db):
 @pytest.fixture
 def sample_pet_data():
     """Fixture for sample pet creation data"""
-    return UserPetCreate(
-        user_id="user-123",
-        species="dog",
-        name="Buddy"
-    )
+    return UserPetCreate(user_id="user-123", species="dog", name="Buddy")
 
 
 # ============================================================================
@@ -108,9 +102,7 @@ def test_create_pet_with_all_species(repository):
     species_list = ["dog", "cat", "dragon", "owl", "fox"]
 
     for i, species in enumerate(species_list):
-        pet = repository.create(
-            UserPetCreate(user_id=f"user-{i}", species=species, name=f"Pet{i}")
-        )
+        pet = repository.create(UserPetCreate(user_id=f"user-{i}", species=species, name=f"Pet{i}"))
         assert pet.species == species
 
 
@@ -170,13 +162,7 @@ def test_update_pet_stats(repository, sample_pet_data):
     """Test updating pet stats"""
     pet = repository.create(sample_pet_data)
 
-    updates = UserPetUpdate(
-        level=5,
-        xp=100,
-        hunger=80,
-        happiness=90,
-        evolution_stage=2
-    )
+    updates = UserPetUpdate(level=5, xp=100, hunger=80, happiness=90, evolution_stage=2)
 
     updated_pet = repository.update(pet.pet_id, updates)
 
@@ -290,6 +276,7 @@ def test_hunger_and_happiness_bounded(repository, sample_pet_data):
 
     # Try to set above 100 - should raise Pydantic ValidationError
     from pydantic import ValidationError
+
     with pytest.raises(ValidationError):
         UserPetUpdate(hunger=150, happiness=150)
 
@@ -326,9 +313,7 @@ def test_list_all_pets(repository):
     """Test listing all pets (admin function)"""
     # Create multiple pets
     for i in range(5):
-        repository.create(
-            UserPetCreate(user_id=f"user-{i}", species="dog", name=f"Pet{i}")
-        )
+        repository.create(UserPetCreate(user_id=f"user-{i}", species="dog", name=f"Pet{i}"))
 
     pets = repository.list_all()
     assert len(pets) == 5

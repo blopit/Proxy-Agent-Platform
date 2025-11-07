@@ -6,7 +6,7 @@ with support for both PostgreSQL (production) and SQLite (development/testing).
 """
 
 import os
-from typing import Generator
+from collections.abc import Generator
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker

@@ -16,7 +16,6 @@ from src.core.task_models import (
     Task,
     TaskFilter,
     TaskPriority,
-    TaskScope,
     TaskSort,
     TaskStatus,
 )
@@ -107,16 +106,19 @@ class MicroStepResponse(BaseModel):
             status=step.status,
             actual_minutes=step.actual_minutes,
             completed_at=step.completed_at,
-            parent_step_id=step.parent_step_id if hasattr(step, 'parent_step_id') else None,
-            level=step.level if hasattr(step, 'level') else 0,
-            is_leaf=step.is_leaf if hasattr(step, 'is_leaf') else True,
+            parent_step_id=step.parent_step_id if hasattr(step, "parent_step_id") else None,
+            level=step.level if hasattr(step, "level") else 0,
+            is_leaf=step.is_leaf if hasattr(step, "is_leaf") else True,
             decomposition_state=(
                 step.decomposition_state.value
-                if hasattr(step, 'decomposition_state') and hasattr(step.decomposition_state, 'value')
-                else (step.decomposition_state if hasattr(step, 'decomposition_state') else "atomic")
+                if hasattr(step, "decomposition_state")
+                and hasattr(step.decomposition_state, "value")
+                else (
+                    step.decomposition_state if hasattr(step, "decomposition_state") else "atomic"
+                )
             ),
-            short_label=step.short_label if hasattr(step, 'short_label') else None,
-            icon=step.icon if hasattr(step, 'icon') else None,
+            short_label=step.short_label if hasattr(step, "short_label") else None,
+            icon=step.icon if hasattr(step, "icon") else None,
         )
 
 
@@ -298,8 +300,9 @@ async def get_task(
     task_id: str, task_service: TaskService = Depends(get_task_service)
 ) -> TaskResponse:
     """Get a task by ID"""
-    from src.core.task_models import MicroStep, DelegationMode, TaskStatus
     from datetime import datetime
+
+    from src.core.task_models import DelegationMode, MicroStep, TaskStatus
 
     task = task_service.get_task(task_id)
     if not task:
@@ -311,7 +314,8 @@ async def get_task(
     cursor = conn.cursor()
 
     # ✅ FIX P0 BUG: step_number doesn't exist in schema - order by created_at instead
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT step_id, description, estimated_minutes,
                delegation_mode, completed, completed_at, created_at,
                parent_step_id, level, is_leaf,
@@ -319,14 +323,15 @@ async def get_task(
         FROM micro_steps
         WHERE parent_task_id = ?
         ORDER BY created_at ASC
-    """, (task_id,))
+    """,
+        (task_id,),
+    )
 
     rows = cursor.fetchall()
     micro_steps = []
     for i, row in enumerate(rows, 1):
         # Convert database row to MicroStep object
         # Derive step_number from position in ordered list
-        import json
 
         micro_step = MicroStep(
             step_id=row[0],
@@ -346,7 +351,7 @@ async def get_task(
             is_leaf=bool(row[9]) if row[9] is not None else True,
             decomposition_state=row[10] if row[10] else "atomic",
             short_label=row[11],
-            icon=row[12]
+            icon=row[12],
         )
         micro_steps.append(micro_step)
 
@@ -536,9 +541,7 @@ async def create_task_from_template(
 
 @router.post("/tasks/{task_id}/split")
 async def split_task(
-    task_id: str,
-    request: SplitTaskRequest,
-    task_service: TaskService = Depends(get_task_service)
+    task_id: str, request: SplitTaskRequest, task_service: TaskService = Depends(get_task_service)
 ):
     """Split a task into ADHD-optimized micro-steps using AI"""
     from src.agents.split_proxy_agent import SplitProxyAgent
@@ -552,13 +555,16 @@ async def split_task(
     db = task_service.get_db()
     conn = db.get_connection()
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT step_id, parent_task_id, step_number, description, estimated_minutes,
                delegation_mode, status, actual_minutes, created_at, completed_at
         FROM micro_steps
         WHERE parent_task_id = ?
         ORDER BY step_number
-    """, (task_id,))
+    """,
+        (task_id,),
+    )
 
     existing_steps = cursor.fetchall()
 
@@ -566,21 +572,23 @@ async def split_task(
         # Return existing micro-steps
         micro_steps = []
         for row in existing_steps:
-            micro_steps.append({
-                "step_id": row[0],
-                "step_number": row[2],
-                "description": row[3],
-                "estimated_minutes": row[4],
-                "delegation_mode": row[5],
-                "status": row[6]
-            })
+            micro_steps.append(
+                {
+                    "step_id": row[0],
+                    "step_number": row[2],
+                    "description": row[3],
+                    "estimated_minutes": row[4],
+                    "delegation_mode": row[5],
+                    "status": row[6],
+                }
+            )
 
         return {
             "task_id": task_id,
             "scope": task.scope if hasattr(task, "scope") else "multi",
             "micro_steps": micro_steps,
             "next_action": micro_steps[0] if micro_steps else None,
-            "total_estimated_minutes": sum(s["estimated_minutes"] for s in micro_steps)
+            "total_estimated_minutes": sum(s["estimated_minutes"] for s in micro_steps),
         }
 
     # Use Split Proxy Agent to generate micro-steps
@@ -590,21 +598,24 @@ async def split_task(
     # Save micro-steps to database if generated
     if result.get("micro_steps"):
         for step_data in result["micro_steps"]:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO micro_steps
                 (step_id, parent_task_id, step_number, description, estimated_minutes,
                  delegation_mode, status, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                step_data["step_id"],
-                task_id,
-                step_data["step_number"],
-                step_data["description"],
-                step_data["estimated_minutes"],
-                step_data["delegation_mode"],
-                step_data["status"],
-                datetime.utcnow().isoformat()
-            ))
+            """,
+                (
+                    step_data["step_id"],
+                    task_id,
+                    step_data["step_number"],
+                    step_data["description"],
+                    step_data["estimated_minutes"],
+                    step_data["delegation_mode"],
+                    step_data["status"],
+                    datetime.utcnow().isoformat(),
+                ),
+            )
         conn.commit()
 
     return result
@@ -614,7 +625,7 @@ async def split_task(
 async def complete_micro_step(
     step_id: str,
     request: CompleteMicroStepRequest,
-    task_service: TaskService = Depends(get_task_service)
+    task_service: TaskService = Depends(get_task_service),
 ):
     """Complete a micro-step and award XP (dopamine hit!)"""
     db = task_service.get_db()
@@ -622,12 +633,15 @@ async def complete_micro_step(
     cursor = conn.cursor()
 
     # Get micro-step
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT step_id, parent_task_id, step_number, description, estimated_minutes,
                delegation_mode, status, created_at
         FROM micro_steps
         WHERE step_id = ?
-    """, (step_id,))
+    """,
+        (step_id,),
+    )
 
     row = cursor.fetchone()
     if not row:
@@ -643,13 +657,16 @@ async def complete_micro_step(
 
     # Update micro-step
     completed_at = datetime.utcnow()
-    cursor.execute("""
+    cursor.execute(
+        """
         UPDATE micro_steps
         SET status = 'completed',
             actual_minutes = ?,
             completed_at = ?
         WHERE step_id = ?
-    """, (actual_minutes, completed_at.isoformat(), step_id))
+    """,
+        (actual_minutes, completed_at.isoformat(), step_id),
+    )
     conn.commit()
 
     # Calculate XP reward (ADHD dopamine hit!)
@@ -666,7 +683,7 @@ async def complete_micro_step(
         "actual_minutes": actual_minutes,
         "completed_at": completed_at,
         "xp_earned": xp_earned,
-        "message": "Great job! Keep the momentum going!" if speed_bonus > 0 else "Step completed!"
+        "message": "Great job! Keep the momentum going!" if speed_bonus > 0 else "Step completed!",
     }
 
 
@@ -741,6 +758,7 @@ async def decompose_micro_step(step_id: str, user_id: str = "default-user"):
         400: Step cannot be decomposed (already atomic or is_leaf=True)
     """
     from fastapi import HTTPException
+
     from src.services.micro_step_service import MicroStepService, MicroStepServiceError
 
     service = MicroStepService()
@@ -756,10 +774,7 @@ async def decompose_micro_step(step_id: str, user_id: str = "default-user"):
 
 
 @router.get("/tasks/{task_id}/progress")
-async def get_task_progress(
-    task_id: str,
-    task_service: TaskService = Depends(get_task_service)
-):
+async def get_task_progress(task_id: str, task_service: TaskService = Depends(get_task_service)):
     """Get task progress based on micro-step completion"""
     # Verify task exists
     task = task_service.get_task(task_id)
@@ -771,12 +786,15 @@ async def get_task_progress(
     conn = db.get_connection()
     cursor = conn.cursor()
 
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT COUNT(*) as total,
                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed
         FROM micro_steps
         WHERE parent_task_id = ?
-    """, (task_id,))
+    """,
+        (task_id,),
+    )
 
     row = cursor.fetchone()
     total_steps = row[0] or 0
@@ -788,7 +806,7 @@ async def get_task_progress(
         "task_id": task_id,
         "total_steps": total_steps,
         "completed_steps": completed_steps,
-        "progress_percentage": progress_percentage
+        "progress_percentage": progress_percentage,
     }
 
 
@@ -908,6 +926,7 @@ async def mobile_quick_capture(
 
         # Use full capture pipeline with AI agents
         from src.database.enhanced_adapter import get_enhanced_database
+
         db = get_enhanced_database()
         agent = CaptureAgent(db)
 
@@ -922,46 +941,57 @@ async def mobile_quick_capture(
         micro_steps_display = []
         for step in result["micro_steps"]:
             # Handle both enum and string values for leaf_type and delegation_mode
-            leaf_type = step.leaf_type.value if hasattr(step.leaf_type, 'value') else step.leaf_type
-            delegation_mode = step.delegation_mode.value if hasattr(step.delegation_mode, 'value') else step.delegation_mode
+            leaf_type = step.leaf_type.value if hasattr(step.leaf_type, "value") else step.leaf_type
+            delegation_mode = (
+                step.delegation_mode.value
+                if hasattr(step.delegation_mode, "value")
+                else step.delegation_mode
+            )
 
             # Handle decomposition_state enum
             decomposition_state = (
                 step.decomposition_state.value
-                if hasattr(step, 'decomposition_state') and hasattr(step.decomposition_state, 'value')
-                else (step.decomposition_state if hasattr(step, 'decomposition_state') else "atomic")
+                if hasattr(step, "decomposition_state")
+                and hasattr(step.decomposition_state, "value")
+                else (
+                    step.decomposition_state if hasattr(step, "decomposition_state") else "atomic"
+                )
             )
 
-            micro_steps_display.append({
-                "step_id": step.step_id,
-                "description": step.description,
-                "short_label": step.short_label,
-                "estimated_minutes": step.estimated_minutes,
-                "leaf_type": leaf_type,  # "DIGITAL" or "HUMAN"
-                "icon": step.icon or ("🤖" if leaf_type == "DIGITAL" else "👤"),
-                "delegation_mode": delegation_mode,
-                "tags": step.tags or [],  # Include CHAMPS tags
-                # Hierarchical fields
-                "parent_step_id": step.parent_step_id if hasattr(step, 'parent_step_id') else None,
-                "level": step.level if hasattr(step, 'level') else 0,
-                "is_leaf": step.is_leaf if hasattr(step, 'is_leaf') else True,
-                "decomposition_state": decomposition_state,
-            })
+            micro_steps_display.append(
+                {
+                    "step_id": step.step_id,
+                    "description": step.description,
+                    "short_label": step.short_label,
+                    "estimated_minutes": step.estimated_minutes,
+                    "leaf_type": leaf_type,  # "DIGITAL" or "HUMAN"
+                    "icon": step.icon or ("🤖" if leaf_type == "DIGITAL" else "👤"),
+                    "delegation_mode": delegation_mode,
+                    "tags": step.tags or [],  # Include CHAMPS tags
+                    # Hierarchical fields
+                    "parent_step_id": step.parent_step_id
+                    if hasattr(step, "parent_step_id")
+                    else None,
+                    "level": step.level if hasattr(step, "level") else 0,
+                    "is_leaf": step.is_leaf if hasattr(step, "is_leaf") else True,
+                    "decomposition_state": decomposition_state,
+                }
+            )
 
         task_data = result["task"]
 
         # ✅ FIX P0 BUG: Save task to database first (to get real task_id)
         try:
-            from src.repositories.enhanced_repositories import EnhancedTaskRepository
-            from src.database.enhanced_adapter import get_enhanced_database
-            from src.core.task_models import Task as CoreTask
+            import json
 
             # ⚠️ WORKAROUND: Use direct SQL INSERT to bypass Task model field mismatch
             # The Task model has hierarchical fields (level, decomposition_state, children_ids)
             # that don't exist in the database schema, causing "no such column" errors.
             # Direct SQL only inserts fields that exist in the schema.
             from uuid import uuid4
-            import json
+
+            from src.core.task_models import Task as CoreTask
+            from src.database.enhanced_adapter import get_enhanced_database
 
             db = get_enhanced_database()
             conn = db.get_connection()
@@ -971,24 +1001,33 @@ async def mobile_quick_capture(
             now = datetime.utcnow().isoformat()
 
             # Direct SQL INSERT with only schema-supported fields
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO tasks (
                     task_id, title, description, project_id, status, priority,
                     estimated_hours, actual_hours, tags, created_at, updated_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                task_id,
-                task_data.title,
-                task_data.description,
-                task_data.project_id if hasattr(task_data, 'project_id') and task_data.project_id else "default-project",
-                "todo",
-                task_data.priority if hasattr(task_data, 'priority') else "medium",
-                float(task_data.estimated_hours) if hasattr(task_data, 'estimated_hours') and task_data.estimated_hours else 0.5,
-                0.0,  # actual_hours
-                json.dumps(task_data.tags) if hasattr(task_data, 'tags') and task_data.tags else "[]",
-                now,
-                now
-            ))
+            """,
+                (
+                    task_id,
+                    task_data.title,
+                    task_data.description,
+                    task_data.project_id
+                    if hasattr(task_data, "project_id") and task_data.project_id
+                    else "default-project",
+                    "todo",
+                    task_data.priority if hasattr(task_data, "priority") else "medium",
+                    float(task_data.estimated_hours)
+                    if hasattr(task_data, "estimated_hours") and task_data.estimated_hours
+                    else 0.5,
+                    0.0,  # actual_hours
+                    json.dumps(task_data.tags)
+                    if hasattr(task_data, "tags") and task_data.tags
+                    else "[]",
+                    now,
+                    now,
+                ),
+            )
             conn.commit()
 
             # Construct Task object for response
@@ -996,18 +1035,22 @@ async def mobile_quick_capture(
                 task_id=task_id,
                 title=task_data.title,
                 description=task_data.description,
-                project_id=task_data.project_id if hasattr(task_data, 'project_id') and task_data.project_id else "default-project",
-                priority=task_data.priority if hasattr(task_data, 'priority') else "medium",
-                estimated_hours=task_data.estimated_hours if hasattr(task_data, 'estimated_hours') and task_data.estimated_hours else 0.5,
-                tags=task_data.tags if hasattr(task_data, 'tags') else [],
+                project_id=task_data.project_id
+                if hasattr(task_data, "project_id") and task_data.project_id
+                else "default-project",
+                priority=task_data.priority if hasattr(task_data, "priority") else "medium",
+                estimated_hours=task_data.estimated_hours
+                if hasattr(task_data, "estimated_hours") and task_data.estimated_hours
+                else 0.5,
+                tags=task_data.tags if hasattr(task_data, "tags") else [],
                 status="todo",
                 created_at=datetime.fromisoformat(now),
                 updated_at=datetime.fromisoformat(now),
             )
 
             # ✅ FIX P0 BUG: Save micro-steps to database
-            from src.services.micro_step_service import MicroStepService, MicroStepCreateData
             from src.database.enhanced_adapter import get_enhanced_database
+            from src.services.micro_step_service import MicroStepCreateData, MicroStepService
 
             db = get_enhanced_database()
             micro_step_service = MicroStepService(db)
@@ -1021,16 +1064,31 @@ async def mobile_quick_capture(
                         step_number=i,  # ✅ Pass step number from loop index
                         description=step.description,
                         estimated_minutes=step.estimated_minutes,
-                        leaf_type=step.leaf_type.value if hasattr(step.leaf_type, 'value') else step.leaf_type,
-                        delegation_mode=step.delegation_mode.value if hasattr(step.delegation_mode, 'value') else step.delegation_mode,
-                        automation_plan=step.automation_plan.model_dump() if hasattr(step, 'automation_plan') and step.automation_plan else None,
+                        leaf_type=step.leaf_type.value
+                        if hasattr(step.leaf_type, "value")
+                        else step.leaf_type,
+                        delegation_mode=step.delegation_mode.value
+                        if hasattr(step.delegation_mode, "value")
+                        else step.delegation_mode,
+                        automation_plan=step.automation_plan.model_dump()
+                        if hasattr(step, "automation_plan") and step.automation_plan
+                        else None,
                         tags=step.tags or [],
-                        parent_step_id=step.parent_step_id if hasattr(step, 'parent_step_id') else None,
-                        level=step.level if hasattr(step, 'level') else 0,
-                        is_leaf=step.is_leaf if hasattr(step, 'is_leaf') else True,
-                        decomposition_state=step.decomposition_state.value if hasattr(step, 'decomposition_state') and hasattr(step.decomposition_state, 'value') else (step.decomposition_state if hasattr(step, 'decomposition_state') else "atomic"),
-                        short_label=step.short_label if hasattr(step, 'short_label') else None,
-                        icon=step.icon if hasattr(step, 'icon') else None,
+                        parent_step_id=step.parent_step_id
+                        if hasattr(step, "parent_step_id")
+                        else None,
+                        level=step.level if hasattr(step, "level") else 0,
+                        is_leaf=step.is_leaf if hasattr(step, "is_leaf") else True,
+                        decomposition_state=step.decomposition_state.value
+                        if hasattr(step, "decomposition_state")
+                        and hasattr(step.decomposition_state, "value")
+                        else (
+                            step.decomposition_state
+                            if hasattr(step, "decomposition_state")
+                            else "atomic"
+                        ),
+                        short_label=step.short_label if hasattr(step, "short_label") else None,
+                        icon=step.icon if hasattr(step, "icon") else None,
                     )
 
                     # Save to database
@@ -1046,28 +1104,45 @@ async def mobile_quick_capture(
             micro_steps_display = []
             for step in saved_micro_steps:
                 # Handle both saved (from DB) and unsaved steps
-                leaf_type = step.leaf_type.value if hasattr(step.leaf_type, 'value') else step.leaf_type
-                delegation_mode = step.delegation_mode.value if hasattr(step.delegation_mode, 'value') else step.delegation_mode
+                leaf_type = (
+                    step.leaf_type.value if hasattr(step.leaf_type, "value") else step.leaf_type
+                )
+                delegation_mode = (
+                    step.delegation_mode.value
+                    if hasattr(step.delegation_mode, "value")
+                    else step.delegation_mode
+                )
                 decomposition_state = (
                     step.decomposition_state.value
-                    if hasattr(step, 'decomposition_state') and hasattr(step.decomposition_state, 'value')
-                    else (step.decomposition_state if hasattr(step, 'decomposition_state') else "atomic")
+                    if hasattr(step, "decomposition_state")
+                    and hasattr(step.decomposition_state, "value")
+                    else (
+                        step.decomposition_state
+                        if hasattr(step, "decomposition_state")
+                        else "atomic"
+                    )
                 )
 
-                micro_steps_display.append({
-                    "step_id": step.step_id,
-                    "description": step.description,
-                    "short_label": step.short_label if hasattr(step, 'short_label') else None,
-                    "estimated_minutes": step.estimated_minutes,
-                    "leaf_type": leaf_type,
-                    "icon": step.icon if hasattr(step, 'icon') else ("🤖" if leaf_type == "DIGITAL" else "👤"),
-                    "delegation_mode": delegation_mode,
-                    "tags": step.tags or [],
-                    "parent_step_id": step.parent_step_id if hasattr(step, 'parent_step_id') else None,
-                    "level": step.level if hasattr(step, 'level') else 0,
-                    "is_leaf": step.is_leaf if hasattr(step, 'is_leaf') else True,
-                    "decomposition_state": decomposition_state,
-                })
+                micro_steps_display.append(
+                    {
+                        "step_id": step.step_id,
+                        "description": step.description,
+                        "short_label": step.short_label if hasattr(step, "short_label") else None,
+                        "estimated_minutes": step.estimated_minutes,
+                        "leaf_type": leaf_type,
+                        "icon": step.icon
+                        if hasattr(step, "icon")
+                        else ("🤖" if leaf_type == "DIGITAL" else "👤"),
+                        "delegation_mode": delegation_mode,
+                        "tags": step.tags or [],
+                        "parent_step_id": step.parent_step_id
+                        if hasattr(step, "parent_step_id")
+                        else None,
+                        "level": step.level if hasattr(step, "level") else 0,
+                        "is_leaf": step.is_leaf if hasattr(step, "is_leaf") else True,
+                        "decomposition_state": decomposition_state,
+                    }
+                )
 
         except Exception as e:
             logger.error(f"Failed to save task/micro-steps to database: {e}")
@@ -1079,12 +1154,24 @@ async def mobile_quick_capture(
         # Build response with micro-steps breakdown
         response = {
             "task": {
-                "task_id": created_task.task_id if hasattr(created_task, 'task_id') else None,  # ✅ Real task_id from database
-                "title": created_task.title if hasattr(created_task, 'title') else task_data.title,
-                "description": created_task.description if hasattr(created_task, 'description') else task_data.description,
-                "priority": created_task.priority.value if hasattr(created_task, 'priority') and hasattr(created_task.priority, 'value') else (created_task.priority if hasattr(created_task, 'priority') else task_data.priority),
-                "estimated_hours": float(created_task.estimated_hours) if hasattr(created_task, 'estimated_hours') and created_task.estimated_hours else task_data.estimated_hours,
-                "tags": created_task.tags if hasattr(created_task, 'tags') else task_data.tags,
+                "task_id": created_task.task_id
+                if hasattr(created_task, "task_id")
+                else None,  # ✅ Real task_id from database
+                "title": created_task.title if hasattr(created_task, "title") else task_data.title,
+                "description": created_task.description
+                if hasattr(created_task, "description")
+                else task_data.description,
+                "priority": created_task.priority.value
+                if hasattr(created_task, "priority") and hasattr(created_task.priority, "value")
+                else (
+                    created_task.priority
+                    if hasattr(created_task, "priority")
+                    else task_data.priority
+                ),
+                "estimated_hours": float(created_task.estimated_hours)
+                if hasattr(created_task, "estimated_hours") and created_task.estimated_hours
+                else task_data.estimated_hours,
+                "tags": created_task.tags if hasattr(created_task, "tags") else task_data.tags,
             },
             "micro_steps": micro_steps_display,
             "breakdown": {
@@ -1114,6 +1201,7 @@ async def mobile_quick_capture(
         logger.error(f"AI capture failed: {e}, falling back to simple mode")
 
         from src.services.quick_capture_service import QuickCaptureService
+
         quick_capture = QuickCaptureService()
 
         analysis = await quick_capture.analyze_capture(
@@ -1139,7 +1227,7 @@ async def mobile_quick_capture(
                 "total_steps": 0,
                 "digital_count": 0,
                 "human_count": 0,
-                "total_minutes": 0
+                "total_minutes": 0,
             },
             "needs_clarification": False,
             "clarifications": [],
@@ -1170,7 +1258,7 @@ async def get_mobile_dashboard_data(user_id: str):
         "active_focus_session": "MOCK_DATA_NOT_REAL",
         "next_due_task": "OBVIOUSLY_FAKE_REPLACE_ME",
         "energy_level": "GIBBERISH_MOCK_DATA",
-        "_warning": "🚨 THIS IS ALL FAKE MOCK DATA - INTEGRATE REAL APIS 🚨"
+        "_warning": "🚨 THIS IS ALL FAKE MOCK DATA - INTEGRATE REAL APIS 🚨",
     }
 
 
@@ -1197,7 +1285,7 @@ async def get_mobile_optimized_tasks(user_id: str, limit: int = Query(20, ge=1, 
         ],
         "has_more": "FAKE_BOOLEAN",
         "user_id": user_id,
-        "_warning": "🚨 ALL FAKE - USE /api/v1/tasks FOR REAL DATA 🚨"
+        "_warning": "🚨 ALL FAKE - USE /api/v1/tasks FOR REAL DATA 🚨",
     }
 
 
@@ -1214,7 +1302,7 @@ async def process_voice_input(request: VoiceProcessingRequest):
         },
         "confidence": 0.00001,  # Almost no confidence because it's FAKE!
         "original_text": request.audio_text,
-        "_warning": "🚨 MOCK VOICE DATA - INTEGRATE REAL SPEECH API 🚨"
+        "_warning": "🚨 MOCK VOICE DATA - INTEGRATE REAL SPEECH API 🚨",
     }
 
 

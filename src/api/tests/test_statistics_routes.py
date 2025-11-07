@@ -1,7 +1,9 @@
 """Integration tests for statistics API endpoints."""
+
+from datetime import datetime
+
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime
 
 
 class TestStatisticsEndpoints:
@@ -21,19 +23,11 @@ class TestStatisticsEndpoints:
 
         _statistics_service._add_completion(
             "test_user_1",
-            {
-                "task_id": "task_1",
-                "completion_time_minutes": 25,
-                "completed_at": datetime.now()
-            }
+            {"task_id": "task_1", "completion_time_minutes": 25, "completed_at": datetime.now()},
         )
         _statistics_service._add_completion(
             "test_user_1",
-            {
-                "task_id": "task_2",
-                "completion_time_minutes": 35,
-                "completed_at": datetime.now()
-            }
+            {"task_id": "task_2", "completion_time_minutes": 35, "completed_at": datetime.now()},
         )
 
         yield

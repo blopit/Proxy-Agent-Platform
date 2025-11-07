@@ -10,7 +10,7 @@ No achievements, leaderboards, or complex motivation algorithms - just core prog
 """
 
 import logging
-from datetime import datetime, date
+from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -57,6 +57,7 @@ class StreakResponse(BaseModel):
 # XP & Level Constants
 # ============================================================================
 
+
 # Simple exponential level progression
 # Level 1→2: 100 XP
 # Level 2→3: 180 XP
@@ -64,7 +65,7 @@ class StreakResponse(BaseModel):
 # Level 10→11: ~2,600 XP
 def xp_for_level(level: int) -> int:
     """Calculate XP required for given level (exponential curve)"""
-    return int(100 * (level ** 1.5))
+    return int(100 * (level**1.5))
 
 
 def calculate_level(total_xp: int) -> int:
@@ -116,7 +117,7 @@ def get_or_create_user_progress(user_id: str) -> dict:
         FROM user_progress
         WHERE user_id = ?
         """,
-        (user_id,)
+        (user_id,),
     )
 
     row = cursor.fetchone()
@@ -128,7 +129,7 @@ def get_or_create_user_progress(user_id: str) -> dict:
             "current_streak": row[2],
             "longest_streak": row[3],
             "last_completion_date": row[4],
-            "total_tasks_completed": row[5]
+            "total_tasks_completed": row[5],
         }
     else:
         # Create new user progress
@@ -139,7 +140,7 @@ def get_or_create_user_progress(user_id: str) -> dict:
              total_tasks_completed, created_at, updated_at)
             VALUES (?, 0, 1, 0, 0, 0, ?, ?)
             """,
-            (user_id, datetime.now().isoformat(), datetime.now().isoformat())
+            (user_id, datetime.now().isoformat(), datetime.now().isoformat()),
         )
         conn.commit()
 
@@ -149,7 +150,7 @@ def get_or_create_user_progress(user_id: str) -> dict:
             "current_streak": 0,
             "longest_streak": 0,
             "last_completion_date": None,
-            "total_tasks_completed": 0
+            "total_tasks_completed": 0,
         }
 
 
@@ -177,7 +178,7 @@ def update_streak(user_id: str) -> dict:
             return {
                 "current_streak": progress["current_streak"],
                 "longest_streak": progress["longest_streak"],
-                "streak_continued": False
+                "streak_continued": False,
             }
         elif days_since == 1:
             # Continue streak
@@ -199,14 +200,14 @@ def update_streak(user_id: str) -> dict:
             updated_at = ?
         WHERE user_id = ?
         """,
-        (new_streak, longest_streak, today.isoformat(), datetime.now().isoformat(), user_id)
+        (new_streak, longest_streak, today.isoformat(), datetime.now().isoformat(), user_id),
     )
     conn.commit()
 
     return {
         "current_streak": new_streak,
         "longest_streak": longest_streak,
-        "streak_continued": True
+        "streak_continued": True,
     }
 
 
@@ -216,9 +217,7 @@ def update_streak(user_id: str) -> dict:
 
 
 @router.get("/progress", response_model=UserProgressResponse)
-async def get_user_progress(
-    current_user: User = Depends(get_current_user)
-):
+async def get_user_progress(current_user: User = Depends(get_current_user)):
     """
     Get your current XP, level, and progress.
 
@@ -244,7 +243,7 @@ async def get_user_progress(
         if last_date_str:
             last_date = date.fromisoformat(last_date_str)
             days_since = (date.today() - last_date).days
-            streak_at_risk = (days_since >= 1)  # Haven't completed today
+            streak_at_risk = days_since >= 1  # Haven't completed today
 
         return UserProgressResponse(
             user_id=user_id,
@@ -255,19 +254,20 @@ async def get_user_progress(
             current_streak=progress["current_streak"],
             longest_streak=progress["longest_streak"],
             total_tasks_completed=progress["total_tasks_completed"],
-            message=f"⭐ Level {level} | {total_xp} XP | {progress['current_streak']}🔥 streak"
+            message=f"⭐ Level {level} | {total_xp} XP | {progress['current_streak']}🔥 streak",
         )
 
     except Exception as e:
         logger.error(f"Failed to get user progress: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get progress: {str(e)}"
+            detail=f"Failed to get progress: {str(e)}",
         )
 
 
 class AddXPRequest(BaseModel):
     """Request model for adding XP"""
+
     xp_amount: int = Field(..., ge=1, le=1000, description="XP to add")
     reason: str = Field("Task completed", description="Reason for XP")
 
@@ -299,7 +299,7 @@ async def add_xp(request: AddXPRequest, current_user: User = Depends(get_current
         # Add XP
         new_total_xp = old_xp + xp_amount
         new_level = calculate_level(new_total_xp)
-        leveled_up = (new_level > old_level)
+        leveled_up = new_level > old_level
 
         # Update streak
         streak_info = update_streak(user_id)
@@ -313,7 +313,7 @@ async def add_xp(request: AddXPRequest, current_user: User = Depends(get_current
                 updated_at = ?
             WHERE user_id = ?
             """,
-            (new_total_xp, new_level, datetime.now().isoformat(), user_id)
+            (new_total_xp, new_level, datetime.now().isoformat(), user_id),
         )
         conn.commit()
 
@@ -334,21 +334,18 @@ async def add_xp(request: AddXPRequest, current_user: User = Depends(get_current
             "new_level": new_level,
             "leveled_up": leveled_up,
             "current_streak": streak_info["current_streak"],
-            "message": message
+            "message": message,
         }
 
     except Exception as e:
         logger.error(f"Failed to add XP: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to add XP: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to add XP: {str(e)}"
         )
 
 
 @router.get("/streak", response_model=StreakResponse)
-async def get_streak(
-    current_user: User = Depends(get_current_user)
-):
+async def get_streak(current_user: User = Depends(get_current_user)):
     """
     Get your current streak status.
 
@@ -382,14 +379,14 @@ async def get_streak(
             longest_streak=progress["longest_streak"],
             last_completion_date=last_date_str,
             streak_at_risk=streak_at_risk,
-            message=message
+            message=message,
         )
 
     except Exception as e:
         logger.error(f"Failed to get streak: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get streak: {str(e)}"
+            detail=f"Failed to get streak: {str(e)}",
         )
 
 

@@ -7,12 +7,14 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Protocol, Type, TypeVar
+from typing import Any, Protocol, TypeVar
 
-T = TypeVar('T')
+T = TypeVar("T")
+
 
 class PydanticModel(Protocol):
     def model_dump(self) -> dict[str, Any]: ...
+
 
 from src.core.task_models import (
     Project,
@@ -64,7 +66,7 @@ class BaseRepository:
             raise RuntimeError("Database connection not established. Call setup() first.")
         return self.connection
 
-    def _dict_to_model(self, data: dict[str, Any], model_class: Type[T]) -> T:
+    def _dict_to_model(self, data: dict[str, Any], model_class: type[T]) -> T:
         """Convert dictionary to model instance"""
         # Convert JSON strings back to objects
         for key, value in data.items():
@@ -81,10 +83,26 @@ class BaseRepository:
                     data[key] = (
                         json.loads(value)
                         if value
-                        else ([] if key in ["tags", "team_members", "default_tags", "micro_steps", "children_ids"] else {})
+                        else (
+                            []
+                            if key
+                            in [
+                                "tags",
+                                "team_members",
+                                "default_tags",
+                                "micro_steps",
+                                "children_ids",
+                            ]
+                            else {}
+                        )
                     )
                 except json.JSONDecodeError:
-                    data[key] = [] if key in ["tags", "team_members", "default_tags", "micro_steps", "children_ids"] else {}
+                    data[key] = (
+                        []
+                        if key
+                        in ["tags", "team_members", "default_tags", "micro_steps", "children_ids"]
+                        else {}
+                    )
             elif (
                 key in ["estimated_hours", "actual_hours", "default_estimated_hours"]
                 and value is not None
@@ -119,7 +137,7 @@ class BaseRepository:
                 data[key] = str(value)
             elif isinstance(value, datetime):
                 data[key] = value.isoformat()
-            elif hasattr(value, 'value'):  # Handle enum values
+            elif hasattr(value, "value"):  # Handle enum values
                 data[key] = value.value
 
         return data
@@ -338,9 +356,7 @@ class ProjectRepository(BaseRepository):
     def get_by_id(self, project_id: str) -> Project | None:
         """Get project by ID"""
         conn = self._ensure_connection()
-        cursor = conn.execute(
-            "SELECT * FROM projects WHERE project_id = ?", (project_id,)
-        )
+        cursor = conn.execute("SELECT * FROM projects WHERE project_id = ?", (project_id,))
         row = cursor.fetchone()
 
         if row:
@@ -426,9 +442,7 @@ class TaskTemplateRepository(BaseRepository):
     def get_by_id(self, template_id: str) -> TaskTemplate | None:
         """Get template by ID"""
         conn = self._ensure_connection()
-        cursor = conn.execute(
-            "SELECT * FROM task_templates WHERE template_id = ?", (template_id,)
-        )
+        cursor = conn.execute("SELECT * FROM task_templates WHERE template_id = ?", (template_id,))
         row = cursor.fetchone()
 
         if row:
@@ -488,9 +502,7 @@ class TaskDependencyRepository(BaseRepository):
     def get_task_dependencies(self, task_id: str) -> list[TaskDependency]:
         """Get all dependencies for a task"""
         conn = self._ensure_connection()
-        cursor = conn.execute(
-            "SELECT * FROM task_dependencies WHERE task_id = ?", (task_id,)
-        )
+        cursor = conn.execute("SELECT * FROM task_dependencies WHERE task_id = ?", (task_id,))
         rows = cursor.fetchall()
         return [self._dict_to_model(dict(row), TaskDependency) for row in rows]
 
@@ -573,8 +585,6 @@ class TaskCommentRepository(BaseRepository):
     def delete(self, comment_id: str) -> bool:
         """Delete a comment"""
         conn = self._ensure_connection()
-        cursor = conn.execute(
-            "DELETE FROM task_comments WHERE comment_id = ?", (comment_id,)
-        )
+        cursor = conn.execute("DELETE FROM task_comments WHERE comment_id = ?", (comment_id,))
         conn.commit()
         return cursor.rowcount > 0

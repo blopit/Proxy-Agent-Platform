@@ -10,8 +10,9 @@ TODO: This is a minimal stub implementation to make tests pass.
       - Monitoring and metrics
 """
 
-from typing import Any, Callable, Optional
 import asyncio
+from collections.abc import Callable
+from typing import Any
 
 
 class RedisCacheService:
@@ -28,7 +29,7 @@ class RedisCacheService:
         self._hits = 0
         self._requests = 0
 
-    async def get(self, key: str) -> Optional[Any]:
+    async def get(self, key: str) -> Any | None:
         """
         Retrieve value from cache by key.
 
@@ -66,9 +67,7 @@ class RedisCacheService:
             expiry = 0
         self._cache[key] = (value, expiry)
 
-    async def get_or_set(
-        self, key: str, fetch_func: Callable, ttl: int = 300
-    ) -> Any:
+    async def get_or_set(self, key: str, fetch_func: Callable, ttl: int = 300) -> Any:
         """
         Get value from cache or fetch and set if not exists.
 

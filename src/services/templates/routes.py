@@ -4,8 +4,7 @@ API routes for Task Templates Service (BE-01).
 Provides CRUD endpoints for managing task templates.
 """
 
-from fastapi import APIRouter, HTTPException, status, Query
-from typing import List, Optional
+from fastapi import APIRouter, HTTPException, Query, status
 
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
 from src.services.templates.models import (
@@ -14,7 +13,6 @@ from src.services.templates.models import (
     TaskTemplateUpdate,
 )
 from src.services.templates.repository import TemplateRepository
-
 
 router = APIRouter(prefix="/api/v1/task-templates", tags=["templates"])
 
@@ -40,8 +38,8 @@ async def create_template(template: TaskTemplateCreate):
     return repo.create_template_with_steps(template)
 
 
-@router.get("/", response_model=List[TaskTemplate])
-async def list_templates(category: Optional[str] = Query(None)):
+@router.get("/", response_model=list[TaskTemplate])
+async def list_templates(category: str | None = Query(None)):
     """
     List all public templates, optionally filtered by category.
 
@@ -77,9 +75,7 @@ async def get_template(template_id: str):
     template = repo.get_by_id(template_id)
 
     if not template:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Template not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
 
     return template
 
@@ -103,9 +99,7 @@ async def update_template(template_id: str, update_data: TaskTemplateUpdate):
     template = repo.update(template_id, update_data)
 
     if not template:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Template not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")
 
     return template
 
@@ -125,6 +119,4 @@ async def delete_template(template_id: str):
     deleted = repo.delete(template_id)
 
     if not deleted:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Template not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Template not found")

@@ -6,11 +6,10 @@ AI-generated task suggestions, and sync operations.
 """
 
 from datetime import datetime
-from typing import Literal, Optional
-from uuid import UUID, uuid4
+from typing import Literal
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
-
 
 # ============================================================================
 # Provider Types and Status Enums
@@ -52,10 +51,10 @@ class UserIntegrationBase(BaseModel):
     """Base fields for user integration"""
 
     provider: ProviderType
-    provider_user_id: Optional[str] = None
-    provider_username: Optional[str] = None
+    provider_user_id: str | None = None
+    provider_username: str | None = None
     status: ConnectionStatus = "disconnected"
-    error_message: Optional[str] = None
+    error_message: str | None = None
     scopes: list[str] = Field(default_factory=list)
     sync_enabled: bool = True
     sync_frequency_minutes: int = 15
@@ -68,28 +67,28 @@ class UserIntegrationCreate(UserIntegrationBase):
     """Model for creating a new user integration"""
 
     user_id: str
-    access_token: Optional[str] = None
-    refresh_token: Optional[str] = None
+    access_token: str | None = None
+    refresh_token: str | None = None
     token_type: str = "Bearer"
-    token_expires_at: Optional[datetime] = None
+    token_expires_at: datetime | None = None
 
 
 class UserIntegrationUpdate(BaseModel):
     """Model for updating an existing user integration"""
 
-    status: Optional[ConnectionStatus] = None
-    error_message: Optional[str] = None
-    access_token: Optional[str] = None
-    refresh_token: Optional[str] = None
-    token_expires_at: Optional[datetime] = None
-    last_sync_at: Optional[datetime] = None
-    next_sync_at: Optional[datetime] = None
-    sync_enabled: Optional[bool] = None
-    sync_frequency_minutes: Optional[int] = None
-    auto_generate_tasks: Optional[bool] = None
-    settings: Optional[dict] = None
-    provider_user_id: Optional[str] = None
-    provider_username: Optional[str] = None
+    status: ConnectionStatus | None = None
+    error_message: str | None = None
+    access_token: str | None = None
+    refresh_token: str | None = None
+    token_expires_at: datetime | None = None
+    last_sync_at: datetime | None = None
+    next_sync_at: datetime | None = None
+    sync_enabled: bool | None = None
+    sync_frequency_minutes: int | None = None
+    auto_generate_tasks: bool | None = None
+    settings: dict | None = None
+    provider_user_id: str | None = None
+    provider_username: str | None = None
 
 
 class UserIntegration(UserIntegrationBase):
@@ -97,8 +96,8 @@ class UserIntegration(UserIntegrationBase):
 
     integration_id: UUID
     user_id: str
-    last_sync_at: Optional[datetime] = None
-    next_sync_at: Optional[datetime] = None
+    last_sync_at: datetime | None = None
+    next_sync_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -118,16 +117,16 @@ class IntegrationTaskBase(BaseModel):
 
     provider_item_id: str
     provider_item_type: ProviderItemType
-    provider_url: Optional[str] = None
+    provider_url: str | None = None
     suggested_title: str
-    suggested_description: Optional[str] = None
+    suggested_description: str | None = None
     suggested_priority: Literal["low", "medium", "high"] = "medium"
-    suggested_due_date: Optional[datetime] = None
-    suggested_estimated_hours: Optional[float] = None
+    suggested_due_date: datetime | None = None
+    suggested_estimated_hours: float | None = None
     suggested_tags: list[str] = Field(default_factory=list)
-    ai_confidence: Optional[float] = None
-    ai_reasoning: Optional[str] = None
-    generation_model: Optional[str] = None
+    ai_confidence: float | None = None
+    ai_reasoning: str | None = None
+    generation_model: str | None = None
     provider_item_snapshot: dict = Field(default_factory=dict)
     metadata: dict = Field(default_factory=dict)
 
@@ -142,10 +141,10 @@ class IntegrationTaskCreate(IntegrationTaskBase):
 class IntegrationTaskUpdate(BaseModel):
     """Model for updating an existing integration task"""
 
-    task_id: Optional[str] = None
-    sync_status: Optional[SyncStatus] = None
-    reviewed_at: Optional[datetime] = None
-    reviewed_by: Optional[str] = None
+    task_id: str | None = None
+    sync_status: SyncStatus | None = None
+    reviewed_at: datetime | None = None
+    reviewed_by: str | None = None
 
 
 class IntegrationTask(IntegrationTaskBase):
@@ -153,10 +152,10 @@ class IntegrationTask(IntegrationTaskBase):
 
     integration_task_id: UUID
     integration_id: UUID
-    task_id: Optional[str] = None
+    task_id: str | None = None
     sync_status: SyncStatus
-    reviewed_at: Optional[datetime] = None
-    reviewed_by: Optional[str] = None
+    reviewed_at: datetime | None = None
+    reviewed_by: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -173,13 +172,13 @@ class IntegrationSyncLogCreate(BaseModel):
 
     integration_id: UUID
     sync_status: Literal["success", "partial_success", "failed"]
-    error_message: Optional[str] = None
+    error_message: str | None = None
     items_fetched: int = 0
     tasks_generated: int = 0
     tasks_auto_approved: int = 0
     tasks_pending_review: int = 0
     api_calls_made: int = 0
-    quota_remaining: Optional[int] = None
+    quota_remaining: int | None = None
     metadata: dict = Field(default_factory=dict)
 
 
@@ -188,7 +187,7 @@ class IntegrationSyncLog(IntegrationSyncLogCreate):
 
     log_id: UUID
     sync_started_at: datetime
-    sync_completed_at: Optional[datetime] = None
+    sync_completed_at: datetime | None = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -203,8 +202,8 @@ class OAuthAuthorizationRequest(BaseModel):
     """Request to start OAuth flow"""
 
     provider: ProviderType
-    redirect_uri: Optional[str] = None
-    state: Optional[str] = None
+    redirect_uri: str | None = None
+    state: str | None = None
 
 
 class OAuthAuthorizationResponse(BaseModel):
@@ -243,14 +242,14 @@ class TaskApprovalRequest(BaseModel):
     """Request to approve a suggested task"""
 
     integration_task_id: UUID
-    modifications: Optional[dict] = None  # Optional edits before approval
+    modifications: dict | None = None  # Optional edits before approval
 
 
 class TaskDismissalRequest(BaseModel):
     """Request to dismiss a suggested task"""
 
     integration_task_id: UUID
-    reason: Optional[str] = None
+    reason: str | None = None
 
 
 class ManualSyncRequest(BaseModel):
@@ -282,10 +281,10 @@ class GmailMessage(BaseModel):
     thread_id: str
     subject: str
     from_email: str
-    from_name: Optional[str] = None
+    from_name: str | None = None
     to_email: str
     snippet: str
-    body_text: Optional[str] = None
+    body_text: str | None = None
     received_at: datetime
     labels: list[str] = Field(default_factory=list)
     is_unread: bool = True
@@ -296,12 +295,12 @@ class CalendarEvent(BaseModel):
 
     event_id: str
     summary: str
-    description: Optional[str] = None
-    location: Optional[str] = None
+    description: str | None = None
+    location: str | None = None
     start: datetime
     end: datetime
     attendees: list[str] = Field(default_factory=list)
-    organizer: Optional[str] = None
+    organizer: str | None = None
     status: str = "confirmed"
 
 
@@ -310,11 +309,11 @@ class SlackMessage(BaseModel):
 
     message_ts: str
     channel_id: str
-    channel_name: Optional[str] = None
+    channel_name: str | None = None
     user_id: str
-    user_name: Optional[str] = None
+    user_name: str | None = None
     text: str
-    thread_ts: Optional[str] = None
+    thread_ts: str | None = None
     reactions: list[str] = Field(default_factory=list)
     posted_at: datetime
 
@@ -339,9 +338,9 @@ class TaskGenerationResponse(BaseModel):
     should_create_task: bool
     confidence: float = Field(ge=0.0, le=1.0)
     reasoning: str
-    suggested_title: Optional[str] = None
-    suggested_description: Optional[str] = None
-    suggested_priority: Optional[Literal["low", "medium", "high"]] = None
-    suggested_due_date: Optional[datetime] = None
-    suggested_estimated_hours: Optional[float] = None
+    suggested_title: str | None = None
+    suggested_description: str | None = None
+    suggested_priority: Literal["low", "medium", "high"] | None = None
+    suggested_due_date: datetime | None = None
+    suggested_estimated_hours: float | None = None
     suggested_tags: list[str] = Field(default_factory=list)

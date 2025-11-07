@@ -6,7 +6,6 @@ Handles database operations for task assignments and agent capabilities.
 
 import json
 from datetime import datetime
-from typing import List, Optional
 from uuid import uuid4
 
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
@@ -33,7 +32,7 @@ class DelegationRepository:
         task_id: str,
         assignee_id: str,
         assignee_type: str,
-        estimated_hours: Optional[float] = None,
+        estimated_hours: float | None = None,
     ) -> dict:
         """
         Create a new task assignment.
@@ -86,9 +85,7 @@ class DelegationRepository:
             "actual_hours": None,
         }
 
-    def get_assignments_by_agent(
-        self, agent_id: str, status: Optional[str] = None
-    ) -> List[dict]:
+    def get_assignments_by_agent(self, agent_id: str, status: str | None = None) -> list[dict]:
         """
         Get all assignments for a specific assignee (agent or human).
 
@@ -121,7 +118,7 @@ class DelegationRepository:
         rows = cursor.fetchall()
         return [self._row_to_dict(row) for row in rows]
 
-    def get_assignment_by_id(self, assignment_id: str) -> Optional[dict]:
+    def get_assignment_by_id(self, assignment_id: str) -> dict | None:
         """
         Get a specific assignment by ID.
 
@@ -143,7 +140,7 @@ class DelegationRepository:
 
         return self._row_to_dict(row) if row else None
 
-    def accept_assignment(self, assignment_id: str) -> Optional[dict]:
+    def accept_assignment(self, assignment_id: str) -> dict | None:
         """
         Accept a pending assignment.
 
@@ -162,7 +159,7 @@ class DelegationRepository:
             return None
 
         if assignment["status"] != "pending":
-            raise ValueError(f"Assignment already accepted or completed")
+            raise ValueError("Assignment already accepted or completed")
 
         accepted_at = datetime.utcnow()
 
@@ -184,8 +181,8 @@ class DelegationRepository:
         return assignment
 
     def complete_assignment(
-        self, assignment_id: str, actual_hours: Optional[float] = None
-    ) -> Optional[dict]:
+        self, assignment_id: str, actual_hours: float | None = None
+    ) -> dict | None:
         """
         Complete an in-progress assignment.
 
@@ -205,7 +202,7 @@ class DelegationRepository:
             return None
 
         if assignment["status"] != "in_progress":
-            raise ValueError(f"Assignment must be accepted before completing")
+            raise ValueError("Assignment must be accepted before completing")
 
         completed_at = datetime.utcnow()
 
@@ -237,7 +234,7 @@ class DelegationRepository:
         agent_id: str,
         agent_name: str,
         agent_type: str,
-        skills: List[str],
+        skills: list[str],
         max_concurrent_tasks: int = 1,
     ) -> dict:
         """
@@ -297,9 +294,7 @@ class DelegationRepository:
             "updated_at": created_at.isoformat(),
         }
 
-    def get_agents(
-        self, agent_type: Optional[str] = None, available_only: bool = False
-    ) -> List[dict]:
+    def get_agents(self, agent_type: str | None = None, available_only: bool = False) -> list[dict]:
         """
         Get agents with optional filtering.
 

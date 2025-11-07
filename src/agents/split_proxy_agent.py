@@ -12,24 +12,23 @@ Implements the psychology from HABIT.md:
 Follows TDD - driven by API endpoint tests.
 """
 
-import os
 import logging
-from datetime import datetime
-from decimal import Decimal
+import os
 from typing import Any
 
-from src.core.task_models import Task, TaskScope, DelegationMode, MicroStep
-from src.core.models import AgentRequest, AgentResponse
+from src.core.task_models import DelegationMode, MicroStep, Task, TaskScope
 
 # Try to import AI clients
 try:
     import openai
+
     OPENAI_AVAILABLE = True
 except ImportError:
     OPENAI_AVAILABLE = False
 
 try:
     import anthropic
+
     ANTHROPIC_AVAILABLE = True
 except ImportError:
     ANTHROPIC_AVAILABLE = False
@@ -96,9 +95,9 @@ class SplitProxyAgent:
                 "next_action": {
                     "step_number": 1,
                     "description": task.title,
-                    "estimated_minutes": 5
+                    "estimated_minutes": 5,
                 },
-                "message": "Task is simple enough - no splitting needed. Just do it!"
+                "message": "Task is simple enough - no splitting needed. Just do it!",
             }
 
         # For MULTI and PROJECT scope, use AI to split
@@ -113,7 +112,7 @@ class SplitProxyAgent:
                     "Consider breaking it into smaller subtasks first, "
                     "then split each subtask into micro-steps."
                 ),
-                "estimated_phases": self._estimate_project_phases(task)
+                "estimated_phases": self._estimate_project_phases(task),
             }
 
         # MULTI scope: Generate micro-steps with AI
@@ -131,16 +130,18 @@ class SplitProxyAgent:
                     "estimated_minutes": step.estimated_minutes,
                     "delegation_mode": step.delegation_mode,
                     "status": step.status,
-                    "icon": step.icon
+                    "icon": step.icon,
                 }
                 for step in micro_steps
             ],
             "next_action": {
                 "step_number": 1,
                 "description": micro_steps[0].description,
-                "estimated_minutes": micro_steps[0].estimated_minutes
-            } if micro_steps else None,
-            "total_estimated_minutes": sum(s.estimated_minutes for s in micro_steps)
+                "estimated_minutes": micro_steps[0].estimated_minutes,
+            }
+            if micro_steps
+            else None,
+            "total_estimated_minutes": sum(s.estimated_minutes for s in micro_steps),
         }
 
         return result
@@ -171,14 +172,10 @@ class SplitProxyAgent:
             "Phase 1: Planning & Research",
             "Phase 2: Core Implementation",
             "Phase 3: Testing & Refinement",
-            "Phase 4: Completion & Review"
+            "Phase 4: Completion & Review",
         ]
 
-    async def _generate_micro_steps_with_ai(
-        self,
-        task: Task,
-        user_id: str
-    ) -> list[MicroStep]:
+    async def _generate_micro_steps_with_ai(self, task: Task, user_id: str) -> list[MicroStep]:
         """
         Use AI to generate micro-steps for a task
 
@@ -198,7 +195,7 @@ class SplitProxyAgent:
             steps_data = await self._split_with_anthropic(prompt, task)
         else:
             # Fallback: Rule-based splitting
-            logger.warning(f"No LLM available for micro-step generation, using fallback rules")
+            logger.warning("No LLM available for micro-step generation, using fallback rules")
             steps_data = self._split_with_rules(task)
 
         # Convert to MicroStep objects
@@ -218,7 +215,7 @@ class SplitProxyAgent:
                 short_label=step_data.get("short_label"),
                 estimated_minutes=estimated_minutes,
                 icon=step_data.get("icon"),
-                delegation_mode=step_data.get("delegation_mode", DelegationMode.DO)
+                delegation_mode=step_data.get("delegation_mode", DelegationMode.DO),
             )
             micro_steps.append(step)
 
@@ -285,14 +282,18 @@ Focus on CLARITY and IMMEDIATE ACTION. Keep steps substantial - don't break triv
             response = await self.openai_client.chat.completions.create(
                 model=os.getenv("LLM_MODEL", "gpt-4o-mini"),
                 messages=[
-                    {"role": "system", "content": "You are an ADHD-optimized task splitting assistant. Always return valid JSON."},
-                    {"role": "user", "content": prompt}
+                    {
+                        "role": "system",
+                        "content": "You are an ADHD-optimized task splitting assistant. Always return valid JSON.",
+                    },
+                    {"role": "user", "content": prompt},
                 ],
                 response_format={"type": "json_object"},
-                temperature=0.7
+                temperature=0.7,
             )
 
             import json
+
             result = json.loads(response.choices[0].message.content)
 
             # Debug: Log first step to check icon
@@ -302,15 +303,21 @@ Focus on CLARITY and IMMEDIATE ACTION. Keep steps substantial - don't break triv
             if "steps" in result:
                 steps = result["steps"]
                 if steps and len(steps) > 0:
-                    logger.info(f"🔍 First step from OpenAI: icon={repr(steps[0].get('icon'))}, short_label={repr(steps[0].get('short_label'))}")
+                    logger.info(
+                        f"🔍 First step from OpenAI: icon={repr(steps[0].get('icon'))}, short_label={repr(steps[0].get('short_label'))}"
+                    )
                 return steps
             elif isinstance(result, list):
                 if result and len(result) > 0:
-                    logger.info(f"🔍 First step from OpenAI (list format): icon={repr(result[0].get('icon'))}, short_label={repr(result[0].get('short_label'))}")
+                    logger.info(
+                        f"🔍 First step from OpenAI (list format): icon={repr(result[0].get('icon'))}, short_label={repr(result[0].get('short_label'))}"
+                    )
                 return result
             else:
                 # Fallback if unexpected format
-                logger.warning(f"Unexpected OpenAI response format, using fallback: {list(result.keys())}")
+                logger.warning(
+                    f"Unexpected OpenAI response format, using fallback: {list(result.keys())}"
+                )
                 return self._split_with_rules(task)
 
         except Exception as e:
@@ -323,10 +330,11 @@ Focus on CLARITY and IMMEDIATE ACTION. Keep steps substantial - don't break triv
             response = await self.anthropic_client.messages.create(
                 model=os.getenv("LLM_MODEL", "claude-3-5-sonnet-20241022"),
                 max_tokens=2000,
-                messages=[{"role": "user", "content": prompt}]
+                messages=[{"role": "user", "content": prompt}],
             )
 
             import json
+
             content = response.content[0].text
 
             # Extract JSON from response
@@ -343,11 +351,15 @@ Focus on CLARITY and IMMEDIATE ACTION. Keep steps substantial - don't break triv
             if "steps" in result:
                 steps = result["steps"]
                 if steps and len(steps) > 0:
-                    logger.info(f"🔍 First step from Anthropic: icon={repr(steps[0].get('icon'))}, short_label={repr(steps[0].get('short_label'))}")
+                    logger.info(
+                        f"🔍 First step from Anthropic: icon={repr(steps[0].get('icon'))}, short_label={repr(steps[0].get('short_label'))}"
+                    )
                 return steps
             elif isinstance(result, list):
                 if result and len(result) > 0:
-                    logger.info(f"🔍 First step from Anthropic (list format): icon={repr(result[0].get('icon'))}, short_label={repr(result[0].get('short_label'))}")
+                    logger.info(
+                        f"🔍 First step from Anthropic (list format): icon={repr(result[0].get('icon'))}, short_label={repr(result[0].get('short_label'))}"
+                    )
                 return result
             else:
                 return self._split_with_rules(task)
@@ -365,107 +377,131 @@ Focus on CLARITY and IMMEDIATE ACTION. Keep steps substantial - don't break triv
         # Generate contextual steps based on task content
         steps = []
         task_lower = task.title.lower()
-        
+
         # Step 1: Always start with setup/preparation (easy win)
         if any(word in task_lower for word in ["email", "message", "send"]):
-            steps.append({
-                "description": f"Open email client and locate recipient",
-                "short_label": "Setup",
-                "estimated_minutes": 2,
-                "delegation_mode": "do",
-                "icon": "📧"
-            })
+            steps.append(
+                {
+                    "description": "Open email client and locate recipient",
+                    "short_label": "Setup",
+                    "estimated_minutes": 2,
+                    "delegation_mode": "do",
+                    "icon": "📧",
+                }
+            )
         elif any(word in task_lower for word in ["buy", "shop", "grocery", "purchase"]):
-            steps.append({
-                "description": f"Make a shopping list for: {task.title}",
-                "short_label": "List",
-                "estimated_minutes": 3,
-                "delegation_mode": "do",
-                "icon": "📝"
-            })
+            steps.append(
+                {
+                    "description": f"Make a shopping list for: {task.title}",
+                    "short_label": "List",
+                    "estimated_minutes": 3,
+                    "delegation_mode": "do",
+                    "icon": "📝",
+                }
+            )
         elif any(word in task_lower for word in ["call", "phone", "contact"]):
-            steps.append({
-                "description": f"Find contact information for: {task.title}",
-                "short_label": "Find",
-                "estimated_minutes": 2,
-                "delegation_mode": "do",
-                "icon": "📞"
-            })
+            steps.append(
+                {
+                    "description": f"Find contact information for: {task.title}",
+                    "short_label": "Find",
+                    "estimated_minutes": 2,
+                    "delegation_mode": "do",
+                    "icon": "📞",
+                }
+            )
         else:
-            steps.append({
-                "description": f"Gather materials and set up workspace for: {task.title}",
-                "short_label": "Setup",
-                "estimated_minutes": 2,
-                "delegation_mode": "do",
-                "icon": "📋"
-            })
+            steps.append(
+                {
+                    "description": f"Gather materials and set up workspace for: {task.title}",
+                    "short_label": "Setup",
+                    "estimated_minutes": 2,
+                    "delegation_mode": "do",
+                    "icon": "📋",
+                }
+            )
 
         # Step 2: Main action based on task type
         if any(word in task_lower for word in ["email", "message", "send"]):
-            steps.append({
-                "description": f"Draft the email content for: {task.title}",
-                "short_label": "Draft",
-                "estimated_minutes": 5,
-                "delegation_mode": "do",
-                "icon": "✍️"
-            })
+            steps.append(
+                {
+                    "description": f"Draft the email content for: {task.title}",
+                    "short_label": "Draft",
+                    "estimated_minutes": 5,
+                    "delegation_mode": "do",
+                    "icon": "✍️",
+                }
+            )
         elif any(word in task_lower for word in ["buy", "shop", "grocery", "purchase"]):
-            steps.append({
-                "description": f"Go to the store and find items for: {task.title}",
-                "short_label": "Shop",
-                "estimated_minutes": 5,  # Max 5 min (ADHD-optimized)
-                "delegation_mode": "do",
-                "icon": "🛒"
-            })
+            steps.append(
+                {
+                    "description": f"Go to the store and find items for: {task.title}",
+                    "short_label": "Shop",
+                    "estimated_minutes": 5,  # Max 5 min (ADHD-optimized)
+                    "delegation_mode": "do",
+                    "icon": "🛒",
+                }
+            )
         elif any(word in task_lower for word in ["call", "phone", "contact"]):
-            steps.append({
-                "description": f"Make the phone call for: {task.title}",
-                "short_label": "Call",
-                "estimated_minutes": 5,
-                "delegation_mode": "do",
-                "icon": "📞"
-            })
+            steps.append(
+                {
+                    "description": f"Make the phone call for: {task.title}",
+                    "short_label": "Call",
+                    "estimated_minutes": 5,
+                    "delegation_mode": "do",
+                    "icon": "📞",
+                }
+            )
         else:
-            steps.append({
-                "description": f"Work on the main part of: {task.title}",
-                "short_label": "Work",
-                "estimated_minutes": 4,  # Max 5 min (ADHD-optimized)
-                "delegation_mode": "do",
-                "icon": "⚙️"
-            })
+            steps.append(
+                {
+                    "description": f"Work on the main part of: {task.title}",
+                    "short_label": "Work",
+                    "estimated_minutes": 4,  # Max 5 min (ADHD-optimized)
+                    "delegation_mode": "do",
+                    "icon": "⚙️",
+                }
+            )
 
         # Step 3: Completion action
         if any(word in task_lower for word in ["email", "message", "send"]):
-            steps.append({
-                "description": f"Send the email and confirm delivery",
-                "short_label": "Send",
-                "estimated_minutes": 2,
-                "delegation_mode": "do",
-                "icon": "📤"
-            })
+            steps.append(
+                {
+                    "description": "Send the email and confirm delivery",
+                    "short_label": "Send",
+                    "estimated_minutes": 2,
+                    "delegation_mode": "do",
+                    "icon": "📤",
+                }
+            )
         elif any(word in task_lower for word in ["buy", "shop", "grocery", "purchase"]):
-            steps.append({
-                "description": f"Checkout and pay for items",
-                "short_label": "Pay",
-                "estimated_minutes": 3,
-                "delegation_mode": "do",
-                "icon": "💳"
-            })
+            steps.append(
+                {
+                    "description": "Checkout and pay for items",
+                    "short_label": "Pay",
+                    "estimated_minutes": 3,
+                    "delegation_mode": "do",
+                    "icon": "💳",
+                }
+            )
         elif any(word in task_lower for word in ["call", "phone", "contact"]):
-            steps.append({
-                "description": f"Take notes on the call outcome",
-                "short_label": "Notes",
-                "estimated_minutes": 2,
-                "delegation_mode": "do",
-                "icon": "📝"
-            })
+            steps.append(
+                {
+                    "description": "Take notes on the call outcome",
+                    "short_label": "Notes",
+                    "estimated_minutes": 2,
+                    "delegation_mode": "do",
+                    "icon": "📝",
+                }
+            )
         else:
-            steps.append({
-                "description": f"Review and finalize: {task.title}",
-                "short_label": "Review",
-                "estimated_minutes": 3,
-                "delegation_mode": "do",
-                "icon": "✅"
-            })
+            steps.append(
+                {
+                    "description": f"Review and finalize: {task.title}",
+                    "short_label": "Review",
+                    "estimated_minutes": 3,
+                    "delegation_mode": "do",
+                    "icon": "✅",
+                }
+            )
 
         return steps

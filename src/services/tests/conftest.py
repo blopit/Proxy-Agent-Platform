@@ -4,17 +4,17 @@ Shared pytest fixtures for service tests
 
 import os
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 from uuid import uuid4
 
 import pytest
 
-from src.core.task_models import Project, TaskPriority
+from src.core.task_models import Project
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
 from src.repositories.enhanced_repositories import EnhancedProjectRepository
-from src.services.task_service import TaskService, ProjectCreationData
 from src.services.micro_step_service import MicroStepService
+from src.services.task_service import TaskService
 
 
 @pytest.fixture(scope="function")
@@ -46,7 +46,7 @@ def test_db() -> Generator[EnhancedDatabaseAdapter, None, None]:
     for migration_file in migration_files:
         migration_path = migrations_dir / migration_file
         if migration_path.exists():
-            with open(migration_path, "r") as f:
+            with open(migration_path) as f:
                 migration_sql = f.read()
                 conn.executescript(migration_sql)
 

@@ -55,18 +55,16 @@ class DecomposerAgent(BaseProxyAgent):
 
         # Split range per level
         self.split_ranges = {
-            0: (2, 6),   # Initiative -> Phases
-            1: (2, 6),   # Phase -> Projects (removed from hierarchy)
+            0: (2, 6),  # Initiative -> Phases
+            1: (2, 6),  # Phase -> Projects (removed from hierarchy)
             2: (4, 50),  # Epic -> Sprints (variable range)
-            3: (2, 6),   # Sprint -> Tasks
-            4: (2, 6),   # Task -> Subtasks
-            5: (2, 6),   # Subtask -> Steps
-            6: (1, 1),   # Steps never split
+            3: (2, 6),  # Sprint -> Tasks
+            4: (2, 6),  # Task -> Subtasks
+            5: (2, 6),  # Subtask -> Steps
+            6: (1, 1),  # Steps never split
         }
 
-    async def _handle_request(
-        self, request: AgentRequest, history: list[dict]
-    ) -> tuple[str, int]:
+    async def _handle_request(self, request: AgentRequest, history: list[dict]) -> tuple[str, int]:
         """
         Process task decomposition request.
 
@@ -99,9 +97,7 @@ class DecomposerAgent(BaseProxyAgent):
 
         return response, xp
 
-    async def decompose_task(
-        self, task: Task, user_id: str, depth: int = 0
-    ) -> dict[str, Any]:
+    async def decompose_task(self, task: Task, user_id: str, depth: int = 0) -> dict[str, Any]:
         """
         Recursively decompose a task into atomic MicroSteps.
 
@@ -195,11 +191,14 @@ class DecomposerAgent(BaseProxyAgent):
 
             # Classify leaf type EARLY (before checking if atomic)
             from src.core.task_models import LeafType
+
             # Always classify - overwrite UNKNOWN or missing values
-            if (not micro_step.leaf_type or
-                micro_step.leaf_type == LeafType.UNKNOWN or
-                micro_step.leaf_type == LeafType.UNKNOWN.value or
-                micro_step.leaf_type == "unknown"):
+            if (
+                not micro_step.leaf_type
+                or micro_step.leaf_type == LeafType.UNKNOWN
+                or micro_step.leaf_type == LeafType.UNKNOWN.value
+                or micro_step.leaf_type == "unknown"
+            ):
                 micro_step.leaf_type = self._classify_leaf_type(micro_step.description)
 
             # Generate CHAMPS tags for the micro-step
@@ -232,33 +231,33 @@ class DecomposerAgent(BaseProxyAgent):
             "total_estimated_minutes": sum(s.estimated_minutes for s in micro_steps),
             "message": f"Task decomposed into {len(micro_steps)} atomic micro-steps",
         }
-    
+
     async def _generate_champs_tags_for_micro_step(self, micro_step: MicroStep) -> None:
         """
         Generate CHAMPS-based tags for a micro-step using LLM
-        
+
         Args:
             micro_step: MicroStep to add tags to
         """
         try:
             from src.services.champs_tag_service import CHAMPSTagService
-            
+
             champs_service = CHAMPSTagService()
             result = await champs_service.generate_tags(
                 micro_step.description,
                 micro_step.estimated_minutes,
-                micro_step.leaf_type.value if micro_step.leaf_type else "HUMAN"
+                micro_step.leaf_type.value if micro_step.leaf_type else "HUMAN",
             )
-            
+
             # Set the tags on the micro-step
             micro_step.tags = result.tags.get_all_tags()
-            
+
         except Exception as e:
             logger.error(f"Error generating CHAMPS tags for micro-step: {e}")
             # Set basic fallback tags
             micro_step.tags = ["🎯 Focused", "⚡ Quick Win"]
 
-    def _classify_leaf_type(self, description: str) -> "LeafType":
+    def _classify_leaf_type(self, description: str) -> LeafType:
         """
         Classify a step as DIGITAL (automatable) or HUMAN (requires person).
 
@@ -274,14 +273,31 @@ class DecomposerAgent(BaseProxyAgent):
 
         # Digital task keywords - tasks that can be automated by AI/APIs
         digital_keywords = [
-            "email", "send email", "draft email",
-            "api", "code", "script", "program",
-            "database", "sql", "query",
-            "automated", "digital", "online",
-            "search", "google", "research",
-            "schedule", "calendar", "reminder",
-            "document", "spreadsheet", "template",
-            "analyze", "calculate", "compute"
+            "email",
+            "send email",
+            "draft email",
+            "api",
+            "code",
+            "script",
+            "program",
+            "database",
+            "sql",
+            "query",
+            "automated",
+            "digital",
+            "online",
+            "search",
+            "google",
+            "research",
+            "schedule",
+            "calendar",
+            "reminder",
+            "document",
+            "spreadsheet",
+            "template",
+            "analyze",
+            "calculate",
+            "compute",
         ]
 
         if any(keyword in desc_lower for keyword in digital_keywords):
@@ -308,7 +324,10 @@ class DecomposerAgent(BaseProxyAgent):
             micro_step.leaf_type = self._classify_leaf_type(micro_step.description)
 
         # Check time constraint based on leaf type
-        if micro_step.leaf_type == LeafType.DIGITAL.value or micro_step.leaf_type == LeafType.DIGITAL:
+        if (
+            micro_step.leaf_type == LeafType.DIGITAL.value
+            or micro_step.leaf_type == LeafType.DIGITAL
+        ):
             # DIGITAL tasks can be any duration - AI can handle complex automations
             pass
         else:
@@ -375,7 +394,7 @@ class DecomposerAgent(BaseProxyAgent):
 
 Project: {task.title}
 Description: {task.description}
-Estimated Time: {float(task.estimated_hours) if task.estimated_hours else 'Unknown'}  hours
+Estimated Time: {float(task.estimated_hours) if task.estimated_hours else "Unknown"}  hours
 
 Requirements:
 1. Create 3-5 high-level subtasks (major phases)
@@ -395,9 +414,7 @@ Return JSON array of subtasks:
 
 Focus on LOGICAL PHASES of the project."""
 
-    async def _generate_subtasks_with_openai(
-        self, prompt: str, task: Task
-    ) -> list[dict]:
+    async def _generate_subtasks_with_openai(self, prompt: str, task: Task) -> list[dict]:
         """Generate subtasks using OpenAI."""
         try:
             response = await self.split_agent.openai_client.chat.completions.create(
@@ -419,9 +436,7 @@ Focus on LOGICAL PHASES of the project."""
             logger.error(f"OpenAI subtask generation failed: {e}")
             return self._generate_subtasks_with_rules(task)
 
-    async def _generate_subtasks_with_anthropic(
-        self, prompt: str, task: Task
-    ) -> list[dict]:
+    async def _generate_subtasks_with_anthropic(self, prompt: str, task: Task) -> list[dict]:
         """Generate subtasks using Anthropic Claude."""
         try:
             response = await self.split_agent.anthropic_client.messages.create(
@@ -595,12 +610,14 @@ Focus on LOGICAL SEMANTIC GROUPING, not just time-based splits."""
             # Fallback: Simple equal splits
             time_per_child = estimated_minutes // num_children
             for i in range(num_children):
-                children_data.append({
-                    "title": f"{child_level_name.capitalize()} {i+1}",
-                    "description": f"Part {i+1} of {task.title}",
-                    "estimated_minutes": time_per_child,
-                    "custom_emoji": "📋",
-                })
+                children_data.append(
+                    {
+                        "title": f"{child_level_name.capitalize()} {i + 1}",
+                        "description": f"Part {i + 1} of {task.title}",
+                        "estimated_minutes": time_per_child,
+                        "custom_emoji": "📋",
+                    }
+                )
 
         # Create child Task objects
         children = []
@@ -668,9 +685,7 @@ Focus on LOGICAL SEMANTIC GROUPING, not just time-based splits."""
             response_lines.append(f"**Subtasks Created:** {result['subtasks']}")
 
         if result.get("total_estimated_minutes"):
-            response_lines.append(
-                f"**Total Time:** {result['total_estimated_minutes']} minutes"
-            )
+            response_lines.append(f"**Total Time:** {result['total_estimated_minutes']} minutes")
 
         response_lines.append("")
         response_lines.append("**Next Steps:**")

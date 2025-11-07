@@ -5,12 +5,10 @@ This executor takes a workflow definition and user context,
 then generates personalized implementation steps using AI.
 """
 
-import json
 import logging
 import os
 import tomllib
 from pathlib import Path
-from typing import Optional
 
 from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
@@ -66,11 +64,11 @@ class WorkflowExecutor:
             except Exception as e:
                 logger.error(f"Failed to load workflow {toml_file}: {e}")
 
-    def get_workflow(self, workflow_id: str) -> Optional[Workflow]:
+    def get_workflow(self, workflow_id: str) -> Workflow | None:
         """Get workflow by ID."""
         return self.workflows.get(workflow_id)
 
-    def list_workflows(self, workflow_type: Optional[WorkflowType] = None) -> list[Workflow]:
+    def list_workflows(self, workflow_type: WorkflowType | None = None) -> list[Workflow]:
         """
         List all available workflows.
 
@@ -91,7 +89,7 @@ class WorkflowExecutor:
         self,
         workflow_id: str,
         context: WorkflowContext,
-        llm_api_key: Optional[str] = None,
+        llm_api_key: str | None = None,
     ) -> WorkflowExecution:
         """
         Execute workflow to generate implementation steps.
@@ -131,8 +129,7 @@ class WorkflowExecutor:
             execution.status = "completed"
 
             logger.info(
-                f"Generated {len(steps)} steps for workflow {workflow_id} "
-                f"(task: {context.task_id})"
+                f"Generated {len(steps)} steps for workflow {workflow_id} (task: {context.task_id})"
             )
 
             return execution
@@ -147,7 +144,7 @@ class WorkflowExecutor:
         self,
         workflow: Workflow,
         context: WorkflowContext,
-        llm_api_key: Optional[str] = None,
+        llm_api_key: str | None = None,
     ) -> list[WorkflowStep]:
         """
         Generate implementation steps using AI.
@@ -180,7 +177,7 @@ class WorkflowExecutor:
         steps = []
         for i, step_data in enumerate(result.output):
             step = WorkflowStep(
-                title=step_data.get("title", f"Step {i+1}"),
+                title=step_data.get("title", f"Step {i + 1}"),
                 description=step_data.get("description", ""),
                 estimated_minutes=step_data.get("estimated_minutes", 30),
                 tdd_phase=step_data.get("tdd_phase"),
@@ -230,7 +227,7 @@ class WorkflowExecutor:
 
         return prompt
 
-    def get_step_by_id(self, execution: WorkflowExecution, step_id: str) -> Optional[WorkflowStep]:
+    def get_step_by_id(self, execution: WorkflowExecution, step_id: str) -> WorkflowStep | None:
         """Get a specific step from execution."""
         for step in execution.steps:
             if step.step_id == step_id:
@@ -241,8 +238,8 @@ class WorkflowExecutor:
         self,
         execution: WorkflowExecution,
         step_id: str,
-        actual_minutes: Optional[int] = None,
-        notes: Optional[str] = None,
+        actual_minutes: int | None = None,
+        notes: str | None = None,
     ) -> bool:
         """
         Mark a step as completed.

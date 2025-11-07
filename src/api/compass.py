@@ -84,22 +84,22 @@ DEFAULT_ZONES = [
         "icon": "💼",
         "simple_goal": "Complete important work tasks",
         "color": "#3b82f6",  # Blue
-        "sort_order": 0
+        "sort_order": 0,
     },
     {
         "name": "Life",
         "icon": "🏠",
         "simple_goal": "Handle personal tasks and errands",
         "color": "#10b981",  # Green
-        "sort_order": 1
+        "sort_order": 1,
     },
     {
         "name": "Self",
         "icon": "❤️",
         "simple_goal": "Invest in health and growth",
         "color": "#8b5cf6",  # Purple
-        "sort_order": 2
-    }
+        "sort_order": 2,
+    },
 ]
 
 
@@ -124,7 +124,7 @@ def get_or_create_default_zones(user_id: str) -> list[dict]:
         WHERE user_id = ? AND is_active = TRUE
         ORDER BY sort_order
         """,
-        (user_id,)
+        (user_id,),
     )
 
     rows = cursor.fetchall()
@@ -133,17 +133,19 @@ def get_or_create_default_zones(user_id: str) -> list[dict]:
         # User has zones, return them
         zones = []
         for row in rows:
-            zones.append({
-                "zone_id": row[0],
-                "name": row[1],
-                "icon": row[2],
-                "simple_goal": row[3],
-                "color": row[4],
-                "sort_order": row[5],
-                "is_active": bool(row[6]),
-                "created_at": row[7],
-                "updated_at": row[8]
-            })
+            zones.append(
+                {
+                    "zone_id": row[0],
+                    "name": row[1],
+                    "icon": row[2],
+                    "simple_goal": row[3],
+                    "color": row[4],
+                    "sort_order": row[5],
+                    "is_active": bool(row[6]),
+                    "created_at": row[7],
+                    "updated_at": row[8],
+                }
+            )
         return zones
 
     # No zones exist, create defaults
@@ -168,21 +170,23 @@ def get_or_create_default_zones(user_id: str) -> list[dict]:
                 zone_config["color"],
                 zone_config["sort_order"],
                 now,
-                now
-            )
+                now,
+            ),
         )
 
-        zones.append({
-            "zone_id": zone_id,
-            "name": zone_config["name"],
-            "icon": zone_config["icon"],
-            "simple_goal": zone_config["simple_goal"],
-            "color": zone_config["color"],
-            "sort_order": zone_config["sort_order"],
-            "is_active": True,
-            "created_at": now,
-            "updated_at": now
-        })
+        zones.append(
+            {
+                "zone_id": zone_id,
+                "name": zone_config["name"],
+                "icon": zone_config["icon"],
+                "simple_goal": zone_config["simple_goal"],
+                "color": zone_config["color"],
+                "sort_order": zone_config["sort_order"],
+                "is_active": True,
+                "created_at": now,
+                "updated_at": now,
+            }
+        )
 
     conn.commit()
     return zones
@@ -194,9 +198,7 @@ def get_or_create_default_zones(user_id: str) -> list[dict]:
 
 
 @router.get("/zones", response_model=list[ZoneResponse])
-async def get_zones(
-    current_user: User = Depends(get_current_user)
-):
+async def get_zones(current_user: User = Depends(get_current_user)):
     """
     Get all compass zones for user.
 
@@ -217,7 +219,7 @@ async def get_zones(
                 sort_order=z["sort_order"],
                 is_active=z["is_active"],
                 created_at=z["created_at"],
-                updated_at=z["updated_at"]
+                updated_at=z["updated_at"],
             )
             for z in zones
         ]
@@ -226,15 +228,12 @@ async def get_zones(
         logger.error(f"Failed to get zones: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get zones: {str(e)}"
+            detail=f"Failed to get zones: {str(e)}",
         )
 
 
 @router.post("/zones", response_model=ZoneResponse, status_code=status.HTTP_201_CREATED)
-async def create_zone(
-    zone_data: ZoneCreate,
-    current_user: User = Depends(get_current_user)
-):
+async def create_zone(zone_data: ZoneCreate, current_user: User = Depends(get_current_user)):
     """
     Create a new compass zone.
 
@@ -248,15 +247,14 @@ async def create_zone(
 
         # Check zone limit (max 5 zones)
         cursor.execute(
-            "SELECT COUNT(*) FROM compass_zones WHERE user_id = ? AND is_active = TRUE",
-            (user_id,)
+            "SELECT COUNT(*) FROM compass_zones WHERE user_id = ? AND is_active = TRUE", (user_id,)
         )
         count = cursor.fetchone()[0]
 
         if count >= 5:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Maximum 5 zones allowed. Archive or delete a zone first."
+                detail="Maximum 5 zones allowed. Archive or delete a zone first.",
             )
 
         # Create zone
@@ -279,8 +277,8 @@ async def create_zone(
                 zone_data.color,
                 count,  # Next sort order
                 now,
-                now
-            )
+                now,
+            ),
         )
         conn.commit()
 
@@ -294,7 +292,7 @@ async def create_zone(
             sort_order=count,
             is_active=True,
             created_at=now,
-            updated_at=now
+            updated_at=now,
         )
 
     except HTTPException:
@@ -303,15 +301,13 @@ async def create_zone(
         logger.error(f"Failed to create zone: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create zone: {str(e)}"
+            detail=f"Failed to create zone: {str(e)}",
         )
 
 
 @router.put("/zones/{zone_id}", response_model=ZoneResponse)
 async def update_zone(
-    zone_id: str,
-    zone_data: ZoneUpdate,
-    current_user: User = Depends(get_current_user)
+    zone_id: str, zone_data: ZoneUpdate, current_user: User = Depends(get_current_user)
 ):
     """
     Update a compass zone.
@@ -344,8 +340,7 @@ async def update_zone(
 
         if not updates:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="No fields to update"
+                status_code=status.HTTP_400_BAD_REQUEST, detail="No fields to update"
             )
 
         updates.append("updated_at = ?")
@@ -356,18 +351,15 @@ async def update_zone(
         cursor.execute(
             f"""
             UPDATE compass_zones
-            SET {', '.join(updates)}
+            SET {", ".join(updates)}
             WHERE zone_id = ? AND user_id = ?
             """,
-            values
+            values,
         )
         conn.commit()
 
         if cursor.rowcount == 0:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Zone not found"
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Zone not found")
 
         # Fetch updated zone
         cursor.execute(
@@ -377,7 +369,7 @@ async def update_zone(
             FROM compass_zones
             WHERE zone_id = ? AND user_id = ?
             """,
-            (zone_id, user_id)
+            (zone_id, user_id),
         )
 
         row = cursor.fetchone()
@@ -391,7 +383,7 @@ async def update_zone(
             sort_order=row[5],
             is_active=bool(row[6]),
             created_at=row[7],
-            updated_at=row[8]
+            updated_at=row[8],
         )
 
     except HTTPException:
@@ -400,14 +392,12 @@ async def update_zone(
         logger.error(f"Failed to update zone: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update zone: {str(e)}"
+            detail=f"Failed to update zone: {str(e)}",
         )
 
 
 @router.get("/progress", response_model=list[ZoneProgressResponse])
-async def get_zone_progress(
-    current_user: User = Depends(get_current_user)
-):
+async def get_zone_progress(current_user: User = Depends(get_current_user)):
     """
     Get task completion counts per zone.
 
@@ -438,7 +428,7 @@ async def get_zone_progress(
             GROUP BY z.zone_id, z.name, z.icon
             ORDER BY z.sort_order
             """,
-            (user_id,)
+            (user_id,),
         )
 
         rows = cursor.fetchall()
@@ -450,7 +440,7 @@ async def get_zone_progress(
                 zone_icon=row[2],
                 tasks_completed_today=row[3] or 0,
                 tasks_completed_this_week=row[4] or 0,
-                tasks_completed_all_time=row[5] or 0
+                tasks_completed_all_time=row[5] or 0,
             )
             for row in rows
         ]
@@ -459,7 +449,7 @@ async def get_zone_progress(
         logger.error(f"Failed to get zone progress: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get progress: {str(e)}"
+            detail=f"Failed to get progress: {str(e)}",
         )
 
 

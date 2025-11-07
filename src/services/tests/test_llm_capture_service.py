@@ -5,7 +5,7 @@ Tests LLM-powered task parsing with Knowledge Graph context integration.
 """
 
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -178,9 +178,7 @@ class TestLLMCaptureService:
         assert result.provider == "openai"
 
     @pytest.mark.asyncio
-    async def test_parse_with_anthropic(
-        self, llm_service, kg_context, mock_anthropic_response
-    ):
+    async def test_parse_with_anthropic(self, llm_service, kg_context, mock_anthropic_response):
         """Test parsing with Anthropic Claude"""
         # Mock Anthropic client
         mock_client = AsyncMock()
@@ -214,9 +212,7 @@ class TestLLMCaptureService:
         """Test that parse raises error when LLM fails"""
         # Mock OpenAI client to raise error
         mock_client = AsyncMock()
-        mock_client.chat.completions.create = AsyncMock(
-            side_effect=Exception("API error")
-        )
+        mock_client.chat.completions.create = AsyncMock(side_effect=Exception("API error"))
 
         llm_service.openai_client = mock_client
 
@@ -298,9 +294,7 @@ class TestParsedTaskModel:
 
         # Invalid estimated_hours (negative)
         with pytest.raises(Exception):
-            ParsedTask(
-                title="Test", description="Desc", estimated_hours=-1.0
-            )
+            ParsedTask(title="Test", description="Desc", estimated_hours=-1.0)
 
     def test_task_parse_result_model(self):
         """Test TaskParseResult model"""

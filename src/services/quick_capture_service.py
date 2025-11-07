@@ -7,17 +7,16 @@ This service combines the UnifiedAgent system with Secretary intelligence to pro
 """
 
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from src.core.settings import get_settings
-from src.core.task_models import TaskPriority, TaskStatus
 from src.knowledge.models import KGContext
 from src.services.llm_capture_service import LLMCaptureService
 from src.services.secretary_service import SecretaryService
 
 # Python 3.10 compatibility
-UTC = timezone.utc
+UTC = UTC
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +35,7 @@ class QuickCaptureService:
         text: str,
         user_id: str,
         voice_input: bool = False,
-        kg_context: Optional[KGContext] = None,
+        kg_context: KGContext | None = None,
     ) -> dict[str, Any]:
         """
         Analyze captured text using AI and secretary intelligence.
@@ -61,9 +60,7 @@ class QuickCaptureService:
             # Try LLM parsing first (if enabled)
             if self.settings.llm_capture_enabled:
                 try:
-                    llm_result = await self.llm_service.parse(
-                        text, user_id, kg_context=kg_context
-                    )
+                    llm_result = await self.llm_service.parse(text, user_id, kg_context=kg_context)
                     # Convert LLM result to analysis format
                     analysis = self._llm_result_to_analysis(
                         llm_result, voice_input, kg_context is not None
@@ -177,9 +174,7 @@ class QuickCaptureService:
             "entities": task.entities,
         }
 
-    def _analyze_with_keywords(
-        self, text: str, user_id: str, voice_input: bool
-    ) -> dict[str, Any]:
+    def _analyze_with_keywords(self, text: str, user_id: str, voice_input: bool) -> dict[str, Any]:
         """
         Smart keyword-based analysis (placeholder for AI integration).
 
@@ -287,7 +282,7 @@ class QuickCaptureService:
             "estimated_hours": estimated_hours,
         }
 
-    def _estimate_time_from_keywords(self, text_lower: str, delegation_type: Optional[str]) -> float:
+    def _estimate_time_from_keywords(self, text_lower: str, delegation_type: str | None) -> float:
         """
         Estimate task duration based on keywords and complexity.
 
@@ -299,24 +294,71 @@ class QuickCaptureService:
             Estimated hours (rounded to 2 decimals)
         """
         # Quick tasks (5-10 minutes = 0.08-0.17 hours)
-        quick_keywords = ["quick", "send", "reply", "check", "turn on", "turn off",
-                         "set", "adjust", "call", "text", "message"]
+        quick_keywords = [
+            "quick",
+            "send",
+            "reply",
+            "check",
+            "turn on",
+            "turn off",
+            "set",
+            "adjust",
+            "call",
+            "text",
+            "message",
+        ]
 
         # Short tasks (15-30 minutes = 0.25-0.5 hours)
-        short_keywords = ["email", "draft", "review", "organize", "clean", "file",
-                         "update", "fix", "schedule", "book"]
+        short_keywords = [
+            "email",
+            "draft",
+            "review",
+            "organize",
+            "clean",
+            "file",
+            "update",
+            "fix",
+            "schedule",
+            "book",
+        ]
 
         # Medium tasks (30-60 minutes = 0.5-1 hour)
-        medium_keywords = ["write", "create", "design", "plan", "research", "analyze",
-                          "prepare", "meeting", "presentation", "document"]
+        medium_keywords = [
+            "write",
+            "create",
+            "design",
+            "plan",
+            "research",
+            "analyze",
+            "prepare",
+            "meeting",
+            "presentation",
+            "document",
+        ]
 
         # Long tasks (1-2 hours)
-        long_keywords = ["develop", "build", "implement", "project", "workshop",
-                        "training", "deep dive", "comprehensive"]
+        long_keywords = [
+            "develop",
+            "build",
+            "implement",
+            "project",
+            "workshop",
+            "training",
+            "deep dive",
+            "comprehensive",
+        ]
 
         # Very long tasks (2+ hours)
-        very_long_keywords = ["major", "complete", "overhaul", "redesign", "migrate",
-                             "full", "entire", "all"]
+        very_long_keywords = [
+            "major",
+            "complete",
+            "overhaul",
+            "redesign",
+            "migrate",
+            "full",
+            "entire",
+            "all",
+        ]
 
         # Count word complexity
         word_count = len(text_lower.split())
@@ -336,12 +378,12 @@ class QuickCaptureService:
         # Delegation-based estimation
         if delegation_type:
             delegation_times = {
-                "email": 0.25,      # 15 minutes
-                "calendar": 0.17,   # 10 minutes
-                "web": 0.33,        # 20 minutes
-                "research": 0.75,   # 45 minutes
-                "document": 1.0,    # 1 hour
-                "home_iot": 0.08,   # 5 minutes
+                "email": 0.25,  # 15 minutes
+                "calendar": 0.17,  # 10 minutes
+                "web": 0.33,  # 20 minutes
+                "research": 0.75,  # 45 minutes
+                "document": 1.0,  # 1 hour
+                "home_iot": 0.08,  # 5 minutes
             }
             return round(delegation_times.get(delegation_type, 0.5), 2)
 
@@ -351,7 +393,7 @@ class QuickCaptureService:
         if word_count > 20:
             base_time = 0.75  # 45 min for longer descriptions
         elif word_count > 10:
-            base_time = 0.5   # 30 min
+            base_time = 0.5  # 30 min
         else:
             base_time = 0.25  # 15 min for very short
 
@@ -387,9 +429,7 @@ class QuickCaptureService:
         else:
             return "this_week"  # Neither urgent nor important
 
-    async def generate_clarifying_questions(
-        self, text: str, user_id: str
-    ) -> list[dict[str, Any]]:
+    async def generate_clarifying_questions(self, text: str, user_id: str) -> list[dict[str, Any]]:
         """
         Generate intelligent clarifying questions for ambiguous tasks.
 
@@ -412,47 +452,57 @@ class QuickCaptureService:
 
             # Ask about urgency if not clear
             if analysis["confidence"] < 80:
-                questions.append({
-                    "question": "Is this urgent (due within 48 hours)?",
-                    "type": "boolean",
-                    "field": "urgent",
-                    "default": False,
-                })
+                questions.append(
+                    {
+                        "question": "Is this urgent (due within 48 hours)?",
+                        "type": "boolean",
+                        "field": "urgent",
+                        "default": False,
+                    }
+                )
 
             # Ask about importance/priority
-            questions.append({
-                "question": "How important is this task?",
-                "type": "select",
-                "field": "priority",
-                "options": ["critical", "high", "medium", "low"],
-                "default": analysis.get("priority", "medium"),
-            })
+            questions.append(
+                {
+                    "question": "How important is this task?",
+                    "type": "select",
+                    "field": "priority",
+                    "options": ["critical", "high", "medium", "low"],
+                    "default": analysis.get("priority", "medium"),
+                }
+            )
 
             # Ask about due date if not detected
             if not analysis.get("due_date"):
-                questions.append({
-                    "question": "When do you need this done?",
-                    "type": "date",
-                    "field": "due_date",
-                    "default": None,
-                })
+                questions.append(
+                    {
+                        "question": "When do you need this done?",
+                        "type": "date",
+                        "field": "due_date",
+                        "default": None,
+                    }
+                )
 
             # Ask about delegation if detected keywords
             if analysis.get("should_delegate"):
-                questions.append({
-                    "question": f"Should I delegate this {analysis['delegation_type']} task to an agent?",
-                    "type": "boolean",
-                    "field": "delegate",
-                    "default": True,
-                })
+                questions.append(
+                    {
+                        "question": f"Should I delegate this {analysis['delegation_type']} task to an agent?",
+                        "type": "boolean",
+                        "field": "delegate",
+                        "default": True,
+                    }
+                )
 
             # Ask for additional context
-            questions.append({
-                "question": "Any additional context or details?",
-                "type": "text",
-                "field": "context",
-                "default": "",
-            })
+            questions.append(
+                {
+                    "question": "Any additional context or details?",
+                    "type": "text",
+                    "field": "context",
+                    "default": "",
+                }
+            )
 
             return questions
 

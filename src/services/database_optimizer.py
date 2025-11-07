@@ -11,9 +11,9 @@ TODO: This is a minimal stub implementation to make tests pass.
       - Automatic optimization recommendations
 """
 
-from typing import Any, List, Dict
 import asyncio
 from datetime import datetime
+from typing import Any
 
 
 class DatabaseOptimizer:
@@ -26,12 +26,12 @@ class DatabaseOptimizer:
 
     def __init__(self):
         """Initialize database optimizer with tracking"""
-        self._indexes: Dict[str, List[str]] = {}
-        self._query_times: List[float] = []
+        self._indexes: dict[str, list[str]] = {}
+        self._query_times: list[float] = []
         self._connection_pool_size = 5
         self._active_connections = 0
 
-    async def query_users_by_email_pattern(self, pattern: str) -> List[Dict[str, Any]]:
+    async def query_users_by_email_pattern(self, pattern: str) -> list[dict[str, Any]]:
         """
         Query users by email pattern.
 
@@ -106,7 +106,7 @@ class DatabaseOptimizer:
         self._active_connections += 1
         return conn_id
 
-    async def analyze_query_performance(self, query: str) -> Dict[str, Any]:
+    async def analyze_query_performance(self, query: str) -> dict[str, Any]:
         """
         Analyze query and suggest optimizations.
 
@@ -128,9 +128,7 @@ class DatabaseOptimizer:
 
         elif "IN (SELECT" in query.upper():
             optimization["suggested_index"] = "foreign_key_index"
-            optimization[
-                "optimization_hint"
-            ] = "Consider using JOIN instead of IN subquery"
+            optimization["optimization_hint"] = "Consider using JOIN instead of IN subquery"
 
         elif "ORDER BY" in query.upper():
             optimization["suggested_index"] = "sort_index"
@@ -141,16 +139,14 @@ class DatabaseOptimizer:
 
         return optimization
 
-    async def get_database_health(self) -> Dict[str, Any]:
+    async def get_database_health(self) -> dict[str, Any]:
         """
         Get comprehensive database health metrics.
 
         Returns:
             Dict with health and performance metrics
         """
-        avg_query_time = (
-            sum(self._query_times) / len(self._query_times) if self._query_times else 0
-        )
+        avg_query_time = sum(self._query_times) / len(self._query_times) if self._query_times else 0
 
         health = {
             "connection_count": self._active_connections,
@@ -163,16 +159,12 @@ class DatabaseOptimizer:
             "index_usage": {
                 "total_indexes": sum(len(cols) for cols in self._indexes.values()),
                 "tables_indexed": len(self._indexes),
-                "indexes_by_table": {
-                    table: len(cols) for table, cols in self._indexes.items()
-                },
+                "indexes_by_table": {table: len(cols) for table, cols in self._indexes.items()},
             },
             "slow_queries": {
                 "count": sum(1 for t in self._query_times if t > 0.1),
                 "percentage": (
-                    sum(1 for t in self._query_times if t > 0.1)
-                    / len(self._query_times)
-                    * 100
+                    sum(1 for t in self._query_times if t > 0.1) / len(self._query_times) * 100
                     if self._query_times
                     else 0
                 ),

@@ -5,11 +5,10 @@ This implementation uses SQLAlchemy ORM models and accepts
 the database session via dependency injection for testability.
 """
 
-from typing import List, Optional
 from sqlalchemy.orm import Session
 
-from src.database.models import Project as ProjectModel
 from src.core.task_models import Project
+from src.database.models import Project as ProjectModel
 from src.repositories.interfaces import ProjectRepositoryInterface
 
 
@@ -30,11 +29,11 @@ class ProjectRepository(ProjectRepositoryInterface):
         """
         self.db = db
 
-    def get_by_id(self, project_id: str) -> Optional[Project]:
+    def get_by_id(self, project_id: str) -> Project | None:
         """Get project by ID"""
-        project_model = self.db.query(ProjectModel).filter(
-            ProjectModel.project_id == project_id
-        ).first()
+        project_model = (
+            self.db.query(ProjectModel).filter(ProjectModel.project_id == project_id).first()
+        )
 
         if not project_model:
             return None
@@ -50,11 +49,11 @@ class ProjectRepository(ProjectRepositoryInterface):
 
         return self._to_domain(project_model)
 
-    def update(self, project_id: str, updates: dict) -> Optional[Project]:
+    def update(self, project_id: str, updates: dict) -> Project | None:
         """Update project"""
-        project_model = self.db.query(ProjectModel).filter(
-            ProjectModel.project_id == project_id
-        ).first()
+        project_model = (
+            self.db.query(ProjectModel).filter(ProjectModel.project_id == project_id).first()
+        )
 
         if not project_model:
             return None
@@ -71,24 +70,22 @@ class ProjectRepository(ProjectRepositoryInterface):
 
     def delete(self, project_id: str) -> bool:
         """Delete project"""
-        result = self.db.query(ProjectModel).filter(
-            ProjectModel.project_id == project_id
-        ).delete()
+        result = self.db.query(ProjectModel).filter(ProjectModel.project_id == project_id).delete()
         self.db.commit()
 
         return result > 0
 
-    def list_all(self, skip: int = 0, limit: int = 100) -> List[Project]:
+    def list_all(self, skip: int = 0, limit: int = 100) -> list[Project]:
         """List all projects with pagination"""
         projects = self.db.query(ProjectModel).offset(skip).limit(limit).all()
         return [self._to_domain(p) for p in projects]
 
-    def get_by_owner(self, owner_id: str) -> List[Project]:
+    def get_by_owner(self, owner_id: str) -> list[Project]:
         """Get projects by owner (placeholder implementation)"""
         # TODO: Add owner_id to Project model
         return self.list_all()
 
-    def get_active(self) -> List[Project]:
+    def get_active(self) -> list[Project]:
         """Get active projects (placeholder implementation)"""
         # TODO: Add is_active field to Project model
         return self.list_all()

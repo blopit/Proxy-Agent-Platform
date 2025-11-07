@@ -9,8 +9,7 @@ import os
 
 import pytest
 
-from src.knowledge.graph_service import GraphService
-from src.knowledge.models import Entity, EntityType, KGContext, Relationship, RelationshipType
+from src.knowledge.models import Entity, EntityType, KGContext
 from src.services.llm_capture_service import LLMCaptureService
 
 # Skip these tests unless explicitly requested
@@ -106,7 +105,7 @@ class TestRealLLMIntegration:
         # Verify reasoning exists
         assert len(result.reasoning) > 0
 
-        print(f"\n✅ Simple task parsing:")
+        print("\n✅ Simple task parsing:")
         print(f"   Title: {result.task.title}")
         print(f"   Priority: {result.task.priority}")
         print(f"   Estimated hours: {result.task.estimated_hours}")
@@ -124,7 +123,7 @@ class TestRealLLMIntegration:
         assert result.task.is_digital is True
         assert result.task.automation_type == "email"
 
-        print(f"\n✅ Digital task classification:")
+        print("\n✅ Digital task classification:")
         print(f"   Title: {result.task.title}")
         print(f"   Is digital: {result.task.is_digital}")
         print(f"   Automation type: {result.task.automation_type}")
@@ -141,7 +140,7 @@ class TestRealLLMIntegration:
         assert result.task.is_digital is False
         assert result.task.automation_type is None
 
-        print(f"\n✅ Human task classification:")
+        print("\n✅ Human task classification:")
         print(f"   Title: {result.task.title}")
         print(f"   Is digital: {result.task.is_digital}")
         print(f"   Reasoning: {result.reasoning}")
@@ -160,15 +159,13 @@ class TestRealLLMIntegration:
         assert result.used_kg_context is True
 
         # Should identify AC entity
-        assert "AC" in result.task.entities or "ac" in [
-            e.lower() for e in result.task.entities
-        ]
+        assert "AC" in result.task.entities or "ac" in [e.lower() for e in result.task.entities]
 
         # Should classify as digital (home IoT)
         assert result.task.is_digital is True
         assert result.task.automation_type == "home_iot"
 
-        print(f"\n✅ KG context integration:")
+        print("\n✅ KG context integration:")
         print(f"   Title: {result.task.title}")
         print(f"   Entities: {result.task.entities}")
         print(f"   Automation: {result.task.automation_type}")
@@ -186,15 +183,13 @@ class TestRealLLMIntegration:
         )
 
         # Should identify Sara from KG
-        assert "Sara" in result.task.entities or "sara" in [
-            e.lower() for e in result.task.entities
-        ]
+        assert "Sara" in result.task.entities or "sara" in [e.lower() for e in result.task.entities]
 
         # Should be email task
         assert result.task.is_digital is True
         assert result.task.automation_type == "email"
 
-        print(f"\n✅ Email with KG context:")
+        print("\n✅ Email with KG context:")
         print(f"   Title: {result.task.title}")
         print(f"   Entities: {result.task.entities}")
         print(f"   Used KG: {result.used_kg_context}")
@@ -211,7 +206,7 @@ class TestRealLLMIntegration:
         # Should detect high priority
         assert result.task.priority in ["critical", "high"]
 
-        print(f"\n✅ Urgent task priority:")
+        print("\n✅ Urgent task priority:")
         print(f"   Title: {result.task.title}")
         print(f"   Priority: {result.task.priority}")
 
@@ -237,7 +232,7 @@ class TestRealLLMIntegration:
             or "first" in result.reasoning.lower()
         )
 
-        print(f"\n✅ Compound task parsing:")
+        print("\n✅ Compound task parsing:")
         print(f"   Title: {result.task.title}")
         print(f"   Entities: {result.task.entities}")
         print(f"   Reasoning: {result.reasoning}")
@@ -259,7 +254,7 @@ class TestRealLLMIntegration:
         )
         assert complex_result.task.estimated_hours >= 1.0  # Should take longer
 
-        print(f"\n✅ Time estimation:")
+        print("\n✅ Time estimation:")
         print(f"   Simple task: {simple_result.task.estimated_hours}h")
         print(f"   Complex task: {complex_result.task.estimated_hours}h")
 
@@ -274,7 +269,7 @@ class TestRealLLMIntegration:
         assert result.task.due_date is not None
         assert "2025-11-15" in result.task.due_date
 
-        print(f"\n✅ Due date extraction:")
+        print("\n✅ Due date extraction:")
         print(f"   Title: {result.task.title}")
         print(f"   Due date: {result.task.due_date}")
 
@@ -290,11 +285,9 @@ class TestRealLLMIntegration:
         # Should generate relevant tags
         assert len(result.task.tags) > 0
         tags_str = " ".join(result.task.tags).lower()
-        assert (
-            "research" in tags_str or "ai" in tags_str or "project" in tags_str
-        )
+        assert "research" in tags_str or "ai" in tags_str or "project" in tags_str
 
-        print(f"\n✅ Tag generation:")
+        print("\n✅ Tag generation:")
         print(f"   Title: {result.task.title}")
         print(f"   Tags: {result.task.tags}")
 
@@ -334,7 +327,7 @@ class TestTokenUsageAndCost:
         # KG should add tokens
         assert result_with_kg.tokens_used > result_no_kg.tokens_used
 
-        print(f"\n✅ KG context token impact:")
+        print("\n✅ KG context token impact:")
         print(f"   Without KG: {result_no_kg.tokens_used} tokens")
         print(f"   With KG: {result_with_kg.tokens_used} tokens")
         print(f"   Additional: {result_with_kg.tokens_used - result_no_kg.tokens_used}")
@@ -347,9 +340,7 @@ class TestErrorHandling:
     async def test_invalid_provider(self, llm_service):
         """Test handling of invalid provider"""
         with pytest.raises(ValueError, match="not available"):
-            await llm_service.parse(
-                "test task", user_id="alice", provider="invalid_provider"
-            )
+            await llm_service.parse("test task", user_id="alice", provider="invalid_provider")
 
     @pytest.mark.asyncio
     async def test_empty_input(self, llm_service):

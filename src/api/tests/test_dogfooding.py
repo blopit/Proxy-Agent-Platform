@@ -9,8 +9,9 @@ import pytest
 # Mark entire module as skipped - dogfooding endpoints not yet implemented
 pytestmark = pytest.mark.skip(reason="Dogfooding endpoints not yet implemented (TDD - tests first)")
 from datetime import datetime, timedelta
+from unittest.mock import Mock, patch
+
 from fastapi.testclient import TestClient
-from unittest.mock import Mock, patch, AsyncMock
 
 from src.api.main import app
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
@@ -311,9 +312,7 @@ class TestStartSoloExecution:
         # Verify default 25 minute duration was used
         # Would check estimated_end timestamp
 
-    def test_start_solo_updates_task_status(
-        self, client, mock_db, mock_current_user, sample_task
-    ):
+    def test_start_solo_updates_task_status(self, client, mock_db, mock_current_user, sample_task):
         """Test that starting solo updates task status to in_progress."""
         mock_db.get_task.return_value = sample_task
         mock_db.update_task.return_value = {**sample_task, "status": "in_progress"}

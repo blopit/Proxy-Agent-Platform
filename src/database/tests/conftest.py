@@ -4,9 +4,9 @@ Pytest configuration for database tests
 Provides isolated test fixtures to avoid database locks
 """
 
-import pytest
 import sqlite3
-from pathlib import Path
+
+import pytest
 
 
 @pytest.fixture

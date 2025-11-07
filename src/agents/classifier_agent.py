@@ -8,8 +8,6 @@ ambiguous cases.
 
 from __future__ import annotations
 
-from typing import Optional
-
 from src.agents.base import BaseProxyAgent
 from src.agents.integration_registry import IntegrationRegistry
 from src.core.models import AgentRequest
@@ -30,13 +28,11 @@ class ClassifierAgent(BaseProxyAgent):
     and generates clarification questions when information is missing.
     """
 
-    def __init__(self, db: Optional[EnhancedDatabaseAdapter] = None):
+    def __init__(self, db: EnhancedDatabaseAdapter | None = None):
         super().__init__("classifier", db)
         self.registry = IntegrationRegistry()
 
-    async def _handle_request(
-        self, request: AgentRequest, history: list[dict]
-    ) -> tuple[str, int]:
+    async def _handle_request(self, request: AgentRequest, history: list[dict]) -> tuple[str, int]:
         """
         Process classification request for a MicroStep.
 
@@ -85,17 +81,16 @@ class ClassifierAgent(BaseProxyAgent):
         automation_plan = self.registry.can_automate(micro_step)
 
         # If leaf_type is already classified as DIGITAL or HUMAN (from DecomposerAgent), respect it
-        already_classified = (micro_step.leaf_type == LeafType.DIGITAL or
-                              micro_step.leaf_type == LeafType.HUMAN)
+        already_classified = (
+            micro_step.leaf_type == LeafType.DIGITAL or micro_step.leaf_type == LeafType.HUMAN
+        )
 
         if automation_plan:
             # Task is automatable - mark as DIGITAL (only if not already classified)
             if not already_classified:
                 micro_step.leaf_type = LeafType.DIGITAL
             micro_step.automation_plan = automation_plan
-            micro_step.delegation_mode = self.registry.suggest_delegation_mode(
-                automation_plan
-            )
+            micro_step.delegation_mode = self.registry.suggest_delegation_mode(automation_plan)
             micro_step.clarification_needs = self._generate_clarifications(
                 micro_step, automation_plan
             )
@@ -114,9 +109,7 @@ class ClassifierAgent(BaseProxyAgent):
             elif not already_classified:
                 # Ambiguous - needs clarification (only if not already classified)
                 micro_step.leaf_type = LeafType.UNKNOWN
-                micro_step.clarification_needs = self._generate_generic_clarifications(
-                    micro_step
-                )
+                micro_step.clarification_needs = self._generate_generic_clarifications(micro_step)
 
     def _is_clearly_human(self, micro_step: MicroStep) -> bool:
         """
@@ -148,7 +141,7 @@ class ClassifierAgent(BaseProxyAgent):
             "drive",
             "go to",
             "meet",
-            "call" " person",
+            "call person",
             "talk to",
             "discuss in person",
         ]
@@ -236,9 +229,7 @@ class ClassifierAgent(BaseProxyAgent):
 
         return clarifications
 
-    def _generate_generic_clarifications(
-        self, micro_step: MicroStep
-    ) -> list[ClarificationNeed]:
+    def _generate_generic_clarifications(self, micro_step: MicroStep) -> list[ClarificationNeed]:
         """
         Generate generic clarification questions for ambiguous tasks.
 
@@ -256,15 +247,15 @@ class ClassifierAgent(BaseProxyAgent):
     def _format_classification_response(self, micro_step: MicroStep) -> str:
         """Format classification results as a readable message."""
         response_lines = [
-            f"🏷️ **Classification Results**",
-            f"",
+            "🏷️ **Classification Results**",
+            "",
             f"**Task:** {micro_step.description}",
             f"**Type:** {micro_step.leaf_type.value.upper()}",
             f"**Delegation:** {micro_step.delegation_mode.value.replace('_', ' ').title()}",
         ]
 
         if micro_step.automation_plan:
-            response_lines.append(f"")
+            response_lines.append("")
             response_lines.append(
                 f"**Automation Plan** (confidence: {micro_step.automation_plan.confidence:.0%})"
             )
@@ -272,14 +263,12 @@ class ClassifierAgent(BaseProxyAgent):
                 response_lines.append(f"  {i}. {step.kind}: {step.params}")
 
         if micro_step.clarification_needs:
-            response_lines.append(f"")
-            response_lines.append(f"**❓ Questions:**")
+            response_lines.append("")
+            response_lines.append("**❓ Questions:**")
             for clarif in micro_step.clarification_needs:
                 response_lines.append(f"  - {clarif.question}")
                 if clarif.options:
-                    response_lines.append(
-                        f"    Options: {', '.join(clarif.options)}"
-                    )
+                    response_lines.append(f"    Options: {', '.join(clarif.options)}")
 
         return "\n".join(response_lines)
 

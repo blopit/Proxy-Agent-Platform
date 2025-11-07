@@ -5,11 +5,9 @@ Habit Repository - Database operations for habits and habit completions
 from __future__ import annotations
 
 import json
-import sqlite3
 from datetime import datetime
 
 from src.core.task_models import CaptureType, Habit, HabitCompletion, RecurrencePattern, Task
-from src.database.enhanced_adapter import EnhancedDatabaseAdapter, get_enhanced_database
 from src.repositories.enhanced_repositories import BaseEnhancedRepository
 
 
@@ -46,11 +44,15 @@ class HabitRepository(BaseEnhancedRepository):
             habit_data["task_id"] = task.task_id
 
             # Convert recurrence_pattern to JSON string if it's a dict
-            if "recurrence_pattern" in habit_data and isinstance(habit_data["recurrence_pattern"], dict):
+            if "recurrence_pattern" in habit_data and isinstance(
+                habit_data["recurrence_pattern"], dict
+            ):
                 habit_data["recurrence_pattern"] = json.dumps(habit_data["recurrence_pattern"])
 
             # Convert completion_history to JSON string
-            if "completion_history" in habit_data and isinstance(habit_data["completion_history"], list):
+            if "completion_history" in habit_data and isinstance(
+                habit_data["completion_history"], list
+            ):
                 habit_data["completion_history"] = json.dumps(habit_data["completion_history"])
 
             # Insert habit
@@ -114,11 +116,15 @@ class HabitRepository(BaseEnhancedRepository):
         habit_data["updated_at"] = datetime.utcnow().isoformat()
 
         # Convert recurrence_pattern to JSON string
-        if "recurrence_pattern" in habit_data and isinstance(habit_data["recurrence_pattern"], dict):
+        if "recurrence_pattern" in habit_data and isinstance(
+            habit_data["recurrence_pattern"], dict
+        ):
             habit_data["recurrence_pattern"] = json.dumps(habit_data["recurrence_pattern"])
 
         # Convert completion_history to JSON string
-        if "completion_history" in habit_data and isinstance(habit_data["completion_history"], list):
+        if "completion_history" in habit_data and isinstance(
+            habit_data["completion_history"], list
+        ):
             habit_data["completion_history"] = json.dumps(habit_data["completion_history"])
 
         set_clause = ", ".join([f"{key} = ?" for key in habit_data.keys() if key != "habit_id"])
@@ -131,7 +137,9 @@ class HabitRepository(BaseEnhancedRepository):
 
         return habit
 
-    def mark_completed_today(self, habit_id: str, completion_date: str | None = None) -> HabitCompletion | None:
+    def mark_completed_today(
+        self, habit_id: str, completion_date: str | None = None
+    ) -> HabitCompletion | None:
         """Mark habit as completed for today and record completion"""
         habit = self.get_by_id(habit_id)
         if not habit:
@@ -244,7 +252,9 @@ class HabitRepository(BaseEnhancedRepository):
         # Parse recurrence_pattern JSON
         if "recurrence_pattern" in data and isinstance(data["recurrence_pattern"], str):
             try:
-                pattern_data = json.loads(data["recurrence_pattern"]) if data["recurrence_pattern"] else {}
+                pattern_data = (
+                    json.loads(data["recurrence_pattern"]) if data["recurrence_pattern"] else {}
+                )
                 data["recurrence_pattern"] = RecurrencePattern(**pattern_data)
             except (json.JSONDecodeError, TypeError, KeyError):
                 # Default pattern if parse fails
@@ -253,7 +263,9 @@ class HabitRepository(BaseEnhancedRepository):
         # Parse completion_history JSON
         if "completion_history" in data and isinstance(data["completion_history"], str):
             try:
-                data["completion_history"] = json.loads(data["completion_history"]) if data["completion_history"] else []
+                data["completion_history"] = (
+                    json.loads(data["completion_history"]) if data["completion_history"] else []
+                )
             except json.JSONDecodeError:
                 data["completion_history"] = []
 

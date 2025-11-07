@@ -11,10 +11,8 @@ Tests complete pet management workflows with real database:
 
 import pytest
 from fastapi.testclient import TestClient
-from datetime import datetime, timezone
 
 from src.api.main import app
-from src.core.pet_models import UserPet, PET_SPECIES
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
 from src.repositories.user_pet_repository import UserPetRepository
 
@@ -22,8 +20,8 @@ from src.repositories.user_pet_repository import UserPetRepository
 @pytest.fixture(scope="function")
 def test_pet_db():
     """Create isolated test database with user_pets table"""
-    import tempfile
     import os
+    import tempfile
 
     temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_file.close()
@@ -66,7 +64,6 @@ def test_pet_db():
 @pytest.fixture(scope="function")
 def test_pet_client(test_pet_db):
     """FastAPI client with test database and dependency override"""
-    import src.api.pets as pets_module
     from src.api.pets import get_pet_repository
 
     # Create test repository
@@ -96,12 +93,7 @@ class TestPetCreation:
     def test_create_pet_with_valid_data(self, test_pet_client, test_pet_db):
         """Test creating a pet with valid species and name"""
         response = test_pet_client.post(
-            "/api/v1/pets/create",
-            json={
-                "user_id": "user-123",
-                "species": "dog",
-                "name": "Buddy"
-            }
+            "/api/v1/pets/create", json={"user_id": "user-123", "species": "dog", "name": "Buddy"}
         )
 
         assert response.status_code == 201
@@ -131,11 +123,7 @@ class TestPetCreation:
         for i, species in enumerate(species_list):
             response = test_pet_client.post(
                 "/api/v1/pets/create",
-                json={
-                    "user_id": f"user-species-{i}",
-                    "species": species,
-                    "name": f"Pet{i}"
-                }
+                json={"user_id": f"user-species-{i}", "species": species, "name": f"Pet{i}"},
             )
 
             assert response.status_code == 201
@@ -145,11 +133,7 @@ class TestPetCreation:
         """Test that invalid species is rejected"""
         response = test_pet_client.post(
             "/api/v1/pets/create",
-            json={
-                "user_id": "user-invalid",
-                "species": "unicorn",
-                "name": "Sparkle"
-            }
+            json={"user_id": "user-invalid", "species": "unicorn", "name": "Sparkle"},
         )
 
         # Pydantic validation happens before service layer
@@ -159,12 +143,7 @@ class TestPetCreation:
     def test_create_pet_fails_with_empty_name(self, test_pet_client):
         """Test that empty name is rejected"""
         response = test_pet_client.post(
-            "/api/v1/pets/create",
-            json={
-                "user_id": "user-noname",
-                "species": "dog",
-                "name": ""
-            }
+            "/api/v1/pets/create", json={"user_id": "user-noname", "species": "dog", "name": ""}
         )
 
         # Empty names are caught by Pydantic (422) or service layer (400)
@@ -175,22 +154,14 @@ class TestPetCreation:
         # Create first pet
         response1 = test_pet_client.post(
             "/api/v1/pets/create",
-            json={
-                "user_id": "user-duplicate",
-                "species": "dog",
-                "name": "First"
-            }
+            json={"user_id": "user-duplicate", "species": "dog", "name": "First"},
         )
         assert response1.status_code == 201
 
         # Attempt second pet
         response2 = test_pet_client.post(
             "/api/v1/pets/create",
-            json={
-                "user_id": "user-duplicate",
-                "species": "cat",
-                "name": "Second"
-            }
+            json={"user_id": "user-duplicate", "species": "cat", "name": "Second"},
         )
 
         assert response2.status_code == 400
@@ -210,11 +181,7 @@ class TestGetPet:
         # Create pet
         create_response = test_pet_client.post(
             "/api/v1/pets/create",
-            json={
-                "user_id": "user-get",
-                "species": "cat",
-                "name": "Whiskers"
-            }
+            json={"user_id": "user-get", "species": "cat", "name": "Whiskers"},
         )
         pet_id = create_response.json()["pet_id"]
 
@@ -248,11 +215,7 @@ class TestPetStatus:
         # Create pet
         test_pet_client.post(
             "/api/v1/pets/create",
-            json={
-                "user_id": "user-status",
-                "species": "dragon",
-                "name": "Spike"
-            }
+            json={"user_id": "user-status", "species": "dragon", "name": "Spike"},
         )
 
         # Feed pet to get 50 XP
@@ -295,22 +258,13 @@ class TestFeedPet:
         """Test feeding pet with XP from task"""
         # Create pet
         test_pet_client.post(
-            "/api/v1/pets/create",
-            json={
-                "user_id": "user-feed",
-                "species": "owl",
-                "name": "Hoot"
-            }
+            "/api/v1/pets/create", json={"user_id": "user-feed", "species": "owl", "name": "Hoot"}
         )
 
         # Feed pet
         response = test_pet_client.post(
             "/api/v1/pets/feed",
-            params={
-                "user_id": "user-feed",
-                "task_priority": "high",
-                "task_estimated_minutes": 30
-            }
+            params={"user_id": "user-feed", "task_priority": "high", "task_estimated_minutes": 30},
         )
 
         assert response.status_code == 200
@@ -334,32 +288,22 @@ class TestFeedPet:
         """Test that high priority tasks give more XP than low"""
         # Create two pets
         test_pet_client.post(
-            "/api/v1/pets/create",
-            json={"user_id": "user-high", "species": "dog", "name": "High"}
+            "/api/v1/pets/create", json={"user_id": "user-high", "species": "dog", "name": "High"}
         )
         test_pet_client.post(
-            "/api/v1/pets/create",
-            json={"user_id": "user-low", "species": "cat", "name": "Low"}
+            "/api/v1/pets/create", json={"user_id": "user-low", "species": "cat", "name": "Low"}
         )
 
         # Feed with high priority
         high_response = test_pet_client.post(
             "/api/v1/pets/feed",
-            params={
-                "user_id": "user-high",
-                "task_priority": "high",
-                "task_estimated_minutes": 10
-            }
+            params={"user_id": "user-high", "task_priority": "high", "task_estimated_minutes": 10},
         )
 
         # Feed with low priority
         low_response = test_pet_client.post(
             "/api/v1/pets/feed",
-            params={
-                "user_id": "user-low",
-                "task_priority": "low",
-                "task_estimated_minutes": 10
-            }
+            params={"user_id": "user-low", "task_priority": "low", "task_estimated_minutes": 10},
         )
 
         high_xp = high_response.json()["xp_gained"]
@@ -372,11 +316,7 @@ class TestFeedPet:
         # Create pet
         test_pet_client.post(
             "/api/v1/pets/create",
-            json={
-                "user_id": "user-levelup",
-                "species": "fox",
-                "name": "Foxy"
-            }
+            json={"user_id": "user-levelup", "species": "fox", "name": "Foxy"},
         )
 
         # Get pet and set XP to 95 (just below level up)
@@ -390,8 +330,8 @@ class TestFeedPet:
             params={
                 "user_id": "user-levelup",
                 "task_priority": "high",
-                "task_estimated_minutes": 10
-            }
+                "task_estimated_minutes": 10,
+            },
         )
 
         data = response.json()
@@ -403,11 +343,7 @@ class TestFeedPet:
         # Create pet and level to 4
         test_pet_client.post(
             "/api/v1/pets/create",
-            json={
-                "user_id": "user-evolve",
-                "species": "dragon",
-                "name": "Drake"
-            }
+            json={"user_id": "user-evolve", "species": "dragon", "name": "Drake"},
         )
 
         repo = UserPetRepository(test_pet_db)
@@ -433,8 +369,8 @@ class TestFeedPet:
             params={
                 "user_id": "user-evolve",
                 "task_priority": "high",
-                "task_estimated_minutes": 50
-            }
+                "task_estimated_minutes": 50,
+            },
         )
 
         data = response.json()
@@ -450,8 +386,8 @@ class TestFeedPet:
             params={
                 "user_id": "user-nopet",
                 "task_priority": "medium",
-                "task_estimated_minutes": 15
-            }
+                "task_estimated_minutes": 15,
+            },
         )
 
         assert response.status_code == 404
@@ -501,11 +437,7 @@ class TestHasPet:
         # Create pet
         test_pet_client.post(
             "/api/v1/pets/create",
-            json={
-                "user_id": "user-haspet",
-                "species": "dog",
-                "name": "Buddy"
-            }
+            json={"user_id": "user-haspet", "species": "dog", "name": "Buddy"},
         )
 
         # Check has pet
@@ -536,12 +468,7 @@ class TestCompleteWorkflows:
 
         # Step 1: Create pet
         create_response = test_pet_client.post(
-            "/api/v1/pets/create",
-            json={
-                "user_id": user_id,
-                "species": "dragon",
-                "name": "Smaug"
-            }
+            "/api/v1/pets/create", json={"user_id": user_id, "species": "dragon", "name": "Smaug"}
         )
         assert create_response.status_code == 201
         assert create_response.json()["level"] == 1
@@ -551,11 +478,7 @@ class TestCompleteWorkflows:
         for i in range(5):
             feed_response = test_pet_client.post(
                 "/api/v1/pets/feed",
-                params={
-                    "user_id": user_id,
-                    "task_priority": "high",
-                    "task_estimated_minutes": 30
-                }
+                params={"user_id": user_id, "task_priority": "high", "task_estimated_minutes": 30},
             )
             assert feed_response.status_code == 200
 
@@ -584,12 +507,7 @@ class TestCompleteWorkflows:
 
         # Create pet
         test_pet_client.post(
-            "/api/v1/pets/create",
-            json={
-                "user_id": user_id,
-                "species": "owl",
-                "name": "Maximus"
-            }
+            "/api/v1/pets/create", json={"user_id": user_id, "species": "owl", "name": "Maximus"}
         )
 
         # Level to 10 (requires 900 XP total: 9 levels * 100 XP)
@@ -614,12 +532,7 @@ class TestCompleteWorkflows:
 
         # Create pet
         test_pet_client.post(
-            "/api/v1/pets/create",
-            json={
-                "user_id": user_id,
-                "species": "cat",
-                "name": "Hungry"
-            }
+            "/api/v1/pets/create", json={"user_id": user_id, "species": "cat", "name": "Hungry"}
         )
 
         # Manually decrease hunger/happiness
@@ -627,16 +540,13 @@ class TestCompleteWorkflows:
         pet = repo.get_by_user_id(user_id)
 
         from src.core.pet_models import UserPetUpdate
+
         repo.update(pet.pet_id, UserPetUpdate(hunger=20, happiness=20))
 
         # Feed pet
         feed_response = test_pet_client.post(
             "/api/v1/pets/feed",
-            params={
-                "user_id": user_id,
-                "task_priority": "medium",
-                "task_estimated_minutes": 15
-            }
+            params={"user_id": user_id, "task_priority": "medium", "task_estimated_minutes": 15},
         )
 
         data = feed_response.json()
@@ -659,11 +569,7 @@ class TestErrorHandling:
         # Create pet
         test_pet_client.post(
             "/api/v1/pets/create",
-            json={
-                "user_id": "user-priority",
-                "species": "dog",
-                "name": "Priority"
-            }
+            json={"user_id": "user-priority", "species": "dog", "name": "Priority"},
         )
 
         # Feed with invalid priority (should default to medium)
@@ -672,8 +578,8 @@ class TestErrorHandling:
             params={
                 "user_id": "user-priority",
                 "task_priority": "invalid",
-                "task_estimated_minutes": 10
-            }
+                "task_estimated_minutes": 10,
+            },
         )
 
         # Should not fail, uses default
@@ -687,9 +593,9 @@ class TestErrorHandling:
             "/api/v1/pets/create",
             json={
                 "user_id": "user-invalid",
-                "species": "dog"
+                "species": "dog",
                 # Missing 'name'
-            }
+            },
         )
 
         assert response.status_code == 422  # Unprocessable Entity

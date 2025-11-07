@@ -5,10 +5,11 @@ Task templates are reusable blueprints for tasks with pre-defined micro-steps.
 Reduces task creation friction for ADHD users by 50%+.
 """
 
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional, Literal
-from uuid import UUID, uuid4
-from datetime import datetime, UTC
+from datetime import UTC, datetime
+from typing import Literal
+from uuid import uuid4
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TemplateStepBase(BaseModel):
@@ -16,10 +17,10 @@ class TemplateStepBase(BaseModel):
 
     step_order: int = Field(..., ge=1, description="Display order (1-indexed)")
     description: str = Field(..., min_length=1, max_length=500)
-    short_label: Optional[str] = Field(None, max_length=100)
+    short_label: str | None = Field(None, max_length=100)
     estimated_minutes: int = Field(..., ge=1, le=60, description="ADHD-optimized duration")
     leaf_type: Literal["DIGITAL", "HUMAN"] = "HUMAN"
-    icon: Optional[str] = Field(None, max_length=50)
+    icon: str | None = Field(None, max_length=50)
 
 
 class TemplateStepCreate(TemplateStepBase):
@@ -41,16 +42,16 @@ class TaskTemplateBase(BaseModel):
     """Base model for task templates."""
 
     name: str = Field(..., min_length=1, max_length=255)
-    description: Optional[str] = None
+    description: str | None = None
     category: Literal["Academic", "Work", "Personal", "Health", "Creative"]
-    icon: Optional[str] = Field(None, max_length=50)
-    estimated_minutes: Optional[int] = Field(None, ge=1)
+    icon: str | None = Field(None, max_length=50)
+    estimated_minutes: int | None = Field(None, ge=1)
 
 
 class TaskTemplateCreate(TaskTemplateBase):
     """Model for creating task templates."""
 
-    steps: List[TemplateStepCreate] = Field(..., min_length=1, max_length=10)
+    steps: list[TemplateStepCreate] = Field(..., min_length=1, max_length=10)
     created_by: str = "system"
     is_public: bool = True
 
@@ -58,10 +59,10 @@ class TaskTemplateCreate(TaskTemplateBase):
 class TaskTemplateUpdate(BaseModel):
     """Model for updating task templates."""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=255)
-    description: Optional[str] = None
-    category: Optional[Literal["Academic", "Work", "Personal", "Health", "Creative"]] = None
-    icon: Optional[str] = None
+    name: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = None
+    category: Literal["Academic", "Work", "Personal", "Health", "Creative"] | None = None
+    icon: str | None = None
 
 
 class TaskTemplate(TaskTemplateBase):
@@ -72,6 +73,6 @@ class TaskTemplate(TaskTemplateBase):
     is_public: bool
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    steps: List[TemplateStep] = []
+    steps: list[TemplateStep] = []
 
     model_config = ConfigDict(from_attributes=True)

@@ -62,10 +62,26 @@ class BaseEnhancedRepository:
                     data[key] = (
                         json.loads(value)
                         if value
-                        else ([] if key in ["tags", "team_members", "default_tags", "micro_steps", "children_ids"] else {})
+                        else (
+                            []
+                            if key
+                            in [
+                                "tags",
+                                "team_members",
+                                "default_tags",
+                                "micro_steps",
+                                "children_ids",
+                            ]
+                            else {}
+                        )
                     )
                 except json.JSONDecodeError:
-                    data[key] = [] if key in ["tags", "team_members", "default_tags", "micro_steps", "children_ids"] else {}
+                    data[key] = (
+                        []
+                        if key
+                        in ["tags", "team_members", "default_tags", "micro_steps", "children_ids"]
+                        else {}
+                    )
             elif (
                 key
                 in [
@@ -110,7 +126,7 @@ class BaseEnhancedRepository:
                 data[key] = str(value)
             elif isinstance(value, datetime):
                 data[key] = value.isoformat()
-            elif hasattr(value, 'value'):  # Handle enum values
+            elif hasattr(value, "value"):  # Handle enum values
                 data[key] = value.value
 
         return data
@@ -426,8 +442,7 @@ class UserAchievementRepository(BaseEnhancedRepository):
         conn = self.db.get_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT * FROM user_achievements WHERE user_achievement_id = ?",
-            (user_achievement_id,)
+            "SELECT * FROM user_achievements WHERE user_achievement_id = ?", (user_achievement_id,)
         )
         row = cursor.fetchone()
         return self._dict_to_model(dict(row), UserAchievement) if row else None
@@ -663,7 +678,6 @@ class EnhancedTaskRepository(BaseEnhancedRepository):
         Returns:
             step_id of the saved MicroStep
         """
-        from src.core.task_models import MicroStep
 
         # Convert MicroStep to dict for database storage
         data = micro_step.model_dump()
@@ -677,7 +691,7 @@ class EnhancedTaskRepository(BaseEnhancedRepository):
             data["clarification_needs"] = json.dumps(
                 [c if isinstance(c, dict) else c.model_dump() for c in data["clarification_needs"]]
             )
-        
+
         # Convert tags to JSON string if present
         if data.get("tags"):
             data["tags"] = json.dumps(data["tags"])
@@ -695,7 +709,9 @@ class EnhancedTaskRepository(BaseEnhancedRepository):
             )
         if data.get("leaf_type"):
             data["leaf_type"] = (
-                data["leaf_type"].value if hasattr(data["leaf_type"], "value") else data["leaf_type"]
+                data["leaf_type"].value
+                if hasattr(data["leaf_type"], "value")
+                else data["leaf_type"]
             )
         if data.get("decomposition_state"):
             data["decomposition_state"] = (

@@ -5,7 +5,6 @@ Following RED-GREEN-REFACTOR workflow.
 These tests define the expected behavior before implementation.
 """
 
-import pytest
 from uuid import uuid4
 
 
@@ -123,9 +122,7 @@ class TestTaskTemplateAPI:
         template_id = create_response.json()["template_id"]
 
         update_data = {"name": "Updated Homework Template"}
-        response = test_client.put(
-            f"/api/v1/task-templates/{template_id}", json=update_data
-        )
+        response = test_client.put(f"/api/v1/task-templates/{template_id}", json=update_data)
         assert response.status_code == 200
         assert response.json()["name"] == "Updated Homework Template"
         # Verify steps unchanged
@@ -139,9 +136,7 @@ class TestTaskTemplateAPI:
         template_id = create_response.json()["template_id"]
 
         update_data = {"category": "Personal"}
-        response = test_client.put(
-            f"/api/v1/task-templates/{template_id}", json=update_data
-        )
+        response = test_client.put(f"/api/v1/task-templates/{template_id}", json=update_data)
         assert response.status_code == 200
         assert response.json()["category"] == "Personal"
 

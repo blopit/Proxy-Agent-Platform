@@ -4,18 +4,22 @@ Pet API Endpoints (BE-02)
 REST API for user pet management system.
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status
-from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from src.core.pet_models import (
-    UserPet, UserPetCreate, FeedPetRequest, FeedPetResponse, PetSpeciesInfo
+    FeedPetResponse,
+    PetSpeciesInfo,
+    UserPet,
+    UserPetCreate,
 )
-from src.services.user_pet_service import (
-    UserPetService, UserAlreadyHasPetError, UserHasNoPetError, PetServiceError
-)
-from src.repositories.user_pet_repository import UserPetRepository
 from src.database.enhanced_adapter import get_enhanced_database
-
+from src.repositories.user_pet_repository import UserPetRepository
+from src.services.user_pet_service import (
+    PetServiceError,
+    UserAlreadyHasPetError,
+    UserHasNoPetError,
+    UserPetService,
+)
 
 router = APIRouter(prefix="/api/v1/pets", tags=["pets"])
 
@@ -31,9 +35,7 @@ def get_pet_repository() -> UserPetRepository:
     return UserPetRepository(db)
 
 
-def get_pet_service(
-    pet_repo: UserPetRepository = Depends(get_pet_repository)
-) -> UserPetService:
+def get_pet_service(pet_repo: UserPetRepository = Depends(get_pet_repository)) -> UserPetService:
     """Get UserPetService instance with dependencies"""
     return UserPetService(pet_repo=pet_repo)
 
@@ -44,10 +46,7 @@ def get_pet_service(
 
 
 @router.post("/create", response_model=UserPet, status_code=status.HTTP_201_CREATED)
-async def create_pet(
-    pet_data: UserPetCreate,
-    service: UserPetService = Depends(get_pet_service)
-):
+async def create_pet(pet_data: UserPetCreate, service: UserPetService = Depends(get_pet_service)):
     """
     Create a new pet for user.
 
@@ -60,32 +59,21 @@ async def create_pet(
     """
     try:
         return service.create_pet(
-            user_id=pet_data.user_id,
-            species=pet_data.species,
-            name=pet_data.name
+            user_id=pet_data.user_id, species=pet_data.species, name=pet_data.name
         )
     except UserAlreadyHasPetError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except PetServiceError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create pet: {str(e)}"
+            detail=f"Failed to create pet: {str(e)}",
         )
 
 
 @router.get("/{user_id}", response_model=UserPet)
-async def get_user_pet(
-    user_id: str,
-    service: UserPetService = Depends(get_pet_service)
-):
+async def get_user_pet(user_id: str, service: UserPetService = Depends(get_pet_service)):
     """
     Get user's pet.
 
@@ -96,17 +84,13 @@ async def get_user_pet(
     pet = service.get_user_pet(user_id)
     if not pet:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User {user_id} has no pet"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} has no pet"
         )
     return pet
 
 
 @router.get("/{user_id}/status")
-async def get_pet_status(
-    user_id: str,
-    service: UserPetService = Depends(get_pet_service)
-):
+async def get_pet_status(user_id: str, service: UserPetService = Depends(get_pet_service)):
     """
     Get pet status with level progress.
 
@@ -120,8 +104,7 @@ async def get_pet_status(
     pet_status = service.get_pet_status(user_id)
     if not pet_status:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User {user_id} has no pet"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"User {user_id} has no pet"
         )
     return pet_status
 
@@ -131,7 +114,7 @@ async def feed_pet(
     user_id: str,
     task_priority: str,
     task_estimated_minutes: int,
-    service: UserPetService = Depends(get_pet_service)
+    service: UserPetService = Depends(get_pet_service),
 ):
     """
     Feed pet with XP from task completion.
@@ -154,16 +137,13 @@ async def feed_pet(
         return service.feed_pet_from_task(
             user_id=user_id,
             task_priority=task_priority,
-            task_estimated_minutes=task_estimated_minutes
+            task_estimated_minutes=task_estimated_minutes,
         )
     except UserHasNoPetError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
-@router.get("/species/list", response_model=List[PetSpeciesInfo])
+@router.get("/species/list", response_model=list[PetSpeciesInfo])
 async def list_species(service: UserPetService = Depends(get_pet_service)):
     """
     List all available pet species.
@@ -174,10 +154,7 @@ async def list_species(service: UserPetService = Depends(get_pet_service)):
 
 
 @router.get("/user/{user_id}/has-pet")
-async def check_has_pet(
-    user_id: str,
-    service: UserPetService = Depends(get_pet_service)
-):
+async def check_has_pet(user_id: str, service: UserPetService = Depends(get_pet_service)):
     """
     Check if user has a pet.
 

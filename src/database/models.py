@@ -5,20 +5,18 @@ This module provides SQLAlchemy models for all database tables,
 matching the schema defined in enhanced_adapter.py
 """
 
-from datetime import datetime, timezone
-from decimal import Decimal
-from typing import Optional
+from datetime import UTC, datetime
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Column,
     DateTime,
     ForeignKey,
     Integer,
+    Numeric,
     String,
     Text,
-    Numeric,
-    CheckConstraint,
 )
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -28,7 +26,7 @@ Base = declarative_base()
 
 def utc_now() -> datetime:
     """Get current UTC timestamp"""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class User(Base):
@@ -48,18 +46,12 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     last_login = Column(DateTime(timezone=True))
     created_at = Column(DateTime(timezone=True), default=utc_now)
-    updated_at = Column(
-        DateTime(timezone=True), default=utc_now, onupdate=utc_now
-    )
+    updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
 
     # Relationships
-    projects = relationship(
-        "Project", back_populates="owner", cascade="all, delete-orphan"
-    )
+    projects = relationship("Project", back_populates="owner", cascade="all, delete-orphan")
     tasks = relationship("Task", back_populates="assignee")
-    compass_zones = relationship(
-        "CompassZone", back_populates="user", cascade="all, delete-orphan"
-    )
+    compass_zones = relationship("CompassZone", back_populates="user", cascade="all, delete-orphan")
     morning_rituals = relationship(
         "MorningRitual", back_populates="user", cascade="all, delete-orphan"
     )
@@ -88,9 +80,7 @@ class Project(Base):
     settings = Column(Text, default="{}")
     project_metadata = Column("metadata", Text, default="{}")  # Column name 'metadata' in DB
     created_at = Column(DateTime(timezone=True), default=utc_now)
-    updated_at = Column(
-        DateTime(timezone=True), default=utc_now, onupdate=utc_now
-    )
+    updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
 
     # Relationships
     owner = relationship("User", back_populates="projects")
@@ -114,9 +104,7 @@ class Task(Base):
         nullable=False,
         index=True,
     )
-    parent_id = Column(
-        String, ForeignKey("tasks.task_id", ondelete="CASCADE"), index=True
-    )
+    parent_id = Column(String, ForeignKey("tasks.task_id", ondelete="CASCADE"), index=True)
     capture_type = Column(String, default="task")
     status = Column(String, default="todo", index=True)
     priority = Column(String, default="medium", index=True)
@@ -128,9 +116,7 @@ class Task(Base):
     started_at = Column(DateTime(timezone=True))
     completed_at = Column(DateTime(timezone=True))
     created_at = Column(DateTime(timezone=True), default=utc_now)
-    updated_at = Column(
-        DateTime(timezone=True), default=utc_now, onupdate=utc_now
-    )
+    updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
     task_metadata = Column("metadata", Text, default="{}")  # Column name 'metadata' in DB
 
     # Epic 7 fields
@@ -154,9 +140,7 @@ class Task(Base):
     micro_step_records = relationship(
         "MicroStep", back_populates="task", cascade="all, delete-orphan"
     )
-    comments = relationship(
-        "TaskComment", back_populates="task", cascade="all, delete-orphan"
-    )
+    comments = relationship("TaskComment", back_populates="task", cascade="all, delete-orphan")
     zone = relationship("CompassZone", back_populates="tasks")
 
     def __repr__(self) -> str:
@@ -250,9 +234,7 @@ class CompassZone(Base):
     sort_order = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), default=utc_now)
-    updated_at = Column(
-        DateTime(timezone=True), default=utc_now, onupdate=utc_now
-    )
+    updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
 
     # Relationships
     user = relationship("User", back_populates="compass_zones")
@@ -471,9 +453,7 @@ class UserIntegration(Base):
     settings = Column(Text, default="{}")  # JSON configuration
     integration_metadata = Column("metadata", Text, default="{}")
     created_at = Column(DateTime(timezone=True), default=utc_now)
-    updated_at = Column(
-        DateTime(timezone=True), default=utc_now, onupdate=utc_now
-    )
+    updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
 
     # Relationships
     integration_tasks = relationship(
@@ -530,9 +510,7 @@ class IntegrationTask(Base):
     # Metadata
     item_metadata = Column("metadata", Text, default="{}")
     created_at = Column(DateTime(timezone=True), default=utc_now)
-    updated_at = Column(
-        DateTime(timezone=True), default=utc_now, onupdate=utc_now
-    )
+    updated_at = Column(DateTime(timezone=True), default=utc_now, onupdate=utc_now)
 
     # Relationships
     integration = relationship("UserIntegration", back_populates="integration_tasks")

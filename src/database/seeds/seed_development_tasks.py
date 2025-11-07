@@ -28,7 +28,7 @@ Examples:
 import argparse
 import os
 import sys
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -36,7 +36,6 @@ from uuid import uuid4
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
-
 
 # ============================================================================
 # Task Definitions (Real-world Dogfooding Tasks)
@@ -164,7 +163,6 @@ DOGFOODING_TASKS = [
         "due_date": None,
         "status": "todo",
     },
-
     # This Week — Core Services
     {
         "task_id": "BE-01",
@@ -202,7 +200,6 @@ DOGFOODING_TASKS = [
         "due_date": None,
         "status": "todo",
     },
-
     # End of Week — Review
     {
         "task_id": "WEEKLY-REVIEW",
@@ -216,7 +213,6 @@ DOGFOODING_TASKS = [
         "due_date": None,
         "status": "todo",
     },
-
     # LION motel
     {
         "task_id": "LION-1",
@@ -242,7 +238,6 @@ DOGFOODING_TASKS = [
         "due_date": "2025-11-02",
         "status": "todo",
     },
-
     # Personal
     {
         "task_id": "PERSONAL-1",
@@ -274,7 +269,6 @@ DEVELOPMENT_TASKS = [
         "category": "backend",
         "priority": "critical",
     },
-
     # Wave 2: Core Services - Backend
     {
         "task_id": "BE-01",
@@ -316,7 +310,6 @@ DEVELOPMENT_TASKS = [
         "category": "backend",
         "priority": "high",
     },
-
     # Wave 2: Core Services - Frontend
     {
         "task_id": "FE-01",
@@ -388,7 +381,6 @@ DEVELOPMENT_TASKS = [
         "category": "frontend",
         "priority": "medium",
     },
-
     # Wave 3: Advanced Backend
     {
         "task_id": "BE-05",
@@ -450,7 +442,6 @@ DEVELOPMENT_TASKS = [
         "category": "backend",
         "priority": "low",
     },
-
     # Wave 3: Enhanced UX
     {
         "task_id": "FE-08",
@@ -512,7 +503,6 @@ DEVELOPMENT_TASKS = [
         "category": "frontend",
         "priority": "medium",
     },
-
     # Wave 4: Creature & ML
     {
         "task_id": "BE-11",
@@ -564,7 +554,6 @@ DEVELOPMENT_TASKS = [
         "category": "frontend",
         "priority": "low",
     },
-
     # Wave 5: Advanced Features
     {
         "task_id": "FE-16",
@@ -586,7 +575,6 @@ DEVELOPMENT_TASKS = [
         "category": "frontend",
         "priority": "high",
     },
-
     # Wave 6: Polish & Quality
     {
         "task_id": "BE-14",
@@ -647,10 +635,10 @@ def reset_database(db_path: str = "proxy_agents_enhanced.db"):
 
     if os.path.exists(db_path):
         os.remove(db_path)
-        print(f"    Removed existing database")
+        print("    Removed existing database")
 
     db = EnhancedDatabaseAdapter(db_path)
-    print(f"    Created fresh database")
+    print("    Created fresh database")
     return db
 
 
@@ -663,43 +651,49 @@ def seed_development_tasks(db: EnhancedDatabaseAdapter):
 
     # Create meta-project
     project_id = "meta-development"
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT OR REPLACE INTO projects (
             project_id, name, description, is_active, created_at, updated_at
         ) VALUES (?, ?, ?, ?, ?, ?)
-    """, (
-        project_id,
-        "App Development (Meta)",
-        "Using the app to build the app!",
-        True,
-        datetime.now(UTC),
-        datetime.now(UTC),
-    ))
+    """,
+        (
+            project_id,
+            "App Development (Meta)",
+            "Using the app to build the app!",
+            True,
+            datetime.now(UTC),
+            datetime.now(UTC),
+        ),
+    )
 
     # Insert tasks
     for task_data in DEVELOPMENT_TASKS:
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO tasks (
                 task_id, title, description, project_id, priority,
                 delegation_mode, estimated_hours, is_meta_task,
                 status, created_at, updated_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            str(uuid4()),
-            f"{task_data['task_id']}: {task_data['title']}",
-            task_data['description'],
-            project_id,
-            task_data['priority'],
-            task_data['delegation_mode'],
-            task_data['estimated_hours'],
-            True,
-            'pending',
-            datetime.now(UTC),
-            datetime.now(UTC),
-        ))
+        """,
+            (
+                str(uuid4()),
+                f"{task_data['task_id']}: {task_data['title']}",
+                task_data["description"],
+                project_id,
+                task_data["priority"],
+                task_data["delegation_mode"],
+                task_data["estimated_hours"],
+                True,
+                "pending",
+                datetime.now(UTC),
+                datetime.now(UTC),
+            ),
+        )
 
-        wave = task_data['wave']
-        cat = task_data['category'][:2].upper()
+        wave = task_data["wave"]
+        cat = task_data["category"][:2].upper()
         print(f"    W{wave} | {cat} | {task_data['task_id']}: {task_data['title']}")
 
     conn.commit()

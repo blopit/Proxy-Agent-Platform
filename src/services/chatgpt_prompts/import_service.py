@@ -8,7 +8,7 @@ and imports them into our task management system.
 import json
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 from uuid import uuid4
 
 from src.services.chatgpt_prompts.models import (
@@ -23,7 +23,7 @@ class TaskImportService:
 
     def __init__(self):
         """Initialize the import service."""
-        self._tasks_db: Dict[str, Dict[str, Any]] = {}  # In-memory for testing
+        self._tasks_db: dict[str, dict[str, Any]] = {}  # In-memory for testing
 
     def import_task_list(self, request: TaskListImportRequest) -> TaskImportResult:
         """
@@ -218,7 +218,7 @@ class TaskImportService:
             tags=task_dict.get("tags", []),
         )
 
-    def _parse_time_estimate(self, time_str: str) -> Optional[float]:
+    def _parse_time_estimate(self, time_str: str) -> float | None:
         """
         Parse time estimate from various formats.
 
@@ -245,7 +245,7 @@ class TaskImportService:
         title: str,
         delegation_mode: str,
         capture_type: str,
-        project_id: Optional[str],
+        project_id: str | None,
     ) -> str:
         """Create parent task in database."""
         task_id = str(uuid4())
@@ -269,7 +269,7 @@ class TaskImportService:
         parent_task_id: str,
         subtask: ImportedSubtask,
         delegation_mode: str,
-        project_id: Optional[str],
+        project_id: str | None,
     ) -> str:
         """Create subtask in database."""
         task_id = str(uuid4())
@@ -288,6 +288,6 @@ class TaskImportService:
         }
         return task_id
 
-    def get_task_by_id(self, task_id: str) -> Optional[Dict[str, Any]]:
+    def get_task_by_id(self, task_id: str) -> dict[str, Any] | None:
         """Get task by ID (for testing)."""
         return self._tasks_db.get(task_id)

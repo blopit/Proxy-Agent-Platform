@@ -4,12 +4,12 @@ Tests for ChatGPT Task List Import Service.
 
 import pytest
 
+from src.services.chatgpt_prompts.import_service import TaskImportService
 from src.services.chatgpt_prompts.models import (
     ImportedSubtask,
     TaskImportResult,
     TaskListImportRequest,
 )
-from src.services.chatgpt_prompts.import_service import TaskImportService
 
 
 @pytest.fixture
@@ -155,9 +155,7 @@ def test_import_with_different_priorities(import_service):
             ImportedSubtask(
                 title="Update SSL certificates", description="Renew certs", priority="high"
             ),
-            ImportedSubtask(
-                title="Review access logs", description="Check logs", priority="low"
-            ),
+            ImportedSubtask(title="Review access logs", description="Check logs", priority="low"),
         ],
     )
 
@@ -177,9 +175,7 @@ def test_import_single_subtask(import_service):
     request = TaskListImportRequest(
         parent_task_context="Quick task",
         subtasks=[
-            ImportedSubtask(
-                title="Do something", description="Quick action", estimated_hours=0.5
-            )
+            ImportedSubtask(title="Do something", description="Quick action", estimated_hours=0.5)
         ],
     )
 
@@ -201,9 +197,7 @@ def test_import_many_subtasks(import_service):
         for i in range(1, 21)  # 20 subtasks
     ]
 
-    request = TaskListImportRequest(
-        parent_task_context="Large project", subtasks=subtasks
-    )
+    request = TaskListImportRequest(parent_task_context="Large project", subtasks=subtasks)
 
     result = import_service.import_task_list(request)
 
@@ -255,9 +249,7 @@ def test_import_with_very_long_descriptions(import_service):
     request = TaskListImportRequest(
         parent_task_context="Long description test",
         subtasks=[
-            ImportedSubtask(
-                title="Task with long description", description=long_desc[:2000]
-            )
+            ImportedSubtask(title="Task with long description", description=long_desc[:2000])
         ],
     )
 

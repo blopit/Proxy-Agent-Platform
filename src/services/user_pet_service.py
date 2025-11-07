@@ -4,14 +4,8 @@ UserPetService - Business logic for user pets (BE-02)
 Handles pet creation, feeding, XP calculation, and status retrieval.
 """
 
-from typing import Optional
-from datetime import datetime, timezone
-
-from src.core.pet_models import (
-    UserPet, UserPetCreate, FeedPetRequest, FeedPetResponse, PET_SPECIES
-)
+from src.core.pet_models import PET_SPECIES, FeedPetResponse, UserPet, UserPetCreate
 from src.repositories.user_pet_repository import UserPetRepository
-
 
 # ============================================================================
 # Custom Exceptions
@@ -20,11 +14,13 @@ from src.repositories.user_pet_repository import UserPetRepository
 
 class PetServiceError(Exception):
     """Base exception for pet service errors"""
+
     pass
 
 
 class UserAlreadyHasPetError(PetServiceError):
     """Raised when user tries to create second pet"""
+
     def __init__(self, user_id: str):
         self.user_id = user_id
         super().__init__(f"User {user_id} already has a pet")
@@ -32,6 +28,7 @@ class UserAlreadyHasPetError(PetServiceError):
 
 class UserHasNoPetError(PetServiceError):
     """Raised when operation requires pet but user has none"""
+
     def __init__(self, user_id: str):
         self.user_id = user_id
         super().__init__(f"User {user_id} has no pet")
@@ -91,8 +88,7 @@ class UserPetService:
         valid_species = [s.species for s in PET_SPECIES]
         if species not in valid_species:
             raise ValueError(
-                f"Invalid species '{species}'. "
-                f"Valid species: {', '.join(valid_species)}"
+                f"Invalid species '{species}'. Valid species: {', '.join(valid_species)}"
             )
 
         # Validate name
@@ -101,11 +97,7 @@ class UserPetService:
 
         # Create pet
         try:
-            pet_data = UserPetCreate(
-                user_id=user_id,
-                species=species,
-                name=name.strip()
-            )
+            pet_data = UserPetCreate(user_id=user_id, species=species, name=name.strip())
             return self.pet_repo.create(pet_data)
 
         except Exception as e:
@@ -115,7 +107,7 @@ class UserPetService:
     # READ Operations
     # ========================================================================
 
-    def get_user_pet(self, user_id: str) -> Optional[UserPet]:
+    def get_user_pet(self, user_id: str) -> UserPet | None:
         """
         Get user's pet (optional).
 
@@ -145,7 +137,7 @@ class UserPetService:
             raise UserHasNoPetError(user_id)
         return pet
 
-    def get_pet_status(self, user_id: str) -> Optional[dict]:
+    def get_pet_status(self, user_id: str) -> dict | None:
         """
         Get pet status with level progress.
 
@@ -167,7 +159,7 @@ class UserPetService:
         return {
             "pet": pet,
             "xp_to_next_level": xp_to_next,
-            "level_progress_percent": level_progress
+            "level_progress_percent": level_progress,
         }
 
     # ========================================================================
@@ -175,10 +167,7 @@ class UserPetService:
     # ========================================================================
 
     def feed_pet_from_task(
-        self,
-        user_id: str,
-        task_priority: str,
-        task_estimated_minutes: int
+        self, user_id: str, task_priority: str, task_estimated_minutes: int
     ) -> FeedPetResponse:
         """
         Feed pet with XP from task completion.
@@ -219,7 +208,7 @@ class UserPetService:
             xp_to_next_level=xp_to_next,
             xp_gained=xp_earned,
             hunger_restored=hunger_restored,
-            happiness_gained=happiness_gained
+            happiness_gained=happiness_gained,
         )
 
     # ========================================================================
@@ -245,11 +234,7 @@ class UserPetService:
         base_xp = 10
 
         # Priority bonus
-        priority_bonuses = {
-            "low": 1,
-            "medium": 3,
-            "high": 5
-        }
+        priority_bonuses = {"low": 1, "medium": 3, "high": 5}
         priority_bonus = priority_bonuses.get(priority.lower(), 3)  # Default medium
 
         # Time bonus (max +10)

@@ -12,8 +12,6 @@ Supports three modes:
 
 from __future__ import annotations
 
-from typing import Optional
-
 from src.agents.base import BaseProxyAgent
 from src.agents.classifier_agent import ClassifierAgent
 from src.agents.decomposer_agent import DecomposerAgent
@@ -34,7 +32,7 @@ class CaptureAgent(BaseProxyAgent):
     4. Generate clarification form if needed
     """
 
-    def __init__(self, db: Optional[EnhancedDatabaseAdapter] = None):
+    def __init__(self, db: EnhancedDatabaseAdapter | None = None):
         super().__init__("capture", db)
         self.quick_capture_service = QuickCaptureService()
         self.decomposer = DecomposerAgent(db)
@@ -42,9 +40,7 @@ class CaptureAgent(BaseProxyAgent):
         self.graph_service = GraphService(db) if db else None
         self.settings = get_settings()
 
-    async def _handle_request(
-        self, request: AgentRequest, history: list[dict]
-    ) -> tuple[str, int]:
+    async def _handle_request(self, request: AgentRequest, history: list[dict]) -> tuple[str, int]:
         """
         Process capture request through the full pipeline.
 
@@ -88,7 +84,7 @@ class CaptureAgent(BaseProxyAgent):
         input_text: str,
         user_id: str,
         mode: CaptureMode = CaptureMode.AUTO,
-        manual_fields: Optional[dict] = None,
+        manual_fields: dict | None = None,
     ) -> dict:
         """
         Execute the full capture pipeline.
@@ -109,11 +105,7 @@ class CaptureAgent(BaseProxyAgent):
         """
         # Step 0: Retrieve Knowledge Graph context (if enabled)
         kg_context = None
-        if (
-            self.settings.kg_enabled
-            and self.graph_service
-            and mode != CaptureMode.MANUAL
-        ):
+        if self.settings.kg_enabled and self.graph_service and mode != CaptureMode.MANUAL:
             try:
                 kg_context = self.graph_service.get_context_for_query(
                     input_text, user_id, max_entities=self.settings.kg_max_entities
@@ -221,9 +213,7 @@ class CaptureAgent(BaseProxyAgent):
             due_date=analysis.get("due_date"),
         )
 
-    def _create_task_from_manual_fields(
-        self, input_text: str, manual_fields: dict
-    ) -> Task:
+    def _create_task_from_manual_fields(self, input_text: str, manual_fields: dict) -> Task:
         """Create a Task object from manual user input."""
         return Task(
             title=manual_fields.get("title", input_text),
@@ -250,9 +240,7 @@ class CaptureAgent(BaseProxyAgent):
 
         return unique
 
-    def _apply_answers_to_micro_step(
-        self, micro_step: MicroStep, answers: dict[str, str]
-    ) -> None:
+    def _apply_answers_to_micro_step(self, micro_step: MicroStep, answers: dict[str, str]) -> None:
         """
         Apply clarification answers to a MicroStep's automation plan.
 
@@ -296,7 +284,7 @@ class CaptureAgent(BaseProxyAgent):
 
         response_lines = [
             f"📝 **Capture Complete** (Mode: {mode.value.upper()})",
-            f"",
+            "",
             f"**Task:** {task.title}",
             f"**Priority:** {task.priority.upper()}",
             f"**Micro-Steps:** {len(micro_steps)}",
@@ -307,8 +295,8 @@ class CaptureAgent(BaseProxyAgent):
         human_count = sum(1 for s in micro_steps if s.leaf_type == LeafType.HUMAN)
         unknown_count = sum(1 for s in micro_steps if s.leaf_type == LeafType.UNKNOWN)
 
-        response_lines.append(f"")
-        response_lines.append(f"**Classification:**")
+        response_lines.append("")
+        response_lines.append("**Classification:**")
         if digital_count:
             response_lines.append(f"  🤖 Digital (AI-ready): {digital_count}")
         if human_count:
@@ -317,13 +305,15 @@ class CaptureAgent(BaseProxyAgent):
             response_lines.append(f"  ❓ Unknown (Needs info): {unknown_count}")
 
         # Show micro-steps
-        response_lines.append(f"")
-        response_lines.append(f"**Breakdown:**")
+        response_lines.append("")
+        response_lines.append("**Breakdown:**")
         for i, step in enumerate(micro_steps[:5], 1):  # Show first 5
             icon = (
                 "🤖"
                 if step.leaf_type == LeafType.DIGITAL
-                else "👤" if step.leaf_type == LeafType.HUMAN else "❓"
+                else "👤"
+                if step.leaf_type == LeafType.HUMAN
+                else "❓"
             )
             response_lines.append(
                 f"  {i}. {icon} {step.description} ({step.estimated_minutes} min)"
@@ -334,19 +324,17 @@ class CaptureAgent(BaseProxyAgent):
 
         # Show clarifications if needed
         if clarifications:
-            response_lines.append(f"")
+            response_lines.append("")
             response_lines.append(f"**❓ Questions ({len(clarifications)}):**")
             for clarif in clarifications[:3]:  # Show first 3
                 response_lines.append(f"  - {clarif.question}")
                 if clarif.options:
-                    response_lines.append(
-                        f"    Options: {', '.join(clarif.options)}"
-                    )
+                    response_lines.append(f"    Options: {', '.join(clarif.options)}")
 
         # Status
-        response_lines.append(f"")
+        response_lines.append("")
         if ready:
-            response_lines.append(f"✅ **Ready to save!**")
+            response_lines.append("✅ **Ready to save!**")
         else:
             response_lines.append(
                 f"⏸️ **Awaiting clarifications** ({len(clarifications)} questions)"

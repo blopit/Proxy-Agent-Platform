@@ -6,18 +6,18 @@ allowing for easy mocking and testing via dependency injection.
 """
 
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, Optional, List
+from typing import Generic, TypeVar
 
-from src.core.task_models import Task, Project, User
+from src.core.task_models import Project, Task, User
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class BaseRepositoryInterface(ABC, Generic[T]):
     """Base repository interface with CRUD operations"""
 
     @abstractmethod
-    def get_by_id(self, entity_id: str) -> Optional[T]:
+    def get_by_id(self, entity_id: str) -> T | None:
         """
         Get entity by ID
 
@@ -43,7 +43,7 @@ class BaseRepositoryInterface(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    def update(self, entity_id: str, updates: dict) -> Optional[T]:
+    def update(self, entity_id: str, updates: dict) -> T | None:
         """
         Update entity
 
@@ -70,7 +70,7 @@ class BaseRepositoryInterface(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    def list_all(self, skip: int = 0, limit: int = 100) -> List[T]:
+    def list_all(self, skip: int = 0, limit: int = 100) -> list[T]:
         """
         List all entities with pagination
 
@@ -88,7 +88,7 @@ class TaskRepositoryInterface(BaseRepositoryInterface[Task]):
     """Task-specific repository interface"""
 
     @abstractmethod
-    def get_by_project(self, project_id: str) -> List[Task]:
+    def get_by_project(self, project_id: str) -> list[Task]:
         """
         Get all tasks for a project
 
@@ -101,7 +101,7 @@ class TaskRepositoryInterface(BaseRepositoryInterface[Task]):
         pass
 
     @abstractmethod
-    def get_by_status(self, status: str) -> List[Task]:
+    def get_by_status(self, status: str) -> list[Task]:
         """
         Get all tasks with a specific status
 
@@ -114,7 +114,7 @@ class TaskRepositoryInterface(BaseRepositoryInterface[Task]):
         pass
 
     @abstractmethod
-    def get_by_assignee(self, assignee_id: str) -> List[Task]:
+    def get_by_assignee(self, assignee_id: str) -> list[Task]:
         """
         Get all tasks assigned to a user
 
@@ -127,7 +127,7 @@ class TaskRepositoryInterface(BaseRepositoryInterface[Task]):
         pass
 
     @abstractmethod
-    def search(self, query: str) -> List[Task]:
+    def search(self, query: str) -> list[Task]:
         """
         Search tasks by query string
 
@@ -144,7 +144,7 @@ class ProjectRepositoryInterface(BaseRepositoryInterface[Project]):
     """Project-specific repository interface"""
 
     @abstractmethod
-    def get_by_owner(self, owner_id: str) -> List[Project]:
+    def get_by_owner(self, owner_id: str) -> list[Project]:
         """
         Get all projects owned by a user
 
@@ -157,7 +157,7 @@ class ProjectRepositoryInterface(BaseRepositoryInterface[Project]):
         pass
 
     @abstractmethod
-    def get_active(self) -> List[Project]:
+    def get_active(self) -> list[Project]:
         """
         Get all active projects
 
@@ -171,7 +171,7 @@ class UserRepositoryInterface(BaseRepositoryInterface[User]):
     """User-specific repository interface"""
 
     @abstractmethod
-    def get_by_username(self, username: str) -> Optional[User]:
+    def get_by_username(self, username: str) -> User | None:
         """
         Get user by username
 
@@ -184,7 +184,7 @@ class UserRepositoryInterface(BaseRepositoryInterface[User]):
         pass
 
     @abstractmethod
-    def get_by_email(self, email: str) -> Optional[User]:
+    def get_by_email(self, email: str) -> User | None:
         """
         Get user by email
 

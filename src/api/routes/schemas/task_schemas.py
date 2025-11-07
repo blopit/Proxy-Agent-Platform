@@ -16,12 +16,8 @@ class TaskCreateRequest(BaseModel):
     title: str = Field(..., min_length=1, max_length=255, description="Task title")
     description: str = Field(..., max_length=2000, description="Task description")
     project_id: str = Field(..., description="Parent project ID")
-    priority: TaskPriority = Field(
-        default=TaskPriority.MEDIUM, description="Task priority"
-    )
-    estimated_hours: Decimal | None = Field(
-        None, ge=0, description="Estimated hours to complete"
-    )
+    priority: TaskPriority = Field(default=TaskPriority.MEDIUM, description="Task priority")
+    estimated_hours: Decimal | None = Field(None, ge=0, description="Estimated hours to complete")
     tags: list[str] = Field(default_factory=list, description="Task tags")
     assignee: str | None = Field(None, description="Assigned user ID")
     due_date: datetime | None = Field(None, description="Task due date")
@@ -186,9 +182,7 @@ class TaskStatsResponse(BaseModel):
     total_tasks: int
     by_status: dict[str, int] = Field(..., description="Task counts by status")
     by_priority: dict[str, int] = Field(..., description="Task counts by priority")
-    completion_rate: float = Field(
-        ..., ge=0, le=1, description="Percentage of completed tasks"
-    )
+    completion_rate: float = Field(..., ge=0, le=1, description="Percentage of completed tasks")
     average_completion_time_hours: float | None = Field(
         None, description="Average time to complete tasks (hours)"
     )

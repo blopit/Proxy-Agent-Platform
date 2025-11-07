@@ -104,7 +104,9 @@ class AutomationStep(BaseModel):
 class AutomationPlan(BaseModel):
     """Structured plan for automated task execution"""
 
-    steps: list[AutomationStep] = Field(default_factory=list, description="Sequence of automation steps")
+    steps: list[AutomationStep] = Field(
+        default_factory=list, description="Sequence of automation steps"
+    )
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score (0.0-1.0)")
 
     model_config = ConfigDict(use_enum_values=True, populate_by_name=True)
@@ -128,8 +130,12 @@ class MicroStep(BaseModel):
     parent_task_id: str = Field(..., description="ID of the parent task")
     step_number: int = Field(..., ge=1, description="Order in sequence")
     description: str = Field(..., min_length=1, max_length=500)
-    short_label: str | None = Field(None, max_length=20, description="1-2 word label for UI display")
-    estimated_minutes: int = Field(..., ge=2, le=5, description="2-5 minutes (ADHD-optimized micro-steps)")
+    short_label: str | None = Field(
+        None, max_length=20, description="1-2 word label for UI display"
+    )
+    estimated_minutes: int = Field(
+        ..., ge=2, le=5, description="2-5 minutes (ADHD-optimized micro-steps)"
+    )
     icon: str | None = Field(None, description="Emoji icon representing this step")
 
     # Delegation
@@ -144,8 +150,12 @@ class MicroStep(BaseModel):
     completed_at: datetime | None = None
 
     # Capture system fields (Epic: Capture Mode)
-    leaf_type: LeafType = Field(default=LeafType.UNKNOWN, description="Classification for automation")
-    automation_plan: AutomationPlan | None = Field(None, description="Structured automation plan if DIGITAL")
+    leaf_type: LeafType = Field(
+        default=LeafType.UNKNOWN, description="Classification for automation"
+    )
+    automation_plan: AutomationPlan | None = Field(
+        None, description="Structured automation plan if DIGITAL"
+    )
     clarification_needs: list[ClarificationNeed] = Field(
         default_factory=list, description="Questions requiring user input"
     )
@@ -158,8 +168,7 @@ class MicroStep(BaseModel):
     level: int = Field(default=0, ge=0, description="Depth in tree (0 = top-level)")
     is_leaf: bool = Field(default=True, description="True if atomic (can't decompose further)")
     decomposition_state: DecompositionState = Field(
-        default=DecompositionState.ATOMIC,
-        description="Current decomposition state"
+        default=DecompositionState.ATOMIC, description="Current decomposition state"
     )
     children_ids: list[str] = Field(default_factory=list, description="IDs of child micro-steps")
 
@@ -203,7 +212,9 @@ class Task(BaseModel):
     parent_id: str | None = Field(None, description="Parent task ID for subtasks")
 
     # Capture type (task, goal, habit, shopping_list)
-    capture_type: CaptureType = Field(default=CaptureType.TASK, description="Type of capture entity")
+    capture_type: CaptureType = Field(
+        default=CaptureType.TASK, description="Type of capture entity"
+    )
 
     # Status and priority
     status: TaskStatus = Field(default=TaskStatus.TODO)
@@ -219,7 +230,7 @@ class Task(BaseModel):
         None,
         description="User ID of assigned person",
         validation_alias="assignee_id",  # Accept 'assignee_id' when parsing
-        serialization_alias="assignee_id"  # Output as 'assignee_id' when serializing
+        serialization_alias="assignee_id",  # Output as 'assignee_id' when serializing
     )
 
     # Dates
@@ -234,21 +245,26 @@ class Task(BaseModel):
 
     # Epic 7: Task Splitting Support
     scope: TaskScope = Field(default=TaskScope.SIMPLE, description="Task complexity scope")
-    micro_steps: list[MicroStep] = Field(default_factory=list, description="Micro-steps (2-5 min each)")
+    micro_steps: list[MicroStep] = Field(
+        default_factory=list, description="Micro-steps (2-5 min each)"
+    )
     is_micro_step: bool = Field(default=False, description="Is this task itself a micro-step")
-    delegation_mode: DelegationMode = Field(default=DelegationMode.DO, description="4D delegation strategy")
+    delegation_mode: DelegationMode = Field(
+        default=DelegationMode.DO, description="4D delegation strategy"
+    )
 
     # Progressive Hierarchy Support (7 Levels)
     level: int = Field(default=0, ge=0, le=6, description="Hierarchy level: 0=Initiative, 6=Step")
     custom_emoji: str | None = Field(None, description="AI-generated custom emoji for this node")
     decomposition_state: DecompositionState = Field(
-        default=DecompositionState.STUB,
-        description="Current decomposition state"
+        default=DecompositionState.STUB, description="Current decomposition state"
     )
     children_ids: list[str] = Field(default_factory=list, description="IDs of child tasks")
     total_minutes: int = Field(default=0, ge=0, description="Total time including all descendants")
     is_leaf: bool = Field(default=False, description="True if atomic leaf node (can't decompose)")
-    leaf_type: LeafType | None = Field(None, description="Classification for leaf nodes (DIGITAL/HUMAN)")
+    leaf_type: LeafType | None = Field(
+        None, description="Classification for leaf nodes (DIGITAL/HUMAN)"
+    )
 
     @field_validator("title")
     @classmethod
@@ -342,9 +358,7 @@ class Task(BaseModel):
         if not self.micro_steps or len(self.micro_steps) == 0:
             return 0.0
 
-        completed_count = sum(
-            1 for step in self.micro_steps if step.status == TaskStatus.COMPLETED
-        )
+        completed_count = sum(1 for step in self.micro_steps if step.status == TaskStatus.COMPLETED)
 
         return (completed_count / len(self.micro_steps)) * 100.0
 
@@ -476,7 +490,7 @@ class TaskComment(BaseModel):
         ...,
         description="User ID of comment author",
         validation_alias="author_id",
-        serialization_alias="author_id"
+        serialization_alias="author_id",
     )
     content: str = Field(..., min_length=1, max_length=2000)
 
@@ -801,23 +815,27 @@ class Goal(BaseModel):
     task_id: str = Field(..., description="Link to tasks table (capture_type='goal')")
 
     # Goal-specific fields
-    target_value: Decimal | None = Field(None, description="Numeric target (NULL for non-quantifiable)")
+    target_value: Decimal | None = Field(
+        None, description="Numeric target (NULL for non-quantifiable)"
+    )
     current_value: Decimal = Field(default=Decimal("0.0"), description="Current progress")
-    unit: str | None = Field(None, max_length=50, description="Measurement unit (pounds, dollars, etc.)")
+    unit: str | None = Field(
+        None, max_length=50, description="Measurement unit (pounds, dollars, etc.)"
+    )
     target_date: datetime | None = Field(None, description="When you want to achieve this goal")
 
     # Milestones
-    milestones: list[Milestone] = Field(default_factory=list, description="Intermediate checkpoints")
+    milestones: list[Milestone] = Field(
+        default_factory=list, description="Intermediate checkpoints"
+    )
 
     # Progress tracking
     progress_percentage: Decimal = Field(
-        default=Decimal("0.0"),
-        ge=0,
-        le=100,
-        decimal_places=2,
-        description="Progress (0-100)"
+        default=Decimal("0.0"), ge=0, le=100, decimal_places=2, description="Progress (0-100)"
     )
-    last_progress_update: datetime | None = Field(None, description="When progress was last updated")
+    last_progress_update: datetime | None = Field(
+        None, description="When progress was last updated"
+    )
 
     # Goal hierarchy
     parent_goal_id: str | None = Field(None, description="Parent goal (NULL for top-level)")
@@ -866,11 +884,10 @@ class RecurrencePattern(BaseModel):
 
     frequency: str = Field(..., description="daily, weekly, monthly, custom")
     interval: int = Field(default=1, ge=1, description="Every N days/weeks/months")
-    active_days: list[int] | None = Field(
-        None,
-        description="For weekly: 0=Sunday, 6=Saturday"
+    active_days: list[int] | None = Field(None, description="For weekly: 0=Sunday, 6=Saturday")
+    time_of_day: str | None = Field(
+        None, pattern=r"^\d{2}:\d{2}$", description="Preferred time (HH:MM)"
     )
-    time_of_day: str | None = Field(None, pattern=r"^\d{2}:\d{2}$", description="Preferred time (HH:MM)")
     rrule: str | None = Field(None, description="Full RRULE string (optional)")
 
     model_config = ConfigDict(
@@ -921,7 +938,9 @@ class Habit(BaseModel):
     last_completed_at: datetime | None = Field(None, description="Most recent completion")
 
     # Reminders
-    reminder_time: str | None = Field(None, pattern=r"^\d{2}:\d{2}$", description="Time for notifications (HH:MM)")
+    reminder_time: str | None = Field(
+        None, pattern=r"^\d{2}:\d{2}$", description="Time for notifications (HH:MM)"
+    )
     reminder_enabled: bool = Field(default=False, description="Whether to send reminders")
 
     # Status
@@ -930,8 +949,7 @@ class Habit(BaseModel):
 
     # Completion history (denormalized for quick stats)
     completion_history: list[str] = Field(
-        default_factory=list,
-        description="ISO dates of recent completions (last 90 days)"
+        default_factory=list, description="ISO dates of recent completions (last 90 days)"
     )
 
     # Metadata
@@ -1073,16 +1091,13 @@ class ShoppingList(BaseModel):
 
         # Update completion percentage
         if self.total_items > 0:
-            self.completion_percentage = Decimal(
-                (self.purchased_items / self.total_items) * 100
-            )
+            self.completion_percentage = Decimal((self.purchased_items / self.total_items) * 100)
         else:
             self.completion_percentage = Decimal("0.0")
 
         # Update costs
         self.total_estimated_cost = sum(
-            (item.estimated_price or Decimal("0.0")) * item.quantity
-            for item in self.items
+            (item.estimated_price or Decimal("0.0")) * item.quantity for item in self.items
         )
         self.total_actual_cost = sum(
             (item.actual_price or Decimal("0.0")) * item.quantity

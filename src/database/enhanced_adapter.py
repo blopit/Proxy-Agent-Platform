@@ -7,9 +7,10 @@ from __future__ import annotations
 import asyncio
 import json
 import sqlite3
-import structlog
 from datetime import datetime
 from pathlib import Path
+
+import structlog
 
 from src.core.models import Message
 

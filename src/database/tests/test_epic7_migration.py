@@ -9,13 +9,12 @@ Tests for adding Epic 7 task splitting fields to database:
 Following TDD RED-GREEN-REFACTOR methodology.
 """
 
-import pytest
-import sqlite3
-from pathlib import Path
 from decimal import Decimal
 
+import pytest
+
+from src.core.task_models import DelegationMode, MicroStep, Task, TaskScope
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
-from src.core.task_models import Task, TaskScope, DelegationMode, MicroStep
 
 
 class TestEpic7DatabaseSchema:
@@ -151,25 +150,28 @@ class TestEpic7TaskPersistence:
             description="Testing Epic 7 scope field",
             project_id="project_123",
             scope=TaskScope.MULTI,
-            estimated_hours=Decimal("0.5")  # 30 minutes = MULTI
+            estimated_hours=Decimal("0.5"),  # 30 minutes = MULTI
         )
 
         # Save to database
         conn = db.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO tasks
             (task_id, title, description, project_id, scope, estimated_hours)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (
-            task.task_id,
-            task.title,
-            task.description,
-            task.project_id,
-            task.scope,  # Already a string due to use_enum_values=True
-            float(task.estimated_hours)
-        ))
+        """,
+            (
+                task.task_id,
+                task.title,
+                task.description,
+                task.project_id,
+                task.scope,  # Already a string due to use_enum_values=True
+                float(task.estimated_hours),
+            ),
+        )
         conn.commit()
 
         # Retrieve and verify
@@ -185,23 +187,26 @@ class TestEpic7TaskPersistence:
             title="Delegate This",
             description="Task to delegate",
             project_id="project_123",
-            delegation_mode=DelegationMode.DELEGATE
+            delegation_mode=DelegationMode.DELEGATE,
         )
 
         conn = db.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO tasks
             (task_id, title, description, project_id, delegation_mode)
             VALUES (?, ?, ?, ?, ?)
-        """, (
-            task.task_id,
-            task.title,
-            task.description,
-            task.project_id,
-            task.delegation_mode  # Already a string
-        ))
+        """,
+            (
+                task.task_id,
+                task.title,
+                task.description,
+                task.project_id,
+                task.delegation_mode,  # Already a string
+            ),
+        )
         conn.commit()
 
         cursor.execute("SELECT delegation_mode FROM tasks WHERE task_id = ?", (task.task_id,))
@@ -216,23 +221,26 @@ class TestEpic7TaskPersistence:
             title="Micro Step Task",
             description="This is a micro-step",
             project_id="project_123",
-            is_micro_step=True
+            is_micro_step=True,
         )
 
         conn = db.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO tasks
             (task_id, title, description, project_id, is_micro_step)
             VALUES (?, ?, ?, ?, ?)
-        """, (
-            task.task_id,
-            task.title,
-            task.description,
-            task.project_id,
-            1 if task.is_micro_step else 0  # SQLite boolean
-        ))
+        """,
+            (
+                task.task_id,
+                task.title,
+                task.description,
+                task.project_id,
+                1 if task.is_micro_step else 0,  # SQLite boolean
+            ),
+        )
         conn.commit()
 
         cursor.execute("SELECT is_micro_step FROM tasks WHERE task_id = ?", (task.task_id,))
@@ -245,18 +253,24 @@ class TestEpic7TaskPersistence:
         """Test saving MicroStep to micro_steps table"""
         # First create parent task
         parent_task = Task(
-            title="Parent Task",
-            description="Task with micro-steps",
-            project_id="project_123"
+            title="Parent Task", description="Task with micro-steps", project_id="project_123"
         )
 
         conn = db.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO tasks (task_id, title, description, project_id)
             VALUES (?, ?, ?, ?)
-        """, (parent_task.task_id, parent_task.title, parent_task.description, parent_task.project_id))
+        """,
+            (
+                parent_task.task_id,
+                parent_task.title,
+                parent_task.description,
+                parent_task.project_id,
+            ),
+        )
 
         # Create micro-step
         micro_step = MicroStep(
@@ -264,33 +278,39 @@ class TestEpic7TaskPersistence:
             step_number=1,
             description="First micro-step",
             estimated_minutes=3,
-            delegation_mode=DelegationMode.DO
+            delegation_mode=DelegationMode.DO,
         )
 
         # Save micro-step
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO micro_steps
             (step_id, parent_task_id, step_number, description, estimated_minutes,
              delegation_mode, status, created_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            micro_step.step_id,
-            micro_step.parent_task_id,
-            micro_step.step_number,
-            micro_step.description,
-            micro_step.estimated_minutes,
-            micro_step.delegation_mode,  # Already string
-            micro_step.status,  # Already string
-            micro_step.created_at.isoformat()
-        ))
+        """,
+            (
+                micro_step.step_id,
+                micro_step.parent_task_id,
+                micro_step.step_number,
+                micro_step.description,
+                micro_step.estimated_minutes,
+                micro_step.delegation_mode,  # Already string
+                micro_step.status,  # Already string
+                micro_step.created_at.isoformat(),
+            ),
+        )
         conn.commit()
 
         # Retrieve and verify
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT step_id, description, estimated_minutes, delegation_mode
             FROM micro_steps
             WHERE parent_task_id = ?
-        """, (parent_task.task_id,))
+        """,
+            (parent_task.task_id,),
+        )
         row = cursor.fetchone()
 
         assert row is not None
@@ -306,18 +326,26 @@ class TestEpic7TaskPersistence:
             title="Complex Task",
             description="Task with multiple micro-steps",
             project_id="project_123",
-            scope=TaskScope.MULTI
+            scope=TaskScope.MULTI,
         )
 
         conn = db.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO tasks
             (task_id, title, description, project_id, scope)
             VALUES (?, ?, ?, ?, ?)
-        """, (parent_task.task_id, parent_task.title, parent_task.description,
-              parent_task.project_id, parent_task.scope))
+        """,
+            (
+                parent_task.task_id,
+                parent_task.title,
+                parent_task.description,
+                parent_task.project_id,
+                parent_task.scope,
+            ),
+        )
 
         # Add 3 micro-steps
         for i in range(1, 4):
@@ -325,27 +353,37 @@ class TestEpic7TaskPersistence:
                 parent_task_id=parent_task.task_id,
                 step_number=i,
                 description=f"Step {i}",
-                estimated_minutes=3
+                estimated_minutes=3,
             )
 
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO micro_steps
                 (step_id, parent_task_id, step_number, description, estimated_minutes,
                  delegation_mode, status, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                step.step_id, step.parent_task_id, step.step_number,
-                step.description, step.estimated_minutes,
-                step.delegation_mode, step.status,  # Already strings
-                step.created_at.isoformat()
-            ))
+            """,
+                (
+                    step.step_id,
+                    step.parent_task_id,
+                    step.step_number,
+                    step.description,
+                    step.estimated_minutes,
+                    step.delegation_mode,
+                    step.status,  # Already strings
+                    step.created_at.isoformat(),
+                ),
+            )
 
         conn.commit()
 
         # Retrieve task with micro-steps
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT COUNT(*) FROM micro_steps WHERE parent_task_id = ?
-        """, (parent_task.task_id,))
+        """,
+            (parent_task.task_id,),
+        )
         count = cursor.fetchone()[0]
 
         assert count == 3
@@ -432,11 +470,14 @@ class TestEpic7MigrationBackwardsCompatibility:
         conn.commit()
 
         # Update with Epic 7 fields
-        cursor.execute("""
+        cursor.execute(
+            """
             UPDATE tasks
             SET scope = ?, delegation_mode = ?, is_micro_step = ?
             WHERE task_id = ?
-        """, ("multi", "delegate", 1, "old_task_2"))
+        """,
+            ("multi", "delegate", 1, "old_task_2"),
+        )
         conn.commit()
 
         # Verify update

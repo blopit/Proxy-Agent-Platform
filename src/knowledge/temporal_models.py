@@ -10,15 +10,15 @@ Provides Pydantic models for:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
 # Python 3.10 compatibility
-UTC = timezone.utc
+UTC = UTC
 
 
 class ItemCategory(str, Enum):
@@ -116,12 +116,12 @@ class TemporalEntity(BaseModel):
 
     # Relevance decay
     relevance_score: float = Field(default=1.0, ge=0.0, le=1.0)
-    last_accessed: Optional[datetime] = None
+    last_accessed: datetime | None = None
     access_count: int = Field(default=0, ge=0)
 
     # Versioning
     is_current: bool = True
-    superseded_by: Optional[str] = None
+    superseded_by: str | None = None
 
     model_config = ConfigDict(use_enum_values=True, populate_by_name=True)
 
@@ -132,7 +132,7 @@ class TemporalEntity(BaseModel):
     def decay_relevance(self, days_since_access: int) -> None:
         """Decay relevance score based on time since last access"""
         decay_rate = 0.95
-        self.relevance_score = max(0.1, self.relevance_score * (decay_rate ** days_since_access))
+        self.relevance_score = max(0.1, self.relevance_score * (decay_rate**days_since_access))
 
 
 class TemporalRelationship(BaseModel):
@@ -153,7 +153,7 @@ class TemporalRelationship(BaseModel):
 
     # Versioning
     is_current: bool = True
-    superseded_by: Optional[str] = None
+    superseded_by: str | None = None
 
     model_config = ConfigDict(use_enum_values=True, populate_by_name=True)
 
@@ -176,24 +176,24 @@ class ShoppingItem(BaseModel):
     item_id: str = Field(default_factory=lambda: str(uuid4()))
     user_id: str
     item_name: str = Field(..., min_length=1, max_length=255)
-    category: Optional[ItemCategory] = None
+    category: ItemCategory | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     # Temporal tracking
     added_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    completed_at: Optional[datetime] = None
-    expired_at: Optional[datetime] = None
+    completed_at: datetime | None = None
+    expired_at: datetime | None = None
 
     # Recurrence detection
     is_recurring: bool = False
-    recurrence_pattern: Optional[RecurrencePattern] = None
-    last_purchased: Optional[datetime] = None
+    recurrence_pattern: RecurrencePattern | None = None
+    last_purchased: datetime | None = None
     purchase_count: int = Field(default=0, ge=0)
 
     # Context
-    preferred_store: Optional[str] = None
+    preferred_store: str | None = None
     urgency: ItemUrgency = ItemUrgency.NORMAL
-    notes: Optional[str] = None
+    notes: str | None = None
 
     # Status
     status: ItemStatus = ItemStatus.ACTIVE
@@ -267,7 +267,7 @@ class PreferenceHistory(BaseModel):
     user_id: str
     preference_key: str = Field(..., description="Preference identifier")
     preference_value: str = Field(..., description="Preference value")
-    context: Optional[str] = Field(None, description="Optional context (location, mood, etc.)")
+    context: str | None = Field(None, description="Optional context (location, mood, etc.)")
 
     # Temporal tracking
     valid_from: datetime
@@ -304,18 +304,18 @@ class EventLog(BaseModel):
     event_id: str = Field(default_factory=lambda: str(uuid4()))
     user_id: str
     event_type: EventType
-    entity_id: Optional[str] = None
+    entity_id: str | None = None
     event_time: datetime = Field(default_factory=lambda: datetime.now(UTC))
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     # Context capture
-    day_of_week: Optional[int] = Field(None, ge=0, le=6)  # 0=Monday, 6=Sunday
-    hour_of_day: Optional[int] = Field(None, ge=0, le=23)
-    location: Optional[str] = None
-    energy_level: Optional[EnergyLevel] = None
+    day_of_week: int | None = Field(None, ge=0, le=6)  # 0=Monday, 6=Sunday
+    hour_of_day: int | None = Field(None, ge=0, le=23)
+    location: str | None = None
+    energy_level: EnergyLevel | None = None
 
     # Pattern detection
-    recurring_pattern_id: Optional[str] = None
+    recurring_pattern_id: str | None = None
 
     model_config = ConfigDict(use_enum_values=True, populate_by_name=True)
 
@@ -324,9 +324,9 @@ class EventLog(BaseModel):
         cls,
         user_id: str,
         event_type: EventType,
-        event_time: Optional[datetime] = None,
+        event_time: datetime | None = None,
         **kwargs: Any,
-    ) -> "EventLog":
+    ) -> EventLog:
         """Create event log with auto-populated temporal context"""
         timestamp = event_time or datetime.now(UTC)
 
@@ -358,8 +358,8 @@ class RecurringPattern(BaseModel):
     pattern_id: str = Field(default_factory=lambda: str(uuid4()))
     user_id: str
     pattern_type: str = Field(..., description="Type of pattern (shopping, task, etc.)")
-    entity_id: Optional[str] = None
-    entity_type: Optional[str] = None
+    entity_id: str | None = None
+    entity_type: str | None = None
 
     # Pattern metadata
     recurrence: RecurrencePattern
@@ -367,13 +367,13 @@ class RecurringPattern(BaseModel):
     observation_count: int = Field(default=0, ge=0)
 
     # Temporal context
-    day_of_week: Optional[int] = Field(None, ge=0, le=6)
-    hour_of_day: Optional[int] = Field(None, ge=0, le=23)
+    day_of_week: int | None = Field(None, ge=0, le=6)
+    hour_of_day: int | None = Field(None, ge=0, le=23)
 
     # Tracking
     first_observed: datetime
     last_observed: datetime
-    next_predicted: Optional[datetime] = None
+    next_predicted: datetime | None = None
 
     is_active: bool = True
 

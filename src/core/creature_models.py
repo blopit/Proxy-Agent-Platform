@@ -10,8 +10,7 @@ Supports:
 
 from datetime import datetime
 from enum import Enum
-from typing import Optional
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -89,7 +88,7 @@ class CreatureTemplate(BaseModel):
     rarity: RarityTier
     primary_color: str = Field(..., description="Hex color code")
     secondary_color: str = Field(..., description="Hex color code")
-    accent_color: Optional[str] = Field(None, description="Hex color code")
+    accent_color: str | None = Field(None, description="Hex color code")
     generation_seed: str = Field(..., description="Seed for AI image generation")
     base_prompt: str = Field(..., description="Base AI prompt for generation")
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -101,7 +100,9 @@ class CreatureTemplate(BaseModel):
     base_charm: int = Field(default=10, ge=1, le=100)
 
     model_config = ConfigDict(
-        use_enum_values=True, populate_by_name=True, json_encoders={datetime: lambda v: v.isoformat()}
+        use_enum_values=True,
+        populate_by_name=True,
+        json_encoders={datetime: lambda v: v.isoformat()},
     )
 
 
@@ -113,7 +114,7 @@ class CreatureTemplateCreate(BaseModel):
     rarity: RarityTier
     primary_color: str
     secondary_color: str
-    accent_color: Optional[str] = None
+    accent_color: str | None = None
     generation_seed: str
     base_prompt: str
     base_strength: int = 10
@@ -140,7 +141,7 @@ class UserCreature(BaseModel):
     template_id: str
 
     # Customization
-    nickname: Optional[str] = Field(None, description="User-assigned nickname")
+    nickname: str | None = Field(None, description="User-assigned nickname")
 
     # Progression
     level: int = Field(default=1, ge=1, le=100)
@@ -148,13 +149,13 @@ class UserCreature(BaseModel):
     evolution_stage: EvolutionStage = EvolutionStage.BABY
 
     # Images for each evolution stage
-    image_baby: Optional[str] = None
-    image_teen: Optional[str] = None
-    image_adult: Optional[str] = None
-    image_elite: Optional[str] = None
-    image_master: Optional[str] = None
-    image_legendary: Optional[str] = None
-    image_mythic: Optional[str] = None
+    image_baby: str | None = None
+    image_teen: str | None = None
+    image_adult: str | None = None
+    image_elite: str | None = None
+    image_master: str | None = None
+    image_legendary: str | None = None
+    image_mythic: str | None = None
 
     # Metadata
     is_starter: bool = False
@@ -162,14 +163,16 @@ class UserCreature(BaseModel):
     is_active: bool = False
     obtained_at: datetime = Field(default_factory=datetime.utcnow)
     obtained_from: ObtainMethod
-    obtained_from_user_id: Optional[str] = None
+    obtained_from_user_id: str | None = None
 
     # Timestamps
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     model_config = ConfigDict(
-        use_enum_values=True, populate_by_name=True, json_encoders={datetime: lambda v: v.isoformat()}
+        use_enum_values=True,
+        populate_by_name=True,
+        json_encoders={datetime: lambda v: v.isoformat()},
     )
 
     @property
@@ -178,7 +181,7 @@ class UserCreature(BaseModel):
         return self.nickname if self.nickname else "Unknown Creature"
 
     @property
-    def current_image(self) -> Optional[str]:
+    def current_image(self) -> str | None:
         """Get image URL for current evolution stage"""
         stage_lower = self.evolution_stage.value.lower()
         return getattr(self, f"image_{stage_lower}", None)
@@ -195,7 +198,7 @@ class UserCreatureCreate(BaseModel):
 
     owner_user_id: str
     template_id: str
-    nickname: Optional[str] = None
+    nickname: str | None = None
     is_starter: bool = False
     obtained_from: ObtainMethod
 
@@ -205,11 +208,11 @@ class UserCreatureCreate(BaseModel):
 class UserCreatureUpdate(BaseModel):
     """Input model for updating user creature"""
 
-    nickname: Optional[str] = None
-    level: Optional[int] = Field(None, ge=1, le=100)
-    xp: Optional[int] = Field(None, ge=0)
-    evolution_stage: Optional[EvolutionStage] = None
-    is_active: Optional[bool] = None
+    nickname: str | None = None
+    level: int | None = Field(None, ge=1, le=100)
+    xp: int | None = Field(None, ge=0)
+    evolution_stage: EvolutionStage | None = None
+    is_active: bool | None = None
 
     model_config = ConfigDict(use_enum_values=True)
 
@@ -228,12 +231,12 @@ class CreatureDetails(BaseModel):
     # Creature instance data
     creature_id: str
     owner_user_id: str
-    nickname: Optional[str]
+    nickname: str | None
     level: int
     xp: int
     xp_to_next_level: int
     evolution_stage: EvolutionStage
-    current_image: Optional[str]
+    current_image: str | None
     is_starter: bool
     is_tradeable: bool
     is_active: bool
@@ -246,7 +249,7 @@ class CreatureDetails(BaseModel):
     rarity: RarityTier
     primary_color: str
     secondary_color: str
-    accent_color: Optional[str]
+    accent_color: str | None
 
     # Stats
     strength: int
@@ -255,7 +258,9 @@ class CreatureDetails(BaseModel):
     charm: int
 
     model_config = ConfigDict(
-        use_enum_values=True, populate_by_name=True, json_encoders={datetime: lambda v: v.isoformat()}
+        use_enum_values=True,
+        populate_by_name=True,
+        json_encoders={datetime: lambda v: v.isoformat()},
     )
 
 
@@ -271,16 +276,18 @@ class CreatureTrade(BaseModel):
     sender_user_id: str
     receiver_user_id: str
     sender_creature_id: str
-    receiver_creature_id: Optional[str] = Field(None, description="None for gifts")
+    receiver_creature_id: str | None = Field(None, description="None for gifts")
     status: TradeStatus = TradeStatus.PENDING
-    message: Optional[str] = None
+    message: str | None = None
     offered_at: datetime = Field(default_factory=datetime.utcnow)
-    responded_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    expires_at: Optional[datetime] = None
+    responded_at: datetime | None = None
+    completed_at: datetime | None = None
+    expires_at: datetime | None = None
 
     model_config = ConfigDict(
-        use_enum_values=True, populate_by_name=True, json_encoders={datetime: lambda v: v.isoformat()}
+        use_enum_values=True,
+        populate_by_name=True,
+        json_encoders={datetime: lambda v: v.isoformat()},
     )
 
     @property
@@ -295,8 +302,8 @@ class TradeRequest(BaseModel):
     sender_user_id: str
     receiver_user_id: str
     sender_creature_id: str
-    receiver_creature_id: Optional[str] = None
-    message: Optional[str] = None
+    receiver_creature_id: str | None = None
+    message: str | None = None
 
     model_config = ConfigDict(use_enum_values=True)
 
@@ -350,8 +357,8 @@ class CreatureLevelUpResult(BaseModel):
     xp_added: int
     leveled_up: bool
     evolved: bool
-    old_stage: Optional[EvolutionStage] = None
-    new_stage: Optional[EvolutionStage] = None
+    old_stage: EvolutionStage | None = None
+    new_stage: EvolutionStage | None = None
 
     model_config = ConfigDict(use_enum_values=True)
 
@@ -359,8 +366,8 @@ class CreatureLevelUpResult(BaseModel):
 class CreatureRewardResult(BaseModel):
     """Result of claiming creature reward after task completion"""
 
-    creature_xp_gained: Optional[CreatureLevelUpResult] = None
-    new_creature_awarded: Optional[UserCreature] = None
+    creature_xp_gained: CreatureLevelUpResult | None = None
+    new_creature_awarded: UserCreature | None = None
     mystery_box_opened: bool = False
 
     model_config = ConfigDict(use_enum_values=True)

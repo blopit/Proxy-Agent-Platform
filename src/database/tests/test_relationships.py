@@ -2,32 +2,34 @@
 Test suite for database relationships and foreign key constraints - Epic 1.3 TDD
 """
 
-import pytest
-from datetime import datetime
-from uuid import uuid4
 import random
 import string
+from datetime import datetime
+from uuid import uuid4
 
-from src.core.task_models import User, Project, Task, FocusSession, Achievement, UserAchievement
+import pytest
+
+from src.core.task_models import Achievement, FocusSession, Project, Task, User, UserAchievement
+from src.database.enhanced_adapter import get_enhanced_database
 from src.repositories.enhanced_repositories import (
-    UserRepository,
+    AchievementRepository,
     EnhancedProjectRepository,
     EnhancedTaskRepository,
     FocusSessionRepository,
-    AchievementRepository,
-    UserAchievementRepository
+    UserAchievementRepository,
+    UserRepository,
 )
-from src.database.enhanced_adapter import get_enhanced_database
 
 
 def generate_unique_email():
     """Generate a unique email address for testing"""
-    suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
+    suffix = "".join(random.choices(string.ascii_lowercase + string.digits, k=8))
     return f"test-{suffix}@example.com"
+
 
 def generate_unique_username():
     """Generate a unique username for testing"""
-    suffix = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+    suffix = "".join(random.choices(string.ascii_lowercase + string.digits, k=6))
     return f"testuser_{suffix}"
 
 
@@ -58,7 +60,7 @@ class TestUserProjectRelationships:
             description="Test Description",
             owner_id="non-existent-user-id",  # Invalid foreign key
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
 
         # Should fail due to foreign key constraint
@@ -66,7 +68,10 @@ class TestUserProjectRelationships:
             self.project_repo.create(project)
 
         # Verify it's a foreign key constraint error
-        assert "foreign key" in str(exc_info.value).lower() or "constraint" in str(exc_info.value).lower()
+        assert (
+            "foreign key" in str(exc_info.value).lower()
+            or "constraint" in str(exc_info.value).lower()
+        )
 
     def test_project_creation_with_valid_owner_succeeds(self):
         """Test that projects can be created with valid owner"""
@@ -76,7 +81,7 @@ class TestUserProjectRelationships:
             username=generate_unique_username(),
             email=generate_unique_email(),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_user = self.user_repo.create(user)
 
@@ -87,7 +92,7 @@ class TestUserProjectRelationships:
             description="Test Description",
             owner_id=created_user.user_id,  # Valid foreign key
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
 
         created_project = self.project_repo.create(project)
@@ -102,7 +107,7 @@ class TestUserProjectRelationships:
             username=generate_unique_username(),
             email=generate_unique_email(),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_user = self.user_repo.create(user)
 
@@ -112,7 +117,7 @@ class TestUserProjectRelationships:
             description="Test Description",
             owner_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_project = self.project_repo.create(project)
 
@@ -144,14 +149,17 @@ class TestProjectTaskRelationships:
             project_id="non-existent-project-id",  # Invalid foreign key
             assignee_id="test-user",
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
 
         # Should fail due to foreign key constraint
         with pytest.raises(Exception) as exc_info:
             self.task_repo.create(task)
 
-        assert "foreign key" in str(exc_info.value).lower() or "constraint" in str(exc_info.value).lower()
+        assert (
+            "foreign key" in str(exc_info.value).lower()
+            or "constraint" in str(exc_info.value).lower()
+        )
 
     def test_task_creation_with_valid_project_succeeds(self):
         """Test that tasks can be created with valid project"""
@@ -161,7 +169,7 @@ class TestProjectTaskRelationships:
             username=generate_unique_username(),
             email=generate_unique_email(),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_user = self.user_repo.create(user)
 
@@ -171,7 +179,7 @@ class TestProjectTaskRelationships:
             description="Test Description",
             owner_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_project = self.project_repo.create(project)
 
@@ -183,7 +191,7 @@ class TestProjectTaskRelationships:
             project_id=created_project.project_id,  # Valid foreign key
             assignee_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
 
         created_task = self.task_repo.create(task)
@@ -198,7 +206,7 @@ class TestProjectTaskRelationships:
             username=generate_unique_username(),
             email=generate_unique_email(),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_user = self.user_repo.create(user)
 
@@ -208,7 +216,7 @@ class TestProjectTaskRelationships:
             description="Test Description",
             owner_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_project = self.project_repo.create(project)
 
@@ -219,7 +227,7 @@ class TestProjectTaskRelationships:
             project_id=created_project.project_id,
             assignee_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_task = self.task_repo.create(task)
 
@@ -249,7 +257,7 @@ class TestTaskHierarchyRelationships:
             username=generate_unique_username(),
             email=generate_unique_email(),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_user = self.user_repo.create(user)
 
@@ -259,7 +267,7 @@ class TestTaskHierarchyRelationships:
             description="Test Description",
             owner_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_project = self.project_repo.create(project)
 
@@ -272,14 +280,17 @@ class TestTaskHierarchyRelationships:
             parent_id="non-existent-task-id",  # Invalid parent reference
             assignee_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
 
         # Should fail due to foreign key constraint
         with pytest.raises(Exception) as exc_info:
             self.task_repo.create(subtask)
 
-        assert "foreign key" in str(exc_info.value).lower() or "constraint" in str(exc_info.value).lower()
+        assert (
+            "foreign key" in str(exc_info.value).lower()
+            or "constraint" in str(exc_info.value).lower()
+        )
 
     def test_subtask_creation_with_valid_parent_succeeds(self):
         """Test that subtasks can be created with valid parent"""
@@ -289,7 +300,7 @@ class TestTaskHierarchyRelationships:
             username=generate_unique_username(),
             email=generate_unique_email(),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_user = self.user_repo.create(user)
 
@@ -299,7 +310,7 @@ class TestTaskHierarchyRelationships:
             description="Test Description",
             owner_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_project = self.project_repo.create(project)
 
@@ -311,7 +322,7 @@ class TestTaskHierarchyRelationships:
             project_id=created_project.project_id,
             assignee_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_parent = self.task_repo.create(parent_task)
 
@@ -324,7 +335,7 @@ class TestTaskHierarchyRelationships:
             parent_id=created_parent.task_id,  # Valid parent reference
             assignee_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
 
         created_subtask = self.task_repo.create(subtask)
@@ -339,7 +350,7 @@ class TestTaskHierarchyRelationships:
             username=generate_unique_username(),
             email=generate_unique_email(),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_user = self.user_repo.create(user)
 
@@ -349,7 +360,7 @@ class TestTaskHierarchyRelationships:
             description="Test Description",
             owner_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_project = self.project_repo.create(project)
 
@@ -360,7 +371,7 @@ class TestTaskHierarchyRelationships:
             project_id=created_project.project_id,
             assignee_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_parent = self.task_repo.create(parent_task)
 
@@ -372,7 +383,7 @@ class TestTaskHierarchyRelationships:
             parent_id=created_parent.task_id,
             assignee_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_subtask = self.task_repo.create(subtask)
 
@@ -403,7 +414,7 @@ class TestUserAssignmentRelationships:
             username=generate_unique_username(),
             email=generate_unique_email(),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_user = self.user_repo.create(user)
 
@@ -413,7 +424,7 @@ class TestUserAssignmentRelationships:
             description="Test Description",
             owner_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_project = self.project_repo.create(project)
 
@@ -425,14 +436,17 @@ class TestUserAssignmentRelationships:
             project_id=created_project.project_id,
             assignee_id="non-existent-user-id",  # Invalid user reference
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
 
         # Should fail due to foreign key constraint
         with pytest.raises(Exception) as exc_info:
             self.task_repo.create(task)
 
-        assert "foreign key" in str(exc_info.value).lower() or "constraint" in str(exc_info.value).lower()
+        assert (
+            "foreign key" in str(exc_info.value).lower()
+            or "constraint" in str(exc_info.value).lower()
+        )
 
     def test_focus_session_user_must_be_valid(self):
         """Test that focus sessions must reference valid users"""
@@ -441,14 +455,17 @@ class TestUserAssignmentRelationships:
             session_id=str(uuid4()),
             user_id="non-existent-user-id",  # Invalid user reference
             planned_duration_minutes=25,
-            started_at=datetime.now()
+            started_at=datetime.now(),
         )
 
         # Should fail due to foreign key constraint
         with pytest.raises(Exception) as exc_info:
             self.focus_repo.create(session)
 
-        assert "foreign key" in str(exc_info.value).lower() or "constraint" in str(exc_info.value).lower()
+        assert (
+            "foreign key" in str(exc_info.value).lower()
+            or "constraint" in str(exc_info.value).lower()
+        )
 
 
 class TestAchievementRelationships:
@@ -469,14 +486,17 @@ class TestAchievementRelationships:
             user_id="non-existent-user-id",  # Invalid user reference
             achievement_id="non-existent-achievement-id",  # Invalid achievement reference
             progress=50.0,
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
 
         # Should fail due to foreign key constraints
         with pytest.raises(Exception) as exc_info:
             self.user_achievement_repo.create(user_achievement)
 
-        assert "foreign key" in str(exc_info.value).lower() or "constraint" in str(exc_info.value).lower()
+        assert (
+            "foreign key" in str(exc_info.value).lower()
+            or "constraint" in str(exc_info.value).lower()
+        )
 
     def test_user_achievement_creation_with_valid_references_succeeds(self):
         """Test that user achievements can be created with valid references"""
@@ -486,7 +506,7 @@ class TestAchievementRelationships:
             username=generate_unique_username(),
             email=generate_unique_email(),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_user = self.user_repo.create(user)
 
@@ -498,7 +518,7 @@ class TestAchievementRelationships:
             category="test",
             criteria={"tasks_completed": 10},
             xp_reward=100,
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
         created_achievement = self.achievement_repo.create(achievement)
 
@@ -508,7 +528,7 @@ class TestAchievementRelationships:
             user_id=created_user.user_id,  # Valid user reference
             achievement_id=created_achievement.achievement_id,  # Valid achievement reference
             progress=50.0,
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
 
         created_user_achievement = self.user_achievement_repo.create(user_achievement)
@@ -523,7 +543,7 @@ class TestAchievementRelationships:
             username=generate_unique_username(),
             email=generate_unique_email(),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_user = self.user_repo.create(user)
 
@@ -534,7 +554,7 @@ class TestAchievementRelationships:
             category="test",
             criteria={"tasks_completed": 10},
             xp_reward=100,
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
         created_achievement = self.achievement_repo.create(achievement)
 
@@ -543,7 +563,7 @@ class TestAchievementRelationships:
             user_id=created_user.user_id,
             achievement_id=created_achievement.achievement_id,
             progress=50.0,
-            created_at=datetime.now()
+            created_at=datetime.now(),
         )
         created_user_achievement = self.user_achievement_repo.create(user_achievement)
 
@@ -551,7 +571,9 @@ class TestAchievementRelationships:
         self.user_repo.delete(created_user.user_id)
 
         # User achievement should also be deleted (cascade)
-        deleted_user_achievement = self.user_achievement_repo.get_by_id(created_user_achievement.user_achievement_id)
+        deleted_user_achievement = self.user_achievement_repo.get_by_id(
+            created_user_achievement.user_achievement_id
+        )
         assert deleted_user_achievement is None
 
 
@@ -573,7 +595,7 @@ class TestDataIntegrityConstraints:
             username=generate_unique_username(),
             email=generate_unique_email(),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_user1 = self.user_repo.create(user1)
 
@@ -583,14 +605,16 @@ class TestDataIntegrityConstraints:
             username=generate_unique_username(),  # Duplicate username
             email="different@example.com",
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
 
         # Should fail due to unique constraint
         with pytest.raises(Exception) as exc_info:
             self.user_repo.create(user2)
 
-        assert "unique" in str(exc_info.value).lower() or "constraint" in str(exc_info.value).lower()
+        assert (
+            "unique" in str(exc_info.value).lower() or "constraint" in str(exc_info.value).lower()
+        )
 
     def test_not_null_constraint_enforcement(self):
         """Test that NOT NULL constraints are enforced"""
@@ -602,7 +626,7 @@ class TestDataIntegrityConstraints:
                 username=None,  # Required field
                 email=generate_unique_email(),
                 created_at=datetime.now(),
-                updated_at=datetime.now()
+                updated_at=datetime.now(),
             )
 
         # Should fail during validation or creation
@@ -616,7 +640,7 @@ class TestDataIntegrityConstraints:
             username=generate_unique_username(),
             email=generate_unique_email(),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_user = self.user_repo.create(user)
 
@@ -626,7 +650,7 @@ class TestDataIntegrityConstraints:
             description="Test Description",
             owner_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_project = self.project_repo.create(project)
 
@@ -637,7 +661,7 @@ class TestDataIntegrityConstraints:
             project_id=created_project.project_id,
             assignee_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_parent = self.task_repo.create(parent_task)
 
@@ -649,7 +673,7 @@ class TestDataIntegrityConstraints:
             parent_id=created_parent.task_id,
             assignee_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_subtask = self.task_repo.create(subtask)
 
@@ -686,7 +710,7 @@ class TestCascadeSetNullBehavior:
             username=generate_unique_username(),
             email=generate_unique_email(),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_owner = self.user_repo.create(owner)
 
@@ -695,7 +719,7 @@ class TestCascadeSetNullBehavior:
             username=generate_unique_username(),
             email=generate_unique_email(),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_assignee = self.user_repo.create(assignee)
 
@@ -706,7 +730,7 @@ class TestCascadeSetNullBehavior:
             description="Test Description",
             owner_id=created_owner.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_project = self.project_repo.create(project)
 
@@ -718,7 +742,7 @@ class TestCascadeSetNullBehavior:
             project_id=created_project.project_id,
             assignee_id=created_assignee.user_id,  # Assigned to different user than owner
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_task = self.task_repo.create(task)
 
@@ -740,7 +764,7 @@ class TestCascadeSetNullBehavior:
             username=generate_unique_username(),
             email=generate_unique_email(),
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_user = self.user_repo.create(user)
 
@@ -750,7 +774,7 @@ class TestCascadeSetNullBehavior:
             description="Test Description",
             owner_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_project = self.project_repo.create(project)
 
@@ -762,7 +786,7 @@ class TestCascadeSetNullBehavior:
             project_id=created_project.project_id,
             assignee_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_parent = self.task_repo.create(parent)
 
@@ -775,7 +799,7 @@ class TestCascadeSetNullBehavior:
             parent_id=created_parent.task_id,
             assignee_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_subtask1 = self.task_repo.create(subtask1)
 
@@ -787,7 +811,7 @@ class TestCascadeSetNullBehavior:
             parent_id=created_parent.task_id,
             assignee_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_subtask2 = self.task_repo.create(subtask2)
 
@@ -800,7 +824,7 @@ class TestCascadeSetNullBehavior:
             parent_id=created_subtask1.task_id,
             assignee_id=created_user.user_id,
             created_at=datetime.now(),
-            updated_at=datetime.now()
+            updated_at=datetime.now(),
         )
         created_sub_subtask = self.task_repo.create(sub_subtask)
 

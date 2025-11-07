@@ -6,12 +6,10 @@ Supports Gmail, Google Calendar, and Google Drive integrations.
 
 import base64
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 from urllib.parse import urlencode
 
 import httpx
-from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
@@ -51,7 +49,7 @@ class GmailProvider(OAuthProvider):
         client_id: str,
         client_secret: str,
         redirect_uri: str,
-        scopes: Optional[list[str]] = None,
+        scopes: list[str] | None = None,
     ):
         super().__init__(
             client_id=client_id,
@@ -81,9 +79,7 @@ class GmailProvider(OAuthProvider):
         }
         return f"{self.AUTHORIZATION_URL}?{urlencode(params)}"
 
-    async def exchange_code_for_tokens(
-        self, code: str
-    ) -> tuple[str, str, datetime, list[str]]:
+    async def exchange_code_for_tokens(self, code: str) -> tuple[str, str, datetime, list[str]]:
         """Exchange authorization code for tokens"""
         async with httpx.AsyncClient() as client:
             response = await client.post(
@@ -102,7 +98,7 @@ class GmailProvider(OAuthProvider):
             access_token = data["access_token"]
             refresh_token = data.get("refresh_token", "")
             expires_in = data.get("expires_in", 3600)
-            expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+            expires_at = datetime.now(UTC) + timedelta(seconds=expires_in)
             granted_scopes = data.get("scope", "").split()
 
             return access_token, refresh_token, expires_at, granted_scopes
@@ -124,7 +120,7 @@ class GmailProvider(OAuthProvider):
 
             access_token = data["access_token"]
             expires_in = data.get("expires_in", 3600)
-            expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
+            expires_at = datetime.now(UTC) + timedelta(seconds=expires_in)
 
             return access_token, expires_at
 
@@ -188,9 +184,7 @@ class GmailProvider(OAuthProvider):
 
             # Fetch full message details
             for msg_id in message_ids:
-                msg = (
-                    service.users().messages().get(userId="me", id=msg_id).execute()
-                )
+                msg = service.users().messages().get(userId="me", id=msg_id).execute()
 
                 # Parse headers
                 headers = {h["name"]: h["value"] for h in msg["payload"]["headers"]}
@@ -210,7 +204,7 @@ class GmailProvider(OAuthProvider):
 
                     received_at = parsedate_to_datetime(date_str)
                 except Exception:
-                    received_at = datetime.now(timezone.utc)
+                    received_at = datetime.now(UTC)
 
                 # Extract labels
                 labels = msg.get("labelIds", [])
@@ -299,7 +293,7 @@ class GmailProvider(OAuthProvider):
 
         return ""
 
-    def _extract_name(self, email_field: str) -> Optional[str]:
+    def _extract_name(self, email_field: str) -> str | None:
         """Extract name from email field (e.g., 'John Doe <john@example.com>')"""
         if "<" in email_field:
             return email_field.split("<")[0].strip().strip('"')
@@ -329,7 +323,7 @@ class GoogleCalendarProvider(OAuthProvider):
         client_id: str,
         client_secret: str,
         redirect_uri: str,
-        scopes: Optional[list[str]] = None,
+        scopes: list[str] | None = None,
     ):
         super().__init__(
             client_id=client_id,
@@ -359,9 +353,7 @@ class GoogleCalendarProvider(OAuthProvider):
         }
         return f"{self.AUTHORIZATION_URL}?{urlencode(params)}"
 
-    async def exchange_code_for_tokens(
-        self, code: str
-    ) -> tuple[str, str, datetime, list[str]]:
+    async def exchange_code_for_tokens(self, code: str) -> tuple[str, str, datetime, list[str]]:
         """Exchange authorization code for tokens (same as Gmail)"""
         gmail_provider = GmailProvider(
             self.client_id, self.client_secret, self.redirect_uri, self.scopes
@@ -405,7 +397,7 @@ class GoogleCalendarProvider(OAuthProvider):
         max_results = settings.get("max_results", 50)
 
         # Calculate time range
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         time_min = now.isoformat()
         time_max = (now + timedelta(days=look_ahead_days)).isoformat()
 
@@ -435,9 +427,7 @@ class GoogleCalendarProvider(OAuthProvider):
                 end_dt = datetime.fromisoformat(end.replace("Z", "+00:00"))
 
                 # Extract attendees
-                attendees = [
-                    a.get("email", "") for a in event_data.get("attendees", [])
-                ]
+                attendees = [a.get("email", "") for a in event_data.get("attendees", [])]
 
                 # Create CalendarEvent
                 cal_event = CalendarEvent(

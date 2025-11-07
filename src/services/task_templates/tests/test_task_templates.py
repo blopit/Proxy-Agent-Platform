@@ -9,9 +9,9 @@ Following RED-GREEN-REFACTOR methodology:
 Test Coverage Target: 95%+
 """
 
-import pytest
 from uuid import uuid4
-from datetime import datetime
+
+import pytest
 
 # Will be implemented in GREEN phase
 # from src.services.task_templates.models import (
@@ -75,6 +75,7 @@ def sample_template_data():
 def test_client():
     """Fixture for FastAPI test client."""
     from fastapi.testclient import TestClient
+
     from src.api.main import app
 
     return TestClient(app)
@@ -146,9 +147,7 @@ class TestTaskTemplateAPI:
 
     def test_get_template_by_id(self, test_client, sample_template_data):
         """RED: Test retrieving a specific template."""
-        create_response = test_client.post(
-            "/api/v1/task-templates/", json=sample_template_data
-        )
+        create_response = test_client.post("/api/v1/task-templates/", json=sample_template_data)
         template_id = create_response.json()["template_id"]
 
         response = test_client.get(f"/api/v1/task-templates/{template_id}")
@@ -167,9 +166,7 @@ class TestTaskTemplateAPI:
 
     def test_update_template_metadata(self, test_client, sample_template_data):
         """RED: Test updating template metadata (not steps)."""
-        create_response = test_client.post(
-            "/api/v1/task-templates/", json=sample_template_data
-        )
+        create_response = test_client.post("/api/v1/task-templates/", json=sample_template_data)
         template_id = create_response.json()["template_id"]
 
         update_data = {"name": "Updated Homework Template", "description": "New description"}
@@ -189,9 +186,7 @@ class TestTaskTemplateAPI:
 
     def test_delete_template_success(self, test_client, sample_template_data):
         """RED: Test deleting a template."""
-        create_response = test_client.post(
-            "/api/v1/task-templates/", json=sample_template_data
-        )
+        create_response = test_client.post("/api/v1/task-templates/", json=sample_template_data)
         template_id = create_response.json()["template_id"]
 
         response = test_client.delete(f"/api/v1/task-templates/{template_id}")
@@ -209,9 +204,7 @@ class TestTaskTemplateAPI:
 
     def test_delete_cascades_to_steps(self, test_client, sample_template_data):
         """RED: Test that deleting template deletes associated steps."""
-        create_response = test_client.post(
-            "/api/v1/task-templates/", json=sample_template_data
-        )
+        create_response = test_client.post("/api/v1/task-templates/", json=sample_template_data)
         template_id = create_response.json()["template_id"]
 
         # Get template with steps

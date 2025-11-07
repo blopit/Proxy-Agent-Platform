@@ -9,7 +9,6 @@ Provides endpoints for:
 
 import logging
 from pathlib import Path
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -21,7 +20,6 @@ from src.workflows.executor import WorkflowExecutor
 from src.workflows.models import (
     Workflow,
     WorkflowContext,
-    WorkflowExecution,
     WorkflowStep,
     WorkflowType,
 )
@@ -47,7 +45,7 @@ class ExecuteWorkflowRequest(BaseModel):
     workflow_id: str = Field(..., description="ID of workflow to execute")
     task_id: str = Field(..., description="Task ID from delegation system")
     task_title: str
-    task_description: Optional[str] = None
+    task_description: str | None = None
     task_priority: str = "medium"
     estimated_hours: float = 4.0
 
@@ -56,9 +54,9 @@ class ExecuteWorkflowRequest(BaseModel):
     time_of_day: str = "morning"
 
     # Optional codebase state
-    codebase_state: Optional[dict] = None
-    recent_tasks: Optional[list[str]] = None
-    current_branch: Optional[str] = None
+    codebase_state: dict | None = None
+    recent_tasks: list[str] | None = None
+    current_branch: str | None = None
 
 
 class ExecuteWorkflowResponse(BaseModel):
@@ -73,7 +71,7 @@ class ExecuteWorkflowResponse(BaseModel):
     # Metadata
     steps_generated: int
     estimated_total_minutes: int
-    llm_provider_used: Optional[str] = None
+    llm_provider_used: str | None = None
 
 
 class WorkflowSummary(BaseModel):
@@ -91,17 +89,17 @@ class SuggestWorkflowsRequest(BaseModel):
     """Request body for workflow suggestions."""
 
     task_title: str = Field(..., description="Task title to analyze")
-    task_description: Optional[str] = Field(None, description="Optional task description")
+    task_description: str | None = Field(None, description="Optional task description")
     user_energy: int = Field(2, ge=1, le=3, description="User energy level (1-3)")
     time_of_day: str = Field("morning", description="Current time of day")
     estimated_hours: float = Field(4.0, gt=0, description="Estimated hours available")
-    recent_tasks: Optional[list[str]] = Field(None, description="Recent completed tasks")
+    recent_tasks: list[str] | None = Field(None, description="Recent completed tasks")
 
 
 # Endpoints
 @router.get("/", response_model=list[WorkflowSummary])
 async def list_workflows(
-    workflow_type: Optional[WorkflowType] = Query(None, description="Filter by type")
+    workflow_type: WorkflowType | None = Query(None, description="Filter by type"),
 ):
     """
     List all available workflows.
@@ -155,7 +153,9 @@ async def get_workflow(workflow_id: str):
 
 
 @router.post("/execute", response_model=ExecuteWorkflowResponse)
-async def execute_workflow(request: ExecuteWorkflowRequest, current_user: User = Depends(get_current_user)):
+async def execute_workflow(
+    request: ExecuteWorkflowRequest, current_user: User = Depends(get_current_user)
+):
     """
     Execute a workflow to generate implementation steps.
 
@@ -222,8 +222,8 @@ async def execute_workflow(request: ExecuteWorkflowRequest, current_user: User =
 async def mark_step_complete(
     execution_id: UUID,
     step_id: str,
-    actual_minutes: Optional[int] = Query(None, description="Actual time taken"),
-    notes: Optional[str] = Query(None, description="Optional notes"),
+    actual_minutes: int | None = Query(None, description="Actual time taken"),
+    notes: str | None = Query(None, description="Optional notes"),
 ):
     """
     Mark a workflow step as completed.
@@ -277,9 +277,7 @@ async def suggest_workflows(request: SuggestWorkflowsRequest):
         available_workflows = executor.list_workflows()
 
         if not available_workflows:
-            raise HTTPException(
-                status_code=404, detail="No workflows available for suggestions"
-            )
+            raise HTTPException(status_code=404, detail="No workflows available for suggestions")
 
         # Build user context
         user_context = {
@@ -307,9 +305,7 @@ async def suggest_workflows(request: SuggestWorkflowsRequest):
 
     except Exception as e:
         logger.error(f"Error generating suggestions: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=500, detail=f"Failed to generate suggestions: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to generate suggestions: {str(e)}")
 
 
 @router.get("/health")

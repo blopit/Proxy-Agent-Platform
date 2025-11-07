@@ -10,7 +10,6 @@ Provides RESTful API for:
 """
 
 import logging
-from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -18,7 +17,6 @@ from pydantic import BaseModel, Field
 
 from src.agents.progress_proxy_advanced import AdvancedProgressAgent
 from src.api.auth import verify_token
-from src.core.models import AgentRequest
 from src.database.enhanced_adapter import get_enhanced_database
 
 logger = logging.getLogger(__name__)
@@ -34,9 +32,7 @@ class TaskCompletionRequest(BaseModel):
     task_id: str
     complexity: str = Field(..., description="Task complexity: low, medium, high, expert")
     priority: str = Field(..., description="Task priority: low, medium, high, critical")
-    quality_rating: str | None = Field(
-        None, description="Quality: poor, average, good, excellent"
-    )
+    quality_rating: str | None = Field(None, description="Quality: poor, average, good, excellent")
     time_spent: int | None = Field(None, description="Time spent in minutes")
     estimated_time: int | None = Field(None, description="Estimated time in minutes")
 
@@ -195,7 +191,9 @@ async def get_user_streak(current_username: str = Depends(verify_token)):
             longest_streak=streak_data["longest_streak"],
             streak_type=streak_data["streak_type"],
             next_milestone=streak_data["next_milestone"],
-            momentum_score=1.0 if streak_data.get("streak_momentum") == "high" else 0.5,  # Convert momentum to score
+            momentum_score=1.0
+            if streak_data.get("streak_momentum") == "high"
+            else 0.5,  # Convert momentum to score
             streak_bonus_multiplier=streak_data.get("bonus_multiplier", 1.0),
             message=f"🔥 {streak_data['current_streak']} day streak! (Next milestone: {streak_data['next_milestone']} days)",
         )
@@ -250,9 +248,7 @@ async def get_level_progression(current_username: str = Depends(verify_token)):
 
 
 @router.get("/visualization", response_model=ProgressVisualizationResponse)
-async def get_progress_visualization(
-    days: int = 30, current_username: str = Depends(verify_token)
-):
+async def get_progress_visualization(days: int = 30, current_username: str = Depends(verify_token)):
     """
     Get progress visualization data.
 
@@ -322,8 +318,16 @@ async def analyze_performance_trends(
 
         # Determine trend direction
         if len(productivity_trend) >= 2:
-            recent_avg = sum(productivity_trend[-3:]) / len(productivity_trend[-3:]) if len(productivity_trend) >= 3 else productivity_trend[-1]
-            earlier_avg = sum(productivity_trend[:3]) / len(productivity_trend[:3]) if len(productivity_trend) >= 3 else productivity_trend[0]
+            recent_avg = (
+                sum(productivity_trend[-3:]) / len(productivity_trend[-3:])
+                if len(productivity_trend) >= 3
+                else productivity_trend[-1]
+            )
+            earlier_avg = (
+                sum(productivity_trend[:3]) / len(productivity_trend[:3])
+                if len(productivity_trend) >= 3
+                else productivity_trend[0]
+            )
             if recent_avg > earlier_avg * 1.1:
                 trend_direction = "improving"
             elif recent_avg < earlier_avg * 0.9:
@@ -334,7 +338,11 @@ async def analyze_performance_trends(
             trend_direction = "insufficient_data"
 
         # Calculate momentum score (0-10)
-        momentum_score = sum(productivity_trend[-5:]) / len(productivity_trend[-5:]) if productivity_trend else 5.0
+        momentum_score = (
+            sum(productivity_trend[-5:]) / len(productivity_trend[-5:])
+            if productivity_trend
+            else 5.0
+        )
 
         # Get recommendations from areas for improvement
         recommendations = viz_data.get("areas_for_improvement", [])

@@ -11,10 +11,10 @@ TODO: This is a minimal stub implementation to make tests pass.
       - Monitoring and alerting
 """
 
-from typing import Any, Callable, List
 import asyncio
-from datetime import datetime
 from collections import defaultdict
+from collections.abc import Callable
+from typing import Any
 
 
 class BackgroundTaskQueue:
@@ -27,15 +27,13 @@ class BackgroundTaskQueue:
 
     def __init__(self):
         """Initialize task queue with in-memory tracking"""
-        self._tasks: List[asyncio.Task] = []
-        self._priority_tasks: dict[int, List[asyncio.Task]] = defaultdict(list)
+        self._tasks: list[asyncio.Task] = []
+        self._priority_tasks: dict[int, list[asyncio.Task]] = defaultdict(list)
         self._total_tasks = 0
         self._completed_tasks = 0
-        self._processing_times: List[float] = []
+        self._processing_times: list[float] = []
 
-    async def enqueue(
-        self, task_func: Callable, *args, **kwargs
-    ) -> asyncio.Task:
+    async def enqueue(self, task_func: Callable, *args, **kwargs) -> asyncio.Task:
         """
         Enqueue a task for background processing.
 
@@ -157,9 +155,7 @@ class BackgroundTaskQueue:
             "queue_size": pending,
             "total_enqueued": self._total_tasks,
             "completion_rate": (
-                self._completed_tasks / self._total_tasks
-                if self._total_tasks > 0
-                else 0
+                self._completed_tasks / self._total_tasks if self._total_tasks > 0 else 0
             ),
         }
 

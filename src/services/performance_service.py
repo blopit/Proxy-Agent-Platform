@@ -11,8 +11,8 @@ TODO: This is a minimal stub implementation to make tests pass.
       - Alerting and notifications
 """
 
-from typing import Any, Dict
 import asyncio
+from typing import Any
 
 
 class PerformanceService:
@@ -25,14 +25,14 @@ class PerformanceService:
 
     def __init__(self):
         """Initialize performance service with metrics tracking"""
-        self._metrics: Dict[str, Any] = {
+        self._metrics: dict[str, Any] = {
             "total_requests": 0,
             "cache_hits": 0,
             "db_queries": 0,
             "average_response_time": 0.25,
         }
 
-    async def simulate_user_workflow(self, user_id: str) -> Dict[str, Any]:
+    async def simulate_user_workflow(self, user_id: str) -> dict[str, Any]:
         """
         Simulate a complete user workflow for benchmarking.
 
@@ -55,9 +55,7 @@ class PerformanceService:
             "status": "completed",
         }
 
-    async def track_request(
-        self, endpoint: str, duration: float, cached: bool = False
-    ) -> None:
+    async def track_request(self, endpoint: str, duration: float, cached: bool = False) -> None:
         """
         Track API request performance.
 
@@ -78,7 +76,7 @@ class PerformanceService:
         new_avg = ((current_avg * (total - 1)) + duration) / total
         self._metrics["average_response_time"] = new_avg
 
-    async def get_metrics(self) -> Dict[str, Any]:
+    async def get_metrics(self) -> dict[str, Any]:
         """
         Get current performance metrics.
 
@@ -97,7 +95,7 @@ class PerformanceService:
 
     async def run_benchmark(
         self, concurrent_users: int = 100, duration: int = 60
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Run performance benchmark test.
 

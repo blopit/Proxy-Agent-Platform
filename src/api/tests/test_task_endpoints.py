@@ -380,7 +380,9 @@ class TestMobileEndpoints:
         assert data["task"]["title"] == "Captured Task"
         assert data["processing_time_ms"] < 2000  # 2-second capture requirement
 
-    @pytest.mark.skip(reason="Mobile dashboard endpoint returns mock data - needs real implementation")
+    @pytest.mark.skip(
+        reason="Mobile dashboard endpoint returns mock data - needs real implementation"
+    )
     def test_mobile_dashboard_data(self, client, mock_task_service):
         """Test mobile dashboard data endpoint"""
         mock_analytics = {
@@ -399,7 +401,9 @@ class TestMobileEndpoints:
         assert data["total_tasks"] == 15
         assert data["completed_today"] == 5
 
-    @pytest.mark.skip(reason="Mobile task list endpoint returns mock data - needs real implementation")
+    @pytest.mark.skip(
+        reason="Mobile task list endpoint returns mock data - needs real implementation"
+    )
     def test_mobile_task_list_optimized(self, client, mock_task_service):
         """Test mobile-optimized task list"""
         mock_tasks = [
@@ -427,7 +431,9 @@ class TestMobileEndpoints:
         assert len(data["tasks"]) == 2
         assert data["tasks"][0]["due_soon"] is True
 
-    @pytest.mark.skip(reason="Voice processing endpoint returns mock data - needs real implementation")
+    @pytest.mark.skip(
+        reason="Voice processing endpoint returns mock data - needs real implementation"
+    )
     def test_voice_task_processing(self, client, mock_task_service):
         """Test voice input processing"""
         mock_processed = {

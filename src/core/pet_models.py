@@ -5,15 +5,16 @@ Simple pet system where completing tasks feeds pets with XP.
 One pet per user, 5 species, 3 evolution stages.
 """
 
-from datetime import datetime, timezone
-from typing import Literal, Optional
-from uuid import UUID, uuid4
+from datetime import UTC, datetime
+from typing import Literal
+from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class PetSpecies(str):
     """Available pet species"""
+
     DOG = "dog"
     CAT = "cat"
     DRAGON = "dragon"
@@ -23,9 +24,10 @@ class PetSpecies(str):
 
 class EvolutionStage(int):
     """Evolution stages"""
-    BABY = 1    # Level 1-4
-    TEEN = 2    # Level 5-9
-    ADULT = 3   # Level 10
+
+    BABY = 1  # Level 1-4
+    TEEN = 2  # Level 5-9
+    ADULT = 3  # Level 10
 
 
 # ============================================================================
@@ -35,12 +37,14 @@ class EvolutionStage(int):
 
 class UserPetBase(BaseModel):
     """Base model for user pet"""
+
     species: Literal["dog", "cat", "dragon", "owl", "fox"]
     name: str = Field(..., min_length=1, max_length=100)
 
 
 class UserPetCreate(UserPetBase):
     """Create user pet request"""
+
     user_id: str
 
 
@@ -51,6 +55,7 @@ class UserPet(UserPetBase):
     Pets grow with task completion and evolve at certain levels.
     Hunger/happiness stats encourage regular engagement.
     """
+
     pet_id: str = Field(default_factory=lambda: str(uuid4()))
     user_id: str
     level: int = Field(default=1, ge=1, le=10)
@@ -58,19 +63,18 @@ class UserPet(UserPetBase):
     hunger: int = Field(default=50, ge=0, le=100)
     happiness: int = Field(default=50, ge=0, le=100)
     evolution_stage: int = Field(default=1, ge=1, le=3)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    last_fed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    last_fed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     model_config = ConfigDict(
-        from_attributes=True,
-        json_encoders={datetime: lambda v: v.isoformat()}
+        from_attributes=True, json_encoders={datetime: lambda v: v.isoformat()}
     )
 
-    @field_validator('evolution_stage')
+    @field_validator("evolution_stage")
     @classmethod
     def validate_evolution(cls, v: int, info) -> int:
         """Validate evolution stage matches level"""
-        level = info.data.get('level', 1)
+        level = info.data.get("level", 1)
         if level < 5 and v > 1:
             raise ValueError("Must be level 5+ for teen stage")
         if level < 10 and v > 2:
@@ -105,12 +109,13 @@ class UserPet(UserPetBase):
 
 class UserPetUpdate(BaseModel):
     """Update user pet fields"""
-    level: Optional[int] = Field(None, ge=1, le=10)
-    xp: Optional[int] = Field(None, ge=0)
-    hunger: Optional[int] = Field(None, ge=0, le=100)
-    happiness: Optional[int] = Field(None, ge=0, le=100)
-    evolution_stage: Optional[int] = Field(None, ge=1, le=3)
-    last_fed_at: Optional[datetime] = None
+
+    level: int | None = Field(None, ge=1, le=10)
+    xp: int | None = Field(None, ge=0)
+    hunger: int | None = Field(None, ge=0, le=100)
+    happiness: int | None = Field(None, ge=0, le=100)
+    evolution_stage: int | None = Field(None, ge=1, le=3)
+    last_fed_at: datetime | None = None
 
 
 # ============================================================================
@@ -120,11 +125,13 @@ class UserPetUpdate(BaseModel):
 
 class FeedPetRequest(BaseModel):
     """Request to feed pet with XP from task completion"""
+
     xp_earned: int = Field(..., ge=1, description="XP from completed task")
 
 
 class FeedPetResponse(BaseModel):
     """Response after feeding pet"""
+
     pet: UserPet
     leveled_up: bool
     evolved: bool
@@ -133,9 +140,7 @@ class FeedPetResponse(BaseModel):
     hunger_restored: int
     happiness_gained: int
 
-    model_config = ConfigDict(
-        json_encoders={datetime: lambda v: v.isoformat()}
-    )
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
 
 # ============================================================================
@@ -145,6 +150,7 @@ class FeedPetResponse(BaseModel):
 
 class PetSpeciesInfo(BaseModel):
     """Information about a pet species"""
+
     species: str
     display_name: str
     description: str
@@ -163,7 +169,7 @@ PET_SPECIES = [
         emoji="🐕",
         baby_emoji="🐕",
         teen_emoji="🐕",
-        adult_emoji="🐺"
+        adult_emoji="🐺",
     ),
     PetSpeciesInfo(
         species="cat",
@@ -172,7 +178,7 @@ PET_SPECIES = [
         emoji="🐈",
         baby_emoji="🐈",
         teen_emoji="🐈",
-        adult_emoji="🐆"
+        adult_emoji="🐆",
     ),
     PetSpeciesInfo(
         species="dragon",
@@ -181,7 +187,7 @@ PET_SPECIES = [
         emoji="🐉",
         baby_emoji="🦎",
         teen_emoji="🐲",
-        adult_emoji="🐉"
+        adult_emoji="🐉",
     ),
     PetSpeciesInfo(
         species="owl",
@@ -190,7 +196,7 @@ PET_SPECIES = [
         emoji="🦉",
         baby_emoji="🐣",
         teen_emoji="🦉",
-        adult_emoji="🦉"
+        adult_emoji="🦉",
     ),
     PetSpeciesInfo(
         species="fox",
@@ -199,6 +205,6 @@ PET_SPECIES = [
         emoji="🦊",
         baby_emoji="🦊",
         teen_emoji="🦊",
-        adult_emoji="🦊"
-    )
+        adult_emoji="🦊",
+    ),
 ]

@@ -6,8 +6,7 @@ Orchestrates OAuth flows, token management, and provider interactions.
 
 import logging
 import secrets
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 from uuid import UUID
 
 from src.integrations.models import ProviderType, UserIntegration
@@ -53,7 +52,7 @@ class IntegrationService:
     # ========================================================================
 
     def initiate_oauth(
-        self, provider: ProviderType, user_id: str, redirect_uri: Optional[str] = None
+        self, provider: ProviderType, user_id: str, redirect_uri: str | None = None
     ) -> str:
         """
         Generate OAuth authorization URL to start the flow.
@@ -83,7 +82,7 @@ class IntegrationService:
         self._oauth_states[state] = {
             "user_id": user_id,
             "provider": provider,
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
         }
 
         # Get authorization URL
@@ -92,9 +91,7 @@ class IntegrationService:
         logger.info(f"Generated OAuth URL for {provider} (user: {user_id})")
         return auth_url
 
-    async def handle_callback(
-        self, provider: ProviderType, code: str, state: str
-    ) -> dict:
+    async def handle_callback(self, provider: ProviderType, code: str, state: str) -> dict:
         """
         Handle OAuth callback and create integration.
 
@@ -138,8 +135,8 @@ class IntegrationService:
             ) = await provider_instance.exchange_code_for_tokens(code)
 
             # Get user info from provider
-            provider_user_id, provider_username = (
-                await provider_instance.get_provider_user_info(access_token)
+            provider_user_id, provider_username = await provider_instance.get_provider_user_info(
+                access_token
             )
 
             # Encrypt tokens
@@ -184,7 +181,7 @@ class IntegrationService:
     # ========================================================================
 
     def get_user_integrations(
-        self, user_id: str, provider: Optional[ProviderType] = None
+        self, user_id: str, provider: ProviderType | None = None
     ) -> list[dict]:
         """
         Get all integrations for a user.
@@ -205,7 +202,7 @@ class IntegrationService:
 
         return integrations
 
-    def get_integration(self, integration_id: str, user_id: str) -> Optional[dict]:
+    def get_integration(self, integration_id: str, user_id: str) -> dict | None:
         """
         Get integration by ID.
 
@@ -235,9 +232,7 @@ class IntegrationService:
 
         return integration
 
-    async def disconnect_provider(
-        self, integration_id: str, user_id: str
-    ) -> bool:
+    async def disconnect_provider(self, integration_id: str, user_id: str) -> bool:
         """
         Disconnect provider integration.
 
@@ -267,9 +262,7 @@ class IntegrationService:
         deleted = self.repo.delete_integration(integration_id)
 
         if deleted:
-            logger.info(
-                f"Disconnected {integration['provider']} integration {integration_id}"
-            )
+            logger.info(f"Disconnected {integration['provider']} integration {integration_id}")
 
         return deleted
 
@@ -301,7 +294,7 @@ class IntegrationService:
 
         # Check token expiration
         token_expires_at = datetime.fromisoformat(integration["token_expires_at"])
-        is_token_expired = datetime.now(timezone.utc) >= token_expires_at
+        is_token_expired = datetime.now(UTC) >= token_expires_at
 
         return {
             "integration_id": integration_id,
@@ -315,9 +308,7 @@ class IntegrationService:
             "provider_username": integration["provider_username"],
         }
 
-    async def trigger_manual_sync(
-        self, integration_id: str, user_id: str
-    ) -> dict:
+    async def trigger_manual_sync(self, integration_id: str, user_id: str) -> dict:
         """
         Trigger manual sync for integration.
 
@@ -342,9 +333,7 @@ class IntegrationService:
         # Get provider instance
         provider_instance = get_provider(integration["provider"])
         if not provider_instance:
-            raise ProviderNotFoundError(
-                f"Provider {integration['provider']} not configured"
-            )
+            raise ProviderNotFoundError(f"Provider {integration['provider']} not configured")
 
         try:
             # Create UserIntegration model for provider
@@ -375,7 +364,7 @@ class IntegrationService:
             # Update last sync time
             self.repo.update_integration(
                 integration_id=integration_id,
-                last_sync_at=datetime.now(timezone.utc),
+                last_sync_at=datetime.now(UTC),
             )
 
             # Create sync log
@@ -411,7 +400,7 @@ class IntegrationService:
     # ========================================================================
 
     def get_suggested_tasks(
-        self, user_id: str, provider: Optional[ProviderType] = None, limit: int = 50
+        self, user_id: str, provider: ProviderType | None = None, limit: int = 50
     ) -> list[dict]:
         """
         Get pending task suggestions for user.
@@ -426,9 +415,7 @@ class IntegrationService:
         """
         return self.repo.get_pending_tasks(user_id, provider=provider, limit=limit)
 
-    def approve_suggestion(
-        self, integration_task_id: str, user_id: str, task_id: str
-    ) -> dict:
+    def approve_suggestion(self, integration_task_id: str, user_id: str, task_id: str) -> dict:
         """
         Approve task suggestion and link to main task.
 
@@ -456,15 +443,11 @@ class IntegrationService:
         # Approve task
         updated_task = self.repo.approve_task(integration_task_id, task_id)
 
-        logger.info(
-            f"Approved task suggestion {integration_task_id}, linked to task {task_id}"
-        )
+        logger.info(f"Approved task suggestion {integration_task_id}, linked to task {task_id}")
 
         return updated_task
 
-    def dismiss_suggestion(
-        self, integration_task_id: str, user_id: str
-    ) -> dict:
+    def dismiss_suggestion(self, integration_task_id: str, user_id: str) -> dict:
         """
         Dismiss task suggestion.
 
@@ -511,7 +494,7 @@ class IntegrationService:
         """
         from datetime import timedelta
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expired_states = []
 
         for state, data in self._oauth_states.items():

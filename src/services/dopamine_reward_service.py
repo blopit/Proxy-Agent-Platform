@@ -10,7 +10,6 @@ Based on HABIT.md principles of evolutionary psychology and dopamine engineering
 import logging
 import random
 from dataclasses import dataclass
-from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
@@ -173,9 +172,7 @@ class DopamineRewardService:
             mystery_content=mystery_content,
         )
 
-    def calculate_microstep_reward(
-        self, user_id: str, streak_days: int = 0
-    ) -> RewardResult:
+    def calculate_microstep_reward(self, user_id: str, streak_days: int = 0) -> RewardResult:
         """
         Calculate reward for completing a micro-step (2-5 min task).
 
@@ -251,9 +248,7 @@ class DopamineRewardService:
             sound_effect=self.sound_map[tier],
             streak_bonus=0,
             mystery_unlocked=streak_days % 7 == 0,  # Mystery every 7 days
-            mystery_content=(
-                self._generate_mystery_reward() if streak_days % 7 == 0 else None
-            ),
+            mystery_content=(self._generate_mystery_reward() if streak_days % 7 == 0 else None),
         )
 
     def open_mystery_box(self, user_id: str, user_level: int = 1) -> dict[str, Any]:
@@ -334,17 +329,21 @@ class DopamineRewardService:
             },
             {
                 "type": "badge",
-                "content": {"badge_name": random.choice(
-                    ["Early Bird", "Night Owl", "Consistency King", "Speed Demon"]
-                )},
+                "content": {
+                    "badge_name": random.choice(
+                        ["Early Bird", "Night Owl", "Consistency King", "Speed Demon"]
+                    )
+                },
                 "xp_bonus": 25,
                 "message": "New badge unlocked!",
             },
             {
                 "type": "theme_unlock",
-                "content": {"theme": random.choice(
-                    ["Dark Galaxy", "Ocean Breeze", "Forest Zen", "Sunset Vibes"]
-                )},
+                "content": {
+                    "theme": random.choice(
+                        ["Dark Galaxy", "Ocean Breeze", "Forest Zen", "Sunset Vibes"]
+                    )
+                },
                 "xp_bonus": 10,
                 "message": "New theme unlocked!",
             },

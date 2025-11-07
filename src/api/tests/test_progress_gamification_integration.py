@@ -11,7 +11,9 @@ Tests all Progress and Gamification REST API endpoints with:
 import pytest
 
 # Mark entire module as skipped - progress/gamification integration not fully implemented
-pytestmark = pytest.mark.skip(reason="Progress/Gamification integration endpoints not fully implemented")
+pytestmark = pytest.mark.skip(
+    reason="Progress/Gamification integration endpoints not fully implemented"
+)
 from fastapi.testclient import TestClient
 
 from src.api.main import app
@@ -47,7 +49,7 @@ def authenticated_client(test_client, test_user_credentials):
         # User exists, try login
         login_data = {
             "username": test_user_credentials["username"],
-            "password": test_user_credentials["password"]
+            "password": test_user_credentials["password"],
         }
         login_response = test_client.post("/api/v1/auth/login", json=login_data)
         assert login_response.status_code == 200, f"Login failed: {login_response.json()}"
@@ -304,9 +306,7 @@ class TestGamificationAPI:
             }
         }
 
-        response = authenticated_client.post(
-            "/api/v1/gamification/motivation", json=context_data
-        )
+        response = authenticated_client.post("/api/v1/gamification/motivation", json=context_data)
 
         assert response.status_code == 200
         data = response.json()

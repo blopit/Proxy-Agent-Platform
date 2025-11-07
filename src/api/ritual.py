@@ -10,7 +10,7 @@ No midday/evening rituals, no notifications - just opportunistic morning plannin
 """
 
 import logging
-from datetime import datetime, date
+from datetime import date, datetime
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -91,7 +91,7 @@ def has_ritual_today(user_id: str) -> bool:
         FROM morning_rituals
         WHERE user_id = ? AND completion_date = ?
         """,
-        (user_id, today)
+        (user_id, today),
     )
 
     count = cursor.fetchone()[0]
@@ -104,9 +104,7 @@ def has_ritual_today(user_id: str) -> bool:
 
 
 @router.get("/check", response_model=RitualCheckResponse)
-async def check_ritual(
-    current_user: User = Depends(get_current_user)
-):
+async def check_ritual(current_user: User = Depends(get_current_user)):
     """
     Check if morning ritual should be shown to user.
 
@@ -136,24 +134,20 @@ async def check_ritual(
             reason = "Ready to plan your day"
 
         return RitualCheckResponse(
-            should_show=should_show,
-            reason=reason,
-            completed_today=completed,
-            is_morning=is_morning
+            should_show=should_show, reason=reason, completed_today=completed, is_morning=is_morning
         )
 
     except Exception as e:
         logger.error(f"Failed to check ritual: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to check ritual: {str(e)}"
+            detail=f"Failed to check ritual: {str(e)}",
         )
 
 
 @router.post("/complete", response_model=RitualCompleteResponse)
 async def complete_ritual(
-    ritual_data: RitualCompleteRequest,
-    current_user: User = Depends(get_current_user)
+    ritual_data: RitualCompleteRequest, current_user: User = Depends(get_current_user)
 ):
     """
     Complete (or skip) the morning ritual.
@@ -174,7 +168,7 @@ async def complete_ritual(
         if has_ritual_today(user_id):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Morning ritual already completed today"
+                detail="Morning ritual already completed today",
             )
 
         # Create ritual record
@@ -206,8 +200,8 @@ async def complete_ritual(
                 ritual_data.focus_task_2_id,
                 ritual_data.focus_task_3_id,
                 ritual_data.skipped,
-                now
-            )
+                now,
+            ),
         )
         conn.commit()
 
@@ -224,7 +218,7 @@ async def complete_ritual(
             completion_date=today,
             focus_tasks=focus_tasks,
             skipped=ritual_data.skipped,
-            message=message
+            message=message,
         )
 
     except HTTPException:
@@ -233,14 +227,12 @@ async def complete_ritual(
         logger.error(f"Failed to complete ritual: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to complete ritual: {str(e)}"
+            detail=f"Failed to complete ritual: {str(e)}",
         )
 
 
 @router.get("/stats", response_model=RitualStatsResponse)
-async def get_ritual_stats(
-    current_user: User = Depends(get_current_user)
-):
+async def get_ritual_stats(current_user: User = Depends(get_current_user)):
     """
     Get morning ritual completion statistics.
 
@@ -265,7 +257,7 @@ async def get_ritual_stats(
             FROM morning_rituals
             WHERE user_id = ?
             """,
-            (user_id,)
+            (user_id,),
         )
 
         row = cursor.fetchone()
@@ -283,7 +275,7 @@ async def get_ritual_stats(
             WHERE user_id = ?
             ORDER BY completion_date DESC
             """,
-            (user_id,)
+            (user_id,),
         )
 
         rows = cursor.fetchall()
@@ -306,21 +298,19 @@ async def get_ritual_stats(
             total_rituals_completed=total_completed,
             total_rituals_skipped=total_skipped,
             current_streak=current_streak,
-            completion_rate=round(completion_rate, 1)
+            completion_rate=round(completion_rate, 1),
         )
 
     except Exception as e:
         logger.error(f"Failed to get ritual stats: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get stats: {str(e)}"
+            detail=f"Failed to get stats: {str(e)}",
         )
 
 
 @router.get("/today")
-async def get_todays_ritual(
-    current_user: User = Depends(get_current_user)
-):
+async def get_todays_ritual(current_user: User = Depends(get_current_user)):
     """
     Get today's ritual if it exists.
 
@@ -346,16 +336,13 @@ async def get_todays_ritual(
             FROM morning_rituals
             WHERE user_id = ? AND completion_date = ?
             """,
-            (user_id, today)
+            (user_id, today),
         )
 
         row = cursor.fetchone()
 
         if not row:
-            return {
-                "completed_today": False,
-                "message": "No morning ritual completed yet today"
-            }
+            return {"completed_today": False, "message": "No morning ritual completed yet today"}
 
         focus_tasks = []
         if row[1]:
@@ -371,14 +358,14 @@ async def get_todays_ritual(
             "focus_tasks": focus_tasks,
             "skipped": bool(row[4]),
             "completed_at": row[5],
-            "message": f"Morning ritual completed with {len(focus_tasks)} focus task(s)"
+            "message": f"Morning ritual completed with {len(focus_tasks)} focus task(s)",
         }
 
     except Exception as e:
         logger.error(f"Failed to get today's ritual: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get today's ritual: {str(e)}"
+            detail=f"Failed to get today's ritual: {str(e)}",
         )
 
 

@@ -4,8 +4,7 @@ UserPetRepository - Data access layer for user pets (BE-02)
 Handles database operations for user pets using enhanced SQLite adapter.
 """
 
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from src.core.pet_models import UserPet, UserPetCreate, UserPetUpdate
@@ -46,7 +45,7 @@ class UserPetRepository:
             Exception: If user already has a pet (unique constraint)
         """
         pet_id = str(uuid4())
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         conn = self.db.get_connection()
         cursor = conn.cursor()
@@ -70,8 +69,8 @@ class UserPetRepository:
                     50,  # Default happiness
                     1,  # Default evolution stage (baby)
                     now.isoformat(),
-                    now.isoformat()
-                )
+                    now.isoformat(),
+                ),
             )
             conn.commit()
 
@@ -86,7 +85,7 @@ class UserPetRepository:
     # READ Operations
     # ========================================================================
 
-    def get_by_id(self, pet_id: str) -> Optional[UserPet]:
+    def get_by_id(self, pet_id: str) -> UserPet | None:
         """
         Get pet by pet_id.
 
@@ -99,17 +98,14 @@ class UserPetRepository:
         conn = self.db.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute(
-            "SELECT * FROM user_pets WHERE pet_id = ?",
-            (pet_id,)
-        )
+        cursor.execute("SELECT * FROM user_pets WHERE pet_id = ?", (pet_id,))
 
         row = cursor.fetchone()
         if row:
             return self._row_to_pet(row)
         return None
 
-    def get_by_user_id(self, user_id: str) -> Optional[UserPet]:
+    def get_by_user_id(self, user_id: str) -> UserPet | None:
         """
         Get pet by user_id.
 
@@ -122,10 +118,7 @@ class UserPetRepository:
         conn = self.db.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute(
-            "SELECT * FROM user_pets WHERE user_id = ?",
-            (user_id,)
-        )
+        cursor.execute("SELECT * FROM user_pets WHERE user_id = ?", (user_id,))
 
         row = cursor.fetchone()
         if row:
@@ -164,7 +157,7 @@ class UserPetRepository:
     # UPDATE Operations
     # ========================================================================
 
-    def update(self, pet_id: str, updates: UserPetUpdate) -> Optional[UserPet]:
+    def update(self, pet_id: str, updates: UserPetUpdate) -> UserPet | None:
         """
         Update pet fields.
 
@@ -202,8 +195,7 @@ class UserPetRepository:
 
         try:
             cursor.execute(
-                f"UPDATE user_pets SET {', '.join(update_fields)} WHERE pet_id = ?",
-                tuple(values)
+                f"UPDATE user_pets SET {', '.join(update_fields)} WHERE pet_id = ?", tuple(values)
             )
             conn.commit()
 
@@ -214,7 +206,7 @@ class UserPetRepository:
             conn.rollback()
             raise e
 
-    def feed_pet(self, pet_id: str, xp_amount: int) -> Optional[UserPet]:
+    def feed_pet(self, pet_id: str, xp_amount: int) -> UserPet | None:
         """
         Feed pet with XP from task completion.
 
@@ -263,7 +255,7 @@ class UserPetRepository:
             hunger=new_hunger,
             happiness=new_happiness,
             evolution_stage=new_evolution_stage,
-            last_fed_at=datetime.now(timezone.utc)
+            last_fed_at=datetime.now(UTC),
         )
 
         return self.update(pet_id, updates)
@@ -320,7 +312,7 @@ class UserPetRepository:
             happiness=row[7],
             evolution_stage=row[8],
             created_at=datetime.fromisoformat(row[9]),
-            last_fed_at=datetime.fromisoformat(row[10])
+            last_fed_at=datetime.fromisoformat(row[10]),
         )
 
     def _calculate_evolution_stage(self, level: int) -> int:

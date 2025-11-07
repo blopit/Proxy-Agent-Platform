@@ -1,6 +1,8 @@
 """Statistics API router."""
+
 from fastapi import APIRouter, HTTPException, status
-from src.core.statistics_models import UserStatisticsResponse, ProductivityScoreResponse
+
+from src.core.statistics_models import ProductivityScoreResponse, UserStatisticsResponse
 from src.services.task_statistics_service import StatisticsService
 
 router = APIRouter(prefix="/api/statistics", tags=["statistics"])
@@ -32,20 +34,16 @@ _statistics_service = StatisticsService()
                         "completion_rate": 84.0,
                         "avg_completion_time_minutes": 25.5,
                         "productivity_score": 78.5,
-                        "streak_days": 7
+                        "streak_days": 7,
                     }
                 }
-            }
+            },
         },
         404: {
             "description": "User not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "User not found: user_999"}
-                }
-            }
-        }
-    }
+            "content": {"application/json": {"example": {"detail": "User not found: user_999"}}},
+        },
+    },
 )
 async def get_user_statistics(user_id: str) -> UserStatisticsResponse:
     """
@@ -63,10 +61,9 @@ async def get_user_statistics(user_id: str) -> UserStatisticsResponse:
     try:
         stats = await _statistics_service.get_user_statistics(user_id)
         return UserStatisticsResponse(**stats)
-    except ValueError as e:
+    except ValueError:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User not found: {user_id}"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"User not found: {user_id}"
         )
 
 
@@ -85,23 +82,14 @@ async def get_user_statistics(user_id: str) -> UserStatisticsResponse:
         200: {
             "description": "Productivity score retrieved successfully",
             "content": {
-                "application/json": {
-                    "example": {
-                        "user_id": "user_123",
-                        "productivity_score": 78.5
-                    }
-                }
-            }
+                "application/json": {"example": {"user_id": "user_123", "productivity_score": 78.5}}
+            },
         },
         404: {
             "description": "User not found",
-            "content": {
-                "application/json": {
-                    "example": {"detail": "User not found: user_999"}
-                }
-            }
-        }
-    }
+            "content": {"application/json": {"example": {"detail": "User not found: user_999"}}},
+        },
+    },
 )
 async def get_productivity_score(user_id: str) -> ProductivityScoreResponse:
     """
@@ -125,8 +113,7 @@ async def get_productivity_score(user_id: str) -> ProductivityScoreResponse:
     try:
         score = await _statistics_service.get_productivity_score(user_id)
         return ProductivityScoreResponse(user_id=user_id, productivity_score=score)
-    except ValueError as e:
+    except ValueError:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User not found: {user_id}"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"User not found: {user_id}"
         )

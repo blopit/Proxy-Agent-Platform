@@ -82,9 +82,7 @@ class IntelligentTaskAgent(BaseProxyAgent):
                     self.openai_client = openai.AsyncOpenAI(api_key=api_key)
                     logging.info("OpenAI client initialized successfully")
                 else:
-                    logging.warning(
-                        "OpenAI API key not configured, using fallback heuristics"
-                    )
+                    logging.warning("OpenAI API key not configured, using fallback heuristics")
             except Exception as e:
                 logging.warning(f"OpenAI client initialization failed: {e}")
 
@@ -95,9 +93,7 @@ class IntelligentTaskAgent(BaseProxyAgent):
                     self.anthropic_client = anthropic.AsyncAnthropic(api_key=api_key)
                     logging.info("Anthropic client initialized successfully")
                 else:
-                    logging.warning(
-                        "Anthropic API key not configured, using fallback heuristics"
-                    )
+                    logging.warning("Anthropic API key not configured, using fallback heuristics")
             except Exception as e:
                 logging.warning(f"Anthropic client initialization failed: {e}")
 
@@ -254,7 +250,7 @@ class IntelligentTaskAgent(BaseProxyAgent):
                     prompt = f"""Analyze the urgency of this task and return ONLY a single number between 0.0 and 1.0.
 
 Task Title: {task.title}
-Description: {task.description or 'No description'}
+Description: {task.description or "No description"}
 Priority: {task.priority}
 
 Consider:
@@ -448,7 +444,7 @@ Return ONLY a decimal number (e.g., 0.85)"""
                     prompt = f"""Break down this task into specific, actionable subtasks.
 
 Task Title: {task.title}
-Description: {task.description or 'No description'}
+Description: {task.description or "No description"}
 Priority: {task.priority}
 
 Return a JSON array of subtask strings. Each subtask should be:
@@ -484,9 +480,7 @@ Return ONLY the JSON array, no other text."""
                     subtasks = json.loads(ai_response)
 
                     if isinstance(subtasks, list) and len(subtasks) > 0:
-                        logging.debug(
-                            f"AI breakdown for '{task.title}': {len(subtasks)} subtasks"
-                        )
+                        logging.debug(f"AI breakdown for '{task.title}': {len(subtasks)} subtasks")
                         return subtasks
 
                 except Exception as ai_error:
@@ -597,7 +591,7 @@ Return ONLY the JSON array, no other text."""
                     prompt = f"""Estimate the duration to complete this task.
 
 Task Title: {task.title}
-Description: {task.description or 'No description'}
+Description: {task.description or "No description"}
 Priority: {task.priority}
 
 Return a JSON object with:

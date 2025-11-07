@@ -375,23 +375,23 @@ class TestProgressGamificationIntegration:
         }
 
         # Act
-        with patch.object(progress_agent, "calculate_task_xp") as mock_xp:
-            with patch.object(
-                gamification_agent, "check_achievement_triggers"
-            ) as mock_achievements:
-                mock_xp.return_value = {"total_xp": 150}
-                mock_achievements.return_value = {
-                    "triggered_achievements": [{"achievement_id": "quality_master"}]
-                }
+        with (
+            patch.object(progress_agent, "calculate_task_xp") as mock_xp,
+            patch.object(gamification_agent, "check_achievement_triggers") as mock_achievements,
+        ):
+            mock_xp.return_value = {"total_xp": 150}
+            mock_achievements.return_value = {
+                "triggered_achievements": [{"achievement_id": "quality_master"}]
+            }
 
-                xp_data = await progress_agent.calculate_task_xp(task_completion_data)
-                achievements = await gamification_agent.check_achievement_triggers(
-                    {"total_xp": xp_data["total_xp"]}
-                )
+            xp_data = await progress_agent.calculate_task_xp(task_completion_data)
+            achievements = await gamification_agent.check_achievement_triggers(
+                {"total_xp": xp_data["total_xp"]}
+            )
 
-                # Assert
-                assert xp_data["total_xp"] == 150
-                assert len(achievements["triggered_achievements"]) == 1
+            # Assert
+            assert xp_data["total_xp"] == 150
+            assert len(achievements["triggered_achievements"]) == 1
 
     @pytest.mark.asyncio
     async def test_leaderboard_progress_correlation(self, progress_agent, gamification_agent):

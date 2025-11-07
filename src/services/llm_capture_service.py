@@ -8,7 +8,6 @@ Uses KG context to auto-populate fields and reduce clarification questions.
 import json
 import logging
 import os
-from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -41,24 +40,21 @@ class ParsedTask(BaseModel):
         default="medium", description="Task priority: critical, high, medium, low"
     )
     estimated_hours: float = Field(
-        default=0.25, description="Estimated time in hours (MUST estimate realistically - 15min default only as fallback)", ge=0.0, le=100.0
+        default=0.25,
+        description="Estimated time in hours (MUST estimate realistically - 15min default only as fallback)",
+        ge=0.0,
+        le=100.0,
     )
-    due_date: Optional[str] = Field(
-        None, description="Due date in ISO format (YYYY-MM-DD)"
-    )
+    due_date: str | None = Field(None, description="Due date in ISO format (YYYY-MM-DD)")
     tags: list[str] = Field(default_factory=list, description="Task tags")
     entities: list[str] = Field(
         default_factory=list, description="Mentioned entities (people, devices, etc.)"
     )
-    is_digital: bool = Field(
-        default=False, description="Can this be automated by AI?"
-    )
-    automation_type: Optional[str] = Field(
+    is_digital: bool = Field(default=False, description="Can this be automated by AI?")
+    automation_type: str | None = Field(
         None, description="Type of automation: email, calendar, home_iot, research, web"
     )
-    confidence: float = Field(
-        default=0.7, description="Parsing confidence (0-1)", ge=0.0, le=1.0
-    )
+    confidence: float = Field(default=0.7, description="Parsing confidence (0-1)", ge=0.0, le=1.0)
 
 
 class TaskParseResult(BaseModel):
@@ -97,8 +93,8 @@ class LLMCaptureService:
         self,
         text: str,
         user_id: str,
-        kg_context: Optional[KGContext] = None,
-        provider: Optional[str] = None,
+        kg_context: KGContext | None = None,
+        provider: str | None = None,
     ) -> TaskParseResult:
         """
         Parse task from natural language using LLM with KG context.
@@ -129,9 +125,7 @@ class LLMCaptureService:
             elif provider == "anthropic" and self.anthropic_client:
                 result = await self._parse_with_anthropic(prompt, text, kg_context)
             else:
-                raise ValueError(
-                    f"Provider {provider} not available or not initialized"
-                )
+                raise ValueError(f"Provider {provider} not available or not initialized")
 
             return result
 
@@ -148,9 +142,7 @@ class LLMCaptureService:
         else:
             raise ValueError("No LLM provider available")
 
-    def _build_prompt(
-        self, text: str, kg_context: Optional[KGContext] = None
-    ) -> str:
+    def _build_prompt(self, text: str, kg_context: KGContext | None = None) -> str:
         """
         Build structured prompt with KG context injection.
 
@@ -226,7 +218,7 @@ class LLMCaptureService:
         return "\n".join(prompt_parts)
 
     async def _parse_with_openai(
-        self, prompt: str, original_text: str, kg_context: Optional[KGContext]
+        self, prompt: str, original_text: str, kg_context: KGContext | None
     ) -> TaskParseResult:
         """Parse using OpenAI (GPT-4 or GPT-4o-mini)"""
         try:
@@ -246,9 +238,7 @@ class LLMCaptureService:
 
             # Validate with Pydantic
             task = ParsedTask(**parsed["task"])
-            reasoning = parsed.get(
-                "reasoning", "Parsed using OpenAI structured output"
-            )
+            reasoning = parsed.get("reasoning", "Parsed using OpenAI structured output")
 
             return TaskParseResult(
                 task=task,
@@ -263,7 +253,7 @@ class LLMCaptureService:
             raise
 
     async def _parse_with_anthropic(
-        self, prompt: str, original_text: str, kg_context: Optional[KGContext]
+        self, prompt: str, original_text: str, kg_context: KGContext | None
     ) -> TaskParseResult:
         """Parse using Anthropic Claude"""
         try:
@@ -291,9 +281,7 @@ class LLMCaptureService:
 
             # Validate with Pydantic
             task = ParsedTask(**parsed["task"])
-            reasoning = parsed.get(
-                "reasoning", "Parsed using Anthropic structured output"
-            )
+            reasoning = parsed.get("reasoning", "Parsed using Anthropic structured output")
 
             # Calculate token usage (Anthropic provides input/output tokens)
             tokens_used = response.usage.input_tokens + response.usage.output_tokens
@@ -311,7 +299,7 @@ class LLMCaptureService:
             raise
 
     def create_fallback_result(
-        self, text: str, kg_context: Optional[KGContext] = None
+        self, text: str, kg_context: KGContext | None = None
     ) -> TaskParseResult:
         """
         Create fallback result when LLM parsing fails.
@@ -320,16 +308,12 @@ class LLMCaptureService:
         """
         # Basic keyword detection
         priority = "medium"
-        if any(
-            word in text.lower()
-            for word in ["urgent", "asap", "critical", "emergency"]
-        ):
+        if any(word in text.lower() for word in ["urgent", "asap", "critical", "emergency"]):
             priority = "high"
 
         # Detect automation potential
         is_digital = any(
-            word in text.lower()
-            for word in ["email", "schedule", "calendar", "research", "browse"]
+            word in text.lower() for word in ["email", "schedule", "calendar", "research", "browse"]
         )
 
         automation_type = None

@@ -7,19 +7,17 @@ Following Test-Driven Development: Red → Green → Refactor
 MicroStepService handles CRUD operations for micro-steps (2-5 minute task chunks)
 """
 
-import pytest
 from datetime import datetime
 from decimal import Decimal
-from uuid import uuid4
 
+import pytest
+
+from src.core.task_models import TaskPriority
 from src.services.micro_step_service import (
-    MicroStepService,
-    MicroStepServiceError,
     MicroStepCreateData,
+    MicroStepServiceError,
     MicroStepUpdateData,
-    MicroStep,
 )
-from src.core.task_models import Task, TaskPriority, TaskStatus
 
 
 @pytest.fixture
@@ -103,7 +101,9 @@ class TestMicroStepCreation:
         assert "parent task" in str(exc_info.value).lower()
 
     @pytest.mark.asyncio
-    async def test_create_micro_step_validates_estimated_minutes(self, micro_step_service, sample_task):
+    async def test_create_micro_step_validates_estimated_minutes(
+        self, micro_step_service, sample_task
+    ):
         """Test that estimated_minutes must be 2-5 minutes (ADHD-friendly)"""
         # Too short (< 2 minutes)
         with pytest.raises(MicroStepServiceError) as exc_info:
@@ -195,7 +195,7 @@ class TestMicroStepRetrieval:
         for i in range(3):
             create_data = MicroStepCreateData(
                 parent_task_id=sample_task.task_id,
-                description=f"Step {i+1}",
+                description=f"Step {i + 1}",
                 estimated_minutes=3,
             )
             await micro_step_service.create_micro_step(create_data)
@@ -214,7 +214,7 @@ class TestMicroStepRetrieval:
         for i in range(3):
             create_data = MicroStepCreateData(
                 parent_task_id=sample_task.task_id,
-                description=f"Step {i+1}",
+                description=f"Step {i + 1}",
                 estimated_minutes=3,
             )
             step = await micro_step_service.create_micro_step(create_data)
@@ -237,7 +237,7 @@ class TestMicroStepRetrieval:
         for i in range(3):
             create_data = MicroStepCreateData(
                 parent_task_id=sample_task.task_id,
-                description=f"Step {i+1}",
+                description=f"Step {i + 1}",
                 estimated_minutes=3,
             )
             await micro_step_service.create_micro_step(create_data)
@@ -347,7 +347,7 @@ class TestMicroStepStatistics:
         for i in range(4):
             create_data = MicroStepCreateData(
                 parent_task_id=sample_task.task_id,
-                description=f"Step {i+1}",
+                description=f"Step {i + 1}",
                 estimated_minutes=3,
             )
             step = await micro_step_service.create_micro_step(create_data)
@@ -388,7 +388,7 @@ class TestMicroStepStatistics:
         for i in range(5):
             create_data = MicroStepCreateData(
                 parent_task_id=sample_task.task_id,
-                description=f"Step {i+1}",
+                description=f"Step {i + 1}",
                 estimated_minutes=3,
             )
             step = await micro_step_service.create_micro_step(create_data)

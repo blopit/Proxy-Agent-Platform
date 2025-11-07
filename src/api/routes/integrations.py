@@ -9,7 +9,6 @@ Provides endpoints for:
 """
 
 import logging
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import RedirectResponse
@@ -81,9 +80,9 @@ class IntegrationSummary(BaseModel):
     integration_id: str
     provider: str
     status: str
-    provider_username: Optional[str]
+    provider_username: str | None
     sync_enabled: bool
-    last_sync_at: Optional[str]
+    last_sync_at: str | None
     connected_at: str
 
 
@@ -96,9 +95,9 @@ class ConnectionStatusResponse(BaseModel):
     is_token_expired: bool
     token_expires_at: str
     sync_enabled: bool
-    last_sync_at: Optional[str]
-    last_sync_status: Optional[str]
-    provider_username: Optional[str]
+    last_sync_at: str | None
+    last_sync_status: str | None
+    provider_username: str | None
 
 
 class SyncResponse(BaseModel):
@@ -118,12 +117,12 @@ class TaskSuggestionResponse(BaseModel):
     integration_id: str
     provider_item_type: str
     suggested_title: str
-    suggested_description: Optional[str]
-    suggested_priority: Optional[str]
+    suggested_description: str | None
+    suggested_priority: str | None
     suggested_tags: list[str]
-    suggested_deadline: Optional[str]
-    ai_confidence: Optional[float]
-    ai_reasoning: Optional[str]
+    suggested_deadline: str | None
+    ai_confidence: float | None
+    ai_reasoning: str | None
     provider_item_snapshot: dict
     created_at: str
 
@@ -187,17 +186,14 @@ async def authorize_provider(
         redirect_uri = None
         if mobile:
             import os
+
             base_redirect = os.getenv(
                 f"{provider.upper()}_REDIRECT_URI",
-                f"http://localhost:8000/api/v1/integrations/{provider}/callback"
+                f"http://localhost:8000/api/v1/integrations/{provider}/callback",
             )
             redirect_uri = f"{base_redirect}?mobile=true"
 
-        auth_url = service.initiate_oauth(
-            provider,
-            current_user.user_id,
-            redirect_uri=redirect_uri
-        )
+        auth_url = service.initiate_oauth(provider, current_user.user_id, redirect_uri=redirect_uri)
 
         return AuthorizationResponse(
             authorization_url=auth_url,
@@ -308,7 +304,7 @@ async def oauth_callback(
 
 @router.get("/", response_model=list[IntegrationSummary])
 async def list_integrations(
-    provider: Optional[ProviderType] = Query(None, description="Filter by provider"),
+    provider: ProviderType | None = Query(None, description="Filter by provider"),
     current_user: User = Depends(get_current_user),
     service: IntegrationService = Depends(get_integration_service),
 ):
@@ -497,7 +493,7 @@ async def trigger_sync(
 
 @router.get("/suggested-tasks", response_model=list[TaskSuggestionResponse])
 async def get_suggested_tasks(
-    provider: Optional[ProviderType] = Query(None, description="Filter by provider"),
+    provider: ProviderType | None = Query(None, description="Filter by provider"),
     limit: int = Query(50, ge=1, le=100, description="Max results"),
     current_user: User = Depends(get_current_user),
     service: IntegrationService = Depends(get_integration_service),

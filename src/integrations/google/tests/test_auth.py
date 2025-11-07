@@ -4,10 +4,11 @@ Tests for Google OAuth2 authentication service.
 Following TDD methodology: RED → GREEN → REFACTOR
 """
 
+from unittest.mock import Mock, patch
+
 import pytest
-from pathlib import Path
-from unittest.mock import Mock, patch, MagicMock
-from src.integrations.google.auth import GoogleAuthService, AuthenticationError
+
+from src.integrations.google.auth import AuthenticationError, GoogleAuthService
 
 
 class TestGoogleAuthService:
@@ -35,9 +36,7 @@ class TestGoogleAuthService:
         """Test that service accepts custom credential paths."""
         creds_path = str(tmp_path / "custom_creds.json")
         token_path = str(tmp_path / "custom_token.json")
-        service = GoogleAuthService(
-            credentials_path=creds_path, token_path=token_path
-        )
+        service = GoogleAuthService(credentials_path=creds_path, token_path=token_path)
         assert service.credentials_path == creds_path
         assert service.token_path == token_path
 
@@ -82,9 +81,7 @@ class TestGoogleAuthService:
 
         assert auth_service.has_valid_credentials() is False
 
-    def test_get_credentials_raises_error_without_credentials_file(
-        self, auth_service
-    ):
+    def test_get_credentials_raises_error_without_credentials_file(self, auth_service):
         """Test that get_credentials raises error when credentials file missing."""
         with pytest.raises(AuthenticationError) as exc_info:
             auth_service.get_credentials()
@@ -147,9 +144,7 @@ class TestGoogleAuthService:
             assert credentials == mock_creds
 
     @patch("src.integrations.google.auth.Credentials")
-    def test_get_credentials_returns_valid_token(
-        self, mock_creds_class, auth_service, tmp_path
-    ):
+    def test_get_credentials_returns_valid_token(self, mock_creds_class, auth_service, tmp_path):
         """Test that get_credentials returns existing valid token."""
         token_file = tmp_path / "token.json"
         token_file.write_text('{"token": "valid"}')
@@ -182,9 +177,7 @@ class TestGoogleAuthService:
         auth_service.revoke_credentials()
 
     @patch("src.integrations.google.auth.Credentials")
-    def test_build_service_returns_google_service(
-        self, mock_creds_class, auth_service, tmp_path
-    ):
+    def test_build_service_returns_google_service(self, mock_creds_class, auth_service, tmp_path):
         """Test that build_service creates a Google API service."""
         token_file = tmp_path / "token.json"
         token_file.write_text('{"token": "valid"}')
@@ -204,6 +197,4 @@ class TestGoogleAuthService:
             service = auth_service.build_service("calendar", "v3")
 
             assert service == mock_service
-            mock_build.assert_called_once_with(
-                "calendar", "v3", credentials=mock_creds
-            )
+            mock_build.assert_called_once_with("calendar", "v3", credentials=mock_creds)

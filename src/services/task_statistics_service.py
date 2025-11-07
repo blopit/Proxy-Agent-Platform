@@ -3,8 +3,8 @@
 Calculates task completion statistics and productivity scores
 for users based on their task history.
 """
+
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
 
 
 class StatisticsService:
@@ -14,10 +14,10 @@ class StatisticsService:
         """Initialize the statistics service with in-memory storage."""
         # In-memory storage for demo purposes
         # In production, this would query a database
-        self._tasks: Dict[str, List[Dict]] = {}
-        self._completions: Dict[str, List[Dict]] = {}
+        self._tasks: dict[str, list[dict]] = {}
+        self._completions: dict[str, list[dict]] = {}
 
-    async def get_user_statistics(self, user_id: str) -> Dict:
+    async def get_user_statistics(self, user_id: str) -> dict:
         """
         Calculate comprehensive statistics for a user.
 
@@ -46,9 +46,7 @@ class StatisticsService:
         completed_tasks = len(completions)
 
         # Calculate completion rate
-        completion_rate = (
-            (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0.0
-        )
+        completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0.0
 
         # Calculate average completion time
         avg_completion_time = 0.0
@@ -102,7 +100,7 @@ class StatisticsService:
         stats = await self.get_user_statistics(user_id)
         return stats["productivity_score"]
 
-    def _calculate_streak(self, completions: List[Dict]) -> int:
+    def _calculate_streak(self, completions: list[dict]) -> int:
         """
         Calculate current consecutive days with task completions.
 
@@ -186,24 +184,23 @@ class StatisticsService:
         # Logarithmic scaling: 1 task = 1 point, 100 tasks = 10 points
         if total_completed > 0:
             import math
+
             volume_score = min(math.log10(total_completed + 1) * 5, 10.0)
         else:
             volume_score = 0.0
 
-        total_score = (
-            completion_score + velocity_score + streak_score + volume_score
-        )
+        total_score = completion_score + velocity_score + streak_score + volume_score
 
         return min(max(total_score, 0.0), 100.0)
 
     # Test helper methods (would be injected via dependency injection in production)
-    def _add_task(self, user_id: str, task: Dict):
+    def _add_task(self, user_id: str, task: dict):
         """Add a task for testing purposes."""
         if user_id not in self._tasks:
             self._tasks[user_id] = []
         self._tasks[user_id].append(task)
 
-    def _add_completion(self, user_id: str, completion: Dict):
+    def _add_completion(self, user_id: str, completion: dict):
         """Add a completion for testing purposes."""
         if user_id not in self._completions:
             self._completions[user_id] = []

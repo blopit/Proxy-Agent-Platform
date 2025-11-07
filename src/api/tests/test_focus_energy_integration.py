@@ -26,8 +26,8 @@ def auth_token(test_client):
     Module-scoped to avoid database locking issues when multiple tests
     try to register/login the same user concurrently.
     """
-    import time
     import random
+    import time
 
     # Add small random delay to avoid race conditions
     time.sleep(random.uniform(0.01, 0.05))

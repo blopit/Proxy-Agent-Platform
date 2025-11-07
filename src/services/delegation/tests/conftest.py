@@ -4,12 +4,14 @@ Pytest configuration for delegation tests.
 
 import pytest
 from fastapi.testclient import TestClient
-from src.core.task_models import Task, Project
-from src.database.enhanced_adapter import EnhancedDatabaseAdapter
+
+from src.core.task_models import Project, Task
 
 
 @pytest.fixture(scope="function")
-def test_client(client_with_test_db: TestClient, test_task: Task, test_project: Project) -> TestClient:
+def test_client(
+    client_with_test_db: TestClient, test_task: Task, test_project: Project
+) -> TestClient:
     """
     Alias for the main test client fixture with task and project setup.
 

@@ -5,11 +5,11 @@ Secretary Service - Intelligent task organization and prioritization logic
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 # Python 3.10 compatibility
-UTC = timezone.utc
+UTC = UTC
 
 from src.core.task_models import TaskPriority, TaskStatus
 from src.repositories.enhanced_repositories import EnhancedTaskRepository
@@ -48,7 +48,9 @@ class SecretaryService:
 
             # Filter by user if provided
             if user_id:
-                all_tasks = [t for t in all_tasks if hasattr(t, "assignee") and t.assignee == user_id]
+                all_tasks = [
+                    t for t in all_tasks if hasattr(t, "assignee") and t.assignee == user_id
+                ]
 
             # Get current time for calculations
             now = datetime.now(UTC)
@@ -86,7 +88,15 @@ class SecretaryService:
 
             # Calculate statistics
             completed_count = len([t for t in all_tasks if t.status == TaskStatus.COMPLETED])
-            overdue_count = len([t for t in all_tasks if t.due_date and self._ensure_timezone_aware(t.due_date) < now and t.status != TaskStatus.COMPLETED])
+            overdue_count = len(
+                [
+                    t
+                    for t in all_tasks
+                    if t.due_date
+                    and self._ensure_timezone_aware(t.due_date) < now
+                    and t.status != TaskStatus.COMPLETED
+                ]
+            )
 
             stats = {
                 "total_tasks": len(all_tasks),
@@ -103,13 +113,17 @@ class SecretaryService:
             for task in all_tasks:
                 due_date = self._ensure_timezone_aware(task.due_date)
                 if due_date and now <= due_date <= one_week and task.status != TaskStatus.COMPLETED:
-                    upcoming_deadlines.append({
-                        "task_id": task.task_id,
-                        "title": task.title,
-                        "due_date": due_date.isoformat(),
-                        "priority": task.priority if isinstance(task.priority, str) else task.priority.value,
-                        "days_until_due": (due_date - now).days,
-                    })
+                    upcoming_deadlines.append(
+                        {
+                            "task_id": task.task_id,
+                            "title": task.title,
+                            "due_date": due_date.isoformat(),
+                            "priority": task.priority
+                            if isinstance(task.priority, str)
+                            else task.priority.value,
+                            "days_until_due": (due_date - now).days,
+                        }
+                    )
 
             # Sort upcoming deadlines by date
             upcoming_deadlines.sort(key=lambda x: x["due_date"])
@@ -146,7 +160,9 @@ class SecretaryService:
 
             # Filter by user if provided
             if user_id:
-                all_tasks = [t for t in all_tasks if hasattr(t, "assignee") and t.assignee == user_id]
+                all_tasks = [
+                    t for t in all_tasks if hasattr(t, "assignee") and t.assignee == user_id
+                ]
 
             # Get current time
             now = datetime.now(UTC)
@@ -163,7 +179,9 @@ class SecretaryService:
                     continue
 
                 # Determine urgency and importance
-                is_urgent = task.due_date and task.due_date <= three_days if task.due_date else False
+                is_urgent = (
+                    task.due_date and task.due_date <= three_days if task.due_date else False
+                )
                 is_important = task.priority in [TaskPriority.HIGH, TaskPriority.CRITICAL]
 
                 task_dict = self._task_to_dict(task)
@@ -203,7 +221,9 @@ class SecretaryService:
             logger.error(f"Failed to generate priority matrix: {e}")
             raise
 
-    def get_daily_briefing(self, user_id: str | None = None, time_of_day: str = "morning") -> dict[str, Any]:
+    def get_daily_briefing(
+        self, user_id: str | None = None, time_of_day: str = "morning"
+    ) -> dict[str, Any]:
         """
         Get daily briefing with stats and upcoming tasks
 
@@ -220,7 +240,9 @@ class SecretaryService:
 
             # Filter by user if provided
             if user_id:
-                all_tasks = [t for t in all_tasks if hasattr(t, "assignee") and t.assignee == user_id]
+                all_tasks = [
+                    t for t in all_tasks if hasattr(t, "assignee") and t.assignee == user_id
+                ]
 
             # Get current time
             now = datetime.now(UTC)
@@ -248,36 +270,40 @@ class SecretaryService:
             # Generate alerts
             alerts = []
             overdue_tasks = [
-                t for t in all_tasks
+                t
+                for t in all_tasks
                 if t.due_date and t.due_date < now and t.status != TaskStatus.COMPLETED
             ]
 
             if overdue_tasks:
-                alerts.append({
-                    "type": "overdue",
-                    "severity": "high",
-                    "message": f"You have {len(overdue_tasks)} overdue task(s)",
-                    "count": len(overdue_tasks),
-                })
+                alerts.append(
+                    {
+                        "type": "overdue",
+                        "severity": "high",
+                        "message": f"You have {len(overdue_tasks)} overdue task(s)",
+                        "count": len(overdue_tasks),
+                    }
+                )
 
-            urgent_today = [
-                t for t in upcoming_tasks
-                if t.get("priority") in ["high", "critical"]
-            ]
+            urgent_today = [t for t in upcoming_tasks if t.get("priority") in ["high", "critical"]]
 
             if urgent_today:
-                alerts.append({
-                    "type": "urgent",
-                    "severity": "medium",
-                    "message": f"You have {len(urgent_today)} high-priority task(s) due soon",
-                    "count": len(urgent_today),
-                })
+                alerts.append(
+                    {
+                        "type": "urgent",
+                        "severity": "medium",
+                        "message": f"You have {len(urgent_today)} high-priority task(s) due soon",
+                        "count": len(urgent_today),
+                    }
+                )
 
             # Calculate statistics
             stats = {
                 "total_tasks": len(all_tasks),
                 "completed_today": len(completed_today),
-                "upcoming_today": len([t for t in upcoming_tasks if t.get("due_date", "") < today_end.isoformat()]),
+                "upcoming_today": len(
+                    [t for t in upcoming_tasks if t.get("due_date", "") < today_end.isoformat()]
+                ),
                 "urgent_tasks": len(urgent_today),
                 "overdue_tasks": len(overdue_tasks),
             }
@@ -311,7 +337,9 @@ class SecretaryService:
 
             # Filter by user if provided
             if user_id:
-                all_tasks = [t for t in all_tasks if hasattr(t, "assignee") and t.assignee == user_id]
+                all_tasks = [
+                    t for t in all_tasks if hasattr(t, "assignee") and t.assignee == user_id
+                ]
 
             suggestions = []
             now = datetime.now(UTC)
@@ -324,25 +352,33 @@ class SecretaryService:
                 # Suggest priority increase for tasks due soon with low priority
                 if task.due_date and task.due_date <= two_days:
                     if task.priority in [TaskPriority.LOW, TaskPriority.MEDIUM]:
-                        suggestions.append({
-                            "task_id": task.task_id,
-                            "title": task.title,
-                            "current_priority": task.priority if isinstance(task.priority, str) else task.priority.value,
-                            "suggested_priority": TaskPriority.HIGH.value,
-                            "reason": f"Task is due in {(task.due_date - now).days} day(s)",
-                            "confidence": 0.85,
-                        })
+                        suggestions.append(
+                            {
+                                "task_id": task.task_id,
+                                "title": task.title,
+                                "current_priority": task.priority
+                                if isinstance(task.priority, str)
+                                else task.priority.value,
+                                "suggested_priority": TaskPriority.HIGH.value,
+                                "reason": f"Task is due in {(task.due_date - now).days} day(s)",
+                                "confidence": 0.85,
+                            }
+                        )
 
                 # Suggest priority decrease for low-importance tasks with no deadline
                 if not task.due_date and task.priority == TaskPriority.HIGH:
-                    suggestions.append({
-                        "task_id": task.task_id,
-                        "title": task.title,
-                        "current_priority": task.priority if isinstance(task.priority, str) else task.priority.value,
-                        "suggested_priority": TaskPriority.MEDIUM.value,
-                        "reason": "High priority task with no deadline set",
-                        "confidence": 0.70,
-                    })
+                    suggestions.append(
+                        {
+                            "task_id": task.task_id,
+                            "title": task.title,
+                            "current_priority": task.priority
+                            if isinstance(task.priority, str)
+                            else task.priority.value,
+                            "suggested_priority": TaskPriority.MEDIUM.value,
+                            "reason": "High priority task with no deadline set",
+                            "confidence": 0.70,
+                        }
+                    )
 
             # Sort by confidence
             suggestions.sort(key=lambda x: x["confidence"], reverse=True)

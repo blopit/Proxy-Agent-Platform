@@ -4,9 +4,7 @@ Repository layer for Task Templates Service (BE-01).
 Handles database operations for task templates and template steps.
 """
 
-import json
-from datetime import datetime, UTC
-from typing import List, Optional, Dict, Any
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
@@ -104,7 +102,7 @@ class TemplateRepository:
             conn.rollback()
             raise e
 
-    def get_by_id(self, template_id: str) -> Optional[TaskTemplate]:
+    def get_by_id(self, template_id: str) -> TaskTemplate | None:
         """
         Get a template by ID with its steps.
 
@@ -175,7 +173,7 @@ class TemplateRepository:
         template_dict["steps"] = steps
         return TaskTemplate(**template_dict)
 
-    def get_all_public(self) -> List[TaskTemplate]:
+    def get_all_public(self) -> list[TaskTemplate]:
         """
         Get all public templates.
 
@@ -197,7 +195,7 @@ class TemplateRepository:
         template_ids = [row[0] for row in cursor.fetchall()]
         return [self.get_by_id(tid) for tid in template_ids if self.get_by_id(tid)]
 
-    def get_by_category(self, category: str) -> List[TaskTemplate]:
+    def get_by_category(self, category: str) -> list[TaskTemplate]:
         """
         Get all public templates in a specific category.
 
@@ -223,7 +221,7 @@ class TemplateRepository:
         template_ids = [row[0] for row in cursor.fetchall()]
         return [self.get_by_id(tid) for tid in template_ids if self.get_by_id(tid)]
 
-    def update(self, template_id: str, update_data: TaskTemplateUpdate) -> Optional[TaskTemplate]:
+    def update(self, template_id: str, update_data: TaskTemplateUpdate) -> TaskTemplate | None:
         """
         Update template metadata (not steps).
 
@@ -263,7 +261,7 @@ class TemplateRepository:
 
         query = f"""
             UPDATE task_templates
-            SET {', '.join(updates)}
+            SET {", ".join(updates)}
             WHERE template_id = ?
         """
 

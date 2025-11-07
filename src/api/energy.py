@@ -62,11 +62,7 @@ class CurrentEnergyResponse(BaseModel):
 # Energy Level Labels
 # ============================================================================
 
-ENERGY_LABELS = {
-    1: "Low",
-    2: "Medium",
-    3: "High"
-}
+ENERGY_LABELS = {1: "Low", 2: "Medium", 3: "High"}
 
 ENERGY_EMOJIS = {
     1: "🔋",  # Low battery
@@ -82,8 +78,7 @@ ENERGY_EMOJIS = {
 
 @router.post("/set", response_model=EnergyResponse)
 async def set_energy_level(
-    energy_data: EnergySetRequest,
-    current_user: User = Depends(get_current_user)
+    energy_data: EnergySetRequest, current_user: User = Depends(get_current_user)
 ):
     """
     Set your current energy level (1-3).
@@ -126,8 +121,8 @@ async def set_energy_level(
                 energy_data.energy_level,
                 time_of_day,
                 energy_data.notes,
-                datetime.now().isoformat()
-            )
+                datetime.now().isoformat(),
+            ),
         )
         conn.commit()
 
@@ -141,21 +136,19 @@ async def set_energy_level(
             energy_label=energy_label,
             recorded_at=datetime.now().isoformat(),
             notes=energy_data.notes,
-            message=f"{emoji} Energy set to {energy_label}"
+            message=f"{emoji} Energy set to {energy_label}",
         )
 
     except Exception as e:
         logger.error(f"Failed to set energy level: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to set energy: {str(e)}"
+            detail=f"Failed to set energy: {str(e)}",
         )
 
 
 @router.get("/current", response_model=CurrentEnergyResponse)
-async def get_current_energy(
-    current_user: User = Depends(get_current_user)
-):
+async def get_current_energy(current_user: User = Depends(get_current_user)):
     """
     Get your most recent energy level.
 
@@ -177,7 +170,7 @@ async def get_current_energy(
             ORDER BY recorded_at DESC
             LIMIT 1
             """,
-            (user_id,)
+            (user_id,),
         )
 
         row = cursor.fetchone()
@@ -198,7 +191,7 @@ async def get_current_energy(
             energy_label=energy_label,
             user_id=user_id,
             timestamp=recorded_at,
-            message=f"{emoji} Current energy: {energy_label}"
+            message=f"{emoji} Current energy: {energy_label}",
         )
 
     except Exception as e:
@@ -209,15 +202,12 @@ async def get_current_energy(
             energy_label="Medium",
             user_id=user_id,
             timestamp=datetime.now().isoformat(),
-            message="⚡ Current energy: Medium (default)"
+            message="⚡ Current energy: Medium (default)",
         )
 
 
 @router.get("/history")
-async def get_energy_history(
-    current_user: User = Depends(get_current_user),
-    limit: int = 10
-):
+async def get_energy_history(current_user: User = Depends(get_current_user), limit: int = 10):
     """
     Get your recent energy level history.
 
@@ -243,7 +233,7 @@ async def get_energy_history(
             ORDER BY recorded_at DESC
             LIMIT ?
             """,
-            (user_id, limit)
+            (user_id, limit),
         )
 
         rows = cursor.fetchall()
@@ -251,27 +241,29 @@ async def get_energy_history(
         history = []
         for row in rows:
             energy_level = row[1]
-            history.append({
-                "snapshot_id": row[0],
-                "energy_level": energy_level,
-                "energy_label": ENERGY_LABELS[energy_level],
-                "time_of_day": row[2],
-                "notes": row[3],
-                "recorded_at": row[4]
-            })
+            history.append(
+                {
+                    "snapshot_id": row[0],
+                    "energy_level": energy_level,
+                    "energy_label": ENERGY_LABELS[energy_level],
+                    "time_of_day": row[2],
+                    "notes": row[3],
+                    "recorded_at": row[4],
+                }
+            )
 
         return {
             "user_id": user_id,
             "count": len(history),
             "history": history,
-            "message": f"📊 Retrieved {len(history)} energy snapshots"
+            "message": f"📊 Retrieved {len(history)} energy snapshots",
         }
 
     except Exception as e:
         logger.error(f"Failed to get energy history: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get history: {str(e)}"
+            detail=f"Failed to get history: {str(e)}",
         )
 
 

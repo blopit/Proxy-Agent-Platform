@@ -4,12 +4,16 @@ FastAPI App - Simple API for proxy agents
 
 import json
 from contextlib import asynccontextmanager
+
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Request
+from datetime import datetime
+
+import structlog
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -18,31 +22,35 @@ from src.api.auth import router as auth_router
 from src.api.basic_tasks import router as basic_task_router
 from src.api.capture import router as capture_router
 from src.api.compass import router as compass_router  # MVP: Compass zones
+from src.api.dogfooding import (
+    router as dogfooding_router,  # Mobile-first task execution (swipe interactions)
+)
 from src.api.energy import router as energy_router
 from src.api.focus import router as focus_router
 from src.api.gamification import router as gamification_router
+from src.api.pets import router as pets_router  # BE-02: User pets service
 from src.api.progress import router as progress_router
 from src.api.rewards import router as rewards_router
 from src.api.ritual import router as ritual_router  # MVP: Morning ritual
 from src.api.routes import tasks_v2_router  # New v2 API
+from src.api.routes.integrations import router as integrations_router  # Provider integration system
+from src.api.routes.statistics import (
+    router as statistics_router,  # Task statistics and productivity metrics
+)
+from src.api.routes.workflows import router as workflows_router  # AI-powered workflow execution
 from src.api.secretary import router as secretary_router
 from src.api.simple_tasks import router as simple_task_router
 from src.api.tasks import router as comprehensive_task_router
 from src.api.websocket import (
     connection_manager,
 )
-from src.services.delegation.routes import router as delegation_router  # BE-00: Task delegation
-from src.services.templates.routes import router as templates_router  # BE-01: Task templates
-from src.api.pets import router as pets_router  # BE-02: User pets service
-from src.services.chatgpt_prompts.routes import router as chatgpt_prompts_router  # ChatGPT video task prompts
-from src.api.routes.workflows import router as workflows_router  # AI-powered workflow execution
-from src.api.routes.integrations import router as integrations_router  # Provider integration system
-from src.api.routes.statistics import router as statistics_router  # Task statistics and productivity metrics
-from src.api.dogfooding import router as dogfooding_router  # Mobile-first task execution (swipe interactions)
 from src.core.models import AgentRequest, AgentResponse
 from src.database.enhanced_adapter import close_enhanced_database, get_enhanced_database
-from datetime import datetime
-import structlog
+from src.services.chatgpt_prompts.routes import (
+    router as chatgpt_prompts_router,  # ChatGPT video task prompts
+)
+from src.services.delegation.routes import router as delegation_router  # BE-00: Task delegation
+from src.services.templates.routes import router as templates_router  # BE-01: Task templates
 
 logger = structlog.get_logger()
 
@@ -93,15 +101,9 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     Otherwise, return standard FastAPI error format.
     """
     if isinstance(exc.detail, dict) and "error_code" in exc.detail:
-        return JSONResponse(
-            status_code=exc.status_code,
-            content=exc.detail
-        )
+        return JSONResponse(status_code=exc.status_code, content=exc.detail)
 
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": exc.detail}
-    )
+    return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
 # Global agent registry
@@ -147,11 +149,7 @@ async def health():
     Used by load balancers and monitoring tools to verify the app is running.
     Always returns 200 OK if the app is responding to requests.
     """
-    return {
-        "status": "healthy",
-        "timestamp": datetime.now().isoformat(),
-        "version": "0.1.0"
-    }
+    return {"status": "healthy", "timestamp": datetime.now().isoformat(), "version": "0.1.0"}
 
 
 @app.get("/ready")
@@ -176,22 +174,18 @@ async def readiness():
         return {
             "status": "ready",
             "timestamp": datetime.now().isoformat(),
-            "checks": {
-                "database": "ok"
-            }
+            "checks": {"database": "ok"},
         }
     except Exception as e:
         from fastapi.responses import JSONResponse
+
         return JSONResponse(
             status_code=503,
             content={
                 "status": "not_ready",
                 "timestamp": datetime.now().isoformat(),
-                "checks": {
-                    "database": "failed",
-                    "error": str(e)
-                }
-            }
+                "checks": {"database": "failed", "error": str(e)},
+            },
         )
 
 

@@ -5,12 +5,11 @@ This implementation uses SQLAlchemy ORM models and accepts
 the database session via dependency injection for testability.
 """
 
-from typing import List, Optional
-from sqlalchemy.orm import Session
 from sqlalchemy import or_
+from sqlalchemy.orm import Session
 
+from src.core.task_models import Task, TaskPriority, TaskStatus
 from src.database.models import Task as TaskModel
-from src.core.task_models import Task, TaskStatus, TaskPriority
 from src.repositories.interfaces import TaskRepositoryInterface
 
 
@@ -31,11 +30,9 @@ class TaskRepository(TaskRepositoryInterface):
         """
         self.db = db
 
-    def get_by_id(self, task_id: str) -> Optional[Task]:
+    def get_by_id(self, task_id: str) -> Task | None:
         """Get task by ID"""
-        task_model = self.db.query(TaskModel).filter(
-            TaskModel.task_id == task_id
-        ).first()
+        task_model = self.db.query(TaskModel).filter(TaskModel.task_id == task_id).first()
 
         if not task_model:
             return None
@@ -51,11 +48,9 @@ class TaskRepository(TaskRepositoryInterface):
 
         return self._to_domain(task_model)
 
-    def update(self, task_id: str, updates: dict) -> Optional[Task]:
+    def update(self, task_id: str, updates: dict) -> Task | None:
         """Update task"""
-        task_model = self.db.query(TaskModel).filter(
-            TaskModel.task_id == task_id
-        ).first()
+        task_model = self.db.query(TaskModel).filter(TaskModel.task_id == task_id).first()
 
         if not task_model:
             return None
@@ -72,47 +67,40 @@ class TaskRepository(TaskRepositoryInterface):
 
     def delete(self, task_id: str) -> bool:
         """Delete task"""
-        result = self.db.query(TaskModel).filter(
-            TaskModel.task_id == task_id
-        ).delete()
+        result = self.db.query(TaskModel).filter(TaskModel.task_id == task_id).delete()
         self.db.commit()
 
         return result > 0
 
-    def list_all(self, skip: int = 0, limit: int = 100) -> List[Task]:
+    def list_all(self, skip: int = 0, limit: int = 100) -> list[Task]:
         """List all tasks with pagination"""
         tasks = self.db.query(TaskModel).offset(skip).limit(limit).all()
         return [self._to_domain(t) for t in tasks]
 
-    def get_by_project(self, project_id: str) -> List[Task]:
+    def get_by_project(self, project_id: str) -> list[Task]:
         """Get tasks by project"""
-        tasks = self.db.query(TaskModel).filter(
-            TaskModel.project_id == project_id
-        ).all()
+        tasks = self.db.query(TaskModel).filter(TaskModel.project_id == project_id).all()
         return [self._to_domain(t) for t in tasks]
 
-    def get_by_status(self, status: str) -> List[Task]:
+    def get_by_status(self, status: str) -> list[Task]:
         """Get tasks by status"""
-        tasks = self.db.query(TaskModel).filter(
-            TaskModel.status == status
-        ).all()
+        tasks = self.db.query(TaskModel).filter(TaskModel.status == status).all()
         return [self._to_domain(t) for t in tasks]
 
-    def get_by_assignee(self, assignee_id: str) -> List[Task]:
+    def get_by_assignee(self, assignee_id: str) -> list[Task]:
         """Get tasks by assignee"""
-        tasks = self.db.query(TaskModel).filter(
-            TaskModel.assignee_id == assignee_id
-        ).all()
+        tasks = self.db.query(TaskModel).filter(TaskModel.assignee_id == assignee_id).all()
         return [self._to_domain(t) for t in tasks]
 
-    def search(self, query: str) -> List[Task]:
+    def search(self, query: str) -> list[Task]:
         """Search tasks by title or description"""
-        tasks = self.db.query(TaskModel).filter(
-            or_(
-                TaskModel.title.ilike(f"%{query}%"),
-                TaskModel.description.ilike(f"%{query}%")
+        tasks = (
+            self.db.query(TaskModel)
+            .filter(
+                or_(TaskModel.title.ilike(f"%{query}%"), TaskModel.description.ilike(f"%{query}%"))
             )
-        ).all()
+            .all()
+        )
         return [self._to_domain(t) for t in tasks]
 
     @staticmethod
@@ -137,8 +125,11 @@ class TaskRepository(TaskRepositoryInterface):
             estimated_hours=task_model.estimated_hours,
             actual_hours=task_model.actual_hours,
             tags=(
-                task_model.tags if isinstance(task_model.tags, list)
-                else eval(task_model.tags) if task_model.tags else []
+                task_model.tags
+                if isinstance(task_model.tags, list)
+                else eval(task_model.tags)
+                if task_model.tags
+                else []
             ),
             assignee=task_model.assignee_id,  # Note: 'assignee' in domain, 'assignee_id' in DB
             due_date=task_model.due_date,
@@ -166,7 +157,9 @@ class TaskRepository(TaskRepositoryInterface):
             project_id=task.project_id,
             parent_id=task.parent_id,
             status=task.status.value if isinstance(task.status, TaskStatus) else task.status,
-            priority=task.priority.value if isinstance(task.priority, TaskPriority) else task.priority,
+            priority=task.priority.value
+            if isinstance(task.priority, TaskPriority)
+            else task.priority,
             estimated_hours=task.estimated_hours,
             actual_hours=task.actual_hours,
             tags=str(task.tags) if task.tags else "[]",

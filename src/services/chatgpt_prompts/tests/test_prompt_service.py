@@ -53,9 +53,7 @@ def test_generate_prompt_with_focus(prompt_service):
 
 def test_generate_prompt_with_task_count(prompt_service):
     """Test prompt generation with expected task count."""
-    request = PromptGenerationRequest(
-        task_context="Organize garage", expected_task_count=12
-    )
+    request = PromptGenerationRequest(task_context="Organize garage", expected_task_count=12)
 
     response = prompt_service.generate_prompt(request)
 
@@ -64,9 +62,7 @@ def test_generate_prompt_with_task_count(prompt_service):
 
 def test_generate_prompt_with_priority(prompt_service):
     """Test prompt generation with priority setting."""
-    request = PromptGenerationRequest(
-        task_context="Fix security issue", priority="critical"
-    )
+    request = PromptGenerationRequest(task_context="Fix security issue", priority="critical")
 
     response = prompt_service.generate_prompt(request)
 

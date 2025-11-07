@@ -15,11 +15,9 @@ Following TDD RED-GREEN-REFACTOR methodology.
 """
 
 import pytest
-from decimal import Decimal
 from fastapi.testclient import TestClient
 
 from src.api.main import app
-from src.core.task_models import Task, TaskScope, DelegationMode, TaskStatus
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
 from src.services.task_service import TaskService
 
@@ -101,10 +99,7 @@ class TestSplitTaskEndpoint:
     def test_split_multi_scope_task_success(self, client, test_db):
         """Test splitting a MULTI-scope task into micro-steps"""
         # This is what the USER does - the most important test!
-        response = client.post(
-            "/api/v1/tasks/task_multi/split",
-            json={"user_id": "test_user"}
-        )
+        response = client.post("/api/v1/tasks/task_multi/split", json={"user_id": "test_user"})
 
         # User expects 200 OK
         assert response.status_code == 200
@@ -190,7 +185,9 @@ class TestGetTaskWithMicroSteps:
         """Test that GET task returns micro-steps if they exist"""
 
         # First, split the task
-        split_response = client.post("/api/v1/tasks/task_multi/split", json={"user_id": "test_user"})
+        split_response = client.post(
+            "/api/v1/tasks/task_multi/split", json={"user_id": "test_user"}
+        )
         assert split_response.status_code == 200
 
         # Now GET the task
@@ -223,13 +220,14 @@ class TestMicroStepOperations:
         """Test PATCH /api/v1/micro-steps/{step_id}/complete"""
 
         # First, split task to create micro-steps
-        split_response = client.post("/api/v1/tasks/task_multi/split", json={"user_id": "test_user"})
+        split_response = client.post(
+            "/api/v1/tasks/task_multi/split", json={"user_id": "test_user"}
+        )
         step_id = split_response.json()["micro_steps"][0]["step_id"]
 
         # Complete the first step
         response = client.patch(
-            f"/api/v1/micro-steps/{step_id}/complete",
-            json={"actual_minutes": 4}
+            f"/api/v1/micro-steps/{step_id}/complete", json={"actual_minutes": 4}
         )
 
         assert response.status_code == 200
@@ -244,7 +242,9 @@ class TestMicroStepOperations:
         """Test completing micro-step awards XP for dopamine hit"""
 
         # Split and complete step
-        split_response = client.post("/api/v1/tasks/task_multi/split", json={"user_id": "test_user"})
+        split_response = client.post(
+            "/api/v1/tasks/task_multi/split", json={"user_id": "test_user"}
+        )
         step_id = split_response.json()["micro_steps"][0]["step_id"]
 
         response = client.patch(f"/api/v1/micro-steps/{step_id}/complete", json={})
@@ -260,7 +260,9 @@ class TestMicroStepOperations:
         """Test GET /api/v1/tasks/{task_id}/progress shows micro-step completion"""
 
         # Split task
-        split_response = client.post("/api/v1/tasks/task_multi/split", json={"user_id": "test_user"})
+        split_response = client.post(
+            "/api/v1/tasks/task_multi/split", json={"user_id": "test_user"}
+        )
         steps = split_response.json()["micro_steps"]
 
         # Complete first step
@@ -296,7 +298,7 @@ class TestSplitAgentIntegration:
                         "step_number": 1,
                         "description": "Test step",
                         "estimated_minutes": 3,
-                        "delegation_mode": "do"
+                        "delegation_mode": "do",
                     }
                 ]
             }
@@ -363,7 +365,9 @@ class TestTaskSplitWorkflow:
         """Test complete user journey: split → complete steps → task done"""
 
         # 1. User splits task
-        split_response = client.post("/api/v1/tasks/task_multi/split", json={"user_id": "test_user"})
+        split_response = client.post(
+            "/api/v1/tasks/task_multi/split", json={"user_id": "test_user"}
+        )
         assert split_response.status_code == 200
         steps = split_response.json()["micro_steps"]
 
@@ -371,7 +375,7 @@ class TestTaskSplitWorkflow:
         for step in steps:
             complete_response = client.patch(
                 f"/api/v1/micro-steps/{step['step_id']}/complete",
-                json={"actual_minutes": step["estimated_minutes"]}
+                json={"actual_minutes": step["estimated_minutes"]},
             )
             assert complete_response.status_code == 200
 

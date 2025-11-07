@@ -4,16 +4,17 @@ Tests for UserPetService (TDD - RED phase)
 Following TDD: Write tests FIRST, then implement service.
 """
 
-import pytest
-from unittest.mock import Mock, MagicMock
-from datetime import datetime, timezone
-from uuid import uuid4
+from datetime import UTC, datetime
+from unittest.mock import Mock
 
-from src.core.pet_models import (
-    UserPet, UserPetCreate, FeedPetRequest, FeedPetResponse, PET_SPECIES
-)
+import pytest
+
+from src.core.pet_models import FeedPetResponse, UserPet
 from src.services.user_pet_service import (
-    UserPetService, PetServiceError, UserAlreadyHasPetError, UserHasNoPetError
+    PetServiceError,
+    UserAlreadyHasPetError,
+    UserHasNoPetError,
+    UserPetService,
 )
 
 
@@ -42,8 +43,8 @@ def sample_pet():
         hunger=50,
         happiness=50,
         evolution_stage=1,
-        created_at=datetime.now(timezone.utc),
-        last_fed_at=datetime.now(timezone.utc)
+        created_at=datetime.now(UTC),
+        last_fed_at=datetime.now(UTC),
     )
 
 
@@ -57,11 +58,7 @@ def test_create_pet_with_valid_data(service, mock_pet_repo, sample_pet):
     mock_pet_repo.user_has_pet.return_value = False
     mock_pet_repo.create.return_value = sample_pet
 
-    result = service.create_pet(
-        user_id="user-456",
-        species="dog",
-        name="Buddy"
-    )
+    result = service.create_pet(user_id="user-456", species="dog", name="Buddy")
 
     assert result == sample_pet
     mock_pet_repo.user_has_pet.assert_called_once_with("user-456")
@@ -151,9 +148,7 @@ def test_feed_pet_from_task_completion(service, mock_pet_repo, sample_pet):
     mock_pet_repo.feed_pet.return_value = fed_pet
 
     response = service.feed_pet_from_task(
-        user_id="user-456",
-        task_priority="high",
-        task_estimated_minutes=30
+        user_id="user-456", task_priority="high", task_estimated_minutes=30
     )
 
     assert isinstance(response, FeedPetResponse)

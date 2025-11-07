@@ -8,7 +8,6 @@ can execute via the /execute-prp slash command.
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Dict
 
 
 def sanitize_filename(title: str) -> str:
@@ -22,12 +21,12 @@ def sanitize_filename(title: str) -> str:
         str: Safe filename without special characters
     """
     # Remove special characters, replace spaces with underscores
-    sanitized = re.sub(r'[^\w\s-]', '', title.lower())
-    sanitized = re.sub(r'[\s-]+', '_', sanitized)
+    sanitized = re.sub(r"[^\w\s-]", "", title.lower())
+    sanitized = re.sub(r"[\s-]+", "_", sanitized)
     return sanitized[:50]  # Limit length
 
 
-def generate_prp_from_task(task: Dict) -> str:
+def generate_prp_from_task(task: dict) -> str:
     """
     Generate a PRP markdown file content from a task.
 
@@ -38,14 +37,14 @@ def generate_prp_from_task(task: Dict) -> str:
     Returns:
         str: PRP file content in markdown format
     """
-    task_id = task.get('task_id', 'unknown')
-    title = task.get('title', 'Untitled Task')
-    description = task.get('description', '')
-    priority = task.get('priority', 'medium')
-    estimated_hours = task.get('estimated_hours', 4.0)
-    delegation_mode = task.get('delegation_mode', 'delegate')
-    category = task.get('category', 'general')
-    tags = task.get('tags', [])
+    task_id = task.get("task_id", "unknown")
+    title = task.get("title", "Untitled Task")
+    description = task.get("description", "")
+    priority = task.get("priority", "medium")
+    estimated_hours = task.get("estimated_hours", 4.0)
+    delegation_mode = task.get("delegation_mode", "delegate")
+    category = task.get("category", "general")
+    tags = task.get("tags", [])
 
     # Parse acceptance criteria from description
     acceptance_criteria = _extract_acceptance_criteria(description)
@@ -54,7 +53,7 @@ def generate_prp_from_task(task: Dict) -> str:
     validation_commands = _generate_validation_commands(category, tags)
 
     # Build PRP content
-    tags_str = ', '.join(tags) if tags else 'none'
+    tags_str = ", ".join(tags) if tags else "none"
     generated_at = datetime.now().isoformat()
 
     # Default acceptance criteria if none provided
@@ -78,7 +77,7 @@ generated_at: {generated_at}
 
 ## Context
 
-{description if description else 'No detailed description provided.'}
+{description if description else "No detailed description provided."}
 
 ## Requirements
 
@@ -134,23 +133,23 @@ def _extract_acceptance_criteria(description: str) -> str:
         str: Formatted acceptance criteria
     """
     if not description:
-        return ''
+        return ""
 
     # Look for explicit acceptance criteria section
-    ac_pattern = r'(?:Acceptance Criteria|AC):\s*\n(.*?)(?=\n\n|\n#|$)'
+    ac_pattern = r"(?:Acceptance Criteria|AC):\s*\n(.*?)(?=\n\n|\n#|$)"
     match = re.search(ac_pattern, description, re.IGNORECASE | re.DOTALL)
 
     if match:
         return match.group(1).strip()
 
     # Look for bullet points that might be criteria
-    bullet_pattern = r'((?:^[-*]\s+.+\n?)+)'
+    bullet_pattern = r"((?:^[-*]\s+.+\n?)+)"
     match = re.search(bullet_pattern, description, re.MULTILINE)
 
     if match:
         return match.group(1).strip()
 
-    return ''
+    return ""
 
 
 def _format_requirements(description: str) -> str:
@@ -164,18 +163,18 @@ def _format_requirements(description: str) -> str:
         str: Formatted requirements
     """
     if not description:
-        return '- Implement the feature as described in the title'
+        return "- Implement the feature as described in the title"
 
     # If description has bullet points, use them
-    if re.search(r'^[-*]\s+', description, re.MULTILINE):
+    if re.search(r"^[-*]\s+", description, re.MULTILINE):
         return description
 
     # Otherwise, convert description to bullet points
-    lines = [line.strip() for line in description.split('\n') if line.strip()]
+    lines = [line.strip() for line in description.split("\n") if line.strip()]
     if len(lines) == 1:
-        return f'- {lines[0]}'
+        return f"- {lines[0]}"
 
-    return '\n'.join(f'- {line}' for line in lines[:5])  # Limit to first 5 lines
+    return "\n".join(f"- {line}" for line in lines[:5])  # Limit to first 5 lines
 
 
 def _generate_validation_commands(category: str, tags: list) -> str:
@@ -192,56 +191,62 @@ def _generate_validation_commands(category: str, tags: list) -> str:
     commands = []
 
     # Python/Backend validation
-    if category in ['backend', 'api', 'database'] or any(
-        tag in tags for tag in ['python', 'backend', 'api', 'database']
+    if category in ["backend", "api", "database"] or any(
+        tag in tags for tag in ["python", "backend", "api", "database"]
     ):
-        commands.extend([
-            '```bash',
-            '# Run tests for the modified modules',
-            'uv run pytest src/{module}/tests/ -v',
-            '',
-            '# Check test coverage',
-            'uv run pytest --cov=src/{module} --cov-report=term-missing',
-            '',
-            '# Lint check',
-            'uv run ruff check src/{module}/',
-            '',
-            '# Type check',
-            'uv run mypy src/{module}/',
-            '```',
-        ])
+        commands.extend(
+            [
+                "```bash",
+                "# Run tests for the modified modules",
+                "uv run pytest src/{module}/tests/ -v",
+                "",
+                "# Check test coverage",
+                "uv run pytest --cov=src/{module} --cov-report=term-missing",
+                "",
+                "# Lint check",
+                "uv run ruff check src/{module}/",
+                "",
+                "# Type check",
+                "uv run mypy src/{module}/",
+                "```",
+            ]
+        )
 
     # Frontend validation
-    if category == 'frontend' or any(tag in tags for tag in ['frontend', 'react', 'ui']):
-        commands.extend([
-            '```bash',
-            '# Run frontend tests',
-            'cd frontend && npm test',
-            '',
-            '# Type check',
-            'cd frontend && npm run type-check',
-            '',
-            '# Lint check',
-            'cd frontend && npm run lint',
-            '',
-            '# Build check',
-            'cd frontend && npm run build',
-            '```',
-        ])
+    if category == "frontend" or any(tag in tags for tag in ["frontend", "react", "ui"]):
+        commands.extend(
+            [
+                "```bash",
+                "# Run frontend tests",
+                "cd frontend && npm test",
+                "",
+                "# Type check",
+                "cd frontend && npm run type-check",
+                "",
+                "# Lint check",
+                "cd frontend && npm run lint",
+                "",
+                "# Build check",
+                "cd frontend && npm run build",
+                "```",
+            ]
+        )
 
     # Default validation if no specific commands
     if not commands:
-        commands.extend([
-            '```bash',
-            '# Run relevant tests',
-            'uv run pytest tests/ -v',
-            '',
-            '# Lint check',
-            'uv run ruff check .',
-            '```',
-        ])
+        commands.extend(
+            [
+                "```bash",
+                "# Run relevant tests",
+                "uv run pytest tests/ -v",
+                "",
+                "# Lint check",
+                "uv run ruff check .",
+                "```",
+            ]
+        )
 
-    return '\n'.join(commands)
+    return "\n".join(commands)
 
 
 def _get_delegation_mode_description(mode: str) -> str:
@@ -255,16 +260,16 @@ def _get_delegation_mode_description(mode: str) -> str:
         str: Description of what the mode means
     """
     mode_descriptions = {
-        'do': '**DO** - This task requires direct human involvement. Claude Code should implement it fully but may need human verification.',
-        'do_with_me': '**DO_WITH_ME** - Collaborative task. Claude Code implements with human guidance. Ask questions if clarification needed.',
-        'delegate': '**DELEGATE** - Fully delegated. Claude Code has full autonomy to implement this task end-to-end.',
-        'delete': '**DELETE** - This task should be eliminated or deprecated. Discuss with human before proceeding.',
+        "do": "**DO** - This task requires direct human involvement. Claude Code should implement it fully but may need human verification.",
+        "do_with_me": "**DO_WITH_ME** - Collaborative task. Claude Code implements with human guidance. Ask questions if clarification needed.",
+        "delegate": "**DELEGATE** - Fully delegated. Claude Code has full autonomy to implement this task end-to-end.",
+        "delete": "**DELETE** - This task should be eliminated or deprecated. Discuss with human before proceeding.",
     }
 
-    return mode_descriptions.get(mode, '**DELEGATE** - Standard implementation task.')
+    return mode_descriptions.get(mode, "**DELEGATE** - Standard implementation task.")
 
 
-def save_prp_file(task: Dict, prp_dir: Path) -> Path:
+def save_prp_file(task: dict, prp_dir: Path) -> Path:
     """
     Generate PRP content and save to file.
 
@@ -282,8 +287,8 @@ def save_prp_file(task: Dict, prp_dir: Path) -> Path:
     prp_content = generate_prp_from_task(task)
 
     # Create filename
-    task_id = task.get('task_id', 'unknown')
-    title = task.get('title', 'untitled')
+    task_id = task.get("task_id", "unknown")
+    title = task.get("title", "untitled")
     sanitized_title = sanitize_filename(title)
     filename = f"{task_id}_{sanitized_title}.prp.md"
 
@@ -292,6 +297,6 @@ def save_prp_file(task: Dict, prp_dir: Path) -> Path:
 
     # Write file
     file_path = prp_dir / filename
-    file_path.write_text(prp_content, encoding='utf-8')
+    file_path.write_text(prp_content, encoding="utf-8")
 
     return file_path

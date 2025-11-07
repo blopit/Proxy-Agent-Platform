@@ -24,7 +24,7 @@ Usage:
 import logging
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -34,15 +34,17 @@ logger = logging.getLogger(__name__)
 
 class ConversationState(str, Enum):
     """States in the task creation conversation flow."""
-    INITIAL = "initial"                    # User provided initial description
-    ASKING_PRIORITY = "asking_priority"    # Agent asking for priority
-    ASKING_DUE_DATE = "asking_due_date"    # Agent asking for due date
-    ASKING_CONTEXT = "asking_context"      # Agent asking for additional context
-    COMPLETE = "complete"                  # All info collected, ready to create
+
+    INITIAL = "initial"  # User provided initial description
+    ASKING_PRIORITY = "asking_priority"  # Agent asking for priority
+    ASKING_DUE_DATE = "asking_due_date"  # Agent asking for due date
+    ASKING_CONTEXT = "asking_context"  # Agent asking for additional context
+    COMPLETE = "complete"  # All info collected, ready to create
 
 
 class TaskPriority(str, Enum):
     """Task priority levels."""
+
     URGENT = "urgent"
     HIGH = "high"
     MEDIUM = "medium"
@@ -51,16 +53,17 @@ class TaskPriority(str, Enum):
 
 class ConversationContext(BaseModel):
     """Context for an ongoing task creation conversation."""
+
     conversation_id: str = Field(default_factory=lambda: str(uuid4()))
     user_id: str
     state: ConversationState = ConversationState.INITIAL
 
     # Collected information
-    title: Optional[str] = None
-    description: Optional[str] = None
-    priority: Optional[TaskPriority] = None
-    due_date: Optional[datetime] = None
-    additional_context: Optional[str] = None
+    title: str | None = None
+    description: str | None = None
+    priority: TaskPriority | None = None
+    due_date: datetime | None = None
+    additional_context: str | None = None
 
     # Conversation metadata
     created_at: datetime = Field(default_factory=datetime.now)
@@ -70,10 +73,11 @@ class ConversationContext(BaseModel):
 
 class AgentResponse(BaseModel):
     """Response from the conversational agent."""
+
     message: str
     state: ConversationState
     task_created: bool = False
-    task: Optional[dict[str, Any]] = None
+    task: dict[str, Any] | None = None
     conversation_id: str
     needs_input: bool = True
 
@@ -93,12 +97,7 @@ class ConversationalTaskAgent:
     - Allows early completion with "done" or "skip"
     """
 
-    def __init__(
-        self,
-        user_id: str,
-        enable_memory: bool = False,
-        memory_client: Optional[Any] = None
-    ):
+    def __init__(self, user_id: str, enable_memory: bool = False, memory_client: Any | None = None):
         """
         Initialize conversational agent.
 
@@ -131,7 +130,7 @@ class ConversationalTaskAgent:
             user_id=self.user_id,
             title=initial_message.strip(),
             description=initial_message.strip(),
-            state=ConversationState.INITIAL
+            state=ConversationState.INITIAL,
         )
 
         self.active_conversations[context.conversation_id] = context
@@ -142,9 +141,7 @@ class ConversationalTaskAgent:
         return await self._ask_priority(context)
 
     async def process_message(
-        self,
-        message: str,
-        conversation_id: Optional[str] = None
+        self, message: str, conversation_id: str | None = None
     ) -> AgentResponse:
         """
         Process a message in an ongoing conversation.
@@ -167,7 +164,7 @@ class ConversationalTaskAgent:
             # Use most recent conversation
             conversation_id = max(
                 self.active_conversations.keys(),
-                key=lambda k: self.active_conversations[k].updated_at
+                key=lambda k: self.active_conversations[k].updated_at,
             )
 
         if conversation_id not in self.active_conversations:
@@ -198,7 +195,7 @@ class ConversationalTaskAgent:
                     message="I didn't understand that priority. Please choose: urgent, high, medium, or low",
                     state=context.state,
                     conversation_id=context.conversation_id,
-                    needs_input=True
+                    needs_input=True,
                 )
 
         elif context.state == ConversationState.ASKING_DUE_DATE:
@@ -213,7 +210,7 @@ class ConversationalTaskAgent:
                     message="I didn't understand that date. Try: 'today', 'tomorrow', 'next week', or a specific date",
                     state=context.state,
                     conversation_id=context.conversation_id,
-                    needs_input=True
+                    needs_input=True,
                 )
 
         elif context.state == ConversationState.ASKING_CONTEXT:
@@ -238,7 +235,7 @@ class ConversationalTaskAgent:
             message=f"Got it: \"{context.title}\"\n\nWhat priority should this task have?\n• urgent - needs immediate attention\n• high - important but not urgent\n• medium - normal priority\n• low - can be done later\n\n(Type 'skip' to use default priority)",
             state=context.state,
             conversation_id=context.conversation_id,
-            needs_input=True
+            needs_input=True,
         )
 
     async def _ask_due_date(self, context: ConversationContext) -> AgentResponse:
@@ -249,7 +246,7 @@ class ConversationalTaskAgent:
             message=f"Priority set to: {context.priority.value}\n\nWhen is this due?\n• today\n• tomorrow\n• next week\n• specific date (e.g., 'December 25' or '2025-12-25')\n\n(Type 'skip' for no due date)",
             state=context.state,
             conversation_id=context.conversation_id,
-            needs_input=True
+            needs_input=True,
         )
 
     async def _ask_context(self, context: ConversationContext) -> AgentResponse:
@@ -262,7 +259,7 @@ class ConversationalTaskAgent:
             message=f"Due date: {due_str}\n\nAny additional context or notes?\n\n(Type 'skip' to create task now, or add any details)",
             state=context.state,
             conversation_id=context.conversation_id,
-            needs_input=True
+            needs_input=True,
         )
 
     async def _create_task(self, context: ConversationContext) -> AgentResponse:
@@ -282,8 +279,8 @@ class ConversationalTaskAgent:
             "metadata": {
                 "conversation_id": context.conversation_id,
                 "created_via": "conversational_agent",
-                "message_count": context.message_count
-            }
+                "message_count": context.message_count,
+            },
         }
 
         # Clean up conversation
@@ -300,8 +297,8 @@ class ConversationalTaskAgent:
             f"Priority: {task['priority']}",
         ]
 
-        if task['due_date']:
-            due_dt = datetime.fromisoformat(task['due_date'])
+        if task["due_date"]:
+            due_dt = datetime.fromisoformat(task["due_date"])
             summary_lines.append(f"Due: {due_dt.strftime('%B %d, %Y')}")
 
         if context.additional_context:
@@ -313,10 +310,10 @@ class ConversationalTaskAgent:
             task_created=True,
             task=task,
             conversation_id=context.conversation_id,
-            needs_input=False
+            needs_input=False,
         )
 
-    def _parse_priority(self, message: str) -> Optional[TaskPriority]:
+    def _parse_priority(self, message: str) -> TaskPriority | None:
         """Parse priority from user message."""
         message_lower = message.lower().strip()
 
@@ -345,7 +342,7 @@ class ConversationalTaskAgent:
 
         return None
 
-    def _parse_due_date(self, message: str) -> Optional[datetime]:
+    def _parse_due_date(self, message: str) -> datetime | None:
         """Parse due date from user message."""
         message_lower = message.lower().strip()
         now = datetime.now()
@@ -378,6 +375,7 @@ class ConversationalTaskAgent:
             # Try ISO format YYYY-MM-DD
             if "-" in message and len(message.split("-")) == 3:
                 from dateutil import parser
+
                 parsed = parser.parse(message)
                 return parsed.replace(hour=23, minute=59, second=59)
         except Exception:
@@ -385,7 +383,7 @@ class ConversationalTaskAgent:
 
         return None
 
-    def get_active_conversation(self, conversation_id: str) -> Optional[ConversationContext]:
+    def get_active_conversation(self, conversation_id: str) -> ConversationContext | None:
         """Get active conversation by ID."""
         return self.active_conversations.get(conversation_id)
 

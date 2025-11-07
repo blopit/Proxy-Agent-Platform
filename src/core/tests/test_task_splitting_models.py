@@ -13,19 +13,19 @@ Following TDD RED-GREEN-REFACTOR methodology:
 3. REFACTOR: Improve code quality while keeping tests green
 """
 
-import pytest
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
+
+import pytest
 from pydantic import ValidationError
 
 # These imports will FAIL initially - that's expected in RED phase
 from src.core.task_models import (
-    Task,
-    TaskStatus,
-    TaskPriority,
-    TaskScope,  # NEW - will fail
     DelegationMode,  # NEW - will fail
     MicroStep,  # NEW - will fail
+    Task,
+    TaskScope,  # NEW - will fail
+    TaskStatus,
 )
 
 
@@ -35,9 +35,9 @@ class TestTaskScope:
     def test_task_scope_enum_exists(self):
         """Test that TaskScope enum is defined"""
         # This will FAIL - TaskScope doesn't exist yet
-        assert hasattr(TaskScope, 'SIMPLE')
-        assert hasattr(TaskScope, 'MULTI')
-        assert hasattr(TaskScope, 'PROJECT')
+        assert hasattr(TaskScope, "SIMPLE")
+        assert hasattr(TaskScope, "MULTI")
+        assert hasattr(TaskScope, "PROJECT")
 
     def test_task_scope_values(self):
         """Test TaskScope enum values match specification"""
@@ -56,10 +56,10 @@ class TestDelegationMode:
     def test_delegation_mode_enum_exists(self):
         """Test that DelegationMode enum is defined"""
         # This will FAIL - DelegationMode doesn't exist yet
-        assert hasattr(DelegationMode, 'DO')
-        assert hasattr(DelegationMode, 'DO_WITH_ME')
-        assert hasattr(DelegationMode, 'DELEGATE')
-        assert hasattr(DelegationMode, 'DELETE')
+        assert hasattr(DelegationMode, "DO")
+        assert hasattr(DelegationMode, "DO_WITH_ME")
+        assert hasattr(DelegationMode, "DELEGATE")
+        assert hasattr(DelegationMode, "DELETE")
 
     def test_delegation_mode_values(self):
         """Test DelegationMode enum values match specification"""
@@ -83,7 +83,7 @@ class TestMicroStep:
             parent_task_id="task_123",
             step_number=1,
             description="Review project requirements",
-            estimated_minutes=3
+            estimated_minutes=3,
         )
 
         assert step.parent_task_id == "task_123"
@@ -94,10 +94,7 @@ class TestMicroStep:
     def test_microstep_has_default_step_id(self):
         """Test that MicroStep generates default step_id"""
         step = MicroStep(
-            parent_task_id="task_123",
-            step_number=1,
-            description="Test step",
-            estimated_minutes=2
+            parent_task_id="task_123", step_number=1, description="Test step", estimated_minutes=2
         )
 
         assert step.step_id is not None
@@ -107,10 +104,7 @@ class TestMicroStep:
     def test_microstep_default_status_is_todo(self):
         """Test that new MicroStep defaults to TODO status"""
         step = MicroStep(
-            parent_task_id="task_123",
-            step_number=1,
-            description="Test step",
-            estimated_minutes=2
+            parent_task_id="task_123", step_number=1, description="Test step", estimated_minutes=2
         )
 
         assert step.status == TaskStatus.TODO
@@ -119,10 +113,7 @@ class TestMicroStep:
         """Test that estimated_minutes must be between 2-5 minutes (ADHD-optimized)"""
         # Valid: 2-5 minutes (ADHD-optimized range)
         step = MicroStep(
-            parent_task_id="task_123",
-            step_number=1,
-            description="Quick task",
-            estimated_minutes=3
+            parent_task_id="task_123", step_number=1, description="Quick task", estimated_minutes=3
         )
         assert step.estimated_minutes == 3
 
@@ -131,7 +122,7 @@ class TestMicroStep:
             parent_task_id="task_123",
             step_number=1,
             description="Minimum duration task",
-            estimated_minutes=2
+            estimated_minutes=2,
         )
         assert step_min.estimated_minutes == 2
 
@@ -139,7 +130,7 @@ class TestMicroStep:
             parent_task_id="task_123",
             step_number=1,
             description="Maximum duration micro-step",
-            estimated_minutes=5
+            estimated_minutes=5,
         )
         assert step_max.estimated_minutes == 5
 
@@ -150,7 +141,7 @@ class TestMicroStep:
                 parent_task_id="task_123",
                 step_number=1,
                 description="Invalid step",
-                estimated_minutes=0
+                estimated_minutes=0,
             )
 
     def test_microstep_estimated_minutes_validation_fails_above_maximum(self):
@@ -160,7 +151,7 @@ class TestMicroStep:
                 parent_task_id="task_123",
                 step_number=1,
                 description="Too long step",
-                estimated_minutes=11
+                estimated_minutes=11,
             )
 
     def test_microstep_description_required(self):
@@ -170,7 +161,7 @@ class TestMicroStep:
                 parent_task_id="task_123",
                 step_number=1,
                 description="",  # Empty string should fail
-                estimated_minutes=3
+                estimated_minutes=3,
             )
 
     def test_microstep_description_stripped(self):
@@ -179,7 +170,7 @@ class TestMicroStep:
             parent_task_id="task_123",
             step_number=1,
             description="  Whitespace test  ",
-            estimated_minutes=3
+            estimated_minutes=3,
         )
 
         assert step.description == "Whitespace test"
@@ -187,10 +178,7 @@ class TestMicroStep:
     def test_microstep_delegation_mode_optional(self):
         """Test that delegation_mode is optional with default DO"""
         step = MicroStep(
-            parent_task_id="task_123",
-            step_number=1,
-            description="Test step",
-            estimated_minutes=3
+            parent_task_id="task_123", step_number=1, description="Test step", estimated_minutes=3
         )
 
         assert step.delegation_mode == DelegationMode.DO
@@ -202,7 +190,7 @@ class TestMicroStep:
             step_number=1,
             description="Delegate to assistant",
             estimated_minutes=5,
-            delegation_mode=DelegationMode.DELEGATE
+            delegation_mode=DelegationMode.DELEGATE,
         )
 
         assert step.delegation_mode == DelegationMode.DELEGATE
@@ -210,10 +198,7 @@ class TestMicroStep:
     def test_microstep_has_timestamps(self):
         """Test that MicroStep has created_at and completed_at timestamps"""
         step = MicroStep(
-            parent_task_id="task_123",
-            step_number=1,
-            description="Test step",
-            estimated_minutes=3
+            parent_task_id="task_123", step_number=1, description="Test step", estimated_minutes=3
         )
 
         assert step.created_at is not None
@@ -223,10 +208,7 @@ class TestMicroStep:
     def test_microstep_mark_completed_method(self):
         """Test marking MicroStep as completed"""
         step = MicroStep(
-            parent_task_id="task_123",
-            step_number=1,
-            description="Test step",
-            estimated_minutes=3
+            parent_task_id="task_123", step_number=1, description="Test step", estimated_minutes=3
         )
 
         # Initially not completed
@@ -244,10 +226,7 @@ class TestMicroStep:
     def test_microstep_actual_minutes_tracked(self):
         """Test that actual_minutes is tracked for completed micro-steps"""
         step = MicroStep(
-            parent_task_id="task_123",
-            step_number=1,
-            description="Test step",
-            estimated_minutes=3
+            parent_task_id="task_123", step_number=1, description="Test step", estimated_minutes=3
         )
 
         # Initially no actual time
@@ -271,42 +250,30 @@ class TestTaskWithMicroSteps:
             title="Test Task",
             description="Test Description",
             project_id="project_123",
-            scope=TaskScope.SIMPLE
+            scope=TaskScope.SIMPLE,
         )
 
         assert task.scope == TaskScope.SIMPLE
 
     def test_task_scope_defaults_to_simple(self):
         """Test that Task scope defaults to SIMPLE"""
-        task = Task(
-            title="Test Task",
-            description="Test Description",
-            project_id="project_123"
-        )
+        task = Task(title="Test Task", description="Test Description", project_id="project_123")
 
         assert task.scope == TaskScope.SIMPLE
 
     def test_task_has_micro_steps_field(self):
         """Test that Task model has micro_steps list field"""
-        task = Task(
-            title="Test Task",
-            description="Test Description",
-            project_id="project_123"
-        )
+        task = Task(title="Test Task", description="Test Description", project_id="project_123")
 
-        assert hasattr(task, 'micro_steps')
+        assert hasattr(task, "micro_steps")
         assert isinstance(task.micro_steps, list)
         assert len(task.micro_steps) == 0  # Empty by default
 
     def test_task_has_is_micro_step_flag(self):
         """Test that Task model has is_micro_step boolean flag"""
-        task = Task(
-            title="Test Task",
-            description="Test Description",
-            project_id="project_123"
-        )
+        task = Task(title="Test Task", description="Test Description", project_id="project_123")
 
-        assert hasattr(task, 'is_micro_step')
+        assert hasattr(task, "is_micro_step")
         assert isinstance(task.is_micro_step, bool)
         assert task.is_micro_step is False  # Regular task by default
 
@@ -316,7 +283,7 @@ class TestTaskWithMicroSteps:
             title="Micro Task",
             description="This is actually a micro-step",
             project_id="project_123",
-            is_micro_step=True
+            is_micro_step=True,
         )
 
         assert task.is_micro_step is True
@@ -327,18 +294,14 @@ class TestTaskWithMicroSteps:
             title="Test Task",
             description="Test Description",
             project_id="project_123",
-            delegation_mode=DelegationMode.DELEGATE
+            delegation_mode=DelegationMode.DELEGATE,
         )
 
         assert task.delegation_mode == DelegationMode.DELEGATE
 
     def test_task_delegation_mode_defaults_to_do(self):
         """Test that Task delegation_mode defaults to DO"""
-        task = Task(
-            title="Test Task",
-            description="Test Description",
-            project_id="project_123"
-        )
+        task = Task(title="Test Task", description="Test Description", project_id="project_123")
 
         assert task.delegation_mode == DelegationMode.DO
 
@@ -348,7 +311,7 @@ class TestTaskWithMicroSteps:
             title="Complex Task",
             description="A task that needs breaking down",
             project_id="project_123",
-            scope=TaskScope.MULTI
+            scope=TaskScope.MULTI,
         )
 
         # Add micro-steps
@@ -356,14 +319,14 @@ class TestTaskWithMicroSteps:
             parent_task_id=task.task_id,
             step_number=1,
             description="First micro-step",
-            estimated_minutes=3
+            estimated_minutes=3,
         )
 
         step2 = MicroStep(
             parent_task_id=task.task_id,
             step_number=2,
             description="Second micro-step",
-            estimated_minutes=4
+            estimated_minutes=4,
         )
 
         task.micro_steps.append(step1)
@@ -379,7 +342,7 @@ class TestTaskWithMicroSteps:
             title="Complex Task",
             description="Task with micro-steps",
             project_id="project_123",
-            scope=TaskScope.MULTI
+            scope=TaskScope.MULTI,
         )
 
         # Add micro-steps
@@ -388,19 +351,19 @@ class TestTaskWithMicroSteps:
                 parent_task_id=task.task_id,
                 step_number=1,
                 description="Step 1",
-                estimated_minutes=3
+                estimated_minutes=3,
             ),
             MicroStep(
                 parent_task_id=task.task_id,
                 step_number=2,
                 description="Step 2",
-                estimated_minutes=4
+                estimated_minutes=4,
             ),
             MicroStep(
                 parent_task_id=task.task_id,
                 step_number=3,
                 description="Step 3",
-                estimated_minutes=2
+                estimated_minutes=2,
             ),
         ]
 
@@ -415,7 +378,7 @@ class TestTaskWithMicroSteps:
             title="Complex Task",
             description="Task with micro-steps",
             project_id="project_123",
-            scope=TaskScope.MULTI
+            scope=TaskScope.MULTI,
         )
 
         # Add 3 micro-steps
@@ -424,7 +387,7 @@ class TestTaskWithMicroSteps:
                 parent_task_id=task.task_id,
                 step_number=i,
                 description=f"Step {i}",
-                estimated_minutes=3
+                estimated_minutes=3,
             )
             for i in range(1, 4)
         ]
@@ -458,7 +421,7 @@ class TestTaskScopeDetermination:
             title="Quick task",
             description="Very simple task",
             project_id="project_123",
-            estimated_hours=Decimal("0.1")  # 6 minutes
+            estimated_hours=Decimal("0.1"),  # 6 minutes
         )
 
         # Helper method to determine scope
@@ -471,7 +434,7 @@ class TestTaskScopeDetermination:
             title="Medium task",
             description="Needs a few steps",
             project_id="project_123",
-            estimated_hours=Decimal("0.5")  # 30 minutes
+            estimated_hours=Decimal("0.5"),  # 30 minutes
         )
 
         determined_scope = task.determine_scope()
@@ -483,7 +446,7 @@ class TestTaskScopeDetermination:
             title="Large project",
             description="Complex multi-step project",
             project_id="project_123",
-            estimated_hours=Decimal("2.0")  # 120 minutes
+            estimated_hours=Decimal("2.0"),  # 120 minutes
         )
 
         determined_scope = task.determine_scope()
@@ -492,9 +455,7 @@ class TestTaskScopeDetermination:
     def test_scope_determination_with_no_estimate(self):
         """Test scope determination when no estimate provided"""
         task = Task(
-            title="Unknown complexity",
-            description="No estimate yet",
-            project_id="project_123"
+            title="Unknown complexity", description="No estimate yet", project_id="project_123"
         )
 
         # Should default to SIMPLE or analyze description
@@ -513,7 +474,7 @@ class TestEpic7Integration:
             title="Implement login feature",
             description="Add user authentication with email and password",
             project_id="project_123",
-            estimated_hours=Decimal("0.5")  # 30 minutes
+            estimated_hours=Decimal("0.5"),  # 30 minutes
         )
 
         # 2. Determine scope (should be MULTI)
@@ -527,35 +488,35 @@ class TestEpic7Integration:
                 step_number=1,
                 description="Create login form UI",
                 estimated_minutes=5,
-                delegation_mode=DelegationMode.DO
+                delegation_mode=DelegationMode.DO,
             ),
             MicroStep(
                 parent_task_id=task.task_id,
                 step_number=2,
                 description="Implement email validation",
                 estimated_minutes=3,
-                delegation_mode=DelegationMode.DO
+                delegation_mode=DelegationMode.DO,
             ),
             MicroStep(
                 parent_task_id=task.task_id,
                 step_number=3,
                 description="Add password encryption",
                 estimated_minutes=4,
-                delegation_mode=DelegationMode.DO_WITH_ME
+                delegation_mode=DelegationMode.DO_WITH_ME,
             ),
             MicroStep(
                 parent_task_id=task.task_id,
                 step_number=4,
                 description="Connect to authentication API",
                 estimated_minutes=5,
-                delegation_mode=DelegationMode.DELEGATE
+                delegation_mode=DelegationMode.DELEGATE,
             ),
             MicroStep(
                 parent_task_id=task.task_id,
                 step_number=5,
                 description="Test login flow",
                 estimated_minutes=3,
-                delegation_mode=DelegationMode.DO
+                delegation_mode=DelegationMode.DO,
             ),
         ]
 
@@ -584,7 +545,7 @@ class TestEpic7Integration:
             title="Reply to email",
             description="Send quick response to John",
             project_id="project_123",
-            estimated_hours=Decimal("0.05")  # 3 minutes
+            estimated_hours=Decimal("0.05"),  # 3 minutes
         )
 
         task.scope = task.determine_scope()

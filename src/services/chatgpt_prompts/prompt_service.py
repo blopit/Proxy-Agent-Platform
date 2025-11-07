@@ -6,7 +6,6 @@ create structured task lists we can import back into our system.
 """
 
 from datetime import datetime
-from typing import Optional
 
 from src.services.chatgpt_prompts.models import (
     PromptGenerationRequest,
@@ -85,25 +84,25 @@ Copy the breakdown above and paste it back into your task management system when
             generated_at=datetime.utcnow(),
         )
 
-    def _build_focus_section(self, analysis_focus: Optional[str]) -> str:
+    def _build_focus_section(self, analysis_focus: str | None) -> str:
         """Build the focus section if user provided specific focus areas."""
         if not analysis_focus:
             return ""
         return f"\nPlease pay special attention to: {analysis_focus}"
 
-    def _build_count_guidance(self, expected_count: Optional[int]) -> str:
+    def _build_count_guidance(self, expected_count: int | None) -> str:
         """Build guidance about expected number of tasks."""
         if not expected_count:
             return ""
         return f"\nI'm expecting roughly {expected_count} distinct steps."
 
-    def _build_priority_note(self, priority: Optional[str]) -> str:
+    def _build_priority_note(self, priority: str | None) -> str:
         """Build note about priority if specified."""
         if not priority or priority == "medium":
             return ""
         return f"\n- Overall priority level: {priority}"
 
-    def _build_hours_note(self, hours: Optional[float]) -> str:
+    def _build_hours_note(self, hours: float | None) -> str:
         """Build note about estimated hours if specified."""
         if not hours:
             return ""

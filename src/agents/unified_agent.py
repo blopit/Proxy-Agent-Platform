@@ -19,12 +19,12 @@ Usage:
     response = await agent.run("Start a Pomodoro session", user_id="alice")
 """
 
-from pydantic_ai import Agent
-from pydantic_ai.models import KnownModelName
-from typing import Any, Optional
 import logging
+from typing import Any
 
-from config import load_agent_config, AgentConfig
+from pydantic_ai import Agent
+
+from config import AgentConfig, load_agent_config
 from src.mcp import MCPClient
 from src.memory import MemoryClient
 
@@ -60,8 +60,8 @@ class UnifiedAgent:
         self,
         config: AgentConfig,
         agent: Agent,
-        mcp_client: Optional[MCPClient] = None,
-        memory_client: Optional[MemoryClient] = None,
+        mcp_client: MCPClient | None = None,
+        memory_client: MemoryClient | None = None,
     ) -> None:
         """
         Initialize unified agent (use create() class method instead).
@@ -85,7 +85,7 @@ class UnifiedAgent:
         agent_type: str,
         enable_mcp: bool = True,
         enable_memory: bool = True,
-        config_override: Optional[dict[str, Any]] = None,
+        config_override: dict[str, Any] | None = None,
     ) -> "UnifiedAgent":
         """
         Create a unified agent from configuration.
@@ -129,9 +129,7 @@ class UnifiedAgent:
                 from pathlib import Path
 
                 mcp_config = config.get_mcp_config()
-                with tempfile.NamedTemporaryFile(
-                    mode="w", suffix=".json", delete=False
-                ) as f:
+                with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
                     json.dump(mcp_config, f)
                     mcp_config_path = Path(f.name)
 
@@ -173,9 +171,7 @@ class UnifiedAgent:
             tools=mcp_tools if mcp_tools else [],
         )
 
-        logger.info(
-            f"Pydantic AI agent created: {model_name}, {len(mcp_tools)} tools"
-        )
+        logger.info(f"Pydantic AI agent created: {model_name}, {len(mcp_tools)} tools")
 
         return cls(
             config=config,
@@ -248,12 +244,8 @@ class UnifiedAgent:
                     limit=self.config.memory.search_limit,
                 )
                 if memories:
-                    memory_context = self.memory_client.format_memories_for_prompt(
-                        memories
-                    )
-                    logger.debug(
-                        f"Retrieved {len(memories)} memories for context"
-                    )
+                    memory_context = self.memory_client.format_memories_for_prompt(memories)
+                    logger.debug(f"Retrieved {len(memories)} memories for context")
             except Exception as e:
                 logger.error(f"Error retrieving memories: {e}")
 
@@ -283,11 +275,7 @@ class UnifiedAgent:
             )
 
             # Save conversation to memory if enabled
-            if (
-                self.memory_client
-                and self.config.memory.enabled
-                and self.config.memory.auto_save
-            ):
+            if self.memory_client and self.config.memory.enabled and self.config.memory.auto_save:
                 try:
                     messages = [
                         {"role": "user", "content": user_message},

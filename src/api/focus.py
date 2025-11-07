@@ -65,9 +65,7 @@ class SessionStatusResponse(BaseModel):
 class SessionCompleteRequest(BaseModel):
     """Request to complete session"""
 
-    actually_focused: bool = Field(
-        True, description="Did you stay focused during the session?"
-    )
+    actually_focused: bool = Field(True, description="Did you stay focused during the session?")
 
 
 class SessionCompleteResponse(BaseModel):
@@ -114,7 +112,7 @@ def get_active_session(user_id: str):
         ORDER BY started_at DESC
         LIMIT 1
         """,
-        (user_id,)
+        (user_id,),
     )
 
     row = cursor.fetchone()
@@ -126,7 +124,7 @@ def get_active_session(user_id: str):
         "task_description": row[1],
         "started_at": row[2],
         "ends_at": row[3],
-        "status": row[4]
+        "status": row[4],
     }
 
 
@@ -145,7 +143,7 @@ def calculate_progress(started_at_str: str, ends_at_str: str):
     return {
         "elapsed_minutes": int(elapsed),
         "remaining_minutes": int(remaining),
-        "progress_percent": round(progress_percent, 1)
+        "progress_percent": round(progress_percent, 1),
     }
 
 
@@ -156,8 +154,7 @@ def calculate_progress(started_at_str: str, ends_at_str: str):
 
 @router.post("/start", response_model=PomodoroResponse, status_code=status.HTTP_201_CREATED)
 async def start_pomodoro(
-    request: PomodoroStartRequest,
-    current_user: User = Depends(get_current_user)
+    request: PomodoroStartRequest, current_user: User = Depends(get_current_user)
 ):
     """
     Start a Pomodoro session (25 minutes of focused work).
@@ -180,7 +177,7 @@ async def start_pomodoro(
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"You already have an active Pomodoro session. Complete it first."
+                detail="You already have an active Pomodoro session. Complete it first.",
             )
 
         # Create new session
@@ -206,8 +203,8 @@ async def start_pomodoro(
                 BREAK_DURATION,
                 "active",
                 WORK_DURATION,  # planned_duration_minutes
-                "pomodoro"  # session_type
-            )
+                "pomodoro",  # session_type
+            ),
         )
         conn.commit()
 
@@ -219,7 +216,7 @@ async def start_pomodoro(
             started_at=started_at.isoformat(),
             ends_at=ends_at.isoformat(),
             status="active",
-            message=f"🍅 Pomodoro started! Focus for {WORK_DURATION} minutes."
+            message=f"🍅 Pomodoro started! Focus for {WORK_DURATION} minutes.",
         )
 
     except HTTPException:
@@ -228,14 +225,12 @@ async def start_pomodoro(
         logger.error(f"Failed to start Pomodoro: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to start session: {str(e)}"
+            detail=f"Failed to start session: {str(e)}",
         )
 
 
 @router.get("/status", response_model=SessionStatusResponse)
-async def get_pomodoro_status(
-    current_user: User = Depends(get_current_user)
-):
+async def get_pomodoro_status(current_user: User = Depends(get_current_user)):
     """
     Get status of your current Pomodoro session.
 
@@ -257,7 +252,7 @@ async def get_pomodoro_status(
                 remaining_minutes=0,
                 progress_percent=0,
                 task_description=None,
-                message="No active Pomodoro session"
+                message="No active Pomodoro session",
             )
 
         progress = calculate_progress(session["started_at"], session["ends_at"])
@@ -278,7 +273,7 @@ async def get_pomodoro_status(
                     completed_at = ?
                 WHERE session_id = ?
                 """,
-                (break_ends_at.isoformat(), datetime.now().isoformat(), session["session_id"])
+                (break_ends_at.isoformat(), datetime.now().isoformat(), session["session_id"]),
             )
             conn.commit()
 
@@ -296,21 +291,20 @@ async def get_pomodoro_status(
             remaining_minutes=progress["remaining_minutes"],
             progress_percent=progress["progress_percent"],
             task_description=session["task_description"],
-            message=f"{emoji} {status_text}: {progress['remaining_minutes']} min remaining"
+            message=f"{emoji} {status_text}: {progress['remaining_minutes']} min remaining",
         )
 
     except Exception as e:
         logger.error(f"Failed to get session status: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get status: {str(e)}"
+            detail=f"Failed to get status: {str(e)}",
         )
 
 
 @router.post("/complete", response_model=SessionCompleteResponse)
 async def complete_pomodoro(
-    request: SessionCompleteRequest,
-    current_user: User = Depends(get_current_user)
+    request: SessionCompleteRequest, current_user: User = Depends(get_current_user)
 ):
     """
     Mark your Pomodoro session as complete and earn XP.
@@ -332,7 +326,7 @@ async def complete_pomodoro(
         if not session:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="No active Pomodoro session to complete"
+                detail="No active Pomodoro session to complete",
             )
 
         # Calculate actual duration
@@ -353,7 +347,7 @@ async def complete_pomodoro(
                 xp_earned = ?
             WHERE session_id = ?
             """,
-            (datetime.now().isoformat(), xp_earned, session["session_id"])
+            (datetime.now().isoformat(), xp_earned, session["session_id"]),
         )
 
         # Update user progress (if user_progress table exists)
@@ -364,7 +358,7 @@ async def complete_pomodoro(
                 last_completion_date = DATE('now')
             WHERE user_id = ?
             """,
-            (xp_earned, user_id)
+            (xp_earned, user_id),
         )
 
         conn.commit()
@@ -374,7 +368,7 @@ async def complete_pomodoro(
             actual_duration_minutes=int(actual_duration),
             xp_earned=xp_earned,
             streak_updated=True,
-            message=f"🎉 Pomodoro complete! +{xp_earned} XP"
+            message=f"🎉 Pomodoro complete! +{xp_earned} XP",
         )
 
     except HTTPException:
@@ -383,7 +377,7 @@ async def complete_pomodoro(
         logger.error(f"Failed to complete Pomodoro: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to complete session: {str(e)}"
+            detail=f"Failed to complete session: {str(e)}",
         )
 
 

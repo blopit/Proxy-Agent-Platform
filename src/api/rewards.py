@@ -16,9 +16,9 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from src.database.enhanced_adapter import get_enhanced_database
-from src.services.dopamine_reward_service import DopamineRewardService, RewardResult
-from src.services.user_pet_service import UserPetService, UserHasNoPetError
 from src.repositories.user_pet_repository import UserPetRepository
+from src.services.dopamine_reward_service import DopamineRewardService
+from src.services.user_pet_service import UserHasNoPetError, UserPetService
 
 logger = logging.getLogger(__name__)
 
@@ -64,9 +64,7 @@ class RewardClaimResponse(BaseModel):
     new_level: int
     level_up: bool
     # Pet feeding integration (BE-02)
-    pet_fed: bool = Field(
-        default=False, description="Whether user's pet was automatically fed"
-    )
+    pet_fed: bool = Field(default=False, description="Whether user's pet was automatically fed")
     pet_response: dict | None = Field(
         default=None,
         description="Pet feeding response (xp_gained, leveled_up, evolved, etc.)",
@@ -183,9 +181,7 @@ async def claim_reward(request: RewardClaimRequest):
 
             except Exception as e:
                 # Log pet feeding errors but don't fail the reward claim
-                logger.warning(
-                    f"Failed to feed pet for user {request.user_id}: {e}", exc_info=True
-                )
+                logger.warning(f"Failed to feed pet for user {request.user_id}: {e}", exc_info=True)
 
         # Log reward for analytics
         logger.info(
@@ -243,8 +239,7 @@ async def open_mystery_box(request: MysteryBoxRequest):
             )
 
         logger.info(
-            f"Mystery box opened: user={request.user_id}, "
-            f"type={mystery_reward['reward_type']}"
+            f"Mystery box opened: user={request.user_id}, type={mystery_reward['reward_type']}"
         )
 
         return {"success": True, **mystery_reward}
@@ -349,8 +344,7 @@ async def _update_user_stats(
     """Update user statistics in database"""
     # TODO: Implement real database update
     logger.info(
-        f"Updating user stats: {user_id}, xp={total_xp}, "
-        f"level={level}, streak={streak_days}"
+        f"Updating user stats: {user_id}, xp={total_xp}, level={level}, streak={streak_days}"
     )
 
 

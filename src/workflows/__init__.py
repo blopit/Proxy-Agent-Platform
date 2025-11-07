@@ -9,9 +9,9 @@ the Proxy Agent Platform's dogfooding needs.
 from src.workflows.executor import WorkflowExecutor
 from src.workflows.models import (
     Workflow,
-    WorkflowStep,
-    WorkflowExecution,
     WorkflowContext,
+    WorkflowExecution,
+    WorkflowStep,
 )
 
 __all__ = [

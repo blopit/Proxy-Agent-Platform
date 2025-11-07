@@ -29,7 +29,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -37,7 +37,6 @@ from uuid import uuid4
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
-
 
 # ============================================================================
 # Task Definitions (Real-world Dogfooding Tasks)
@@ -262,10 +261,10 @@ def reset_database(db_path: str = "proxy_agents_enhanced.db"):
 
     if os.path.exists(db_path):
         os.remove(db_path)
-        print(f"    Removed existing database")
+        print("    Removed existing database")
 
     db = EnhancedDatabaseAdapter(db_path)
-    print(f"    Created fresh database")
+    print("    Created fresh database")
     return db
 
 
@@ -336,9 +335,7 @@ def seed_dogfooding_tasks(db: EnhancedDatabaseAdapter):
         status_map = {"completed": "✅", "in_progress": "🔄", "todo": "○"}
         status_emoji = status_map.get(task_data.get("status", "todo"), "○")
         due_str = f" (Due: {task_data['due_date']})" if task_data.get("due_date") else ""
-        print(
-            f"    {status_emoji} {cat} | {task_data['task_id']}: {task_data['title']}{due_str}"
-        )
+        print(f"    {status_emoji} {cat} | {task_data['task_id']}: {task_data['title']}{due_str}")
 
     conn.commit()
     print(f"\n✅ Seeded {len(DOGFOODING_TASKS)} dogfooding tasks!")
@@ -351,9 +348,7 @@ def main():
     )
     parser.add_argument("--reset", action="store_true", help="Reset database before seeding")
     parser.add_argument("--yes", "-y", action="store_true", help="Skip confirmation prompt")
-    parser.add_argument(
-        "--db-path", default="proxy_agents_enhanced.db", help="Database path"
-    )
+    parser.add_argument("--db-path", default="proxy_agents_enhanced.db", help="Database path")
     args = parser.parse_args()
 
     print("=" * 60)
@@ -374,9 +369,15 @@ def main():
     print("\n🎉 Ready for dogfooding!")
     print("\n📋 Summary:")
     print(f"   • {len([t for t in DOGFOODING_TASKS if 'BE-00' in t.get('tags', [])])} BE-00 tasks")
-    print(f"   • {len([t for t in DOGFOODING_TASKS if 'Core Services' in t.get('tags', [])])} Core Services tasks")
-    print(f"   • {len([t for t in DOGFOODING_TASKS if 'LION motel' in t.get('tags', [])])} LION motel tasks")
-    print(f"   • {len([t for t in DOGFOODING_TASKS if 'Personal' in t.get('tags', [])])} Personal tasks")
+    print(
+        f"   • {len([t for t in DOGFOODING_TASKS if 'Core Services' in t.get('tags', [])])} Core Services tasks"
+    )
+    print(
+        f"   • {len([t for t in DOGFOODING_TASKS if 'LION motel' in t.get('tags', [])])} LION motel tasks"
+    )
+    print(
+        f"   • {len([t for t in DOGFOODING_TASKS if 'Personal' in t.get('tags', [])])} Personal tasks"
+    )
 
 
 if __name__ == "__main__":

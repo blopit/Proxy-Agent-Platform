@@ -146,7 +146,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
             settings.jwt_secret_key,
             algorithms=[settings.jwt_algorithm],
             # Force expiry verification for security
-            options={"require": ["exp"], "verify_exp": True}
+            options={"require": ["exp"], "verify_exp": True},
         )
         username: str = payload.get("sub")
         if username is None:
@@ -202,7 +202,7 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(securit
             credentials.credentials,
             settings.jwt_secret_key,
             algorithms=[settings.jwt_algorithm],
-            options={"require": ["exp"], "verify_exp": True}
+            options={"require": ["exp"], "verify_exp": True},
         )
 
         # Extract user_id from token

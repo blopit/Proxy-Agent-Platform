@@ -7,22 +7,14 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from src.core.task_models import (
     CaptureType,
-    Goal,
-    Habit,
-    HabitCompletion,
-    Milestone,
     RecurrencePattern,
-    ShoppingList,
-    ShoppingListItem,
     TaskPriority,
 )
-
 
 # Goal Request/Response Models
 
@@ -58,8 +50,12 @@ class GoalCreate(BaseModel):
     project_id: str
 
     # Goal-specific fields
-    target_value: Decimal | None = Field(None, description="Numeric target (e.g., 20 for '20 pounds')")
-    unit: str | None = Field(None, max_length=50, description="Measurement unit (pounds, dollars, etc.)")
+    target_value: Decimal | None = Field(
+        None, description="Numeric target (e.g., 20 for '20 pounds')"
+    )
+    unit: str | None = Field(
+        None, max_length=50, description="Measurement unit (pounds, dollars, etc.)"
+    )
     target_date: datetime | None = Field(None, description="When you want to achieve this goal")
     milestones: list[MilestoneCreate] = Field(default_factory=list)
 
@@ -191,7 +187,9 @@ class HabitUpdate(BaseModel):
 class HabitCompletionCreate(BaseModel):
     """Request model for recording a habit completion"""
 
-    completion_date: str | None = Field(None, description="ISO date (YYYY-MM-DD), defaults to today")
+    completion_date: str | None = Field(
+        None, description="ISO date (YYYY-MM-DD), defaults to today"
+    )
     energy_level: int | None = Field(None, ge=1, le=5)
     mood: str | None = Field(None, description="good, neutral, bad")
     notes: str | None = Field(None, max_length=500)
@@ -409,8 +407,7 @@ class BulkShoppingListCreate(BaseModel):
 
     # Bulk text input
     items_text: str = Field(
-        ...,
-        description="Newline-separated list of items (e.g., 'Milk\\nEggs\\nBread')"
+        ..., description="Newline-separated list of items (e.g., 'Milk\\nEggs\\nBread')"
     )
 
     # Shopping list fields

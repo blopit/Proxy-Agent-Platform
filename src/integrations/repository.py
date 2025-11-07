@@ -9,9 +9,8 @@ Handles CRUD operations for:
 
 import json
 import logging
-from datetime import datetime, timezone
-from typing import Optional
-from uuid import UUID, uuid4
+from datetime import UTC, datetime
+from uuid import uuid4
 
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
 
@@ -44,8 +43,8 @@ class IntegrationRepository:
         scopes: list[str],
         provider_user_id: str,
         provider_username: str,
-        settings: Optional[dict] = None,
-        metadata: Optional[dict] = None,
+        settings: dict | None = None,
+        metadata: dict | None = None,
     ) -> dict:
         """
         Create a new provider integration.
@@ -66,7 +65,7 @@ class IntegrationRepository:
             Created integration data
         """
         integration_id = str(uuid4())
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         query = """
         INSERT INTO user_integrations (
@@ -103,7 +102,7 @@ class IntegrationRepository:
 
         return self.get_integration(integration_id)
 
-    def get_integration(self, integration_id: str) -> Optional[dict]:
+    def get_integration(self, integration_id: str) -> dict | None:
         """
         Get integration by ID.
 
@@ -131,7 +130,7 @@ class IntegrationRepository:
         return self._parse_integration(result[0])
 
     def get_user_integrations(
-        self, user_id: str, provider: Optional[str] = None, status: Optional[str] = None
+        self, user_id: str, provider: str | None = None, status: str | None = None
     ) -> list[dict]:
         """
         Get all integrations for a user.
@@ -172,13 +171,13 @@ class IntegrationRepository:
     def update_integration(
         self,
         integration_id: str,
-        access_token: Optional[str] = None,
-        refresh_token: Optional[str] = None,
-        token_expires_at: Optional[datetime] = None,
-        status: Optional[str] = None,
-        settings: Optional[dict] = None,
-        last_sync_at: Optional[datetime] = None,
-    ) -> Optional[dict]:
+        access_token: str | None = None,
+        refresh_token: str | None = None,
+        token_expires_at: datetime | None = None,
+        status: str | None = None,
+        settings: dict | None = None,
+        last_sync_at: datetime | None = None,
+    ) -> dict | None:
         """
         Update integration fields.
 
@@ -225,7 +224,7 @@ class IntegrationRepository:
             return self.get_integration(integration_id)
 
         updates.append("updated_at = ?")
-        params.append(datetime.now(timezone.utc).isoformat())
+        params.append(datetime.now(UTC).isoformat())
         params.append(integration_id)
 
         query = f"UPDATE user_integrations SET {', '.join(updates)} WHERE integration_id = ?"
@@ -277,14 +276,14 @@ class IntegrationRepository:
         provider_item_id: str,
         provider_item_type: str,
         suggested_title: str,
-        suggested_description: Optional[str] = None,
-        suggested_priority: Optional[str] = None,
-        suggested_tags: Optional[list[str]] = None,
-        suggested_deadline: Optional[datetime] = None,
-        ai_confidence: Optional[float] = None,
-        ai_reasoning: Optional[str] = None,
-        ai_model: Optional[str] = None,
-        provider_item_snapshot: Optional[dict] = None,
+        suggested_description: str | None = None,
+        suggested_priority: str | None = None,
+        suggested_tags: list[str] | None = None,
+        suggested_deadline: datetime | None = None,
+        ai_confidence: float | None = None,
+        ai_reasoning: str | None = None,
+        ai_model: str | None = None,
+        provider_item_snapshot: dict | None = None,
         sync_status: str = "pending_approval",
     ) -> dict:
         """
@@ -309,7 +308,7 @@ class IntegrationRepository:
             Created integration task data
         """
         integration_task_id = str(uuid4())
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         query = """
         INSERT INTO integration_tasks (
@@ -347,7 +346,7 @@ class IntegrationRepository:
 
         return self.get_integration_task(integration_task_id)
 
-    def get_integration_task(self, integration_task_id: str) -> Optional[dict]:
+    def get_integration_task(self, integration_task_id: str) -> dict | None:
         """
         Get integration task by ID.
 
@@ -377,7 +376,7 @@ class IntegrationRepository:
         return self._parse_integration_task(result[0])
 
     def get_pending_tasks(
-        self, user_id: str, provider: Optional[str] = None, limit: int = 50
+        self, user_id: str, provider: str | None = None, limit: int = 50
     ) -> list[dict]:
         """
         Get pending task suggestions for user.
@@ -416,7 +415,7 @@ class IntegrationRepository:
         results = self.db.execute_read(query, tuple(params))
         return [self._parse_integration_task(row) for row in results]
 
-    def approve_task(self, integration_task_id: str, task_id: str) -> Optional[dict]:
+    def approve_task(self, integration_task_id: str, task_id: str) -> dict | None:
         """
         Approve task suggestion and link to main task.
 
@@ -427,7 +426,7 @@ class IntegrationRepository:
         Returns:
             Updated integration task data or None if not found
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         query = """
         UPDATE integration_tasks
@@ -442,7 +441,7 @@ class IntegrationRepository:
 
         return self.get_integration_task(integration_task_id)
 
-    def dismiss_task(self, integration_task_id: str) -> Optional[dict]:
+    def dismiss_task(self, integration_task_id: str) -> dict | None:
         """
         Dismiss task suggestion.
 
@@ -452,7 +451,7 @@ class IntegrationRepository:
         Returns:
             Updated integration task data or None if not found
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         query = """
         UPDATE integration_tasks
@@ -479,8 +478,8 @@ class IntegrationRepository:
         tasks_generated: int = 0,
         tasks_auto_approved: int = 0,
         api_calls_made: int = 0,
-        error_message: Optional[str] = None,
-        metadata: Optional[dict] = None,
+        error_message: str | None = None,
+        metadata: dict | None = None,
     ) -> dict:
         """
         Create sync log entry.
@@ -499,7 +498,7 @@ class IntegrationRepository:
             Created sync log data
         """
         log_id = str(uuid4())
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         query = """
         INSERT INTO integration_sync_logs (
@@ -528,7 +527,7 @@ class IntegrationRepository:
 
         return self.get_sync_log(log_id)
 
-    def get_sync_log(self, log_id: str) -> Optional[dict]:
+    def get_sync_log(self, log_id: str) -> dict | None:
         """
         Get sync log by ID.
 
@@ -554,9 +553,7 @@ class IntegrationRepository:
 
         return self._parse_sync_log(result[0])
 
-    def get_sync_logs(
-        self, integration_id: str, limit: int = 10
-    ) -> list[dict]:
+    def get_sync_logs(self, integration_id: str, limit: int = 10) -> list[dict]:
         """
         Get recent sync logs for integration.
 

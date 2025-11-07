@@ -268,7 +268,9 @@ class AdvancedGamificationAgent(BaseProxyAgent):
         # Generate AI-powered celebration messages for triggered achievements
         if self.openai_client and triggered_achievements.get("triggered_achievements"):
             for achievement in triggered_achievements["triggered_achievements"]:
-                celebration_message = await self._generate_celebration_message(achievement, user_activity)
+                celebration_message = await self._generate_celebration_message(
+                    achievement, user_activity
+                )
                 achievement["celebration_message"] = celebration_message
 
         return {
@@ -449,7 +451,9 @@ class AdvancedGamificationAgent(BaseProxyAgent):
         if self.openai_client:
             try:
                 preferred_motivators = user_profile.get("preferred_motivators", [])
-                motivators_str = ", ".join(preferred_motivators) if preferred_motivators else "none specified"
+                motivators_str = (
+                    ", ".join(preferred_motivators) if preferred_motivators else "none specified"
+                )
 
                 prompt = f"""Generate a personalized motivation and re-engagement strategy.
 
@@ -488,14 +492,20 @@ Example: {{"motivation_type": "re_engagement", "primary_strategy": "achievable_g
                 if isinstance(ai_strategy, dict) and "motivation_type" in ai_strategy:
                     return {
                         "motivation_type": ai_strategy["motivation_type"],
-                        "primary_strategy": ai_strategy.get("primary_strategy", "balanced_approach"),
+                        "primary_strategy": ai_strategy.get(
+                            "primary_strategy", "balanced_approach"
+                        ),
                         "recommendations": ai_strategy.get("recommendations", []),
                         "gamification_adjustments": ai_strategy.get("gamification_adjustments", {}),
-                        "expected_improvement": float(ai_strategy.get("expected_improvement", 0.15)),
+                        "expected_improvement": float(
+                            ai_strategy.get("expected_improvement", 0.15)
+                        ),
                         "timeline": "1-2 weeks",
                     }
             except Exception as ai_error:
-                logging.debug(f"AI motivation strategy generation failed, using fallback: {ai_error}")
+                logging.debug(
+                    f"AI motivation strategy generation failed, using fallback: {ai_error}"
+                )
 
         # Fallback to heuristic strategy
         if recent_activity_drop or completion_rate < 0.7:
@@ -706,16 +716,16 @@ Example: {{"motivation_type": "re_engagement", "primary_strategy": "achievable_g
             prompt = f"""Generate an enthusiastic, personalized celebration message for an achievement.
 
 Achievement Unlocked:
-- Name: {achievement['name']}
-- Description: {achievement['description']}
-- XP Reward: {achievement['xp_reward']}
-- Badge Tier: {achievement['badge_tier']}
-- Category: {achievement.get('category', 'general')}
+- Name: {achievement["name"]}
+- Description: {achievement["description"]}
+- XP Reward: {achievement["xp_reward"]}
+- Badge Tier: {achievement["badge_tier"]}
+- Category: {achievement.get("category", "general")}
 
 User Context:
-- Total XP: {user_context.get('total_xp', 'unknown')}
-- Tasks completed today: {user_context.get('tasks_completed_today', 0)}
-- Current streak: {user_context.get('consecutive_days', 0)} days
+- Total XP: {user_context.get("total_xp", "unknown")}
+- Tasks completed today: {user_context.get("tasks_completed_today", 0)}
+- Current streak: {user_context.get("consecutive_days", 0)} days
 
 Requirements:
 - 1-2 sentences maximum
@@ -743,7 +753,7 @@ Example: "🎉 Incredible! You've earned Productivity Master by crushing 10 task
 
             celebration_message = response.choices[0].message.content.strip()
             # Remove any quotes that might have been added
-            celebration_message = celebration_message.strip('"\'')
+            celebration_message = celebration_message.strip("\"'")
             return celebration_message
 
         except Exception as ai_error:

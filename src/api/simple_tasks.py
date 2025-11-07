@@ -3,7 +3,6 @@ Simple Task API endpoints - Working with enhanced repositories directly
 """
 
 from datetime import datetime
-from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Query
 
@@ -289,8 +288,8 @@ async def quick_capture(request: dict):
         # Use direct SQL INSERT to bypass Task model field mismatch (level, decomposition_state, etc.)
         _ensure_default_entities()  # Ensure default project exists
 
-        from uuid import uuid4
         import json as json_lib
+        from uuid import uuid4
 
         task_id = str(uuid4())
         now = datetime.now().isoformat()
@@ -299,24 +298,33 @@ async def quick_capture(request: dict):
         cursor = conn.cursor()
 
         # Direct SQL INSERT with only schema-supported fields
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO tasks (
                 task_id, title, description, project_id, status, priority,
                 estimated_hours, actual_hours, tags, created_at, updated_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            task_id,
-            task_data.title,
-            task_data.description,
-            task_data.project_id if hasattr(task_data, 'project_id') and task_data.project_id else "default-project",
-            "todo",
-            task_data.priority if hasattr(task_data, 'priority') else "medium",
-            float(task_data.estimated_hours) if hasattr(task_data, 'estimated_hours') and task_data.estimated_hours else 0.5,
-            0.0,  # actual_hours
-            json_lib.dumps(task_data.tags) if hasattr(task_data, 'tags') and task_data.tags else "[]",
-            now,
-            now
-        ))
+        """,
+            (
+                task_id,
+                task_data.title,
+                task_data.description,
+                task_data.project_id
+                if hasattr(task_data, "project_id") and task_data.project_id
+                else "default-project",
+                "todo",
+                task_data.priority if hasattr(task_data, "priority") else "medium",
+                float(task_data.estimated_hours)
+                if hasattr(task_data, "estimated_hours") and task_data.estimated_hours
+                else 0.5,
+                0.0,  # actual_hours
+                json_lib.dumps(task_data.tags)
+                if hasattr(task_data, "tags") and task_data.tags
+                else "[]",
+                now,
+                now,
+            ),
+        )
         conn.commit()
 
         # Construct Task object for response
@@ -324,17 +332,21 @@ async def quick_capture(request: dict):
             task_id=task_id,
             title=task_data.title,
             description=task_data.description,
-            project_id=task_data.project_id if hasattr(task_data, 'project_id') and task_data.project_id else "default-project",
-            priority=task_data.priority if hasattr(task_data, 'priority') else "medium",
-            estimated_hours=task_data.estimated_hours if hasattr(task_data, 'estimated_hours') and task_data.estimated_hours else 0.5,
-            tags=task_data.tags if hasattr(task_data, 'tags') else [],
+            project_id=task_data.project_id
+            if hasattr(task_data, "project_id") and task_data.project_id
+            else "default-project",
+            priority=task_data.priority if hasattr(task_data, "priority") else "medium",
+            estimated_hours=task_data.estimated_hours
+            if hasattr(task_data, "estimated_hours") and task_data.estimated_hours
+            else 0.5,
+            tags=task_data.tags if hasattr(task_data, "tags") else [],
             status="todo",
             created_at=datetime.fromisoformat(now),
             updated_at=datetime.fromisoformat(now),
         )
 
         # ✅ FIX P0 BUG: Save micro-steps to database
-        from src.services.micro_step_service import MicroStepService, MicroStepCreateData
+        from src.services.micro_step_service import MicroStepCreateData, MicroStepService
 
         micro_step_service = MicroStepService(db)
         saved_micro_steps = []
@@ -347,14 +359,22 @@ async def quick_capture(request: dict):
                     step_number=i,  # ✅ Pass step number from loop index
                     description=step.description,
                     estimated_minutes=step.estimated_minutes,
-                    leaf_type=step.leaf_type.value if hasattr(step.leaf_type, 'value') else step.leaf_type,
-                    delegation_mode=step.delegation_mode.value if hasattr(step.delegation_mode, 'value') else step.delegation_mode,
-                    automation_plan=step.automation_plan.model_dump() if step.automation_plan else None,
+                    leaf_type=step.leaf_type.value
+                    if hasattr(step.leaf_type, "value")
+                    else step.leaf_type,
+                    delegation_mode=step.delegation_mode.value
+                    if hasattr(step.delegation_mode, "value")
+                    else step.delegation_mode,
+                    automation_plan=step.automation_plan.model_dump()
+                    if step.automation_plan
+                    else None,
                     tags=step.tags or [],
                     parent_step_id=step.parent_step_id,
                     level=step.level,
                     is_leaf=step.is_leaf,
-                    decomposition_state=step.decomposition_state.value if hasattr(step.decomposition_state, 'value') else step.decomposition_state,
+                    decomposition_state=step.decomposition_state.value
+                    if hasattr(step.decomposition_state, "value")
+                    else step.decomposition_state,
                     short_label=step.short_label,
                     icon=step.icon,
                 )
@@ -365,6 +385,7 @@ async def quick_capture(request: dict):
             except Exception as e:
                 # Log error but continue with other steps
                 import logging
+
                 logging.getLogger(__name__).warning(f"Failed to save micro-step {i}: {e}")
                 # Add unsaved step to list anyway (for debugging)
                 saved_micro_steps.append(step)
@@ -372,20 +393,30 @@ async def quick_capture(request: dict):
         # Format micro-steps for frontend
         micro_steps_display = []
         for step in saved_micro_steps:
-            micro_steps_display.append({
-                "step_id": step.step_id,
-                "description": step.description,
-                "short_label": step.short_label if hasattr(step, 'short_label') else None,
-                "estimated_minutes": step.estimated_minutes,
-                "leaf_type": step.leaf_type.value if hasattr(step.leaf_type, 'value') else step.leaf_type,
-                "icon": step.icon if hasattr(step, 'icon') else None,
-                "delegation_mode": step.delegation_mode.value if hasattr(step.delegation_mode, 'value') else step.delegation_mode,
-                "tags": step.tags or [],
-                "is_leaf": step.is_leaf if hasattr(step, 'is_leaf') else True,
-                "decomposition_state": step.decomposition_state.value if hasattr(step.decomposition_state, 'value') else step.decomposition_state,
-                "level": step.level if hasattr(step, 'level') else 0,
-                "parent_step_id": step.parent_step_id if hasattr(step, 'parent_step_id') else None,
-            })
+            micro_steps_display.append(
+                {
+                    "step_id": step.step_id,
+                    "description": step.description,
+                    "short_label": step.short_label if hasattr(step, "short_label") else None,
+                    "estimated_minutes": step.estimated_minutes,
+                    "leaf_type": step.leaf_type.value
+                    if hasattr(step.leaf_type, "value")
+                    else step.leaf_type,
+                    "icon": step.icon if hasattr(step, "icon") else None,
+                    "delegation_mode": step.delegation_mode.value
+                    if hasattr(step.delegation_mode, "value")
+                    else step.delegation_mode,
+                    "tags": step.tags or [],
+                    "is_leaf": step.is_leaf if hasattr(step, "is_leaf") else True,
+                    "decomposition_state": step.decomposition_state.value
+                    if hasattr(step.decomposition_state, "value")
+                    else step.decomposition_state,
+                    "level": step.level if hasattr(step, "level") else 0,
+                    "parent_step_id": step.parent_step_id
+                    if hasattr(step, "parent_step_id")
+                    else None,
+                }
+            )
 
         processing_time_ms = int((datetime.now() - start_time).total_seconds() * 1000)
 
@@ -423,6 +454,7 @@ async def quick_capture(request: dict):
     except Exception as e:
         # Fallback to simple capture on error
         import logging
+
         logging.getLogger(__name__).error(f"AI capture failed: {e}, falling back to simple mode")
 
         task = Task(
@@ -439,7 +471,12 @@ async def quick_capture(request: dict):
         return {
             "task": task,
             "micro_steps": [],
-            "breakdown": {"total_steps": 0, "digital_count": 0, "human_count": 0, "total_minutes": 0},
+            "breakdown": {
+                "total_steps": 0,
+                "digital_count": 0,
+                "human_count": 0,
+                "total_minutes": 0,
+            },
             "needs_clarification": False,
             "clarifications": [],
             "processing_time_ms": 0,
@@ -575,20 +612,22 @@ async def decompose_task(
         for child_id in task.children_ids:
             child = task_repo.get_by_id(child_id)
             if child:
-                children_tasks.append({
-                    "task_id": child.task_id,
-                    "title": child.title,
-                    "description": child.description,
-                    "level": child.level,
-                    "estimated_minutes": int((child.estimated_hours or 0) * 60),
-                    "total_minutes": child.total_minutes,
-                    "decomposition_state": child.decomposition_state.value,
-                    "is_leaf": child.is_leaf,
-                    "leaf_type": child.leaf_type.value if child.leaf_type else None,
-                    "custom_emoji": child.custom_emoji,
-                    "icon": child.metadata.get("icon") if child.metadata else None,
-                    "children_ids": child.children_ids,
-                })
+                children_tasks.append(
+                    {
+                        "task_id": child.task_id,
+                        "title": child.title,
+                        "description": child.description,
+                        "level": child.level,
+                        "estimated_minutes": int((child.estimated_hours or 0) * 60),
+                        "total_minutes": child.total_minutes,
+                        "decomposition_state": child.decomposition_state.value,
+                        "is_leaf": child.is_leaf,
+                        "leaf_type": child.leaf_type.value if child.leaf_type else None,
+                        "custom_emoji": child.custom_emoji,
+                        "icon": child.metadata.get("icon") if child.metadata else None,
+                        "children_ids": child.children_ids,
+                    }
+                )
 
         return {
             "task_id": task.task_id,

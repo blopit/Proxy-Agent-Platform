@@ -5,12 +5,10 @@ Goal Repository - Database operations for goals
 from __future__ import annotations
 
 import json
-import sqlite3
 from datetime import datetime
 from decimal import Decimal
 
 from src.core.task_models import CaptureType, Goal, Milestone, Task
-from src.database.enhanced_adapter import EnhancedDatabaseAdapter, get_enhanced_database
 from src.repositories.enhanced_repositories import BaseEnhancedRepository
 
 
@@ -51,14 +49,22 @@ class GoalRepository(BaseEnhancedRepository):
                 goal_data["milestones"] = json.dumps(
                     [
                         {
-                            "value": str(m["value"]) if isinstance(m["value"], Decimal) else m["value"],
-                            "date": m["date"].isoformat() if isinstance(m["date"], datetime) else m["date"],
+                            "value": str(m["value"])
+                            if isinstance(m["value"], Decimal)
+                            else m["value"],
+                            "date": m["date"].isoformat()
+                            if isinstance(m["date"], datetime)
+                            else m["date"],
                             "description": m.get("description"),
                             "completed": m.get("completed", False),
-                            "completed_at": m["completed_at"].isoformat() if m.get("completed_at") else None,
+                            "completed_at": m["completed_at"].isoformat()
+                            if m.get("completed_at")
+                            else None,
                         }
                         for m in goal_data["milestones"]
-                    ] if isinstance(goal_data["milestones"], list) else []
+                    ]
+                    if isinstance(goal_data["milestones"], list)
+                    else []
                 )
 
             # Insert goal
@@ -127,13 +133,19 @@ class GoalRepository(BaseEnhancedRepository):
                 [
                     {
                         "value": str(m["value"]) if isinstance(m["value"], Decimal) else m["value"],
-                        "date": m["date"].isoformat() if isinstance(m["date"], datetime) else m["date"],
+                        "date": m["date"].isoformat()
+                        if isinstance(m["date"], datetime)
+                        else m["date"],
                         "description": m.get("description"),
                         "completed": m.get("completed", False),
-                        "completed_at": m["completed_at"].isoformat() if m.get("completed_at") else None,
+                        "completed_at": m["completed_at"].isoformat()
+                        if m.get("completed_at")
+                        else None,
                     }
                     for m in goal_data["milestones"]
-                ] if isinstance(goal_data["milestones"], list) else []
+                ]
+                if isinstance(goal_data["milestones"], list)
+                else []
             )
 
         set_clause = ", ".join([f"{key} = ?" for key in goal_data.keys() if key != "goal_id"])
@@ -155,7 +167,9 @@ class GoalRepository(BaseEnhancedRepository):
         goal.update_progress(new_value)
         return self.update(goal)
 
-    def add_milestone(self, goal_id: str, value: Decimal, date: datetime, description: str | None = None) -> Goal | None:
+    def add_milestone(
+        self, goal_id: str, value: Decimal, date: datetime, description: str | None = None
+    ) -> Goal | None:
         """Add a milestone to a goal"""
         goal = self.get_by_id(goal_id)
         if not goal:
@@ -183,7 +197,9 @@ class GoalRepository(BaseEnhancedRepository):
 
         return [self._dict_to_goal_model(dict(row)) for row in rows]
 
-    def get_goals_by_status(self, is_active: bool, is_achieved: bool, limit: int = 50) -> list[Goal]:
+    def get_goals_by_status(
+        self, is_active: bool, is_achieved: bool, limit: int = 50
+    ) -> list[Goal]:
         """Get goals by status"""
         conn = self.db.get_connection()
         cursor = conn.cursor()
@@ -253,7 +269,9 @@ class GoalRepository(BaseEnhancedRepository):
                 data["milestones"] = [
                     Milestone(
                         value=Decimal(m["value"]) if m["value"] else Decimal("0.0"),
-                        date=datetime.fromisoformat(m["date"]) if isinstance(m["date"], str) else m["date"],
+                        date=datetime.fromisoformat(m["date"])
+                        if isinstance(m["date"], str)
+                        else m["date"],
                         description=m.get("description"),
                         completed=m.get("completed", False),
                         completed_at=(
@@ -280,7 +298,13 @@ class GoalRepository(BaseEnhancedRepository):
                 data[field] = Decimal(str(data[field]))
 
         # Convert datetime fields
-        for field in ["target_date", "last_progress_update", "achieved_at", "created_at", "updated_at"]:
+        for field in [
+            "target_date",
+            "last_progress_update",
+            "achieved_at",
+            "created_at",
+            "updated_at",
+        ]:
             if field in data and isinstance(data[field], str):
                 try:
                     data[field] = datetime.fromisoformat(data[field])

@@ -7,7 +7,7 @@ Provides RESTful endpoints for the Capture Mode pipeline:
 - Saving finalized task trees to database
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -17,7 +17,6 @@ from src.core.task_models import (
     AutomationPlan,
     CaptureMode,
     ClarificationNeed,
-    LeafType,
     MicroStep,
     Task,
 )
@@ -43,7 +42,7 @@ class CaptureRequest(BaseModel):
     query: str = Field(..., description="Raw user input (brain dump)")
     user_id: str = Field(..., description="User ID")
     mode: str = Field("auto", description="Capture mode: auto, manual, clarify")
-    manual_fields: Optional[dict[str, Any]] = Field(
+    manual_fields: dict[str, Any] | None = Field(
         None, description="Manual field overrides (for MANUAL mode)"
     )
 
@@ -56,9 +55,9 @@ class MicroStepResponse(BaseModel):
     estimated_minutes: int
     delegation_mode: str
     leaf_type: str
-    icon: Optional[str] = None
-    short_label: Optional[str] = None
-    automation_plan: Optional[AutomationPlan] = None
+    icon: str | None = None
+    short_label: str | None = None
+    automation_plan: AutomationPlan | None = None
     clarification_needs: list[ClarificationNeed] = []
     tags: list[str] = []  # CHAMPS-based tags
 
@@ -86,7 +85,7 @@ class SaveCaptureRequest(BaseModel):
     task: dict[str, Any]
     micro_steps: list[dict[str, Any]]
     user_id: str
-    project_id: Optional[str] = None
+    project_id: str | None = None
 
 
 # --- Endpoints ---
@@ -247,9 +246,7 @@ async def submit_clarifications(
         )
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Clarification processing failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Clarification processing failed: {str(e)}")
 
 
 @router.post("/save")
@@ -353,6 +350,4 @@ async def get_capture_stats(
         }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"Stats retrieval failed: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Stats retrieval failed: {str(e)}")

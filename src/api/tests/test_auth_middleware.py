@@ -4,12 +4,13 @@ Tests for JWT authentication middleware - TDD RED phase
 Testing get_current_user dependency that will be used across all protected routes.
 """
 
+from unittest.mock import patch
+
 import pytest
 from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
-from unittest.mock import Mock, patch
 
-from src.api.auth import get_current_user, create_access_token
+from src.api.auth import create_access_token, get_current_user
 from src.core.task_models import User
 
 
@@ -29,9 +30,7 @@ class TestGetCurrentUser:
         token = create_access_token(token_data)
 
         # Create mock credentials
-        credentials = HTTPAuthorizationCredentials(
-            scheme="Bearer", credentials=token
-        )
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
 
         # Mock the UserRepository
         with patch("src.api.auth.user_repo") as mock_repo:
@@ -66,9 +65,7 @@ class TestGetCurrentUser:
         token_data = {"sub": "testuser", "user_id": "user_123"}
         token = create_access_token(token_data, expires_delta=timedelta(seconds=-60))
 
-        credentials = HTTPAuthorizationCredentials(
-            scheme="Bearer", credentials=token
-        )
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
 
         # Should raise HTTPException
         with pytest.raises(HTTPException) as exc_info:
@@ -105,9 +102,7 @@ class TestGetCurrentUser:
         token_data = {"sub": "testuser"}  # Missing user_id
         token = create_access_token(token_data)
 
-        credentials = HTTPAuthorizationCredentials(
-            scheme="Bearer", credentials=token
-        )
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
 
         with pytest.raises(HTTPException) as exc_info:
             get_current_user(credentials)
@@ -126,9 +121,7 @@ class TestGetCurrentUser:
         token_data = {"sub": "testuser", "user_id": "nonexistent_user"}
         token = create_access_token(token_data)
 
-        credentials = HTTPAuthorizationCredentials(
-            scheme="Bearer", credentials=token
-        )
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
 
         with patch("src.api.auth.user_repo") as mock_repo:
             mock_repo.get_by_id.return_value = None  # User not found
@@ -150,9 +143,7 @@ class TestGetCurrentUser:
         token_data = {"sub": "testuser", "user_id": "user_123"}
         token = create_access_token(token_data)
 
-        credentials = HTTPAuthorizationCredentials(
-            scheme="Bearer", credentials=token
-        )
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
 
         with patch("src.api.auth.user_repo") as mock_repo:
             mock_user = User(

@@ -5,10 +5,11 @@ Tests written FIRST before migration implementation.
 Following Test-Driven Development: Red → Green → Refactor
 """
 
-import pytest
 from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
+
+import pytest
 
 
 @pytest.fixture
@@ -37,7 +38,7 @@ def db(isolated_db):
 
     # Apply 008_add_reflections.sql migration
     migration_path = Path(__file__).parent.parent / "migrations" / "008_add_reflections.sql"
-    with open(migration_path, "r") as f:
+    with open(migration_path) as f:
         migration_sql = f.read()
         isolated_db.executescript(migration_sql)
 
@@ -56,8 +57,7 @@ def get_table_columns(db, table_name):
 def table_exists(db, table_name):
     """Helper to check if table exists"""
     cursor = db.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
-        (table_name,)
+        "SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table_name,)
     )
     return cursor.fetchone() is not None
 
@@ -118,12 +118,15 @@ class TestReflectionsTableSchema:
 
         # Try to insert without user_id (should fail)
         with pytest.raises(Exception):  # Will raise IntegrityError
-            db.execute("""
+            db.execute(
+                """
                 INSERT INTO reflections (
                     reflection_id, reflection_date, what_happened
                 )
                 VALUES (?, ?, ?)
-            """, (str(uuid4()), "2025-10-22", "Test"))
+            """,
+                (str(uuid4()), "2025-10-22", "Test"),
+            )
 
     def test_reflection_date_is_text(self, db):
         """Test reflection_date is TEXT type (ISO format)"""
@@ -137,10 +140,13 @@ class TestReflectionsTableSchema:
 
         # Try to insert without what_happened (should fail)
         with pytest.raises(Exception):
-            db.execute("""
+            db.execute(
+                """
                 INSERT INTO reflections (reflection_id, user_id, reflection_date)
                 VALUES (?, ?, ?)
-            """, (str(uuid4()), "alice", "2025-10-22"))
+            """,
+                (str(uuid4()), "alice", "2025-10-22"),
+            )
 
     def test_energy_level_is_integer(self, db):
         """Test energy_level is INTEGER type"""
@@ -169,34 +175,43 @@ class TestReflectionsForeignKeys:
 
         # Create micro-step
         step_id = str(uuid4())
-        db.execute("""
+        db.execute(
+            """
             INSERT INTO micro_steps (step_id, parent_task_id, description, estimated_minutes)
             VALUES (?, ?, ?, ?)
-        """, (step_id, task_id, "Test Step", 5))
+        """,
+            (step_id, task_id, "Test Step", 5),
+        )
 
         # Try to insert reflection with non-existent step_id
         # Should fail if foreign key is enforced
         with pytest.raises(Exception):  # IntegrityError
-            db.execute("""
+            db.execute(
+                """
                 INSERT INTO reflections (
                     reflection_id, user_id, reflection_date,
                     step_id, what_happened
                 )
                 VALUES (?, ?, ?, ?, ?)
-            """, (str(uuid4()), "alice", "2025-10-22", "non-existent-step-id", "Test"))
+            """,
+                (str(uuid4()), "alice", "2025-10-22", "non-existent-step-id", "Test"),
+            )
 
     def test_task_id_references_tasks(self, db):
         """Test that task_id has foreign key to tasks table"""
         # Try to insert reflection with non-existent task_id
         # Should fail if foreign key is enforced
         with pytest.raises(Exception):  # IntegrityError
-            db.execute("""
+            db.execute(
+                """
                 INSERT INTO reflections (
                     reflection_id, user_id, reflection_date,
                     task_id, what_happened
                 )
                 VALUES (?, ?, ?, ?, ?)
-            """, (str(uuid4()), "alice", "2025-10-22", "non-existent-task-id", "Test"))
+            """,
+                (str(uuid4()), "alice", "2025-10-22", "non-existent-task-id", "Test"),
+            )
 
     def test_cascade_delete_on_step(self, db):
         """Test that deleting micro-step cascades to reflections"""
@@ -206,20 +221,26 @@ class TestReflectionsForeignKeys:
 
         # Create micro-step
         step_id = str(uuid4())
-        db.execute("""
+        db.execute(
+            """
             INSERT INTO micro_steps (step_id, parent_task_id, description, estimated_minutes)
             VALUES (?, ?, ?, ?)
-        """, (step_id, task_id, "Test Step", 5))
+        """,
+            (step_id, task_id, "Test Step", 5),
+        )
 
         # Create reflection
         reflection_id = str(uuid4())
-        db.execute("""
+        db.execute(
+            """
             INSERT INTO reflections (
                 reflection_id, user_id, reflection_date,
                 step_id, what_happened
             )
             VALUES (?, ?, ?, ?, ?)
-        """, (reflection_id, "alice", "2025-10-22", step_id, "Test reflection"))
+        """,
+            (reflection_id, "alice", "2025-10-22", step_id, "Test reflection"),
+        )
 
         # Verify reflection exists
         cursor = db.execute("SELECT * FROM reflections WHERE reflection_id = ?", (reflection_id,))
@@ -243,30 +264,41 @@ class TestReflectionsDataTypes:
         db.execute("INSERT INTO tasks (task_id, title) VALUES (?, ?)", (task_id, "Test"))
 
         step_id = str(uuid4())
-        db.execute("""
+        db.execute(
+            """
             INSERT INTO micro_steps (step_id, parent_task_id, description, estimated_minutes)
             VALUES (?, ?, ?, ?)
-        """, (step_id, task_id, "Test", 5))
+        """,
+            (step_id, task_id, "Test", 5),
+        )
 
         # Insert with JSON llm_analysis
         reflection_id = str(uuid4())
         import json
-        llm_analysis = json.dumps({
-            "sentiment": "positive",
-            "key_insights": ["Good focus", "Task well-scoped"],
-            "suggestions": ["Continue this pattern"]
-        })
 
-        db.execute("""
+        llm_analysis = json.dumps(
+            {
+                "sentiment": "positive",
+                "key_insights": ["Good focus", "Task well-scoped"],
+                "suggestions": ["Continue this pattern"],
+            }
+        )
+
+        db.execute(
+            """
             INSERT INTO reflections (
                 reflection_id, user_id, reflection_date,
                 step_id, what_happened, llm_analysis
             )
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (reflection_id, "alice", "2025-10-22", step_id, "Completed successfully", llm_analysis))
+        """,
+            (reflection_id, "alice", "2025-10-22", step_id, "Completed successfully", llm_analysis),
+        )
 
         # Retrieve and verify
-        cursor = db.execute("SELECT llm_analysis FROM reflections WHERE reflection_id = ?", (reflection_id,))
+        cursor = db.execute(
+            "SELECT llm_analysis FROM reflections WHERE reflection_id = ?", (reflection_id,)
+        )
         result = cursor.fetchone()[0]
         parsed = json.loads(result)
 
@@ -280,29 +312,40 @@ class TestReflectionsDataTypes:
         db.execute("INSERT INTO tasks (task_id, title) VALUES (?, ?)", (task_id, "Test"))
 
         step_id = str(uuid4())
-        db.execute("""
+        db.execute(
+            """
             INSERT INTO micro_steps (step_id, parent_task_id, description, estimated_minutes)
             VALUES (?, ?, ?, ?)
-        """, (step_id, task_id, "Test", 5))
+        """,
+            (step_id, task_id, "Test", 5),
+        )
 
         # Insert with JSON detected_patterns
         reflection_id = str(uuid4())
         import json
-        patterns = json.dumps([
-            {"pattern": "morning_productivity", "confidence": 0.85},
-            {"pattern": "email_distraction", "confidence": 0.72}
-        ])
 
-        db.execute("""
+        patterns = json.dumps(
+            [
+                {"pattern": "morning_productivity", "confidence": 0.85},
+                {"pattern": "email_distraction", "confidence": 0.72},
+            ]
+        )
+
+        db.execute(
+            """
             INSERT INTO reflections (
                 reflection_id, user_id, reflection_date,
                 step_id, what_happened, detected_patterns
             )
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (reflection_id, "alice", "2025-10-22", step_id, "Test", patterns))
+        """,
+            (reflection_id, "alice", "2025-10-22", step_id, "Test", patterns),
+        )
 
         # Retrieve and verify
-        cursor = db.execute("SELECT detected_patterns FROM reflections WHERE reflection_id = ?", (reflection_id,))
+        cursor = db.execute(
+            "SELECT detected_patterns FROM reflections WHERE reflection_id = ?", (reflection_id,)
+        )
         result = cursor.fetchone()[0]
         parsed = json.loads(result)
 
@@ -320,23 +363,31 @@ class TestReflectionsTimestamps:
         db.execute("INSERT INTO tasks (task_id, title) VALUES (?, ?)", (task_id, "Test"))
 
         step_id = str(uuid4())
-        db.execute("""
+        db.execute(
+            """
             INSERT INTO micro_steps (step_id, parent_task_id, description, estimated_minutes)
             VALUES (?, ?, ?, ?)
-        """, (step_id, task_id, "Test", 5))
+        """,
+            (step_id, task_id, "Test", 5),
+        )
 
         reflection_id = str(uuid4())
 
-        db.execute("""
+        db.execute(
+            """
             INSERT INTO reflections (
                 reflection_id, user_id, reflection_date,
                 step_id, what_happened
             )
             VALUES (?, ?, ?, ?, ?)
-        """, (reflection_id, "alice", "2025-10-22", step_id, "Test"))
+        """,
+            (reflection_id, "alice", "2025-10-22", step_id, "Test"),
+        )
 
         # Check created_at is set (not NULL)
-        cursor = db.execute("SELECT created_at FROM reflections WHERE reflection_id = ?", (reflection_id,))
+        cursor = db.execute(
+            "SELECT created_at FROM reflections WHERE reflection_id = ?", (reflection_id,)
+        )
         created_at_str = cursor.fetchone()[0]
 
         assert created_at_str is not None, "created_at should be automatically set"
@@ -355,36 +406,48 @@ class TestReflectionsQueries:
         db.execute("INSERT INTO tasks (task_id, title) VALUES (?, ?)", (task_id, "Test"))
 
         step_id = str(uuid4())
-        db.execute("""
+        db.execute(
+            """
             INSERT INTO micro_steps (step_id, parent_task_id, description, estimated_minutes)
             VALUES (?, ?, ?, ?)
-        """, (step_id, task_id, "Test", 5))
+        """,
+            (step_id, task_id, "Test", 5),
+        )
 
         # Insert 3 reflections for alice
         for i in range(3):
             reflection_id = str(uuid4())
-            db.execute("""
+            db.execute(
+                """
                 INSERT INTO reflections (
                     reflection_id, user_id, reflection_date,
                     step_id, what_happened
                 )
                 VALUES (?, ?, ?, ?, ?)
-            """, (reflection_id, "alice", f"2025-10-{22+i}", step_id, f"Reflection {i+1}"))
+            """,
+                (reflection_id, "alice", f"2025-10-{22 + i}", step_id, f"Reflection {i + 1}"),
+            )
 
         # Insert 1 reflection for bob
         reflection_id = str(uuid4())
-        db.execute("""
+        db.execute(
+            """
             INSERT INTO reflections (
                 reflection_id, user_id, reflection_date,
                 step_id, what_happened
             )
             VALUES (?, ?, ?, ?, ?)
-        """, (reflection_id, "bob", "2025-10-22", step_id, "Bob's reflection"))
+        """,
+            (reflection_id, "bob", "2025-10-22", step_id, "Bob's reflection"),
+        )
 
         # Query all reflections for alice
-        cursor = db.execute("""
+        cursor = db.execute(
+            """
             SELECT * FROM reflections WHERE user_id = ?
-        """, ("alice",))
+        """,
+            ("alice",),
+        )
 
         results = cursor.fetchall()
         assert len(results) == 3
@@ -396,27 +459,36 @@ class TestReflectionsQueries:
         db.execute("INSERT INTO tasks (task_id, title) VALUES (?, ?)", (task_id, "Test"))
 
         step_id = str(uuid4())
-        db.execute("""
+        db.execute(
+            """
             INSERT INTO micro_steps (step_id, parent_task_id, description, estimated_minutes)
             VALUES (?, ?, ?, ?)
-        """, (step_id, task_id, "Test", 5))
+        """,
+            (step_id, task_id, "Test", 5),
+        )
 
         # Insert reflections for different dates
         dates = ["2025-10-20", "2025-10-21", "2025-10-22"]
         for date in dates:
             reflection_id = str(uuid4())
-            db.execute("""
+            db.execute(
+                """
                 INSERT INTO reflections (
                     reflection_id, user_id, reflection_date,
                     step_id, what_happened
                 )
                 VALUES (?, ?, ?, ?, ?)
-            """, (reflection_id, "alice", date, step_id, f"Reflection on {date}"))
+            """,
+                (reflection_id, "alice", date, step_id, f"Reflection on {date}"),
+            )
 
         # Query reflections for specific date
-        cursor = db.execute("""
+        cursor = db.execute(
+            """
             SELECT * FROM reflections WHERE reflection_date = ?
-        """, ("2025-10-22",))
+        """,
+            ("2025-10-22",),
+        )
 
         results = cursor.fetchall()
         assert len(results) == 1
@@ -430,32 +502,44 @@ class TestReflectionsQueries:
 
         # Create 2 micro-steps
         step_id_1 = str(uuid4())
-        db.execute("""
+        db.execute(
+            """
             INSERT INTO micro_steps (step_id, parent_task_id, description, estimated_minutes)
             VALUES (?, ?, ?, ?)
-        """, (step_id_1, task_id, "Step 1", 5))
+        """,
+            (step_id_1, task_id, "Step 1", 5),
+        )
 
         step_id_2 = str(uuid4())
-        db.execute("""
+        db.execute(
+            """
             INSERT INTO micro_steps (step_id, parent_task_id, description, estimated_minutes)
             VALUES (?, ?, ?, ?)
-        """, (step_id_2, task_id, "Step 2", 5))
+        """,
+            (step_id_2, task_id, "Step 2", 5),
+        )
 
         # Insert reflections for step_id_1 only
         for i in range(2):
             reflection_id = str(uuid4())
-            db.execute("""
+            db.execute(
+                """
                 INSERT INTO reflections (
                     reflection_id, user_id, reflection_date,
                     step_id, what_happened
                 )
                 VALUES (?, ?, ?, ?, ?)
-            """, (reflection_id, "alice", f"2025-10-{22+i}", step_id_1, f"Reflection {i+1}"))
+            """,
+                (reflection_id, "alice", f"2025-10-{22 + i}", step_id_1, f"Reflection {i + 1}"),
+            )
 
         # Query reflections for step_id_1
-        cursor = db.execute("""
+        cursor = db.execute(
+            """
             SELECT * FROM reflections WHERE step_id = ?
-        """, (step_id_1,))
+        """,
+            (step_id_1,),
+        )
 
         results = cursor.fetchall()
         assert len(results) == 2

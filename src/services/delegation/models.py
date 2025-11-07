@@ -6,11 +6,10 @@ agent capabilities, and task assignments.
 """
 
 from datetime import datetime
-from typing import List, Literal, Optional
+from typing import Literal
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-
 
 # ============================================================================
 # Task Delegation Models
@@ -22,12 +21,8 @@ class TaskDelegationCreate(BaseModel):
 
     task_id: str = Field(..., description="ID of the task to delegate")
     assignee_id: str = Field(..., description="ID of the assignee (human or agent)")
-    assignee_type: Literal["human", "agent"] = Field(
-        ..., description="Type of assignee"
-    )
-    estimated_hours: Optional[float] = Field(
-        None, gt=0, description="Estimated hours to complete"
-    )
+    assignee_type: Literal["human", "agent"] = Field(..., description="Type of assignee")
+    estimated_hours: float | None = Field(None, gt=0, description="Estimated hours to complete")
 
 
 class TaskAssignment(BaseModel):
@@ -39,10 +34,10 @@ class TaskAssignment(BaseModel):
     assignee_type: Literal["human", "agent"]
     status: Literal["pending", "in_progress", "completed"] = "pending"
     assigned_at: datetime = Field(default_factory=datetime.utcnow)
-    accepted_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    estimated_hours: Optional[float] = None
-    actual_hours: Optional[float] = None
+    accepted_at: datetime | None = None
+    completed_at: datetime | None = None
+    estimated_hours: float | None = None
+    actual_hours: float | None = None
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -53,7 +48,7 @@ class TaskAssignment(BaseModel):
 class AssignmentComplete(BaseModel):
     """Model for completing an assignment."""
 
-    actual_hours: Optional[float] = Field(None, gt=0, description="Actual hours spent")
+    actual_hours: float | None = Field(None, gt=0, description="Actual hours spent")
 
 
 # ============================================================================
@@ -66,15 +61,13 @@ class AgentCapabilityCreate(BaseModel):
 
     agent_id: str = Field(..., description="Unique agent identifier")
     agent_name: str = Field(..., description="Human-readable agent name")
-    agent_type: Literal["backend", "frontend", "general"] = Field(
-        ..., description="Type of agent"
-    )
-    skills: List[str] = Field(..., description="List of agent skills")
+    agent_type: Literal["backend", "frontend", "general"] = Field(..., description="Type of agent")
+    skills: list[str] = Field(..., description="List of agent skills")
     max_concurrent_tasks: int = Field(default=1, gt=0, description="Max concurrent tasks")
 
     @field_validator("skills")
     @classmethod
-    def skills_must_not_be_empty(cls, v: List[str]) -> List[str]:
+    def skills_must_not_be_empty(cls, v: list[str]) -> list[str]:
         """Ensure skills list is not empty."""
         if not v:
             raise ValueError("Skills list cannot be empty")
@@ -88,7 +81,7 @@ class AgentCapability(BaseModel):
     agent_id: str
     agent_name: str
     agent_type: Literal["backend", "frontend", "general"]
-    skills: List[str]
+    skills: list[str]
     max_concurrent_tasks: int = 1
     current_task_count: int = 0
     is_available: bool = True
@@ -109,11 +102,11 @@ class AgentCapability(BaseModel):
 class AssignmentStatus(BaseModel):
     """Model for assignment status query parameters."""
 
-    status: Optional[Literal["pending", "in_progress", "completed"]] = None
+    status: Literal["pending", "in_progress", "completed"] | None = None
 
 
 class AgentFilter(BaseModel):
     """Model for filtering agents."""
 
-    agent_type: Optional[Literal["backend", "frontend", "general"]] = None
-    available_only: Optional[bool] = None
+    agent_type: Literal["backend", "frontend", "general"] | None = None
+    available_only: bool | None = None

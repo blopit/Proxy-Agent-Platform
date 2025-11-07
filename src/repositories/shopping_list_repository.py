@@ -10,7 +10,6 @@ from datetime import datetime
 from decimal import Decimal
 
 from src.core.task_models import CaptureType, ShoppingList, ShoppingListItem, Task
-from src.database.enhanced_adapter import EnhancedDatabaseAdapter, get_enhanced_database
 from src.repositories.enhanced_repositories import BaseEnhancedRepository
 
 
@@ -207,7 +206,9 @@ class ShoppingListRepository(BaseEnhancedRepository):
 
         return item
 
-    def mark_item_purchased(self, item_id: str, actual_price: Decimal | None = None) -> ShoppingListItem | None:
+    def mark_item_purchased(
+        self, item_id: str, actual_price: Decimal | None = None
+    ) -> ShoppingListItem | None:
         """Mark an item as purchased"""
         item = self.get_item_by_id(item_id)
         if not item:
@@ -332,7 +333,9 @@ class ShoppingListRepository(BaseEnhancedRepository):
 
         item_columns = ", ".join(item_data.keys())
         item_placeholders = ", ".join(["?" for _ in item_data.keys()])
-        item_query = f"INSERT INTO shopping_list_items ({item_columns}) VALUES ({item_placeholders})"
+        item_query = (
+            f"INSERT INTO shopping_list_items ({item_columns}) VALUES ({item_placeholders})"
+        )
 
         cursor.execute(item_query, list(item_data.values()))
 

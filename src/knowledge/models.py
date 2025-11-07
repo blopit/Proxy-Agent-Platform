@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -172,40 +172,40 @@ class KGContext(BaseModel):
 class PersonMetadata(BaseModel):
     """Metadata specific to Person entities"""
 
-    email: Optional[str] = None
-    phone: Optional[str] = None
-    team: Optional[str] = None
-    role: Optional[str] = None
-    relationship: Optional[str] = None  # e.g., "manager", "colleague", "friend"
-    preferred_contact: Optional[str] = None  # e.g., "email", "slack", "phone"
+    email: str | None = None
+    phone: str | None = None
+    team: str | None = None
+    role: str | None = None
+    relationship: str | None = None  # e.g., "manager", "colleague", "friend"
+    preferred_contact: str | None = None  # e.g., "email", "slack", "phone"
 
 
 class DeviceMetadata(BaseModel):
     """Metadata specific to Device entities"""
 
-    location: Optional[str] = None
-    type: Optional[str] = None  # e.g., "smart_light", "thermostat", "speaker"
-    brand: Optional[str] = None
-    model: Optional[str] = None
-    integration: Optional[str] = None  # e.g., "homekit", "alexa", "google_home"
+    location: str | None = None
+    type: str | None = None  # e.g., "smart_light", "thermostat", "speaker"
+    brand: str | None = None
+    model: str | None = None
+    integration: str | None = None  # e.g., "homekit", "alexa", "google_home"
     capabilities: list[str] = Field(default_factory=list)  # e.g., ["on_off", "dim", "color"]
 
 
 class LocationMetadata(BaseModel):
     """Metadata specific to Location entities"""
 
-    address: Optional[str] = None
-    type: Optional[str] = None  # e.g., "home", "office", "coffee_shop"
-    coordinates: Optional[dict[str, float]] = None  # {"lat": 37.7, "lon": -122.4}
-    timezone: Optional[str] = None
+    address: str | None = None
+    type: str | None = None  # e.g., "home", "office", "coffee_shop"
+    coordinates: dict[str, float] | None = None  # {"lat": 37.7, "lon": -122.4}
+    timezone: str | None = None
 
 
 class ProjectMetadata(BaseModel):
     """Metadata specific to Project entities"""
 
-    deadline: Optional[str] = None  # ISO date string
-    status: Optional[str] = None  # e.g., "active", "on_hold", "completed"
-    priority: Optional[str] = None  # e.g., "low", "medium", "high"
+    deadline: str | None = None  # ISO date string
+    status: str | None = None  # e.g., "active", "on_hold", "completed"
+    priority: str | None = None  # e.g., "low", "medium", "high"
     tags: list[str] = Field(default_factory=list)
 
 
@@ -225,7 +225,9 @@ class EntityWithRelationships(BaseModel):
         default_factory=list, description="(relationship, source_entity) pairs"
     )
 
-    def get_related_entities(self, relationship_type: Optional[RelationshipType] = None) -> list[Entity]:
+    def get_related_entities(
+        self, relationship_type: RelationshipType | None = None
+    ) -> list[Entity]:
         """Get all related entities, optionally filtered by relationship type"""
         related = []
 

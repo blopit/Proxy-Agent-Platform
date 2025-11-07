@@ -5,25 +5,26 @@ This service layer implements business logic for task management
 using dependency injection pattern for testability.
 """
 
-from datetime import datetime, timezone
-from typing import List
+from datetime import UTC, datetime
 from uuid import uuid4
 
-from src.core.task_models import Task, TaskStatus, TaskPriority
-from src.repositories.interfaces import TaskRepositoryInterface, ProjectRepositoryInterface
-
+from src.core.task_models import Task, TaskPriority, TaskStatus
+from src.repositories.interfaces import ProjectRepositoryInterface, TaskRepositoryInterface
 
 # ============================================================================
 # Custom Exceptions
 # ============================================================================
 
+
 class TaskServiceError(Exception):
     """Base exception for task service errors"""
+
     pass
 
 
 class TaskNotFoundError(TaskServiceError):
     """Raised when task is not found"""
+
     def __init__(self, task_id: str):
         self.task_id = task_id
         super().__init__(f"Task {task_id} not found")
@@ -31,6 +32,7 @@ class TaskNotFoundError(TaskServiceError):
 
 class ProjectNotFoundError(TaskServiceError):
     """Raised when project is not found"""
+
     def __init__(self, project_id: str):
         self.project_id = project_id
         super().__init__(f"Project {project_id} not found")
@@ -39,6 +41,7 @@ class ProjectNotFoundError(TaskServiceError):
 # ============================================================================
 # Task Service
 # ============================================================================
+
 
 class TaskService:
     """
@@ -49,9 +52,7 @@ class TaskService:
     """
 
     def __init__(
-        self,
-        task_repo: TaskRepositoryInterface,
-        project_repo: ProjectRepositoryInterface
+        self, task_repo: TaskRepositoryInterface, project_repo: ProjectRepositoryInterface
     ):
         """
         Initialize service with injected repositories
@@ -69,7 +70,7 @@ class TaskService:
         description: str,
         project_id: str,
         priority: TaskPriority = TaskPriority.MEDIUM,
-        assignee: str | None = None
+        assignee: str | None = None,
     ) -> Task:
         """
         Create a new task
@@ -101,8 +102,8 @@ class TaskService:
             priority=priority,
             status=TaskStatus.TODO,
             assignee=assignee,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc)
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         return self.task_repo.create(task)
@@ -147,18 +148,15 @@ class TaskService:
             new_status = TaskStatus(new_status)
 
         # Build updates dict
-        updates = {
-            "status": new_status.value,
-            "updated_at": datetime.now(timezone.utc)
-        }
+        updates = {"status": new_status.value, "updated_at": datetime.now(UTC)}
 
         # Set completed_at when transitioning to COMPLETED
         if new_status == TaskStatus.COMPLETED:
-            updates["completed_at"] = datetime.now(timezone.utc)
+            updates["completed_at"] = datetime.now(UTC)
 
         # Set started_at when transitioning to IN_PROGRESS (only first time)
         elif new_status == TaskStatus.IN_PROGRESS and not task.started_at:
-            updates["started_at"] = datetime.now(timezone.utc)
+            updates["started_at"] = datetime.now(UTC)
 
         # Update via repository
         updated_task = self.task_repo.update(task_id, updates)
@@ -179,7 +177,7 @@ class TaskService:
         """
         return self.task_repo.delete(task_id)
 
-    def list_tasks_by_project(self, project_id: str) -> List[Task]:
+    def list_tasks_by_project(self, project_id: str) -> list[Task]:
         """
         List all tasks for a project
 
@@ -191,7 +189,7 @@ class TaskService:
         """
         return self.task_repo.get_by_project(project_id)
 
-    def list_tasks_by_status(self, status: TaskStatus | str) -> List[Task]:
+    def list_tasks_by_status(self, status: TaskStatus | str) -> list[Task]:
         """
         List all tasks with a specific status
 
@@ -207,7 +205,7 @@ class TaskService:
 
         return self.task_repo.get_by_status(status.value)
 
-    def list_tasks_by_assignee(self, assignee_id: str) -> List[Task]:
+    def list_tasks_by_assignee(self, assignee_id: str) -> list[Task]:
         """
         List all tasks assigned to a user
 
@@ -219,7 +217,7 @@ class TaskService:
         """
         return self.task_repo.get_by_assignee(assignee_id)
 
-    def search_tasks(self, query: str) -> List[Task]:
+    def search_tasks(self, query: str) -> list[Task]:
         """
         Search tasks by query
 

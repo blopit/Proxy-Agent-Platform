@@ -4,8 +4,10 @@ Tests for WorkflowExecutor.
 Tests workflow loading, execution, and step generation.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
+
 from src.workflows.executor import WorkflowExecutor
 from src.workflows.models import WorkflowContext, WorkflowType
 
@@ -109,10 +111,10 @@ def test_build_user_prompt(executor: WorkflowExecutor):
 # and is marked as async. Run with pytest-asyncio:
 # pytest src/workflows/tests/test_executor.py -v
 
+
 @pytest.mark.asyncio
 @pytest.mark.skipif(
-    not Path.home().joinpath(".anthropic_api_key").exists(),
-    reason="Requires ANTHROPIC_API_KEY"
+    not Path.home().joinpath(".anthropic_api_key").exists(), reason="Requires ANTHROPIC_API_KEY"
 )
 async def test_execute_workflow_integration(executor: WorkflowExecutor):
     """

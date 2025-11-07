@@ -4,8 +4,8 @@ Google Calendar integration service.
 Provides access to Google Calendar API for reading and managing calendar events.
 """
 
-from datetime import datetime, date, timedelta
-from typing import List, Optional
+from datetime import datetime, timedelta
+
 from pydantic import BaseModel, Field
 
 from src.integrations.google.auth import GoogleAuthService
@@ -20,13 +20,13 @@ class CalendarEvent(BaseModel):
 
     event_id: str
     summary: str
-    description: Optional[str] = None
-    location: Optional[str] = None
+    description: str | None = None
+    location: str | None = None
     start_time: datetime
     end_time: datetime
     is_all_day: bool = False
-    attendees: List[str] = Field(default_factory=list)
-    time_zone: Optional[str] = None
+    attendees: list[str] = Field(default_factory=list)
+    time_zone: str | None = None
 
     @classmethod
     def from_api_response(cls, data: dict) -> "CalendarEvent":
@@ -68,9 +68,7 @@ class CalendarEvent(BaseModel):
             end_date = datetime.fromisoformat(end_data["date"])
             end_time = datetime.combine(end_date.date(), datetime.max.time())
         else:
-            end_time = datetime.fromisoformat(
-                end_data.get("dateTime", "").replace("Z", "+00:00")
-            )
+            end_time = datetime.fromisoformat(end_data.get("dateTime", "").replace("Z", "+00:00"))
 
         # Parse attendees
         attendees = [
@@ -161,11 +159,11 @@ class GoogleCalendarService:
 
     def get_events(
         self,
-        time_min: Optional[datetime] = None,
-        time_max: Optional[datetime] = None,
+        time_min: datetime | None = None,
+        time_max: datetime | None = None,
         max_results: int = 100,
         calendar_id: str = "primary",
-    ) -> List[CalendarEvent]:
+    ) -> list[CalendarEvent]:
         """
         Retrieve calendar events within a date range.
 
@@ -212,7 +210,7 @@ class GoogleCalendarService:
         items = events_result.get("items", [])
         return [CalendarEvent.from_api_response(item) for item in items]
 
-    def get_today_events(self, calendar_id: str = "primary") -> List[CalendarEvent]:
+    def get_today_events(self, calendar_id: str = "primary") -> list[CalendarEvent]:
         """
         Get all events for today.
 
@@ -232,13 +230,11 @@ class GoogleCalendarService:
         start_of_day = datetime.combine(now.date(), datetime.min.time())
         end_of_day = datetime.combine(now.date(), datetime.max.time())
 
-        return self.get_events(
-            time_min=start_of_day, time_max=end_of_day, calendar_id=calendar_id
-        )
+        return self.get_events(time_min=start_of_day, time_max=end_of_day, calendar_id=calendar_id)
 
     def get_upcoming_events(
         self, max_results: int = 10, calendar_id: str = "primary"
-    ) -> List[CalendarEvent]:
+    ) -> list[CalendarEvent]:
         """
         Get upcoming events starting from now.
 
@@ -260,9 +256,9 @@ class GoogleCalendarService:
         summary: str,
         start_time: datetime,
         end_time: datetime,
-        description: Optional[str] = None,
-        location: Optional[str] = None,
-        attendees: Optional[List[str]] = None,
+        description: str | None = None,
+        location: str | None = None,
+        attendees: list[str] | None = None,
         calendar_id: str = "primary",
     ) -> CalendarEvent:
         """
@@ -305,9 +301,7 @@ class GoogleCalendarService:
 
         # Create event
         created_event = (
-            self.service.events()
-            .insert(calendarId=calendar_id, body=event_body)
-            .execute()
+            self.service.events().insert(calendarId=calendar_id, body=event_body).execute()
         )
 
         return CalendarEvent.from_api_response(created_event)
@@ -315,11 +309,11 @@ class GoogleCalendarService:
     def update_event(
         self,
         event_id: str,
-        summary: Optional[str] = None,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None,
-        description: Optional[str] = None,
-        location: Optional[str] = None,
+        summary: str | None = None,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+        description: str | None = None,
+        location: str | None = None,
         calendar_id: str = "primary",
     ) -> CalendarEvent:
         """
@@ -392,9 +386,7 @@ class GoogleCalendarService:
             >>> success = calendar.delete_event("event123")
         """
         try:
-            self.service.events().delete(
-                calendarId=calendar_id, eventId=event_id
-            ).execute()
+            self.service.events().delete(calendarId=calendar_id, eventId=event_id).execute()
             return True
         except Exception:
             return False
@@ -403,8 +395,8 @@ class GoogleCalendarService:
         self,
         time_min: datetime,
         time_max: datetime,
-        calendar_ids: Optional[List[str]] = None,
-    ) -> List[dict]:
+        calendar_ids: list[str] | None = None,
+    ) -> list[dict]:
         """
         Get free/busy information for calendars.
 

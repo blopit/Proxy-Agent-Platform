@@ -4,10 +4,12 @@ Tests for Google Calendar integration service.
 Following TDD methodology: RED → GREEN → REFACTOR
 """
 
+from datetime import datetime
+from unittest.mock import Mock, patch
+
 import pytest
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
-from src.integrations.google.calendar import GoogleCalendarService, CalendarEvent
+
+from src.integrations.google.calendar import CalendarEvent, GoogleCalendarService
 
 
 class TestGoogleCalendarService:
@@ -32,9 +34,7 @@ class TestGoogleCalendarService:
         assert service.auth_service == mock_auth_service
         mock_auth_service.build_service.assert_called_once_with("calendar", "v3")
 
-    def test_get_events_returns_list_of_calendar_events(
-        self, calendar_service, mock_auth_service
-    ):
+    def test_get_events_returns_list_of_calendar_events(self, calendar_service, mock_auth_service):
         """Test that get_events returns a list of CalendarEvent objects."""
         # Mock API response
         mock_events = {
@@ -130,9 +130,7 @@ class TestGoogleCalendarService:
             "start": {"dateTime": "2025-10-30T15:00:00Z"},
             "end": {"dateTime": "2025-10-30T16:00:00Z"},
         }
-        calendar_service.service.events().insert().execute.return_value = (
-            mock_created_event
-        )
+        calendar_service.service.events().insert().execute.return_value = mock_created_event
 
         start_time = datetime(2025, 10, 30, 15, 0, 0)
         end_time = datetime(2025, 10, 30, 16, 0, 0)
@@ -166,13 +164,9 @@ class TestGoogleCalendarService:
             "start": {"dateTime": "2025-10-30T10:00:00Z"},
             "end": {"dateTime": "2025-10-30T11:00:00Z"},
         }
-        calendar_service.service.events().update().execute.return_value = (
-            mock_updated_event
-        )
+        calendar_service.service.events().update().execute.return_value = mock_updated_event
 
-        event = calendar_service.update_event(
-            event_id="event1", summary="Updated Meeting"
-        )
+        event = calendar_service.update_event(event_id="event1", summary="Updated Meeting")
 
         assert event.summary == "Updated Meeting"
         assert calendar_service.service.events().get.called
@@ -201,16 +195,12 @@ class TestGoogleCalendarService:
                 }
             }
         }
-        calendar_service.service.freebusy().query().execute.return_value = (
-            mock_response
-        )
+        calendar_service.service.freebusy().query().execute.return_value = mock_response
 
         start_time = datetime(2025, 10, 30, 9, 0, 0)
         end_time = datetime(2025, 10, 30, 17, 0, 0)
 
-        busy_times = calendar_service.get_free_busy(
-            time_min=start_time, time_max=end_time
-        )
+        busy_times = calendar_service.get_free_busy(time_min=start_time, time_max=end_time)
 
         assert len(busy_times) == 1
         assert calendar_service.service.freebusy().query.called

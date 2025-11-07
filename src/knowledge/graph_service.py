@@ -12,8 +12,7 @@ from __future__ import annotations
 
 import json
 import logging
-import re
-from typing import Any, Optional
+from typing import Any
 
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter, get_enhanced_database
 from src.knowledge.models import (
@@ -36,7 +35,7 @@ class GraphService:
     relationships to provide context-aware task capture.
     """
 
-    def __init__(self, db: Optional[EnhancedDatabaseAdapter] = None):
+    def __init__(self, db: EnhancedDatabaseAdapter | None = None):
         self.db = db or get_enhanced_database()
 
     # ========================================================================
@@ -48,7 +47,7 @@ class GraphService:
         entity_type: EntityType | str,
         name: str,
         user_id: str,
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> Entity:
         """
         Create a new entity in the knowledge graph.
@@ -77,7 +76,11 @@ class GraphService:
         cursor = conn.cursor()
 
         # Get string value of entity_type (handle both string and enum)
-        entity_type_value = entity.entity_type.value if isinstance(entity.entity_type, EntityType) else entity.entity_type
+        entity_type_value = (
+            entity.entity_type.value
+            if isinstance(entity.entity_type, EntityType)
+            else entity.entity_type
+        )
 
         cursor.execute(
             """
@@ -101,7 +104,7 @@ class GraphService:
         conn.commit()
         return entity
 
-    def get_entity(self, entity_id: str) -> Optional[Entity]:
+    def get_entity(self, entity_id: str) -> Entity | None:
         """Get entity by ID"""
         conn = self.db.get_connection()
         cursor = conn.cursor()
@@ -116,7 +119,7 @@ class GraphService:
     def get_entities_by_user(
         self,
         user_id: str,
-        entity_type: Optional[EntityType | str] = None,
+        entity_type: EntityType | str | None = None,
     ) -> list[Entity]:
         """
         Get all entities for a user, optionally filtered by type.
@@ -132,7 +135,9 @@ class GraphService:
         cursor = conn.cursor()
 
         if entity_type:
-            type_value = EntityType(entity_type).value if isinstance(entity_type, str) else entity_type.value
+            type_value = (
+                EntityType(entity_type).value if isinstance(entity_type, str) else entity_type.value
+            )
             cursor.execute(
                 "SELECT * FROM kg_entities WHERE user_id = ? AND entity_type = ? ORDER BY name",
                 (user_id, type_value),
@@ -188,7 +193,7 @@ class GraphService:
         from_entity_id: str,
         to_entity_id: str,
         relationship_type: RelationshipType | str,
-        metadata: Optional[dict[str, Any]] = None,
+        metadata: dict[str, Any] | None = None,
     ) -> Relationship:
         """
         Create a relationship between two entities.
@@ -222,7 +227,11 @@ class GraphService:
         cursor = conn.cursor()
 
         # Get string value of relationship_type (handle both string and enum)
-        relationship_type_value = relationship.relationship_type.value if isinstance(relationship.relationship_type, RelationshipType) else relationship.relationship_type
+        relationship_type_value = (
+            relationship.relationship_type.value
+            if isinstance(relationship.relationship_type, RelationshipType)
+            else relationship.relationship_type
+        )
 
         cursor.execute(
             """
@@ -245,8 +254,8 @@ class GraphService:
 
     def get_relationships(
         self,
-        entity_id: Optional[str] = None,
-        relationship_type: Optional[RelationshipType | str] = None,
+        entity_id: str | None = None,
+        relationship_type: RelationshipType | str | None = None,
     ) -> list[Relationship]:
         """
         Get relationships, optionally filtered by entity or type.
@@ -301,7 +310,7 @@ class GraphService:
     # GRAPH QUERIES
     # ========================================================================
 
-    def get_entity_with_relationships(self, entity_id: str) -> Optional[EntityWithRelationships]:
+    def get_entity_with_relationships(self, entity_id: str) -> EntityWithRelationships | None:
         """
         Get an entity with all its relationships and connected entities.
 
@@ -362,7 +371,7 @@ class GraphService:
         self,
         entity_id: str,
         max_depth: int = 2,
-        relationship_type: Optional[RelationshipType | str] = None,
+        relationship_type: RelationshipType | str | None = None,
     ) -> list[Entity]:
         """
         Find entities related to a given entity (graph traversal).
@@ -506,7 +515,11 @@ class GraphService:
     ) -> str:
         """Convert a relationship to a human-readable fact"""
         # Pydantic use_enum_values=True means relationship_type is already a string
-        rel_type = relationship.relationship_type if isinstance(relationship.relationship_type, str) else relationship.relationship_type.value
+        rel_type = (
+            relationship.relationship_type
+            if isinstance(relationship.relationship_type, str)
+            else relationship.relationship_type.value
+        )
 
         # Format based on relationship type
         if rel_type == "worksWith":

@@ -8,7 +8,6 @@ Implements ADHD-friendly task breakdown with validation
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
@@ -31,22 +30,22 @@ class MicroStep(BaseModel):
     parent_task_id: str
     description: str
     estimated_minutes: int
-    leaf_type: Optional[str] = None  # "DIGITAL" or "HUMAN"
-    delegation_mode: Optional[str] = None  # "DO", "DO_WITH_ME", "DELEGATE", "DELETE"
-    automation_plan: Optional[dict] = None  # JSON automation details
-    tags: Optional[list[str]] = None  # CHAMPS-based tags
+    leaf_type: str | None = None  # "DIGITAL" or "HUMAN"
+    delegation_mode: str | None = None  # "DO", "DO_WITH_ME", "DELEGATE", "DELETE"
+    automation_plan: dict | None = None  # JSON automation details
+    tags: list[str] | None = None  # CHAMPS-based tags
     completed: bool = False
-    completed_at: Optional[datetime] = None
-    energy_level: Optional[int] = None  # 1-5 scale
+    completed_at: datetime | None = None
+    energy_level: int | None = None  # 1-5 scale
     created_at: datetime = Field(default_factory=datetime.now)
 
     # Hierarchical structure fields
-    parent_step_id: Optional[str] = None  # Parent micro-step ID
+    parent_step_id: str | None = None  # Parent micro-step ID
     level: int = 0  # Depth in tree
     is_leaf: bool = True  # Can be decomposed?
     decomposition_state: str = "atomic"  # stub, decomposing, decomposed, atomic
-    short_label: Optional[str] = None  # 1-2 word label
-    icon: Optional[str] = None  # Emoji icon
+    short_label: str | None = None  # 1-2 word label
+    icon: str | None = None  # Emoji icon
 
 
 @dataclass
@@ -57,38 +56,38 @@ class MicroStepCreateData:
     description: str
     estimated_minutes: int
     step_number: int = 1  # Required by database schema
-    leaf_type: Optional[str] = None
-    delegation_mode: Optional[str] = None
-    automation_plan: Optional[dict] = None
-    tags: Optional[list[str]] = None
+    leaf_type: str | None = None
+    delegation_mode: str | None = None
+    automation_plan: dict | None = None
+    tags: list[str] | None = None
 
     # Hierarchical fields
-    parent_step_id: Optional[str] = None
+    parent_step_id: str | None = None
     level: int = 0
     is_leaf: bool = True
     decomposition_state: str = "atomic"
-    short_label: Optional[str] = None
-    icon: Optional[str] = None
+    short_label: str | None = None
+    icon: str | None = None
 
 
 @dataclass
 class MicroStepUpdateData:
     """Data class for updating micro-steps"""
 
-    description: Optional[str] = None
-    estimated_minutes: Optional[int] = None
-    leaf_type: Optional[str] = None
-    delegation_mode: Optional[str] = None
-    automation_plan: Optional[dict] = None
-    completed: Optional[bool] = None
-    completed_at: Optional[datetime] = None
-    energy_level: Optional[int] = None
+    description: str | None = None
+    estimated_minutes: int | None = None
+    leaf_type: str | None = None
+    delegation_mode: str | None = None
+    automation_plan: dict | None = None
+    completed: bool | None = None
+    completed_at: datetime | None = None
+    energy_level: int | None = None
 
 
 class MicroStepService:
     """Service for managing micro-steps (2-5 minute task chunks)"""
 
-    def __init__(self, db: Optional[EnhancedDatabaseAdapter] = None):
+    def __init__(self, db: EnhancedDatabaseAdapter | None = None):
         """
         Initialize MicroStepService
 
@@ -99,23 +98,26 @@ class MicroStepService:
 
         self.db = db or get_enhanced_database()
         self.champs_service = None
-    
+
     def _get_champs_service(self):
         """Lazy load CHAMPS service"""
         if self.champs_service is None:
             from src.services.champs_tag_service import CHAMPSTagService
+
             self.champs_service = CHAMPSTagService()
         return self.champs_service
-    
-    async def generate_champs_tags(self, description: str, estimated_minutes: int, leaf_type: str = "HUMAN") -> list[str]:
+
+    async def generate_champs_tags(
+        self, description: str, estimated_minutes: int, leaf_type: str = "HUMAN"
+    ) -> list[str]:
         """
         Generate CHAMPS-based tags for a micro-step using LLM
-        
+
         Args:
             description: Step description
             estimated_minutes: Estimated duration
             leaf_type: "DIGITAL" or "HUMAN"
-            
+
         Returns:
             List of CHAMPS tags
         """
@@ -148,9 +150,7 @@ class MicroStepService:
         parent_task = task_repo.get_by_id(data.parent_task_id)
 
         if not parent_task:
-            raise MicroStepServiceError(
-                f"Parent task with ID {data.parent_task_id} not found"
-            )
+            raise MicroStepServiceError(f"Parent task with ID {data.parent_task_id} not found")
 
         # Validate estimated_minutes (ADHD-friendly: 2-5 minutes required)
         if data.estimated_minutes < 2:
@@ -177,9 +177,7 @@ class MicroStepService:
         tags = data.tags
         if not tags:
             tags = await self.generate_champs_tags(
-                data.description, 
-                data.estimated_minutes, 
-                data.leaf_type or "HUMAN"
+                data.description, data.estimated_minutes, data.leaf_type or "HUMAN"
             )
 
         # Create micro-step
@@ -191,10 +189,8 @@ class MicroStepService:
         conn = self.db.get_connection()
         cursor = conn.cursor()
 
-        automation_plan_json = (
-            json.dumps(data.automation_plan) if data.automation_plan else None
-        )
-        
+        automation_plan_json = json.dumps(data.automation_plan) if data.automation_plan else None
+
         tags_json = json.dumps(tags) if tags else None
 
         # Insert into database with actual schema columns
@@ -236,7 +232,7 @@ class MicroStepService:
         # Retrieve and return created micro-step
         return self.get_micro_step(step_id)
 
-    def get_micro_step(self, step_id: str) -> Optional[MicroStep]:
+    def get_micro_step(self, step_id: str) -> MicroStep | None:
         """
         Get a micro-step by ID
 
@@ -326,7 +322,7 @@ class MicroStepService:
                 delegation_mode=row[5],
                 automation_plan=None,  # Not in schema
                 tags=None,  # Not in schema
-                completed=(row[6] == 'done'),  # Map status to completed
+                completed=(row[6] == "done"),  # Map status to completed
                 completed_at=datetime.fromisoformat(row[9]) if row[9] else None,
                 energy_level=None,  # Not in schema
                 created_at=datetime.fromisoformat(row[8]),
@@ -354,7 +350,7 @@ class MicroStepService:
         all_steps = self.get_micro_steps_by_task(parent_task_id)
         return [step for step in all_steps if not step.completed]
 
-    def get_next_micro_step(self, parent_task_id: str) -> Optional[MicroStep]:
+    def get_next_micro_step(self, parent_task_id: str) -> MicroStep | None:
         """
         Get the next incomplete micro-step (for Hunter mode)
 
@@ -367,9 +363,7 @@ class MicroStepService:
         incomplete = self.get_incomplete_micro_steps(parent_task_id)
         return incomplete[0] if incomplete else None
 
-    def update_micro_step(
-        self, step_id: str, data: MicroStepUpdateData
-    ) -> MicroStep:
+    def update_micro_step(self, step_id: str, data: MicroStepUpdateData) -> MicroStep:
         """
         Update a micro-step
 
@@ -416,7 +410,7 @@ class MicroStepService:
 
         if data.completed is not None:
             updates.append("status = ?")
-            params.append('done' if data.completed else 'todo')
+            params.append("done" if data.completed else "todo")
 
             # Also update the completed column
             updates.append("completed = ?")
@@ -562,7 +556,7 @@ class MicroStepService:
                 delegation_mode=row[5],
                 automation_plan=None,  # Not in schema
                 tags=None,  # Not in schema
-                completed=(row[6] == 'done'),  # Map status to completed
+                completed=(row[6] == "done"),  # Map status to completed
                 completed_at=datetime.fromisoformat(row[9]) if row[9] else None,
                 energy_level=None,  # Not in schema
                 created_at=datetime.fromisoformat(row[8]),
@@ -609,7 +603,7 @@ class MicroStepService:
                 description=step.description,
                 estimated_minutes=step.estimated_minutes,
                 delegation_mode=step.delegation_mode,
-            )
+            ),
         )
 
         # Set decomposition state manually in database
@@ -617,7 +611,7 @@ class MicroStepService:
         cursor = conn.cursor()
         cursor.execute(
             "UPDATE micro_steps SET decomposition_state = ? WHERE step_id = ?",
-            ("decomposing", step_id)
+            ("decomposing", step_id),
         )
         conn.commit()
 
@@ -647,14 +641,24 @@ class MicroStepService:
                     parent_task_id=step.parent_task_id,
                     description=child_step.description,
                     estimated_minutes=child_step.estimated_minutes,
-                    leaf_type=child_step.leaf_type.value if hasattr(child_step.leaf_type, 'value') else child_step.leaf_type,
-                    delegation_mode=child_step.delegation_mode.value if hasattr(child_step.delegation_mode, 'value') else child_step.delegation_mode,
-                    automation_plan=child_step.automation_plan.model_dump() if child_step.automation_plan else None,
+                    leaf_type=child_step.leaf_type.value
+                    if hasattr(child_step.leaf_type, "value")
+                    else child_step.leaf_type,
+                    delegation_mode=child_step.delegation_mode.value
+                    if hasattr(child_step.delegation_mode, "value")
+                    else child_step.delegation_mode,
+                    automation_plan=child_step.automation_plan.model_dump()
+                    if child_step.automation_plan
+                    else None,
                     tags=child_step.tags,
                     parent_step_id=step_id,  # Set parent to current step
                     level=step.level + 1,
-                    is_leaf=child_step.is_leaf if hasattr(child_step, 'is_leaf') else (child_step.estimated_minutes <= 5),
-                    decomposition_state=child_step.decomposition_state.value if hasattr(child_step, 'decomposition_state') else "atomic",
+                    is_leaf=child_step.is_leaf
+                    if hasattr(child_step, "is_leaf")
+                    else (child_step.estimated_minutes <= 5),
+                    decomposition_state=child_step.decomposition_state.value
+                    if hasattr(child_step, "decomposition_state")
+                    else "atomic",
                     short_label=child_step.short_label,
                     icon=child_step.icon,
                 )
@@ -665,7 +669,7 @@ class MicroStepService:
         # Update parent step state to "decomposed"
         cursor.execute(
             "UPDATE micro_steps SET decomposition_state = ? WHERE step_id = ?",
-            ("decomposed", step_id)
+            ("decomposed", step_id),
         )
         conn.commit()
 

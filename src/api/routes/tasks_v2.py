@@ -6,31 +6,30 @@ with dependency injection for full testability.
 """
 
 import logging
-from typing import List
+from datetime import UTC
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from src.database.connection import get_db_session
-from src.repositories.task_repository_v2 import TaskRepository
-from src.repositories.project_repository_v2 import ProjectRepository
-from src.services.task_service_v2 import (
-    TaskService,
-    TaskNotFoundError,
-    ProjectNotFoundError,
-)
 from src.api.routes.schemas import (
     TaskCreateRequest,
-    TaskUpdateRequest,
-    TaskStatusUpdateRequest,
-    TaskResponse,
     TaskListResponse,
+    TaskResponse,
     TaskSearchResponse,
-    TaskStatsResponse,
     TaskSearchResultItem,
-    ErrorResponse,
+    TaskStatsResponse,
+    TaskStatusUpdateRequest,
+    TaskUpdateRequest,
 )
-from src.core.task_models import TaskStatus, TaskPriority
+from src.core.task_models import TaskPriority, TaskStatus
+from src.database.connection import get_db_session
+from src.repositories.project_repository_v2 import ProjectRepository
+from src.repositories.task_repository_v2 import TaskRepository
+from src.services.task_service_v2 import (
+    ProjectNotFoundError,
+    TaskNotFoundError,
+    TaskService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +40,7 @@ router = APIRouter(prefix="/api/v2", tags=["tasks-v2"])
 # ============================================================================
 # Dependency Injection
 # ============================================================================
+
 
 def get_task_service(db: Session = Depends(get_db_session)) -> TaskService:
     """
@@ -61,10 +61,10 @@ def get_task_service(db: Session = Depends(get_db_session)) -> TaskService:
 # CRUD Endpoints
 # ============================================================================
 
+
 @router.post("/tasks", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 async def create_task(
-    request: TaskCreateRequest,
-    service: TaskService = Depends(get_task_service)
+    request: TaskCreateRequest, service: TaskService = Depends(get_task_service)
 ) -> TaskResponse:
     """
     Create a new task
@@ -99,13 +99,13 @@ async def create_task(
                 "error_code": "project_not_found",
                 "message": str(e),
                 "details": {"project_id": e.project_id},
-            }
+            },
         )
     except Exception as e:
         logger.error(f"Unexpected error creating task: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"error_code": "internal_error", "message": "Internal server error"}
+            detail={"error_code": "internal_error", "message": "Internal server error"},
         )
 
 
@@ -113,11 +113,12 @@ async def create_task(
 # Search & Statistics (MUST come before /{task_id} route)
 # ============================================================================
 
+
 @router.get("/tasks/search", response_model=TaskSearchResponse)
 async def search_tasks(
     q: str = Query(..., min_length=1, description="Search query"),
     limit: int = Query(20, ge=1, le=100, description="Maximum results"),
-    service: TaskService = Depends(get_task_service)
+    service: TaskService = Depends(get_task_service),
 ) -> TaskSearchResponse:
     """
     Search tasks by query string
@@ -148,26 +149,24 @@ async def search_tasks(
         else:
             relevance = 0.5
 
-        results.append(TaskSearchResultItem(
-            task_id=task.task_id,
-            title=task.title,
-            description=task.description,
-            status=task.status,
-            priority=task.priority,
-            relevance_score=relevance
-        ))
+        results.append(
+            TaskSearchResultItem(
+                task_id=task.task_id,
+                title=task.title,
+                description=task.description,
+                status=task.status,
+                priority=task.priority,
+                relevance_score=relevance,
+            )
+        )
 
-    return TaskSearchResponse(
-        results=results,
-        total=len(results),
-        query=q
-    )
+    return TaskSearchResponse(results=results, total=len(results), query=q)
 
 
 @router.get("/tasks/stats", response_model=TaskStatsResponse)
 async def get_task_stats(
     project_id: str | None = Query(None, description="Filter by project ID"),
-    service: TaskService = Depends(get_task_service)
+    service: TaskService = Depends(get_task_service),
 ) -> TaskStatsResponse:
     """
     Get task statistics
@@ -208,7 +207,8 @@ async def get_task_stats(
 
     # Average completion time
     completed_tasks_with_times = [
-        t for t in tasks
+        t
+        for t in tasks
         if t.status == TaskStatus.COMPLETED
         and t.started_at is not None
         and t.completed_at is not None
@@ -227,15 +227,12 @@ async def get_task_stats(
         by_status=by_status,
         by_priority=by_priority,
         completion_rate=completion_rate,
-        average_completion_time_hours=avg_completion_time
+        average_completion_time_hours=avg_completion_time,
     )
 
 
 @router.get("/tasks/{task_id}", response_model=TaskResponse)
-async def get_task(
-    task_id: str,
-    service: TaskService = Depends(get_task_service)
-) -> TaskResponse:
+async def get_task(task_id: str, service: TaskService = Depends(get_task_service)) -> TaskResponse:
     """
     Get task by ID
 
@@ -261,15 +258,13 @@ async def get_task(
                 "error_code": "task_not_found",
                 "message": str(e),
                 "details": {"task_id": e.task_id},
-            }
+            },
         )
 
 
 @router.put("/tasks/{task_id}", response_model=TaskResponse)
 async def update_task(
-    task_id: str,
-    request: TaskUpdateRequest,
-    service: TaskService = Depends(get_task_service)
+    task_id: str, request: TaskUpdateRequest, service: TaskService = Depends(get_task_service)
 ) -> TaskResponse:
     """
     Update task
@@ -298,10 +293,14 @@ async def update_task(
             updates["description"] = request.description
         if request.status is not None:
             # Handle both enum and string (use_enum_values=True makes it a string)
-            updates["status"] = request.status if isinstance(request.status, str) else request.status.value
+            updates["status"] = (
+                request.status if isinstance(request.status, str) else request.status.value
+            )
         if request.priority is not None:
             # Handle both enum and string (use_enum_values=True makes it a string)
-            updates["priority"] = request.priority if isinstance(request.priority, str) else request.priority.value
+            updates["priority"] = (
+                request.priority if isinstance(request.priority, str) else request.priority.value
+            )
         if request.estimated_hours is not None:
             updates["estimated_hours"] = request.estimated_hours
         if request.actual_hours is not None:
@@ -320,8 +319,9 @@ async def update_task(
 
         # Apply other updates if any
         if updates:
-            from datetime import datetime, timezone
-            updates["updated_at"] = datetime.now(timezone.utc)
+            from datetime import datetime
+
+            updates["updated_at"] = datetime.now(UTC)
             updated_task = service.task_repo.update(task_id, updates)
             if not updated_task:
                 raise TaskNotFoundError(task_id)
@@ -337,15 +337,12 @@ async def update_task(
                 "error_code": "task_not_found",
                 "message": str(e),
                 "details": {"task_id": e.task_id},
-            }
+            },
         )
 
 
 @router.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_task(
-    task_id: str,
-    service: TaskService = Depends(get_task_service)
-) -> None:
+async def delete_task(task_id: str, service: TaskService = Depends(get_task_service)) -> None:
     """
     Delete task
 
@@ -373,7 +370,7 @@ async def delete_task(
                 "error_code": "task_not_found",
                 "message": str(e),
                 "details": {"task_id": e.task_id},
-            }
+            },
         )
 
 
@@ -385,7 +382,7 @@ async def list_tasks(
     assignee: str | None = Query(None, description="Filter by assignee"),
     limit: int = Query(50, ge=1, le=100, description="Maximum results"),
     skip: int = Query(0, ge=0, description="Results to skip"),
-    service: TaskService = Depends(get_task_service)
+    service: TaskService = Depends(get_task_service),
 ) -> TaskListResponse:
     """
     List tasks with optional filters and pagination
@@ -418,37 +415,39 @@ async def list_tasks(
     # Apply additional filters if needed
     if tasks and status and not any([project_id]):
         # Handle both enum and string status values
-        tasks = [t for t in tasks if (t.status.value if hasattr(t.status, 'value') else t.status) == status]
+        tasks = [
+            t
+            for t in tasks
+            if (t.status.value if hasattr(t.status, "value") else t.status) == status
+        ]
     if tasks and priority:
         # Handle both enum and string priority values
-        tasks = [t for t in tasks if (t.priority.value if hasattr(t.priority, 'value') else t.priority) == priority]
+        tasks = [
+            t
+            for t in tasks
+            if (t.priority.value if hasattr(t.priority, "value") else t.priority) == priority
+        ]
     if tasks and assignee and not any([project_id, status]):
         tasks = [t for t in tasks if t.assignee == assignee]
 
     # Apply pagination manually for filtered results
     total = len(tasks)
-    tasks = tasks[skip:skip + limit]
+    tasks = tasks[skip : skip + limit]
 
     # Convert to response models
     task_responses = [TaskResponse.from_task(task) for task in tasks]
 
-    return TaskListResponse(
-        tasks=task_responses,
-        total=total,
-        limit=limit,
-        skip=skip
-    )
+    return TaskListResponse(tasks=task_responses, total=total, limit=limit, skip=skip)
 
 
 # ============================================================================
 # Status Management
 # ============================================================================
 
+
 @router.patch("/tasks/{task_id}/status", response_model=TaskResponse)
 async def update_task_status(
-    task_id: str,
-    request: TaskStatusUpdateRequest,
-    service: TaskService = Depends(get_task_service)
+    task_id: str, request: TaskStatusUpdateRequest, service: TaskService = Depends(get_task_service)
 ) -> TaskResponse:
     """
     Update task status with automatic timestamp management
@@ -476,5 +475,5 @@ async def update_task_status(
                 "error_code": "task_not_found",
                 "message": str(e),
                 "details": {"task_id": e.task_id},
-            }
+            },
         )

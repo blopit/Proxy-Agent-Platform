@@ -33,9 +33,7 @@ class Settings(BaseSettings):
     )
 
     # Security Configuration
-    jwt_secret_key: str = Field(
-        ..., description="Secret key for JWT token generation (required)"
-    )
+    jwt_secret_key: str = Field(..., description="Secret key for JWT token generation (required)")
     jwt_algorithm: str = Field(default="HS256", description="JWT encoding algorithm")
     jwt_access_token_expire_minutes: int = Field(
         default=30, description="JWT token expiry in minutes"
@@ -58,9 +56,7 @@ class Settings(BaseSettings):
     )
     llm_api_key: str | None = Field(default=None, description="LLM API key")
     llm_model: str = Field(default="gpt-4", description="LLM model name")
-    llm_base_url: str = Field(
-        default="https://api.openai.com/v1", description="LLM API base URL"
-    )
+    llm_base_url: str = Field(default="https://api.openai.com/v1", description="LLM API base URL")
 
     # External Services
     brave_api_key: str | None = Field(default=None, description="Brave Search API key")
@@ -84,9 +80,13 @@ class Settings(BaseSettings):
     )
 
     # Gamification
-    xp_multiplier: float = Field(default=1.0, description="XP multiplier for rewards", ge=0.1, le=10.0)
+    xp_multiplier: float = Field(
+        default=1.0, description="XP multiplier for rewards", ge=0.1, le=10.0
+    )
     streak_bonus_enabled: bool = Field(default=True, description="Enable streak bonuses")
-    achievement_notifications: bool = Field(default=True, description="Enable achievement notifications")
+    achievement_notifications: bool = Field(
+        default=True, description="Enable achievement notifications"
+    )
 
     # Knowledge Graph Configuration
     kg_enabled: bool = Field(
@@ -98,9 +98,7 @@ class Settings(BaseSettings):
     kg_max_depth: int = Field(
         default=2, description="Maximum relationship traversal depth", ge=1, le=5
     )
-    kg_auto_extract: bool = Field(
-        default=True, description="Auto-extract entities from task text"
-    )
+    kg_auto_extract: bool = Field(default=True, description="Auto-extract entities from task text")
 
     # LLM Capture Configuration
     llm_capture_enabled: bool = Field(
@@ -149,7 +147,7 @@ class Settings(BaseSettings):
         return self.testing
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """
     Get cached settings instance.

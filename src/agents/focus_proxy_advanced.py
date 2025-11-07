@@ -378,10 +378,10 @@ Example: {{"duration": 45, "confidence": 0.8, "reasoning": "Medium complexity ta
                 prompt = f"""Analyze focus quality from activity data and provide distraction insights.
 
 Activity Data:
-- App switches: {distraction_indicators['app_switches']}
-- Typing pattern: {distraction_indicators['typing_pattern']}
-- Mouse movement: {distraction_indicators['mouse_movement']}
-- Notification interactions: {distraction_indicators['notification_interactions']}
+- App switches: {distraction_indicators["app_switches"]}
+- Typing pattern: {distraction_indicators["typing_pattern"]}
+- Mouse movement: {distraction_indicators["mouse_movement"]}
+- Notification interactions: {distraction_indicators["notification_interactions"]}
 
 Return JSON with:
 - distraction_level: 0.0-1.0 (0=fully focused, 1=highly distracted)

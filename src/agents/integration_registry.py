@@ -8,9 +8,8 @@ can be automated and generates structured AutomationPlans for digital execution.
 from __future__ import annotations
 
 import re
-from typing import Optional
 
-from src.core.task_models import AutomationPlan, AutomationStep, MicroStep, DelegationMode
+from src.core.task_models import AutomationPlan, AutomationStep, DelegationMode, MicroStep
 
 
 class IntegrationRegistry:
@@ -94,7 +93,7 @@ class IntegrationRegistry:
         "put away",
     ]
 
-    def can_automate(self, micro_step: MicroStep) -> Optional[AutomationPlan]:
+    def can_automate(self, micro_step: MicroStep) -> AutomationPlan | None:
         """
         Determine if a MicroStep can be automated and generate an AutomationPlan.
 
@@ -138,12 +137,11 @@ class IntegrationRegistry:
         """Check if task requires physical action."""
         return any(verb in description for verb in self.PHYSICAL_VERBS)
 
-    def _check_home_iot(self, description: str) -> Optional[AutomationPlan]:
+    def _check_home_iot(self, description: str) -> AutomationPlan | None:
         """Check for home automation tasks (lights, AC, etc.)."""
         # Check for toggle/turn on/turn off actions
         is_toggle = any(
-            pattern in description
-            for pattern in ["turn on", "turn off", "toggle", "switch"]
+            pattern in description for pattern in ["turn on", "turn off", "toggle", "switch"]
         )
 
         if not is_toggle:
@@ -172,7 +170,7 @@ class IntegrationRegistry:
             confidence=0.9,
         )
 
-    def _check_email(self, description: str) -> Optional[AutomationPlan]:
+    def _check_email(self, description: str) -> AutomationPlan | None:
         """Check for email tasks."""
         if not any(kw in description for kw in self.EMAIL_KEYWORDS):
             return None
@@ -199,7 +197,7 @@ class IntegrationRegistry:
             confidence=0.7 if recipient and subject else 0.4,
         )
 
-    def _check_calendar(self, description: str) -> Optional[AutomationPlan]:
+    def _check_calendar(self, description: str) -> AutomationPlan | None:
         """Check for calendar/scheduling tasks."""
         if not any(kw in description for kw in self.CALENDAR_KEYWORDS):
             return None
@@ -208,9 +206,7 @@ class IntegrationRegistry:
         title = description
 
         # Extract time (basic pattern matching)
-        time_match = re.search(
-            r"(?:at|@)\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)", description
-        )
+        time_match = re.search(r"(?:at|@)\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)", description)
         when = time_match.group(1) if time_match else None
 
         return AutomationPlan(
@@ -227,7 +223,7 @@ class IntegrationRegistry:
             confidence=0.7 if when else 0.5,
         )
 
-    def _check_research(self, description: str) -> Optional[AutomationPlan]:
+    def _check_research(self, description: str) -> AutomationPlan | None:
         """Check for research/lookup tasks."""
         if not any(kw in description for kw in self.RESEARCH_KEYWORDS):
             return None
@@ -249,7 +245,7 @@ class IntegrationRegistry:
             confidence=0.8,
         )
 
-    def _check_document(self, description: str) -> Optional[AutomationPlan]:
+    def _check_document(self, description: str) -> AutomationPlan | None:
         """Check for document creation tasks."""
         if not any(kw in description for kw in self.DOCUMENT_KEYWORDS):
             return None
@@ -267,7 +263,7 @@ class IntegrationRegistry:
             confidence=0.6,
         )
 
-    def _check_web(self, description: str) -> Optional[AutomationPlan]:
+    def _check_web(self, description: str) -> AutomationPlan | None:
         """Check for web browsing tasks."""
         if not any(kw in description for kw in self.WEB_KEYWORDS):
             return None
@@ -286,7 +282,7 @@ class IntegrationRegistry:
             confidence=0.7 if url else 0.5,
         )
 
-    def suggest_delegation_mode(self, automation_plan: Optional[AutomationPlan]) -> DelegationMode:
+    def suggest_delegation_mode(self, automation_plan: AutomationPlan | None) -> DelegationMode:
         """
         Suggest a DelegationMode based on automation plan availability.
 

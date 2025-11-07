@@ -5,10 +5,8 @@ Handles authentication with Google services using OAuth2 flow.
 Manages credentials, token refresh, and service building.
 """
 
-import json
 import os
 from pathlib import Path
-from typing import Optional
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -40,9 +38,9 @@ class GoogleAuthService:
 
     def __init__(
         self,
-        credentials_path: Optional[str] = None,
-        token_path: Optional[str] = None,
-        scopes: Optional[list[str]] = None,
+        credentials_path: str | None = None,
+        token_path: str | None = None,
+        scopes: list[str] | None = None,
     ):
         """
         Initialize Google authentication service.
@@ -59,9 +57,7 @@ class GoogleAuthService:
         self.credentials_path = credentials_path or os.getenv(
             "GMAIL_CREDENTIALS_PATH", "./credentials/credentials.json"
         )
-        self.token_path = token_path or os.getenv(
-            "GMAIL_TOKEN_PATH", "./credentials/token.json"
-        )
+        self.token_path = token_path or os.getenv("GMAIL_TOKEN_PATH", "./credentials/token.json")
         self.scopes = scopes or self.DEFAULT_SCOPES
 
     def has_valid_credentials(self) -> bool:
@@ -105,9 +101,7 @@ class GoogleAuthService:
         # Load existing token if available
         if Path(self.token_path).exists():
             try:
-                creds = Credentials.from_authorized_user_file(
-                    self.token_path, self.scopes
-                )
+                creds = Credentials.from_authorized_user_file(self.token_path, self.scopes)
             except Exception:
                 # Token file is corrupted, will create new one
                 pass
@@ -129,9 +123,7 @@ class GoogleAuthService:
                 )
 
             try:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    self.credentials_path, self.scopes
-                )
+                flow = InstalledAppFlow.from_client_secrets_file(self.credentials_path, self.scopes)
                 creds = flow.run_local_server(port=0)
                 self._save_credentials(creds)
             except Exception as e:

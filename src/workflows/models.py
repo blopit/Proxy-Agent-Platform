@@ -4,10 +4,10 @@ Pydantic models for workflow system.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class WorkflowType(str, Enum):
@@ -42,7 +42,7 @@ class WorkflowContext(BaseModel):
     # Task details
     task_id: str
     task_title: str
-    task_description: Optional[str] = None
+    task_description: str | None = None
     task_priority: str = "medium"
     estimated_hours: float = 4.0
 
@@ -63,7 +63,7 @@ class WorkflowContext(BaseModel):
 
     # Recent work context
     recent_tasks: list[str] = Field(default_factory=list, description="Recently completed tasks")
-    current_branch: Optional[str] = None
+    current_branch: str | None = None
 
     # Additional context
     extra_context: dict[str, Any] = Field(default_factory=dict)
@@ -81,19 +81,19 @@ class WorkflowStep(BaseModel):
     status: StepStatus = StepStatus.PENDING
 
     # TDD-specific
-    tdd_phase: Optional[str] = None  # "red", "green", "refactor"
-    validation_command: Optional[str] = None
-    expected_outcome: Optional[str] = None
+    tdd_phase: str | None = None  # "red", "green", "refactor"
+    validation_command: str | None = None
+    expected_outcome: str | None = None
 
     # UI display
     icon: str = "📋"
     order: int = 0
 
     # Metadata
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    actual_minutes: Optional[int] = None
-    notes: Optional[str] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    actual_minutes: int | None = None
+    notes: str | None = None
 
 
 class Workflow(BaseModel):
@@ -118,7 +118,7 @@ class Workflow(BaseModel):
 
     # Metadata
     created_at: datetime = Field(default_factory=datetime.now)
-    author: Optional[str] = None
+    author: str | None = None
     tags: list[str] = Field(default_factory=list)
 
     # Step defaults
@@ -149,14 +149,14 @@ class WorkflowExecution(BaseModel):
     # Execution metadata
     status: str = "pending"  # pending, in_progress, completed, failed
     started_at: datetime = Field(default_factory=datetime.now)
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
 
     # AI usage tracking
-    llm_provider_used: Optional[str] = None
+    llm_provider_used: str | None = None
     prompt_tokens: int = 0
     completion_tokens: int = 0
     estimated_cost: float = 0.0
 
     # Results
-    error_message: Optional[str] = None
-    notes: Optional[str] = None
+    error_message: str | None = None
+    notes: str | None = None

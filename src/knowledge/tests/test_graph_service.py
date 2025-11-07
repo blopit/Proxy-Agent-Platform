@@ -5,7 +5,6 @@ Tests CRUD operations, graph traversal, and context retrieval.
 """
 
 import pytest
-from datetime import datetime
 
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
 from src.knowledge.graph_service import GraphService
@@ -13,7 +12,6 @@ from src.knowledge.models import (
     Entity,
     EntityType,
     KGContext,
-    PersonMetadata,
     Relationship,
     RelationshipType,
 )
@@ -126,7 +124,7 @@ class TestEntityCRUD:
             entity_type=entity.entity_type,
             name=entity.name,
             user_id=entity.user_id,
-            metadata=entity.metadata
+            metadata=entity.metadata,
         )
 
         assert created_entity.entity_id is not None
@@ -147,7 +145,7 @@ class TestEntityCRUD:
             entity_type=entity.entity_type,
             name=entity.name,
             user_id=entity.user_id,
-            metadata=entity.metadata
+            metadata=entity.metadata,
         )
 
         # Try to create again with updated metadata
@@ -155,7 +153,7 @@ class TestEntityCRUD:
             entity_type=entity.entity_type,
             name=entity.name,
             user_id=entity.user_id,
-            metadata={"role": "manager", "email": "sara@company.com"}
+            metadata={"role": "manager", "email": "sara@company.com"},
         )
 
         # Should have updated, not created duplicate
@@ -175,7 +173,7 @@ class TestEntityCRUD:
                 entity_type=entity.entity_type,
                 name=entity.name,
                 user_id=entity.user_id,
-                metadata=entity.metadata
+                metadata=entity.metadata,
             )
 
         # Get all entities for alice
@@ -196,13 +194,11 @@ class TestEntityCRUD:
                 entity_type=entity.entity_type,
                 name=entity.name,
                 user_id=entity.user_id,
-                metadata=entity.metadata
+                metadata=entity.metadata,
             )
 
         # Get only DEVICE entities
-        devices = graph_service.get_entities_by_user(
-            "alice", entity_type=EntityType.DEVICE
-        )
+        devices = graph_service.get_entities_by_user("alice", entity_type=EntityType.DEVICE)
         assert len(devices) == 1
         assert devices[0].name == "AC"
 
@@ -213,7 +209,7 @@ class TestEntityCRUD:
             entity_type=entity.entity_type,
             name=entity.name,
             user_id=entity.user_id,
-            metadata=entity.metadata
+            metadata=entity.metadata,
         )
 
         # Update entity
@@ -231,10 +227,7 @@ class TestEntityCRUD:
     def test_update_nonexistent_entity(self, graph_service):
         """Test updating non-existent entity"""
         nonexistent = Entity(
-            entity_id="nonexistent",
-            entity_type=EntityType.PERSON,
-            name="Test",
-            user_id="alice"
+            entity_id="nonexistent", entity_type=EntityType.PERSON, name="Test", user_id="alice"
         )
         result = graph_service.update_entity(nonexistent)
         assert result is None or result.entity_id == "nonexistent"  # May return None or unchanged
@@ -246,7 +239,7 @@ class TestEntityCRUD:
             entity_type=entity.entity_type,
             name=entity.name,
             user_id=entity.user_id,
-            metadata=entity.metadata
+            metadata=entity.metadata,
         )
 
         # Delete entity
@@ -270,11 +263,11 @@ class TestRelationshipCRUD:
         """Test relationship creation"""
         rel = sample_relationships[0]
         created_rel = graph_service.create_relationship(
-                from_entity_id=rel.from_entity_id,
-                to_entity_id=rel.to_entity_id,
-                relationship_type=rel.relationship_type,
-                metadata=rel.metadata if hasattr(rel, 'metadata') else {}
-            )
+            from_entity_id=rel.from_entity_id,
+            to_entity_id=rel.to_entity_id,
+            relationship_type=rel.relationship_type,
+            metadata=rel.metadata if hasattr(rel, "metadata") else {},
+        )
 
         assert created_rel is not None
         assert created_rel.from_entity_id == rel.from_entity_id
@@ -289,7 +282,7 @@ class TestRelationshipCRUD:
                 from_entity_id=rel.from_entity_id,
                 to_entity_id=rel.to_entity_id,
                 relationship_type=rel.relationship_type,
-                metadata=rel.metadata if hasattr(rel, 'metadata') else {}
+                metadata=rel.metadata if hasattr(rel, "metadata") else {},
             )
 
         # Get all relationships involving alice (from or to)
@@ -304,13 +297,11 @@ class TestRelationshipCRUD:
                 from_entity_id=rel.from_entity_id,
                 to_entity_id=rel.to_entity_id,
                 relationship_type=rel.relationship_type,
-                metadata=rel.metadata if hasattr(rel, 'metadata') else {}
+                metadata=rel.metadata if hasattr(rel, "metadata") else {},
             )
 
         # Get only WORKS_WITH relationships
-        work_rels = graph_service.get_relationships(
-            relationship_type=RelationshipType.WORKS_WITH
-        )
+        work_rels = graph_service.get_relationships(relationship_type=RelationshipType.WORKS_WITH)
         assert len(work_rels) == 1
         assert work_rels[0].to_entity_id == "person-1"
 
@@ -318,11 +309,11 @@ class TestRelationshipCRUD:
         """Test relationship deletion"""
         rel = sample_relationships[0]
         graph_service.create_relationship(
-                from_entity_id=rel.from_entity_id,
-                to_entity_id=rel.to_entity_id,
-                relationship_type=rel.relationship_type,
-                metadata=rel.metadata if hasattr(rel, 'metadata') else {}
-            )
+            from_entity_id=rel.from_entity_id,
+            to_entity_id=rel.to_entity_id,
+            relationship_type=rel.relationship_type,
+            metadata=rel.metadata if hasattr(rel, "metadata") else {},
+        )
 
         # Delete relationship
         success = graph_service.delete_relationship(rel.relationship_id)
@@ -346,14 +337,14 @@ class TestGraphTraversal:
                 entity_type=entity.entity_type,
                 name=entity.name,
                 user_id=entity.user_id,
-                metadata=entity.metadata
+                metadata=entity.metadata,
             )
         for rel in sample_relationships:
             graph_service.create_relationship(
                 from_entity_id=rel.from_entity_id,
                 to_entity_id=rel.to_entity_id,
                 relationship_type=rel.relationship_type,
-                metadata=rel.metadata if hasattr(rel, 'metadata') else {}
+                metadata=rel.metadata if hasattr(rel, "metadata") else {},
             )
 
         # Get person-1 with relationships
@@ -379,14 +370,14 @@ class TestGraphTraversal:
                 entity_type=entity.entity_type,
                 name=entity.name,
                 user_id=entity.user_id,
-                metadata=entity.metadata
+                metadata=entity.metadata,
             )
         for rel in sample_relationships:
             graph_service.create_relationship(
                 from_entity_id=rel.from_entity_id,
                 to_entity_id=rel.to_entity_id,
                 relationship_type=rel.relationship_type,
-                metadata=rel.metadata if hasattr(rel, 'metadata') else {}
+                metadata=rel.metadata if hasattr(rel, "metadata") else {},
             )
 
         # Find entities related to alice (depth 1)
@@ -408,14 +399,14 @@ class TestGraphTraversal:
                 entity_type=entity.entity_type,
                 name=entity.name,
                 user_id=entity.user_id,
-                metadata=entity.metadata
+                metadata=entity.metadata,
             )
         for rel in sample_relationships:
             graph_service.create_relationship(
                 from_entity_id=rel.from_entity_id,
                 to_entity_id=rel.to_entity_id,
                 relationship_type=rel.relationship_type,
-                metadata=rel.metadata if hasattr(rel, 'metadata') else {}
+                metadata=rel.metadata if hasattr(rel, "metadata") else {},
             )
 
         # Find entities related to alice (depth 2)
@@ -436,7 +427,7 @@ class TestGraphTraversal:
                 entity_type=entity.entity_type,
                 name=entity.name,
                 user_id=entity.user_id,
-                metadata=entity.metadata
+                metadata=entity.metadata,
             )
 
         # Extract mentions from text
@@ -472,9 +463,7 @@ class TestGraphTraversal:
 class TestContextRetrieval:
     """Test Knowledge Graph context retrieval for LLM prompts"""
 
-    def test_get_context_for_query(
-        self, graph_service, sample_entities, sample_relationships
-    ):
+    def test_get_context_for_query(self, graph_service, sample_entities, sample_relationships):
         """Test retrieving context for a query"""
         # Create entities and relationships
         for entity in sample_entities:
@@ -482,14 +471,14 @@ class TestContextRetrieval:
                 entity_type=entity.entity_type,
                 name=entity.name,
                 user_id=entity.user_id,
-                metadata=entity.metadata
+                metadata=entity.metadata,
             )
         for rel in sample_relationships:
             graph_service.create_relationship(
                 from_entity_id=rel.from_entity_id,
                 to_entity_id=rel.to_entity_id,
                 relationship_type=rel.relationship_type,
-                metadata=rel.metadata if hasattr(rel, 'metadata') else {}
+                metadata=rel.metadata if hasattr(rel, "metadata") else {},
             )
 
         # Get context for query
@@ -521,7 +510,7 @@ class TestContextRetrieval:
                 entity_type=entity.entity_type,
                 name=entity.name,
                 user_id=entity.user_id,
-                metadata=entity.metadata
+                metadata=entity.metadata,
             )
 
         # Query with no matching entities
@@ -532,9 +521,7 @@ class TestContextRetrieval:
         # Should return empty context
         assert len(context.entities) == 0
 
-    def test_context_format_for_prompt(
-        self, graph_service, sample_entities, sample_relationships
-    ):
+    def test_context_format_for_prompt(self, graph_service, sample_entities, sample_relationships):
         """Test formatting context for LLM prompt"""
         # Create entities and relationships
         for entity in sample_entities:
@@ -542,20 +529,18 @@ class TestContextRetrieval:
                 entity_type=entity.entity_type,
                 name=entity.name,
                 user_id=entity.user_id,
-                metadata=entity.metadata
+                metadata=entity.metadata,
             )
         for rel in sample_relationships:
             graph_service.create_relationship(
                 from_entity_id=rel.from_entity_id,
                 to_entity_id=rel.to_entity_id,
                 relationship_type=rel.relationship_type,
-                metadata=rel.metadata if hasattr(rel, 'metadata') else {}
+                metadata=rel.metadata if hasattr(rel, "metadata") else {},
             )
 
         # Get context
-        context = graph_service.get_context_for_query(
-            "email Sara about the AC", user_id="alice"
-        )
+        context = graph_service.get_context_for_query("email Sara about the AC", user_id="alice")
 
         # Format for prompt
         formatted = context.format_for_prompt()
@@ -588,7 +573,7 @@ class TestMetadataHandling:
             entity_type=person.entity_type,
             name=person.name,
             user_id=person.user_id,
-            metadata=person.metadata
+            metadata=person.metadata,
         )
 
         # Retrieve and check metadata
@@ -610,7 +595,7 @@ class TestMetadataHandling:
             entity_type=device.entity_type,
             name=device.name,
             user_id=device.user_id,
-            metadata=device.metadata
+            metadata=device.metadata,
         )
 
         # Retrieve and check metadata
@@ -629,11 +614,11 @@ class TestMetadataHandling:
         )
 
         graph_service.create_entity(
-                entity_type=entity.entity_type,
-                name=entity.name,
-                user_id=entity.user_id,
-                metadata=entity.metadata
-            )
+            entity_type=entity.entity_type,
+            name=entity.name,
+            user_id=entity.user_id,
+            metadata=entity.metadata,
+        )
 
         retrieved = graph_service.get_entity("test-1")
         assert retrieved.metadata == {}

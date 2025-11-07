@@ -5,8 +5,6 @@ Following RED-GREEN-REFACTOR workflow.
 These tests define the expected behavior before implementation.
 """
 
-import pytest
-from datetime import datetime, UTC
 from uuid import uuid4
 
 
@@ -106,9 +104,7 @@ class TestAgentAssignments:
 
     def test_get_agent_assignments_nonexistent_agent(self, test_client):
         """RED: Should return empty list for nonexistent agent."""
-        response = test_client.get(
-            "/api/v1/delegation/assignments/agent/nonexistent-agent"
-        )
+        response = test_client.get("/api/v1/delegation/assignments/agent/nonexistent-agent")
 
         assert response.status_code == 200
         assert response.json() == []
@@ -129,9 +125,7 @@ class TestAssignmentLifecycle:
         assignment_id = create_response.json()["assignment_id"]
 
         # Accept the assignment
-        response = test_client.post(
-            f"/api/v1/delegation/assignments/{assignment_id}/accept"
-        )
+        response = test_client.post(f"/api/v1/delegation/assignments/{assignment_id}/accept")
 
         assert response.status_code == 200
         data = response.json()
@@ -151,9 +145,7 @@ class TestAssignmentLifecycle:
         test_client.post(f"/api/v1/delegation/assignments/{assignment_id}/accept")
 
         # Try to accept again
-        response = test_client.post(
-            f"/api/v1/delegation/assignments/{assignment_id}/accept"
-        )
+        response = test_client.post(f"/api/v1/delegation/assignments/{assignment_id}/accept")
 
         assert response.status_code == 400
         assert "already accepted" in response.json()["detail"].lower()

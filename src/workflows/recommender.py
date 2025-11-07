@@ -7,7 +7,6 @@ It analyzes tasks and recommends workflows with letter grades (A+ to F).
 
 import logging
 import os
-from typing import Optional
 
 from pydantic import BaseModel, Field
 from pydantic_ai import Agent
@@ -132,7 +131,7 @@ Example output:
         task_description: str,
         available_workflows: list[Workflow],
         user_context: dict,
-        llm_api_key: Optional[str] = None,
+        llm_api_key: str | None = None,
     ) -> list[WorkflowSuggestion]:
         """
         Get AI-powered workflow suggestions with letter grades.
@@ -182,10 +181,10 @@ AVAILABLE WORKFLOWS:
 {workflow_catalog}
 
 USER CONTEXT:
-- Energy Level: {user_context.get('energy', 'medium')} ({user_context.get('energy_numeric', 2)}/3)
-- Time of Day: {user_context.get('time_of_day', 'unknown')}
-- Available Time: {user_context.get('estimated_hours', 4)} hours
-- Recent Tasks: {', '.join(user_context.get('recent_tasks', [])[:3]) or 'None'}
+- Energy Level: {user_context.get("energy", "medium")} ({user_context.get("energy_numeric", 2)}/3)
+- Time of Day: {user_context.get("time_of_day", "unknown")}
+- Available Time: {user_context.get("estimated_hours", 4)} hours
+- Recent Tasks: {", ".join(user_context.get("recent_tasks", [])[:3]) or "None"}
 
 Analyze the task and provide grades for ALL workflows (even if some get F).
 Be HONEST - not everything deserves an A!
@@ -194,7 +193,7 @@ Consider:
 1. Domain match (dev vs personal vs health, etc.)
 2. Task type match (API vs component vs planning, etc.)
 3. User energy level (does workflow match their capacity?)
-4. Time availability (realistic for {user_context.get('estimated_hours', 4)} hours?)
+4. Time availability (realistic for {user_context.get("estimated_hours", 4)} hours?)
 5. Context fit (does it make sense given recent work?)
 
 Return JSON array with ALL workflows graded from best to worst.
@@ -206,9 +205,7 @@ Return JSON array with ALL workflows graded from best to worst.
             # Sort by confidence (highest first)
             suggestions = sorted(result.output, key=lambda s: s.confidence, reverse=True)
 
-            logger.info(
-                f"Generated {len(suggestions)} workflow suggestions for task: {task_title}"
-            )
+            logger.info(f"Generated {len(suggestions)} workflow suggestions for task: {task_title}")
 
             return suggestions
 
