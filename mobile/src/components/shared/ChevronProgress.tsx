@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import { View, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { ChevronElement, ChevronPosition } from '../../../components/core/ChevronElement';
+import { Text } from '@/src/components/ui/Text';
 
 export type ProgressState = 'completed' | 'active' | 'pending' | 'disabled';
 

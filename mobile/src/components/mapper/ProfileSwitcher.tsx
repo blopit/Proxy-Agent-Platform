@@ -1,7 +1,8 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { ChevronDown } from 'lucide-react-native';
 import { useState } from 'react';
 import { Profile } from '@/src/contexts/ProfileContext';
+import { Text } from '@/src/components/ui/Text';
 
 interface ProfileSwitcherProps {
   selectedProfile: Profile;

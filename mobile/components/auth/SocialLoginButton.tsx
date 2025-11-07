@@ -4,9 +4,10 @@
  */
 
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, View } from 'react-native';
+import { TouchableOpacity, StyleSheet, ActivityIndicator, View } from 'react-native';
 import { Chrome, Github, Apple as AppleIcon } from 'lucide-react-native';
 import { THEME } from '../../src/theme/colors';
+import { Text } from '@/src/components/ui/Text';
 
 export type SocialProvider = 'google' | 'apple' | 'github' | 'microsoft';
 
