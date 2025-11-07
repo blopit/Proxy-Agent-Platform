@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Map, ZoomIn, ZoomOut, Maximize, GitBranch } from 'lucide-react-native';
 import { THEME } from '../../src/theme/colors';
+import { Text } from '@/src/components/ui/Text';
 
 /**
  * Mapper Screen - Complete composition showing the Task Graph/Dependency interface

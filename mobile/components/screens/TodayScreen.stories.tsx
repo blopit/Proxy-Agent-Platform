@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Calendar, ChevronLeft, ChevronRight, Plus } from 'lucide-react-native';
 import { THEME } from '../../src/theme/colors';
 import TimelineView from '../timeline/TimelineView';
 import type { TimelineEvent } from '../timeline/TimelineView';
+import { Text } from '@/src/components/ui/Text';
 
 /**
  * Today Screen - Complete composition showing the Timeline/Calendar interface

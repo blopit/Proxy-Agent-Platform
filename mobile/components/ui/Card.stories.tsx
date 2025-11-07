@@ -4,11 +4,12 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card, CardHeader, CardContent, CardFooter } from './Card';
 import { THEME } from '../../src/theme/colors';
 import BionicText from '../shared/BionicText';
 import { Calendar, Clock, AlertCircle, CheckCircle } from 'lucide-react-native';
+import { Text } from '@/src/components/ui/Text';
 
 const meta = {
   title: 'UI/Card',

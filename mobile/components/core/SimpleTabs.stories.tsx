@@ -3,12 +3,13 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useState } from 'react';
 import { Plus, Search, Target, Calendar, Map } from 'lucide-react-native';
 import SimpleTabs, { SimpleTab } from './SimpleTabs';
 import { Tabs, TabItem } from './Tabs';
 import { THEME } from '../../src/theme/colors';
+import { Text } from '@/src/components/ui/Text';
 
 const meta = {
   title: 'Core/SimpleTabs',

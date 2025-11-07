@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Search, Filter, SlidersHorizontal } from 'lucide-react-native';
 import { THEME } from '../../src/theme/colors';
 import TaskList from '../tasks/TaskList';
 import ProfileSwitcher from '../ProfileSwitcher';
+import { Text } from '@/src/components/ui/Text';
 
 /**
  * Scout Screen - Complete composition showing the Task Discovery interface

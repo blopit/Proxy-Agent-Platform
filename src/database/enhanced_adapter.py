@@ -7,10 +7,13 @@ from __future__ import annotations
 import asyncio
 import json
 import sqlite3
+import structlog
 from datetime import datetime
 from pathlib import Path
 
 from src.core.models import Message
+
+logger = structlog.get_logger()
 
 
 class EnhancedDatabaseAdapter:
@@ -554,7 +557,7 @@ class EnhancedDatabaseAdapter:
 
             return True
         except Exception as e:
-            print(f"Migration failed: {e}")
+            logger.error("migration_failed", error=str(e), exc_info=True)
             return False
 
     # Legacy compatibility methods

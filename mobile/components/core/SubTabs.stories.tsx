@@ -4,12 +4,13 @@
  */
 
 import type { Meta, StoryObj } from '@storybook/react';
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
 import { useState } from 'react';
 import { Link2, Plus, MessageCircleQuestion } from 'lucide-react-native';
 import SubTabs, { SubTab } from './SubTabs';
 import { Tabs, TabItem } from './Tabs';
 import { THEME } from '../../src/theme/colors';
+import { Text } from '@/src/components/ui/Text';
 
 const meta = {
   title: 'Core/SubTabs',

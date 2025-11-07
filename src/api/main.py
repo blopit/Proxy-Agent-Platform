@@ -42,6 +42,9 @@ from src.api.dogfooding import router as dogfooding_router  # Mobile-first task 
 from src.core.models import AgentRequest, AgentResponse
 from src.database.enhanced_adapter import close_enhanced_database, get_enhanced_database
 from datetime import datetime
+import structlog
+
+logger = structlog.get_logger()
 
 
 @asynccontextmanager
@@ -53,13 +56,13 @@ async def lifespan(app: FastAPI):
     """
     # Startup
     get_enhanced_database()  # Initialize the enhanced SQLite database
-    print("🚀 Proxy Agent Platform started with Enhanced SQLite")
+    logger.info("platform_started", database="Enhanced SQLite", emoji="🚀")
 
     yield
 
     # Shutdown
     close_enhanced_database()
-    print("✨ Proxy Agent Platform shutdown")
+    logger.info("platform_shutdown", emoji="✨")
 
 
 # Create FastAPI app with lifespan handler

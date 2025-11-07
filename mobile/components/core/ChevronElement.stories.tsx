@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { ChevronElement } from './ChevronElement';
+import { Text } from '@/src/components/ui/Text';
 
 const meta = {
   title: 'Core/ChevronElement',
