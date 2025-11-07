@@ -334,7 +334,7 @@ async def get_capture_stats(
     - Most common automation types
     """
     try:
-        task_repo = EnhancedTaskRepository(db)
+        EnhancedTaskRepository(db)
 
         # Get all user tasks with micro-steps
         # This is a simplified version - you may want to add specific queries

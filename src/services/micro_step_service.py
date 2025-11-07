@@ -191,7 +191,7 @@ class MicroStepService:
 
         automation_plan_json = json.dumps(data.automation_plan) if data.automation_plan else None
 
-        tags_json = json.dumps(tags) if tags else None
+        json.dumps(tags) if tags else None
 
         # Insert into database with actual schema columns
         cursor.execute(
@@ -634,7 +634,7 @@ class MicroStepService:
         from src.core.task_models import MicroStep as CoreMicroStep
 
         children_ids = []
-        for i, child_step in enumerate(result.get("micro_steps", []), 1):
+        for _i, child_step in enumerate(result.get("micro_steps", []), 1):
             # Convert core MicroStep to service MicroStep
             if isinstance(child_step, CoreMicroStep):
                 child_data = MicroStepCreateData(

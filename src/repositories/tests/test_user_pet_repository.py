@@ -272,7 +272,7 @@ def test_hunger_decreases_over_time(repository, sample_pet_data):
 
 def test_hunger_and_happiness_bounded(repository, sample_pet_data):
     """Test that hunger and happiness stay within 0-100 bounds"""
-    pet = repository.create(sample_pet_data)
+    repository.create(sample_pet_data)
 
     # Try to set above 100 - should raise Pydantic ValidationError
     from pydantic import ValidationError

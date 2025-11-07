@@ -313,7 +313,7 @@ async def analyze_performance_trends(
 
         # Extract trend information
         productivity_trend = viz_data.get("productivity_score_trend", [])
-        xp_trend = viz_data.get("daily_xp_trend", [])
+        viz_data.get("daily_xp_trend", [])
         insights = viz_data.get("performance_insights", {})
 
         # Determine trend direction

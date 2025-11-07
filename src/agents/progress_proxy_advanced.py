@@ -83,7 +83,7 @@ class AdvancedProgressAgent(BaseProxyAgent):
 
         # Level thresholds (exponential growth)
         self.level_thresholds = [0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200, 4000]
-        for i in range(11, 101):  # Levels 11-100
+        for _i in range(11, 101):  # Levels 11-100
             next_threshold = int(self.level_thresholds[-1] * 1.25)
             self.level_thresholds.append(next_threshold)
 
@@ -269,7 +269,7 @@ class AdvancedProgressAgent(BaseProxyAgent):
         longest_streak = current_streak
         temp_streak = 0
 
-        for i, entry in enumerate(sorted_history):
+        for _i, entry in enumerate(sorted_history):
             if entry.get("tasks_completed", 0) > 0:
                 temp_streak += 1
                 longest_streak = max(longest_streak, temp_streak)

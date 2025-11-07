@@ -137,7 +137,7 @@ class TestGoogleAuthService:
         mock_creds.to_json.return_value = '{"token": "refreshed"}'
         mock_creds_class.from_authorized_user_file.return_value = mock_creds
 
-        with patch("src.integrations.google.auth.Request") as mock_request:
+        with patch("src.integrations.google.auth.Request"):
             credentials = auth_service.get_credentials()
 
             mock_creds.refresh.assert_called_once()

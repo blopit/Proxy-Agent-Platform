@@ -285,7 +285,7 @@ class AdvancedGamificationAgent(BaseProxyAgent):
         triggered = []
         progress_updates = []
 
-        user_id = user_activity.get("user_id", "unknown")
+        user_activity.get("user_id", "unknown")
 
         for achievement_id, definition in self.achievement_definitions.items():
             criteria = definition["criteria"]
@@ -700,7 +700,7 @@ Example: {{"motivation_type": "re_engagement", "primary_strategy": "achievable_g
                 "Social gamification features",
             ],
             "achievement_categories": list(
-                set(defn["category"] for defn in self.achievement_definitions.values())
+                {defn["category"] for defn in self.achievement_definitions.values()}
             ),
             "status": "fully_operational",
         }

@@ -345,11 +345,10 @@ Return ONLY a decimal number (e.g., 0.85)"""
         # Time-based analysis
         if "current_time" in context:
             # Morning tasks get boost for focus work
-            if "morning" in context.get("current_time", ""):
-                if any(
-                    word in task.title.lower() for word in ["code", "write", "develop", "design"]
-                ):
-                    score += 0.2
+            if "morning" in context.get("current_time", "") and any(
+                word in task.title.lower() for word in ["code", "write", "develop", "design"]
+            ):
+                score += 0.2
 
         # Energy level analysis
         if "energy_level" in context:
@@ -851,11 +850,10 @@ Return ONLY the JSON object, no other text."""
                     for word in ["meeting", "call", "presentation", "collaborate"]
                 ):
                     enhancement_score += 0.3
-            elif "home" in location:
-                if any(
-                    word in task.title.lower() for word in ["personal", "family", "hobby", "relax"]
-                ):
-                    enhancement_score += 0.3
+            elif "home" in location and any(
+                word in task.title.lower() for word in ["personal", "family", "hobby", "relax"]
+            ):
+                enhancement_score += 0.3
 
         # Mood/energy enhancement
         if "mood" in context:
@@ -863,11 +861,10 @@ Return ONLY the JSON object, no other text."""
             if mood in ["focused", "productive"]:
                 if task.priority == "high" or "complex" in task.description.lower():
                     enhancement_score += 0.2
-            elif mood in ["tired", "low"]:
-                if any(
-                    word in task.title.lower() for word in ["easy", "simple", "quick", "organize"]
-                ):
-                    enhancement_score += 0.2
+            elif mood in ["tired", "low"] and any(
+                word in task.title.lower() for word in ["easy", "simple", "quick", "organize"]
+            ):
+                enhancement_score += 0.2
 
         return min(1.0, base_score + enhancement_score)
 
@@ -1141,7 +1138,7 @@ Return ONLY the JSON object, no other text."""
 
         # Update success patterns
         hour = learning_data["completion_hour"]
-        day = learning_data["day_of_week"]
+        learning_data["day_of_week"]
         success = learning_data["success"]
 
         if hour not in category_data["success_patterns"]:

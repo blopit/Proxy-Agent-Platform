@@ -232,7 +232,7 @@ async def quick_capture(query: str, user_id: str, session_id: str = "mobile"):
 async def get_history(session_id: str, limit: int = 10):
     """Get conversation history"""
     try:
-        db = get_enhanced_database()
+        get_enhanced_database()
         # history = await db.get_conversation_history(session_id, limit)
         # Return mock data for now
         return {

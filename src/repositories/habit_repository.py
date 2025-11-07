@@ -4,6 +4,7 @@ Habit Repository - Database operations for habits and habit completions
 
 from __future__ import annotations
 
+import contextlib
 import json
 from datetime import datetime
 
@@ -35,7 +36,7 @@ class HabitRepository(BaseEnhancedRepository):
             # Insert task first
             task_data = self._model_to_dict(task)
             task_columns = ", ".join(task_data.keys())
-            task_placeholders = ", ".join(["?" for _ in task_data.keys()])
+            task_placeholders = ", ".join(["?" for _ in task_data])
             task_query = f"INSERT INTO tasks ({task_columns}) VALUES ({task_placeholders})"
             cursor.execute(task_query, list(task_data.values()))
 
@@ -57,7 +58,7 @@ class HabitRepository(BaseEnhancedRepository):
 
             # Insert habit
             habit_columns = ", ".join(habit_data.keys())
-            habit_placeholders = ", ".join(["?" for _ in habit_data.keys()])
+            habit_placeholders = ", ".join(["?" for _ in habit_data])
             habit_query = f"INSERT INTO habits ({habit_columns}) VALUES ({habit_placeholders})"
             cursor.execute(habit_query, list(habit_data.values()))
 
@@ -127,7 +128,7 @@ class HabitRepository(BaseEnhancedRepository):
         ):
             habit_data["completion_history"] = json.dumps(habit_data["completion_history"])
 
-        set_clause = ", ".join([f"{key} = ?" for key in habit_data.keys() if key != "habit_id"])
+        set_clause = ", ".join([f"{key} = ?" for key in habit_data if key != "habit_id"])
         values = [value for key, value in habit_data.items() if key != "habit_id"]
         values.append(habit.habit_id)
 
@@ -219,7 +220,7 @@ class HabitRepository(BaseEnhancedRepository):
             completion_data["metadata"] = json.dumps(completion_data["metadata"])
 
         columns = ", ".join(completion_data.keys())
-        placeholders = ", ".join(["?" for _ in completion_data.keys()])
+        placeholders = ", ".join(["?" for _ in completion_data])
         query = f"INSERT INTO habit_completions ({columns}) VALUES ({placeholders})"
 
         cursor.execute(query, list(completion_data.values()))
@@ -279,10 +280,8 @@ class HabitRepository(BaseEnhancedRepository):
         # Convert datetime fields
         for field in ["last_completed_at", "paused_at", "created_at", "updated_at"]:
             if field in data and isinstance(data[field], str):
-                try:
+                with contextlib.suppress(ValueError, TypeError):
                     data[field] = datetime.fromisoformat(data[field])
-                except (ValueError, TypeError):
-                    pass
 
         # Convert boolean fields
         for field in ["is_active", "reminder_enabled"]:
@@ -308,10 +307,8 @@ class HabitRepository(BaseEnhancedRepository):
         # Convert datetime fields
         for field in ["completed_at", "created_at"]:
             if field in data and isinstance(data[field], str):
-                try:
+                with contextlib.suppress(ValueError, TypeError):
                     data[field] = datetime.fromisoformat(data[field])
-                except (ValueError, TypeError):
-                    pass
 
         # Convert integer fields
         if "energy_level" in data and data["energy_level"] is not None:

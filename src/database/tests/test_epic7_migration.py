@@ -98,7 +98,7 @@ class TestEpic7DatabaseSchema:
             "completed_at": "TIMESTAMP",
         }
 
-        for col_name, col_type in required_columns.items():
+        for col_name, _col_type in required_columns.items():
             assert col_name in columns, f"Missing column: {col_name}"
 
     def test_micro_steps_table_has_foreign_key_to_tasks(self, db):

@@ -414,7 +414,6 @@ class TestFocusEnergyIntegration:
         # Arrange
         user_id = "user123"
         focus_session_data = {"duration": 45, "intensity": "high"}
-        energy_data = {"current_level": 4.0, "trend": "declining"}
 
         # Act
         with patch.object(focus_agent, "recommend_break") as mock_focus_break:

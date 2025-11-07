@@ -4,6 +4,7 @@ Integration test for Rewards API with Pet Feeding (BE-02)
 Tests automatic pet feeding when rewards are claimed after task completion.
 """
 
+import contextlib
 from unittest import mock
 
 import pytest
@@ -52,10 +53,8 @@ def test_db_with_pets():
 
     yield db
 
-    try:
+    with contextlib.suppress(Exception):
         os.unlink(temp_file.name)
-    except Exception:
-        pass
 
 
 @pytest.fixture(scope="function")
@@ -187,7 +186,7 @@ class TestRewardsPetIntegration:
         )
 
         # Complete multiple high-priority tasks to accumulate XP
-        for i in range(5):
+        for _i in range(5):
             response = client.post(
                 "/api/v1/rewards/claim",
                 json={
@@ -229,9 +228,8 @@ class TestRewardsPetIntegration:
         # Each high-priority 30-min task gives ~25 XP
         # Need 400 XP total to reach level 5 (4 level ups * 100 XP each)
         # So need ~16 tasks
-        evolved = False
 
-        for i in range(20):  # Extra tasks to be safe
+        for _i in range(20):  # Extra tasks to be safe
             response = client.post(
                 "/api/v1/rewards/claim",
                 json={
@@ -249,7 +247,6 @@ class TestRewardsPetIntegration:
             data = response.json()
 
             if data["pet_response"]["evolved"]:
-                evolved = True
                 assert data["pet_response"]["evolution_stage"] == 2  # Teen
                 break
 

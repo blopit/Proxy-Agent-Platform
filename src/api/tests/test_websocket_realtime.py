@@ -51,7 +51,6 @@ class TestWebSocketConnection:
         """Test WebSocket connection with authentication"""
         # Arrange
         user_id = "user123"
-        invalid_user_id = "invalid_user"
 
         # Act & Assert - Valid user should connect
         with client.websocket_connect(f"/ws/{user_id}") as websocket:
@@ -82,10 +81,6 @@ class TestWebSocketConnection:
                 assert ws2 is not None
 
                 # Test broadcast functionality
-                broadcast_data = {
-                    "type": "system_message",
-                    "message": "System maintenance in 5 minutes",
-                }
 
                 # In a real implementation, this would be triggered by server
                 # For testing, we simulate receiving the broadcast
@@ -125,7 +120,7 @@ class TestDashboardDataStreaming:
             assert response["channel"] == "dashboard_updates"
 
             # Simulate dashboard data update
-            dashboard_data = {
+            {
                 "type": "dashboard_update",
                 "data": {
                     "tasks_completed_today": 5,
@@ -145,7 +140,6 @@ class TestDashboardDataStreaming:
         """Test real-time task progress updates"""
         # Arrange
         user_id = "user123"
-        task_id = "task_789"
 
         with client.websocket_connect(f"/ws/{user_id}") as websocket:
             # Subscribe to task updates
@@ -153,14 +147,6 @@ class TestDashboardDataStreaming:
             websocket.send_json(subscribe_data)
 
             # Simulate task progress update
-            task_update = {
-                "type": "task_progress",
-                "task_id": task_id,
-                "progress": 0.75,
-                "status": "in_progress",
-                "time_spent": 45,
-                "estimated_completion": "2025-10-17T16:30:00Z",
-            }
 
             # Should handle task progress updates efficiently
 
@@ -212,14 +198,6 @@ class TestAgentStatusBroadcasting:
             websocket.send_json(subscribe_data)
 
             # Simulate agent status change
-            agent_status = {
-                "type": "agent_status_update",
-                "agent_type": "task_intelligence",
-                "status": "processing",
-                "current_task": "Analyzing task priorities",
-                "progress": 0.6,
-                "estimated_completion": 30,
-            }
 
             # Should broadcast agent status efficiently
 
@@ -239,17 +217,6 @@ class TestAgentStatusBroadcasting:
             websocket.send_json(subscribe_data)
 
             # Simulate multi-agent coordination
-            coordination_data = {
-                "type": "agent_coordination",
-                "coordinating_agents": [
-                    "task_intelligence",
-                    "focus_management",
-                    "progress_tracking",
-                ],
-                "coordination_type": "task_optimization",
-                "status": "in_progress",
-                "expected_result": "optimized_task_plan",
-            }
 
     @pytest.mark.asyncio
     async def test_agent_error_broadcasting(self, client):
@@ -263,14 +230,6 @@ class TestAgentStatusBroadcasting:
             websocket.send_json(subscribe_data)
 
             # Simulate agent error
-            error_data = {
-                "type": "agent_error",
-                "agent_type": "focus_management",
-                "error_type": "session_timeout",
-                "error_message": "Focus session timed out unexpectedly",
-                "recovery_action": "restart_session",
-                "severity": "medium",
-            }
 
 
 class TestNotificationSystem:
@@ -292,7 +251,7 @@ class TestNotificationSystem:
             websocket.send_json(subscribe_data)
 
             # Simulate achievement notification
-            achievement_notification = {
+            {
                 "type": "notification",
                 "category": "achievement",
                 "title": "New Achievement Unlocked!",
@@ -314,7 +273,7 @@ class TestNotificationSystem:
             websocket.send_json(subscribe_data)
 
             # Simulate break reminder
-            break_notification = {
+            {
                 "type": "notification",
                 "category": "break_reminder",
                 "title": "Time for a Break!",
@@ -340,7 +299,7 @@ class TestNotificationSystem:
             websocket.send_json(subscribe_data)
 
             # Simulate deadline notification
-            deadline_notification = {
+            {
                 "type": "notification",
                 "category": "deadline_warning",
                 "title": "Task Deadline Approaching",
@@ -367,7 +326,7 @@ class TestNotificationSystem:
             websocket.send_json(subscribe_data)
 
             # Simulate motivational notification
-            motivation_notification = {
+            {
                 "type": "notification",
                 "category": "motivation",
                 "title": "You're on Fire! 🔥",
@@ -441,9 +400,7 @@ class TestWebSocketErrorHandling:
                     break
 
             # Check if rate limiting is enforced
-            rate_limit_msg = next(
-                (msg for msg in messages if msg.get("type") == "rate_limit_warning"), None
-            )
+            next((msg for msg in messages if msg.get("type") == "rate_limit_warning"), None)
             # In real implementation, this should exist
 
 
@@ -458,7 +415,7 @@ class TestWebSocketPerformance:
     async def test_concurrent_connections(self, client):
         """Test handling multiple concurrent connections"""
         # Simulate multiple users connecting simultaneously
-        user_ids = [f"user{i}" for i in range(10)]
+        [f"user{i}" for i in range(10)]
 
         async def connect_user(user_id):
             with client.websocket_connect(f"/ws/{user_id}") as websocket:

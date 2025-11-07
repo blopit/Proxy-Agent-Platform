@@ -512,10 +512,7 @@ class TaskService:
         """Check if adding a dependency would create a circular dependency"""
         # Simple circular dependency check: if depends_on_task already depends on task_id
         existing_deps = self.dependency_repo.get_task_dependencies(depends_on_task_id)
-        for dep in existing_deps:
-            if dep.depends_on_task_id == task_id:
-                return True
-        return False
+        return any(dep.depends_on_task_id == task_id for dep in existing_deps)
 
     def _estimate_with_ai(self, task: Task) -> Decimal:
         """Estimate task duration using AI (placeholder implementation)"""

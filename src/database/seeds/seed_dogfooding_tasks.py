@@ -36,6 +36,8 @@ from uuid import uuid4
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
+import contextlib
+
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
 
 # ============================================================================
@@ -298,10 +300,8 @@ def seed_dogfooding_tasks(db: EnhancedDatabaseAdapter):
         # Parse due_date if provided
         due_date = None
         if task_data.get("due_date"):
-            try:
+            with contextlib.suppress(ValueError):
                 due_date = datetime.strptime(task_data["due_date"], "%Y-%m-%d")
-            except ValueError:
-                pass
 
         # Convert tags list to JSON string
         tags_json = json.dumps(task_data.get("tags", []))

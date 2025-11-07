@@ -367,7 +367,6 @@ class TestProgressGamificationIntegration:
     async def test_xp_to_achievement_flow(self, progress_agent, gamification_agent):
         """Test XP calculation triggering achievement checks"""
         # Arrange
-        user_id = "user123"
         task_completion_data = {
             "xp_earned": 150,
             "task_type": "complex_implementation",

@@ -5,14 +5,21 @@ from datetime import datetime
 import pytest
 from fastapi.testclient import TestClient
 
+from src.api.main import app
+
 
 class TestStatisticsEndpoints:
     """Test suite for statistics API endpoints."""
 
     @pytest.fixture
+    def client(self):
+        """FastAPI test client fixture."""
+        return TestClient(app)
+
+    @pytest.fixture
     def setup_test_data(self, client: TestClient):
         """Setup test data for a user."""
-        from src.api.statistics import _statistics_service
+        from src.api.routes.statistics import _statistics_service
 
         _statistics_service._clear_data()
 
@@ -164,7 +171,7 @@ class TestStatisticsEndpoints:
 
     def test_multiple_users_isolation(self, client: TestClient):
         """Test that statistics for different users are isolated."""
-        from src.api.statistics import _statistics_service
+        from src.api.routes.statistics import _statistics_service
 
         _statistics_service._clear_data()
 

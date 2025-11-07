@@ -239,11 +239,9 @@ async def get_user_progress(current_user: User = Depends(get_current_user)):
 
         # Check if streak is at risk
         last_date_str = progress["last_completion_date"]
-        streak_at_risk = False
         if last_date_str:
             last_date = date.fromisoformat(last_date_str)
-            days_since = (date.today() - last_date).days
-            streak_at_risk = days_since >= 1  # Haven't completed today
+            (date.today() - last_date).days
 
         return UserProgressResponse(
             user_id=user_id,

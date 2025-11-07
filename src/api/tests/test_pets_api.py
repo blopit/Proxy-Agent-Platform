@@ -9,6 +9,8 @@ Tests complete pet management workflows with real database:
 - Error handling
 """
 
+import contextlib
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -55,10 +57,8 @@ def test_pet_db():
 
     yield db
 
-    try:
+    with contextlib.suppress(Exception):
         os.unlink(temp_file.name)
-    except Exception:
-        pass
 
 
 @pytest.fixture(scope="function")
@@ -475,7 +475,7 @@ class TestCompleteWorkflows:
         assert create_response.json()["evolution_stage"] == 1
 
         # Step 2: Feed multiple times to level up
-        for i in range(5):
+        for _i in range(5):
             feed_response = test_pet_client.post(
                 "/api/v1/pets/feed",
                 params={"user_id": user_id, "task_priority": "high", "task_estimated_minutes": 30},

@@ -206,7 +206,7 @@ class TestDelegateTask:
                 json={"auto_assign": True},
             )
 
-            data = response.json()
+            response.json()
             # In future, this should check gamification service call
             # For now, just verify structure
             assert response.status_code == 200
@@ -342,7 +342,7 @@ class TestCompleteSoloExecution:
     def test_complete_solo_awards_xp(self, client, mock_db, mock_current_user, sample_task):
         """Test that completing solo session awards XP."""
         # Setup focus session
-        focus_session = {
+        {
             "focus_session_id": "session-789",
             "task_id": "task-123",
             "user_id": "test-user-123",

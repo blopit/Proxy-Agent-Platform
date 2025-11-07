@@ -236,7 +236,6 @@ class TestBackgroundTaskQueue:
     async def test_task_queue_monitoring(self, task_queue):
         """Test task queue monitoring and metrics"""
         # Arrange
-        monitoring_data = []
 
         async def monitored_task(task_id: int):
             await asyncio.sleep(0.05)
@@ -250,7 +249,7 @@ class TestBackgroundTaskQueue:
             tasks.append(task)
 
         await asyncio.gather(*tasks)
-        total_time = time.time() - start_time
+        time.time() - start_time
 
         # Get queue metrics
         metrics = await task_queue.get_metrics()
@@ -313,9 +312,7 @@ class TestDatabaseOptimization:
             start_time = time.time()
             with patch.object(db_optimizer, "get_connection") as mock_conn:
                 mock_conn.return_value = f"connection_{query_id % 5}"  # Simulate pool of 5
-                result = await db_optimizer.execute_query(
-                    f"SELECT * FROM tasks WHERE id = {query_id}"
-                )
+                await db_optimizer.execute_query(f"SELECT * FROM tasks WHERE id = {query_id}")
             return time.time() - start_time
 
         # Act

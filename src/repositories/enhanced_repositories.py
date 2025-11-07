@@ -5,6 +5,7 @@ Enhanced Repository Layer - Database operations for all models using the enhance
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import sqlite3
 from dataclasses import dataclass
@@ -95,10 +96,8 @@ class BaseEnhancedRepository:
             ):
                 data[key] = Decimal(str(value))
             elif key.endswith("_at") and isinstance(value, str):
-                try:
+                with contextlib.suppress(ValueError, TypeError):
                     data[key] = datetime.fromisoformat(value)
-                except (ValueError, TypeError):
-                    pass
 
         return model_class(**data)
 
@@ -152,7 +151,7 @@ class UserRepository(BaseEnhancedRepository):
         """Create a new user"""
         data = self._model_to_dict(user)
         columns = ", ".join(data.keys())
-        placeholders = ", ".join(["?" for _ in data.keys()])
+        placeholders = ", ".join(["?" for _ in data])
 
         query = f"INSERT INTO users ({columns}) VALUES ({placeholders})"
 
@@ -201,7 +200,7 @@ class UserRepository(BaseEnhancedRepository):
         data = self._model_to_dict(user)
         data["updated_at"] = datetime.utcnow().isoformat()
 
-        set_clause = ", ".join([f"{key} = ?" for key in data.keys() if key != "user_id"])
+        set_clause = ", ".join([f"{key} = ?" for key in data if key != "user_id"])
         values = [value for key, value in data.items() if key != "user_id"]
         values.append(user.user_id)
 
@@ -251,7 +250,7 @@ class FocusSessionRepository(BaseEnhancedRepository):
         """Create a new focus session"""
         data = self._model_to_dict(session)
         columns = ", ".join(data.keys())
-        placeholders = ", ".join(["?" for _ in data.keys()])
+        placeholders = ", ".join(["?" for _ in data])
 
         query = f"INSERT INTO focus_sessions ({columns}) VALUES ({placeholders})"
 
@@ -303,7 +302,7 @@ class FocusSessionRepository(BaseEnhancedRepository):
         """Update a focus session"""
         data = self._model_to_dict(session)
 
-        set_clause = ", ".join([f"{key} = ?" for key in data.keys() if key != "session_id"])
+        set_clause = ", ".join([f"{key} = ?" for key in data if key != "session_id"])
         values = [value for key, value in data.items() if key != "session_id"]
         values.append(session.session_id)
 
@@ -352,7 +351,7 @@ class AchievementRepository(BaseEnhancedRepository):
         """Create a new achievement"""
         data = self._model_to_dict(achievement)
         columns = ", ".join(data.keys())
-        placeholders = ", ".join(["?" for _ in data.keys()])
+        placeholders = ", ".join(["?" for _ in data])
 
         query = f"INSERT INTO achievements ({columns}) VALUES ({placeholders})"
 
@@ -371,7 +370,7 @@ class UserAchievementRepository(BaseEnhancedRepository):
         """Create a new user achievement"""
         data = self._model_to_dict(user_achievement)
         columns = ", ".join(data.keys())
-        placeholders = ", ".join(["?" for _ in data.keys()])
+        placeholders = ", ".join(["?" for _ in data])
 
         query = f"INSERT INTO user_achievements ({columns}) VALUES ({placeholders})"
 
@@ -422,9 +421,7 @@ class UserAchievementRepository(BaseEnhancedRepository):
         """Update a user achievement"""
         data = self._model_to_dict(user_achievement)
 
-        set_clause = ", ".join(
-            [f"{key} = ?" for key in data.keys() if key != "user_achievement_id"]
-        )
+        set_clause = ", ".join([f"{key} = ?" for key in data if key != "user_achievement_id"])
         values = [value for key, value in data.items() if key != "user_achievement_id"]
         values.append(user_achievement.user_achievement_id)
 
@@ -472,7 +469,7 @@ class ProductivityMetricsRepository(BaseEnhancedRepository):
             set_clause = ", ".join(
                 [
                     f"{key} = ?"
-                    for key in data.keys()
+                    for key in data
                     if key not in ["metrics_id", "user_id", "date", "period_type"]
                 ]
             )
@@ -488,7 +485,7 @@ class ProductivityMetricsRepository(BaseEnhancedRepository):
         else:
             # Insert new record
             columns = ", ".join(data.keys())
-            placeholders = ", ".join(["?" for _ in data.keys()])
+            placeholders = ", ".join(["?" for _ in data])
             query = f"INSERT INTO productivity_metrics ({columns}) VALUES ({placeholders})"
             cursor.execute(query, list(data.values()))
 
@@ -535,7 +532,7 @@ class EnhancedTaskRepository(BaseEnhancedRepository):
         """Create a new task"""
         data = self._model_to_dict(task)
         columns = ", ".join(data.keys())
-        placeholders = ", ".join(["?" for _ in data.keys()])
+        placeholders = ", ".join(["?" for _ in data])
 
         query = f"INSERT INTO tasks ({columns}) VALUES ({placeholders})"
 
@@ -562,7 +559,7 @@ class EnhancedTaskRepository(BaseEnhancedRepository):
         data = self._model_to_dict(task)
         data["updated_at"] = datetime.utcnow().isoformat()
 
-        set_clause = ", ".join([f"{key} = ?" for key in data.keys() if key != "task_id"])
+        set_clause = ", ".join([f"{key} = ?" for key in data if key != "task_id"])
         values = [value for key, value in data.items() if key != "task_id"]
         values.append(task.task_id)
 
@@ -767,7 +764,7 @@ class EnhancedProjectRepository(BaseEnhancedRepository):
         """Create a new project"""
         data = self._model_to_dict(project)
         columns = ", ".join(data.keys())
-        placeholders = ", ".join(["?" for _ in data.keys()])
+        placeholders = ", ".join(["?" for _ in data])
 
         query = f"INSERT INTO projects ({columns}) VALUES ({placeholders})"
 
@@ -794,7 +791,7 @@ class EnhancedProjectRepository(BaseEnhancedRepository):
         data = self._model_to_dict(project)
         data["updated_at"] = datetime.utcnow().isoformat()
 
-        set_clause = ", ".join([f"{key} = ?" for key in data.keys() if key != "project_id"])
+        set_clause = ", ".join([f"{key} = ?" for key in data if key != "project_id"])
         values = [value for key, value in data.items() if key != "project_id"]
         values.append(project.project_id)
 

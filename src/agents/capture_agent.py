@@ -70,7 +70,7 @@ class CaptureAgent(BaseProxyAgent):
 
         # Award XP based on complexity
         micro_step_count = len(result["micro_steps"])
-        clarification_count = len(result["clarifications"])
+        len(result["clarifications"])
 
         xp = 30  # Base XP for capture
         xp += micro_step_count * 5  # Bonus per micro-step

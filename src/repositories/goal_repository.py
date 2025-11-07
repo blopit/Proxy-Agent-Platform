@@ -4,6 +4,7 @@ Goal Repository - Database operations for goals
 
 from __future__ import annotations
 
+import contextlib
 import json
 from datetime import datetime
 from decimal import Decimal
@@ -36,7 +37,7 @@ class GoalRepository(BaseEnhancedRepository):
             # Insert task first
             task_data = self._model_to_dict(task)
             task_columns = ", ".join(task_data.keys())
-            task_placeholders = ", ".join(["?" for _ in task_data.keys()])
+            task_placeholders = ", ".join(["?" for _ in task_data])
             task_query = f"INSERT INTO tasks ({task_columns}) VALUES ({task_placeholders})"
             cursor.execute(task_query, list(task_data.values()))
 
@@ -69,7 +70,7 @@ class GoalRepository(BaseEnhancedRepository):
 
             # Insert goal
             goal_columns = ", ".join(goal_data.keys())
-            goal_placeholders = ", ".join(["?" for _ in goal_data.keys()])
+            goal_placeholders = ", ".join(["?" for _ in goal_data])
             goal_query = f"INSERT INTO goals ({goal_columns}) VALUES ({goal_placeholders})"
             cursor.execute(goal_query, list(goal_data.values()))
 
@@ -148,7 +149,7 @@ class GoalRepository(BaseEnhancedRepository):
                 else []
             )
 
-        set_clause = ", ".join([f"{key} = ?" for key in goal_data.keys() if key != "goal_id"])
+        set_clause = ", ".join([f"{key} = ?" for key in goal_data if key != "goal_id"])
         values = [value for key, value in goal_data.items() if key != "goal_id"]
         values.append(goal.goal_id)
 
@@ -306,10 +307,8 @@ class GoalRepository(BaseEnhancedRepository):
             "updated_at",
         ]:
             if field in data and isinstance(data[field], str):
-                try:
+                with contextlib.suppress(ValueError, TypeError):
                     data[field] = datetime.fromisoformat(data[field])
-                except (ValueError, TypeError):
-                    pass
 
         # Convert boolean fields
         for field in ["is_active", "is_achieved"]:

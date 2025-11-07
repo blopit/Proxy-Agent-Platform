@@ -4,6 +4,7 @@ Shopping List Repository - Database operations for shopping lists and items
 
 from __future__ import annotations
 
+import contextlib
 import json
 import sqlite3
 from datetime import datetime
@@ -37,7 +38,7 @@ class ShoppingListRepository(BaseEnhancedRepository):
             # Insert task first
             task_data = self._model_to_dict(task)
             task_columns = ", ".join(task_data.keys())
-            task_placeholders = ", ".join(["?" for _ in task_data.keys()])
+            task_placeholders = ", ".join(["?" for _ in task_data])
             task_query = f"INSERT INTO tasks ({task_columns}) VALUES ({task_placeholders})"
             cursor.execute(task_query, list(task_data.values()))
 
@@ -46,11 +47,11 @@ class ShoppingListRepository(BaseEnhancedRepository):
             list_data["task_id"] = task.task_id
 
             # Remove items from list_data (they're stored separately)
-            items = list_data.pop("items", [])
+            list_data.pop("items", [])
 
             # Insert shopping list
             list_columns = ", ".join(list_data.keys())
-            list_placeholders = ", ".join(["?" for _ in list_data.keys()])
+            list_placeholders = ", ".join(["?" for _ in list_data])
             list_query = f"INSERT INTO shopping_lists ({list_columns}) VALUES ({list_placeholders})"
             cursor.execute(list_query, list(list_data.values()))
 
@@ -130,7 +131,7 @@ class ShoppingListRepository(BaseEnhancedRepository):
         # Remove items from update (they're updated separately)
         list_data.pop("items", None)
 
-        set_clause = ", ".join([f"{key} = ?" for key in list_data.keys() if key != "list_id"])
+        set_clause = ", ".join([f"{key} = ?" for key in list_data if key != "list_id"])
         values = [value for key, value in list_data.items() if key != "list_id"]
         values.append(shopping_list.list_id)
 
@@ -191,7 +192,7 @@ class ShoppingListRepository(BaseEnhancedRepository):
         item_data = self._model_to_dict(item)
         item_data["updated_at"] = datetime.utcnow().isoformat()
 
-        set_clause = ", ".join([f"{key} = ?" for key in item_data.keys() if key != "item_id"])
+        set_clause = ", ".join([f"{key} = ?" for key in item_data if key != "item_id"])
         values = [value for key, value in item_data.items() if key != "item_id"]
         values.append(item.item_id)
 
@@ -332,7 +333,7 @@ class ShoppingListRepository(BaseEnhancedRepository):
         item_data = self._model_to_dict(item)
 
         item_columns = ", ".join(item_data.keys())
-        item_placeholders = ", ".join(["?" for _ in item_data.keys()])
+        item_placeholders = ", ".join(["?" for _ in item_data])
         item_query = (
             f"INSERT INTO shopping_list_items ({item_columns}) VALUES ({item_placeholders})"
         )
@@ -361,10 +362,8 @@ class ShoppingListRepository(BaseEnhancedRepository):
         # Convert datetime fields
         for field in ["shopping_date", "completed_at", "shopped_at", "created_at", "updated_at"]:
             if field in data and isinstance(data[field], str):
-                try:
+                with contextlib.suppress(ValueError, TypeError):
                     data[field] = datetime.fromisoformat(data[field])
-                except (ValueError, TypeError):
-                    pass
 
         # Convert boolean fields
         for field in ["is_active", "is_completed"]:
@@ -397,10 +396,8 @@ class ShoppingListRepository(BaseEnhancedRepository):
         # Convert datetime fields
         for field in ["purchased_at", "created_at", "updated_at"]:
             if field in data and isinstance(data[field], str):
-                try:
+                with contextlib.suppress(ValueError, TypeError):
                     data[field] = datetime.fromisoformat(data[field])
-                except (ValueError, TypeError):
-                    pass
 
         # Convert boolean field
         if "is_purchased" in data:

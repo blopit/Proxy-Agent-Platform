@@ -597,7 +597,7 @@ class TestDataIntegrityConstraints:
             created_at=datetime.now(),
             updated_at=datetime.now(),
         )
-        created_user1 = self.user_repo.create(user1)
+        self.user_repo.create(user1)
 
         # Try to create second user with same username
         user2 = User(
@@ -621,7 +621,7 @@ class TestDataIntegrityConstraints:
         # Try to create user without required fields
         with pytest.raises(Exception) as exc_info:
             # This should fail in Pydantic validation or database constraint
-            user = User(
+            User(
                 user_id=str(uuid4()),
                 username=None,  # Required field
                 email=generate_unique_email(),

@@ -337,7 +337,7 @@ class TestPromptTemplates:
         prompt = llm_service._build_prompt("test task", kg_context=kg_context)
 
         # Should include formatted KG context
-        formatted_context = kg_context.format_for_prompt()
+        kg_context.format_for_prompt()
 
         # Check key elements from context are in prompt
         assert "AC" in prompt

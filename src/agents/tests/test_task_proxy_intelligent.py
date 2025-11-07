@@ -723,7 +723,7 @@ class TestContextAwareSuggestions:
         creative_evening_fit = await self.agent._calculate_context_fit(
             creative_task, evening_context
         )
-        routine_morning_fit = await self.agent._calculate_context_fit(routine_task, morning_context)
+        await self.agent._calculate_context_fit(routine_task, morning_context)
         routine_evening_fit = await self.agent._calculate_context_fit(routine_task, evening_context)
 
         # Creative tasks should fit better in morning high-energy context
@@ -860,7 +860,7 @@ class TestLearningAndPersonalization:
             ("Plan sprint", "Create development roadmap", "planning"),
         ]
 
-        for title, description, expected_category in test_cases:
+        for title, description, _expected_category in test_cases:
             category = self.agent._categorize_advanced(title, description)
             # Allow flexible categorization based on keywords present
         # Allow any valid category that makes sense

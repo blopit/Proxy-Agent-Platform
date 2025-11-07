@@ -16,6 +16,8 @@ class PydanticModel(Protocol):
     def model_dump(self) -> dict[str, Any]: ...
 
 
+import contextlib
+
 from src.core.task_models import (
     Project,
     Task,
@@ -109,10 +111,8 @@ class BaseRepository:
             ):
                 data[key] = Decimal(str(value))
             elif key.endswith("_at") and isinstance(value, str):
-                try:
+                with contextlib.suppress(ValueError, TypeError):
                     data[key] = datetime.fromisoformat(value)
-                except (ValueError, TypeError):
-                    pass
 
         return model_class(**data)
 
@@ -189,7 +189,7 @@ class TaskRepository(BaseRepository):
         conn = self._ensure_connection()
         data = self._model_to_dict(task)
         columns = ", ".join(data.keys())
-        placeholders = ", ".join(["?" for _ in data.keys()])
+        placeholders = ", ".join(["?" for _ in data])
 
         query = f"INSERT INTO tasks ({columns}) VALUES ({placeholders})"
         conn.execute(query, list(data.values()))
@@ -213,7 +213,7 @@ class TaskRepository(BaseRepository):
         data = self._model_to_dict(task)
         data["updated_at"] = datetime.utcnow().isoformat()
 
-        set_clause = ", ".join([f"{key} = ?" for key in data.keys() if key != "task_id"])
+        set_clause = ", ".join([f"{key} = ?" for key in data if key != "task_id"])
         values = [value for key, value in data.items() if key != "task_id"]
         values.append(task.task_id)
 
@@ -345,7 +345,7 @@ class ProjectRepository(BaseRepository):
         conn = self._ensure_connection()
         data = self._model_to_dict(project)
         columns = ", ".join(data.keys())
-        placeholders = ", ".join(["?" for _ in data.keys()])
+        placeholders = ", ".join(["?" for _ in data])
 
         query = f"INSERT INTO projects ({columns}) VALUES ({placeholders})"
         conn.execute(query, list(data.values()))
@@ -369,7 +369,7 @@ class ProjectRepository(BaseRepository):
         data = self._model_to_dict(project)
         data["updated_at"] = datetime.utcnow().isoformat()
 
-        set_clause = ", ".join([f"{key} = ?" for key in data.keys() if key != "project_id"])
+        set_clause = ", ".join([f"{key} = ?" for key in data if key != "project_id"])
         values = [value for key, value in data.items() if key != "project_id"]
         values.append(project.project_id)
 
@@ -431,7 +431,7 @@ class TaskTemplateRepository(BaseRepository):
         conn = self._ensure_connection()
         data = self._model_to_dict(template)
         columns = ", ".join(data.keys())
-        placeholders = ", ".join(["?" for _ in data.keys()])
+        placeholders = ", ".join(["?" for _ in data])
 
         query = f"INSERT INTO task_templates ({columns}) VALUES ({placeholders})"
         conn.execute(query, list(data.values()))
@@ -491,7 +491,7 @@ class TaskDependencyRepository(BaseRepository):
         conn = self._ensure_connection()
         data = self._model_to_dict(dependency)
         columns = ", ".join(data.keys())
-        placeholders = ", ".join(["?" for _ in data.keys()])
+        placeholders = ", ".join(["?" for _ in data])
 
         query = f"INSERT INTO task_dependencies ({columns}) VALUES ({placeholders})"
         conn.execute(query, list(data.values()))
@@ -550,7 +550,7 @@ class TaskCommentRepository(BaseRepository):
         conn = self._ensure_connection()
         data = self._model_to_dict(comment)
         columns = ", ".join(data.keys())
-        placeholders = ", ".join(["?" for _ in data.keys()])
+        placeholders = ", ".join(["?" for _ in data])
 
         query = f"INSERT INTO task_comments ({columns}) VALUES ({placeholders})"
         conn.execute(query, list(data.values()))
@@ -572,7 +572,7 @@ class TaskCommentRepository(BaseRepository):
         conn = self._ensure_connection()
         data = self._model_to_dict(comment)
 
-        set_clause = ", ".join([f"{key} = ?" for key in data.keys() if key != "comment_id"])
+        set_clause = ", ".join([f"{key} = ?" for key in data if key != "comment_id"])
         values = [value for key, value in data.items() if key != "comment_id"]
         values.append(comment.comment_id)
 

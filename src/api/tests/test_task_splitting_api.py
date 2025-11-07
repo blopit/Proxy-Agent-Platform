@@ -304,7 +304,7 @@ class TestSplitAgentIntegration:
             }
 
         # This test will DRIVE the creation of Split Proxy Agent
-        response = client.post("/api/v1/tasks/task_multi/split", json={"user_id": "test_user"})
+        client.post("/api/v1/tasks/task_multi/split", json={"user_id": "test_user"})
 
         # For now, it will fail because agent doesn't exist
         # Once implemented, verify agent was called
@@ -385,6 +385,6 @@ class TestTaskSplitWorkflow:
         assert progress_response.json()["progress_percentage"] == 100.0
 
         # 4. Verify task is marked completed
-        task_response = client.get("/api/v1/tasks/task_multi")
+        client.get("/api/v1/tasks/task_multi")
         # Task might auto-complete when all micro-steps are done
         # assert task_response.json()["status"] in ["completed", "in_progress"]

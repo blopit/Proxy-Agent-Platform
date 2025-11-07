@@ -87,7 +87,7 @@ def graph_service(db):
         metadata={"role": "boss", "email": "bob@company.com"},
     )
 
-    office_location = service.create_entity(
+    service.create_entity(
         entity_type=EntityType.LOCATION,
         name="Office",
         user_id="alice",
@@ -217,7 +217,7 @@ class TestCaptureWithKnowledgeGraph:
             )
 
             # Check clarifications
-            clarifications = result["clarifications"]
+            result["clarifications"]
 
             # Should have fewer clarifications because KG provided Sara's email
             # Without KG, would ask "Who should I send this email to?"
@@ -327,7 +327,7 @@ class TestDecompositionWithClassification:
 
             # Check if any micro-steps are classified as DIGITAL
             micro_steps = result["micro_steps"]
-            digital_steps = [s for s in micro_steps if s.leaf_type == LeafType.DIGITAL]
+            [s for s in micro_steps if s.leaf_type == LeafType.DIGITAL]
 
             # Should have at least some digital steps for research tasks
             assert len(micro_steps) > 0

@@ -61,10 +61,7 @@ class RedisCacheService:
             value: Value to cache
             ttl: Time-to-live in seconds (0 = no expiration)
         """
-        if ttl > 0:
-            expiry = asyncio.get_event_loop().time() + ttl
-        else:
-            expiry = 0
+        expiry = asyncio.get_event_loop().time() + ttl if ttl > 0 else 0
         self._cache[key] = (value, expiry)
 
     async def get_or_set(self, key: str, fetch_func: Callable, ttl: int = 300) -> Any:
