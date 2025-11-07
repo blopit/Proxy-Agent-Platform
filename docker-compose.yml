@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: proxy-agent-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:////app/.data/databases/proxy_agents_enhanced.db
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./src:/app/src
+      - data-volume:/app/.data
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - proxy-agent-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: proxy-agent-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - proxy-agent-network
+    command: redis-server --appendonly yes
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: proxy-agent-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - proxy-agent-network
+    profiles:
+      - full
+
+  storybook:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: storybook
+    container_name: proxy-agent-storybook
+    ports:
+      - "6006:6006"
+    restart: unless-stopped
+    networks:
+      - proxy-agent-network
+    profiles:
+      - dev
+
+volumes:
+  data-volume:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  proxy-agent-network:
+    driver: bridge
