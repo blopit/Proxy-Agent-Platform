@@ -10,12 +10,13 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Check, AlertCircle } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
 import ChevronStep from '../core/ChevronStep';
 import ChevronButton from '../core/ChevronButton';
 import { THEME } from '../../src/theme/colors';
+import { Text } from '@/src/components/ui/Text';
 
 export type ConnectionStatus = 'disconnected' | 'connected' | 'error' | 'connecting';
 

@@ -436,7 +436,8 @@ class TestWebSocketErrorHandling:
                 try:
                     msg = websocket.receive_json()
                     messages.append(msg)
-                except:
+                except Exception:
+                    # WebSocket closed or error receiving message
                     break
 
             # Check if rate limiting is enforced

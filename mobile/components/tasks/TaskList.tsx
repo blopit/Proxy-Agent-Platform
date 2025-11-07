@@ -9,10 +9,11 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { THEME } from '../../src/theme/colors';
 import TaskCardBig from '../cards/TaskCardBig';
 import SuggestionCard from '../cards/SuggestionCard';
+import { Text } from '@/src/components/ui/Text';
 
 export interface Task {
   task_id: string;

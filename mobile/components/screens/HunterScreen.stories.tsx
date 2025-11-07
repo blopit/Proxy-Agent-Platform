@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Zap, ChevronRight, Check, Circle } from 'lucide-react-native';
 import { THEME } from '../../src/theme/colors';
 import FocusTimer from '../focus/FocusTimer';
 import TaskCardBig from '../cards/TaskCardBig';
+import { Text } from '@/src/components/ui/Text';
 
 /**
  * Hunter Screen - Complete composition showing the Focus Mode interface

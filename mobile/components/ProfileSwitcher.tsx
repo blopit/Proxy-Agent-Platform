@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { ChevronDown } from 'lucide-react-native';
+import { Text } from '@/src/components/ui/Text';
 
 export type Profile = 'personal' | 'lionmotel' | 'aiservice';
 

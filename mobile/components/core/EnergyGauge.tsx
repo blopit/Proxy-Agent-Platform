@@ -11,8 +11,9 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
+import { Text } from '@/src/components/ui/Text';
 
 interface EnergyGaugeProps {
   energy: number; // 0-100
