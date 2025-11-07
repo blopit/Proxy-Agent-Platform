@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS micro_steps;
 CREATE TABLE micro_steps (
     step_id TEXT PRIMARY KEY,
     parent_task_id TEXT NOT NULL,
-    step_number INTEGER NOT NULL,
+    step_number INTEGER DEFAULT 1,
     description TEXT NOT NULL,
     estimated_minutes INTEGER NOT NULL CHECK(estimated_minutes >= 2 AND estimated_minutes <= 5),
     delegation_mode TEXT DEFAULT 'do',

@@ -37,8 +37,9 @@
  */
 
 import React from 'react';
-import { Text, StyleSheet, TextStyle } from 'react-native';
+import { Text as RNText, StyleSheet, TextStyle } from 'react-native';
 import { THEME } from '../../src/theme/colors';
+import { getFontFamily, DEFAULT_FONT_FAMILY } from '../../src/theme/fonts';
 
 export type FadeMode = 'linear' | 'sigmoid' | 'exponential' | 'optimal';
 
@@ -141,12 +142,14 @@ const calculateEmphasis = (
 /**
  * Calculate font weight based on emphasis level
  * Maps emphasis (0-1) to font weight (400-700)
- * - 0.0 = 400 (normal)
- * - 1.0 = 700 (bold)
+ * Returns the appropriate Lexend font family
+ * - 0.0 = 400 (normal) -> Lexend-Regular
+ * - 1.0 = 700 (bold) -> Lexend-Bold
  */
-const calculateFontWeight = (emphasis: number, maxWeight: number = 700): number => {
+const calculateFontFamily = (emphasis: number, maxWeight: number = 700): string => {
   const minWeight = 400; // Normal weight
-  return Math.round(minWeight + emphasis * (maxWeight - minWeight));
+  const weight = Math.round(minWeight + emphasis * (maxWeight - minWeight));
+  return getFontFamily(weight);
 };
 
 /**
@@ -175,12 +178,12 @@ export default function BionicText({
 }: BionicTextProps) {
   // Backward compatibility: if boldRatio is provided, use it as boldZoneEnd
   const actualBoldZoneEnd = boldRatio !== undefined ? boldRatio : boldZoneEnd;
-  // If bionic reading is disabled, just render normal text
+  // If bionic reading is disabled, just render normal text with Lexend
   if (!enabled) {
     return (
-      <Text style={[styles.container, style, { color: baseColor, letterSpacing }]}>
+      <RNText style={[styles.container, style, { color: baseColor, letterSpacing, fontFamily: DEFAULT_FONT_FAMILY }]}>
         {children}
-      </Text>
+      </RNText>
     );
   }
 
@@ -188,24 +191,24 @@ export default function BionicText({
   const words = children.split(/(\s+)/);
 
   return (
-    <Text style={[styles.container, style, { color: baseColor, letterSpacing }]}>
+    <RNText style={[styles.container, style, { color: baseColor, letterSpacing, fontFamily: DEFAULT_FONT_FAMILY }]}>
       {words.map((segment, segmentIndex) => {
         // If it's whitespace, render as-is
         if (/^\s+$/.test(segment)) {
-          return <Text key={segmentIndex}>{segment}</Text>;
+          return <RNText key={segmentIndex}>{segment}</RNText>;
         }
 
         // Split word from trailing punctuation
         const match = segment.match(/^([a-zA-Z0-9]+)([^\w]*)$/);
         if (!match) {
-          return <Text key={segmentIndex}>{segment}</Text>;
+          return <RNText key={segmentIndex}>{segment}</RNText>;
         }
 
         const [, word, punctuation] = match;
         const chars = word.split('');
 
         return (
-          <Text key={segmentIndex}>
+          <RNText key={segmentIndex}>
             {chars.map((char, charIndex) => {
               // Calculate emphasis for this character position
               const emphasis = calculateEmphasis(
@@ -218,7 +221,7 @@ export default function BionicText({
               );
 
               // Calculate visual properties based on emphasis
-              const fontWeight = calculateFontWeight(emphasis, maxFontWeight);
+              const fontFamily = calculateFontFamily(emphasis, maxFontWeight);
               const opacity = calculateOpacity(emphasis, minOpacity);
 
               // For very low emphasis, use base color with opacity
@@ -226,23 +229,23 @@ export default function BionicText({
               const color = emphasis > 0.7 ? boldColor : baseColor;
 
               return (
-                <Text
+                <RNText
                   key={charIndex}
                   style={{
-                    fontWeight: fontWeight.toString() as TextStyle['fontWeight'],
+                    fontFamily,
                     opacity,
                     color,
                   }}
                 >
                   {char}
-                </Text>
+                </RNText>
               );
             })}
-            {punctuation && <Text style={{ opacity: minOpacity }}>{punctuation}</Text>}
-          </Text>
+            {punctuation && <RNText style={{ opacity: minOpacity, fontFamily: DEFAULT_FONT_FAMILY }}>{punctuation}</RNText>}
+          </RNText>
         );
       })}
-    </Text>
+    </RNText>
   );
 }
 
@@ -250,6 +253,7 @@ const styles = StyleSheet.create({
   container: {
     fontSize: 16,
     lineHeight: 24,
-    // Allow font weight and opacity to be overridden per-character
+    fontFamily: DEFAULT_FONT_FAMILY,
+    // Allow font family and opacity to be overridden per-character
   },
 });

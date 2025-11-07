@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { THEME } from './colors';
+import { THEME, FONTS } from './colors';
 
 export type ThemeMode = 'dark' | 'light';
 
 interface ThemeContextType {
   mode: ThemeMode;
   colors: typeof THEME;
+  fonts: typeof FONTS;
   setMode: (mode: ThemeMode) => void;
 }
 
@@ -52,7 +53,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   const colors = mode === 'dark' ? THEME : THEME_LIGHT;
 
   return (
-    <ThemeContext.Provider value={{ mode, colors, setMode }}>
+    <ThemeContext.Provider value={{ mode, colors, fonts: FONTS, setMode }}>
       {children}
     </ThemeContext.Provider>
   );

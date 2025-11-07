@@ -367,4 +367,4 @@ class TestMicroStepsQueries:
 
         results = cursor.fetchall()
         assert len(results) == 1
-        assert results[0][2] == "Incomplete"  # description column
+        assert results[0][3] == "Incomplete"  # description column (index 3: step_id, parent_task_id, step_number, description)

@@ -13,8 +13,9 @@
  */
 
 import React, { useState } from 'react';
-import { TouchableOpacity, Text, StyleSheet, View, Animated } from 'react-native';
+import { TouchableOpacity, StyleSheet, View, Animated } from 'react-native';
 import Svg, { Path, Defs, LinearGradient, Stop } from 'react-native-svg';
+import { Text } from '@/src/components/ui/Text';
 
 export type ChevronButtonVariant = 'primary' | 'success' | 'error' | 'warning' | 'neutral';
 export type ChevronButtonPosition = 'first' | 'middle' | 'last' | 'single';

@@ -10,13 +10,21 @@ An ADHD-optimized productivity platform that helps users manage tasks, maintain 
 [![Tests: 887](https://img.shields.io/badge/tests-887%20collected-brightgreen.svg)](pytest.ini)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🚀 Quick Start
+## 🚀 Quick Navigation
 
-**New developer? Start here:** [START_HERE.md](START_HERE.md)
+**🆕 New Developer?** [START_HERE.md](START_HERE.md) - Your 30-minute onboarding guide
 
-**Want the full status?** [Platform Status Report](reports/current/PLATFORM_STATUS_2025-11-02.md)
+**📚 Documentation Hub** [docs/INDEX.md](docs/INDEX.md) - Find any documentation
 
-**Ready to build?** [Next Tasks Prioritized](docs/status/NEXT_TASKS_PRIORITIZED.md)
+**📊 Current Status** [reports/current/](reports/current/) - Latest platform status
+
+**💻 Ready to Code?** [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
+
+**🎯 Development Standards** [CLAUDE.md](CLAUDE.md) - Required reading for all devs
+
+**📦 Example Code** [examples/](examples/) - Patterns and templates
+
+**📈 Change Log** [CHANGELOG.md](CHANGELOG.md) - Recent updates
 
 ## 🎯 Current Status (November 2, 2025)
 
@@ -259,39 +267,49 @@ pap recommend
 
 ## 📚 Documentation
 
-### Backend Development (Start Here!)
+> **📖 Complete Documentation Hub**: [docs/INDEX.md](docs/INDEX.md)
 
-**New backend developer?** Follow this path:
+### 🎯 Getting Started
 
-1. **[Backend Onboarding](BACKEND_ONBOARDING.md)** ⭐ Complete setup checklist (1-3 days)
-2. **[CLAUDE.md](CLAUDE.md)** ⭐ Development standards and TDD workflow (REQUIRED)
-3. **[Backend Guide](BACKEND_GUIDE.md)** Architecture, patterns, and workflows
-4. **[Naming Conventions](NAMING_CONVENTIONS.md)** Coding and database naming standards
-5. **[Backend Resources](BACKEND_RESOURCES.md)** Tools, libraries, and learning materials
-6. **[Backend Hub](docs/backend/README.md)** Central documentation index
+- **New to the Project?** [START_HERE.md](START_HERE.md)
+- **Backend Developer?** [docs/getting-started/BACKEND_DEVELOPER_START.md](docs/getting-started/BACKEND_DEVELOPER_START.md)
+- **Frontend Developer?** [docs/getting-started/FRONTEND_DEVELOPER_START.md](docs/getting-started/FRONTEND_DEVELOPER_START.md)
+- **Installation Guide** [docs/getting-started/installation.md](docs/getting-started/installation.md)
 
-### Quick Reference
-- [Installation Guide](docs/installation.md)
-- [API Documentation](docs/api/README.md)
-- [User Guide](docs/user-guide/README.md)
-- [Developer Guide](docs/development/README.md)
+### 🏗️ Architecture & Design
 
-### Architecture
 - [System Architecture](docs/architecture/system-overview.md)
-- [Agent Framework](docs/architecture/agent-framework.md)
-- [Database Schema](docs/architecture/database-schema.md)
-- [API Design](docs/architecture/api-design.md)
-
-### Components
+- [AI System Architecture](docs/architecture/AI_SYSTEM_ARCHITECTURE.md)
+- [Design Documents](docs/design/)
 - [Core Agents](docs/components/core-agents.md)
-- [Gamification System](docs/components/gamification.md)
-- [Mobile Integration](docs/components/mobile-integration.md)
-- [Learning Engine](docs/components/learning-engine.md)
 
-### Deployment
-- [Production Deployment](docs/deployment/production.md)
-- [Docker Setup](docs/deployment/docker.md)
-- [Monitoring & Logging](docs/deployment/monitoring.md)
+### 💻 Development
+
+- **Standards & Conventions** [CLAUDE.md](CLAUDE.md) - **REQUIRED READING**
+- **Backend Development** [docs/backend/](docs/backend/)
+- **Frontend Development** [docs/frontend/](docs/frontend/)
+- **Mobile Development** [docs/mobile/](docs/mobile/)
+- **API Documentation** [docs/api/](docs/api/)
+
+### 📖 Guides & How-Tos
+
+- [Focus Mode Guide](docs/guides/FOCUS_MODE_GUIDE.md)
+- [Dogfooding Guide](docs/guides/DOGFOODING_START.md)
+- [BEAST Loop System](docs/guides/BEAST_LOOP_SYSTEM.md)
+- [All Guides →](docs/guides/)
+
+### 📊 Status & Reports
+
+- [Current Reports](reports/current/) - Latest status
+- [Project Status](docs/status/) - Detailed progress
+- [Report Archive](reports/archive/) - Historical reports
+
+### 📚 References
+
+- [Tech Stack](docs/references/TECH_STACK.md)
+- [Project Vision](docs/references/PROJECT_VISION_SYNTHESIS.md)
+- [External References](docs/references/EXTERNAL_REFERENCES.md)
+- [All References →](docs/references/)
 
 ## 🏗️ Architecture
 

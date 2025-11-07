@@ -31,7 +31,8 @@
       "Bash(npx react-native-storybook-loader --config .rnstorybook/main.ts)",
       "Bash(npm ls)",
       "Bash(npm run storybook-generate)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(tree -L 2 -I 'node_modules|__pycache__|*.pyc|.git|.next|storybook-static|.venv|dist' --dirsfirst)"
     ],
     "deny": [],
     "ask": []

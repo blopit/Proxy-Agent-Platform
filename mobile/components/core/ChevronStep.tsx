@@ -10,9 +10,10 @@
  */
 
 import React, { ReactNode } from 'react';
-import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, View, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { THEME } from '../../src/theme/colors';
+import { Text } from '@/src/components/ui/Text';
 
 export type ChevronPosition = 'first' | 'middle' | 'last' | 'single';
 export type ChevronStatus = 'pending' | 'active' | 'done' | 'error' | 'next' | 'tab' | 'active_tab';

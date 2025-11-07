@@ -1,7 +1,7 @@
 """Unit tests for StatisticsService."""
 import pytest
 from datetime import datetime, timedelta
-from src.services.statistics import StatisticsService
+from src.services.task_statistics_service import StatisticsService
 
 
 class TestStatisticsService:

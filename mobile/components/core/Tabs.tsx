@@ -4,9 +4,10 @@
  */
 
 import React, { ReactNode } from 'react';
-import { View, TouchableOpacity, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
 import { ChevronElement, ChevronPosition } from './ChevronElement';
 import { THEME } from '../../src/theme/colors';
+import { Text } from '@/src/components/ui/Text';
 
 export interface TabItem<T extends string = string> {
   id: T;

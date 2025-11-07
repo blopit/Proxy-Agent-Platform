@@ -6,9 +6,10 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Bot } from 'lucide-react-native';
 import { Card, CardHeader, CardContent, CardFooter } from '../ui/Card';
+import { Text } from '@/src/components/ui/Text';
 
 // Types (same as web version)
 interface MicroStep {

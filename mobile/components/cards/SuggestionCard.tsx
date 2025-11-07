@@ -12,10 +12,11 @@
  */
 
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { X, Plus } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
 import ChevronButton from '../core/ChevronButton';
+import { Text } from '@/src/components/ui/Text';
 
 export interface Source {
   iconSvg: string; // SVG path data

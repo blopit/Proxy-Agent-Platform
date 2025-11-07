@@ -85,16 +85,19 @@ yarn-error.log*
 # Ruff
 .ruff_cache/
 
-# Database
+# Runtime Data Directory (databases, logs, etc.)
+.data/
+
+# Database (legacy - files should be in .data/databases/)
 *.db
 *.sqlite3
 
-# Memory/Vector DB
+# Memory/Vector DB (legacy - should be in .data/)
 memory_db/
 test_memory_db/
 *.qdrant
 
-# Logs
+# Logs (legacy - should be in .data/logs/)
 *.log
 logs/
 

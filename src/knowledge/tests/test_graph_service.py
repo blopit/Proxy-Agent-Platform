@@ -269,14 +269,17 @@ class TestRelationshipCRUD:
     def test_create_relationship(self, graph_service, sample_relationships):
         """Test relationship creation"""
         rel = sample_relationships[0]
-        created_id = graph_service.create_relationship(
+        created_rel = graph_service.create_relationship(
                 from_entity_id=rel.from_entity_id,
                 to_entity_id=rel.to_entity_id,
                 relationship_type=rel.relationship_type,
                 metadata=rel.metadata if hasattr(rel, 'metadata') else {}
             )
 
-        assert created_id == rel.relationship_id
+        assert created_rel is not None
+        assert created_rel.from_entity_id == rel.from_entity_id
+        assert created_rel.to_entity_id == rel.to_entity_id
+        assert created_rel.relationship_type == rel.relationship_type
 
     def test_get_relationships(self, graph_service, sample_relationships):
         """Test retrieving relationships"""
@@ -289,8 +292,8 @@ class TestRelationshipCRUD:
                 metadata=rel.metadata if hasattr(rel, 'metadata') else {}
             )
 
-        # Get all relationships from alice
-        rels = graph_service.get_relationships(from_entity_id="alice")
+        # Get all relationships involving alice (from or to)
+        rels = graph_service.get_relationships(entity_id="alice")
         assert len(rels) == 2
 
     def test_get_relationships_by_type(self, graph_service, sample_relationships):

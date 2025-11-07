@@ -3,6 +3,8 @@
  * Centralized color definitions for the mobile app
  */
 
+import { FONT_FAMILY } from './fonts';
+
 export const THEME = {
   // Base colors (dark to light)
   base03: '#002b36', // Background highlights
@@ -47,6 +49,11 @@ export const SEMANTIC_COLORS = {
   tabToday: THEME.orange,
   tabProgress: THEME.violet,
 } as const;
+
+/**
+ * Font family exports for easy access in theme
+ */
+export const FONTS = FONT_FAMILY;
 
 export type ThemeColor = keyof typeof THEME;
 export type SemanticColor = keyof typeof SEMANTIC_COLORS;
