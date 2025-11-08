@@ -8,7 +8,6 @@ import * as AuthSession from 'expo-auth-session';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { API_BASE_URL, OAUTH_REDIRECT_SCHEME } from '@/src/api/config';
 
 // Required for dismissing the web browser modal
@@ -16,16 +15,6 @@ WebBrowser.maybeCompleteAuthSession();
 
 // App scheme for OAuth redirects
 const APP_SCHEME = OAUTH_REDIRECT_SCHEME;
-
-// Google Client ID from environment
-const GOOGLE_WEB_CLIENT_ID = Constants.expoConfig?.extra?.googleClientId || '';
-
-// Configure Google Sign-In
-GoogleSignin.configure({
-  webClientId: GOOGLE_WEB_CLIENT_ID, // From Google Cloud Console (Web OAuth client)
-  offlineAccess: true, // To get refresh token
-  forceCodeForRefreshToken: true, // Force auth code flow
-});
 
 export interface OAuthResult {
   access_token: string;
@@ -40,6 +29,31 @@ export interface OAuthResult {
 }
 
 export type SocialProvider = 'google' | 'apple' | 'github' | 'microsoft';
+
+/**
+ * Google OAuth Configuration
+ */
+const getGoogleConfig = () => {
+  const clientId = Constants.expoConfig?.extra?.googleClientId || '';
+  const scopes = ['openid', 'profile', 'email'];
+
+  // Platform-specific redirect URIs
+  let redirectUri: string;
+  if (Platform.OS === 'web') {
+    // Web uses localhost redirect (works with Web OAuth client)
+    redirectUri = 'http://127.0.0.1:19006/auth/google';
+  } else {
+    // iOS/Android use custom scheme
+    redirectUri = AuthSession.makeRedirectUri({
+      scheme: APP_SCHEME,
+      path: 'auth/google',
+    });
+  }
+
+  return { clientId, redirectUri, scopes };
+};
+
+const GOOGLE_CONFIG = getGoogleConfig();
 
 /**
  * GitHub OAuth Configuration
@@ -68,61 +82,123 @@ const MICROSOFT_CONFIG = {
 
 class OAuthService {
   /**
-   * Sign in with Google using the official Google Sign-In SDK
-   *
-   * This uses @react-native-google-signin/google-signin which:
-   * - Works on iOS, Android, and Web
-   * - Handles all OAuth complexity automatically
-   * - Provides native Google Sign-In UI
-   * - Is the official Google-recommended approach for React Native
+   * Sign in with Google - uses platform-specific implementation
    */
   async signInWithGoogle(): Promise<OAuthResult> {
+    if (Platform.OS === 'web') {
+      return this.signInWithGoogleWeb();
+    } else {
+      return this.signInWithGoogleNative();
+    }
+  }
+
+  /**
+   * Sign in with Google on web using expo-auth-session
+   */
+  private async signInWithGoogleWeb(): Promise<OAuthResult> {
     try {
-      // Check if Google Play Services are available (Android only, not on web)
-      if (Platform.OS === 'android') {
-        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-      }
+      // Use AuthSession for web OAuth flow
+      const discovery = {
+        authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+        tokenEndpoint: 'https://oauth2.googleapis.com/token',
+      };
 
-      // Sign in with Google - this opens native Google Sign-In UI (or popup on web)
-      const userInfo = await GoogleSignin.signIn();
-
-      // Get the server auth code (this is what we send to our backend)
-      const serverAuthCode = userInfo.serverAuthCode;
-
-      if (!serverAuthCode) {
-        throw new Error('Failed to get authorization code from Google Sign-In');
-      }
-
-      // Get the ID token for additional user info if needed
-      const idToken = userInfo.data?.idToken;
-
-      console.log('Google Sign-In successful:', {
-        email: userInfo.data?.user.email,
-        name: userInfo.data?.user.name,
-        hasAuthCode: !!serverAuthCode,
-        hasIdToken: !!idToken,
+      const authRequest = new AuthSession.AuthRequest({
+        clientId: GOOGLE_CONFIG.clientId,
+        scopes: GOOGLE_CONFIG.scopes,
+        redirectUri: GOOGLE_CONFIG.redirectUri,
+        responseType: AuthSession.ResponseType.Code,
+        usePKCE: false,
+        extraParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+        },
       });
 
-      // Exchange the server auth code for our app's token via backend
-      // Note: We don't send redirect_uri because Google Sign-In SDK handles the OAuth flow
-      const tokenResponse = await this.exchangeGoogleAuthCode(serverAuthCode);
-      return tokenResponse;
-    } catch (error: any) {
-      console.error('Google sign-in error:', error);
+      const result = await authRequest.promptAsync(discovery);
 
-      // Handle specific Google Sign-In errors
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+      // Handle user cancellation
+      if (result.type === 'cancel') {
         throw new Error('Google authentication cancelled by user');
-      } else if (error.code === statusCodes.IN_PROGRESS) {
-        throw new Error('Google sign-in already in progress');
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        throw new Error('Google Play Services not available (Android only)');
       }
 
+      // Check for error in response
+      if (result.type === 'error') {
+        throw new Error(
+          `Google authentication error: ${result.error?.description || result.error?.code || 'Unknown error'}`
+        );
+      }
+
+      // Check for success and authorization code
+      if (result.type !== 'success' || !result.params.code) {
+        throw new Error('Google authentication failed - no authorization code received');
+      }
+
+      const code = result.params.code;
+
+      // Exchange authorization code for token via backend
+      const tokenResponse = await this.exchangeOAuthCode('google', code, GOOGLE_CONFIG.redirectUri);
+      return tokenResponse;
+    } catch (error) {
+      console.error('Google sign-in error (web):', error);
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error('Google sign-in failed');
+      throw new Error('Google sign-in failed on web');
+    }
+  }
+
+  /**
+   * Sign in with Google on iOS/Android using WebBrowser
+   */
+  private async signInWithGoogleNative(): Promise<OAuthResult> {
+    try {
+      // Build the authorization URL for Google
+      const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+      authUrl.searchParams.append('client_id', GOOGLE_CONFIG.clientId);
+      authUrl.searchParams.append('redirect_uri', GOOGLE_CONFIG.redirectUri);
+      authUrl.searchParams.append('response_type', 'code');
+      authUrl.searchParams.append('scope', GOOGLE_CONFIG.scopes.join(' '));
+      authUrl.searchParams.append('access_type', 'offline');
+      authUrl.searchParams.append('prompt', 'consent');
+
+      // Start OAuth flow using WebBrowser
+      const result = await WebBrowser.openAuthSessionAsync(
+        authUrl.toString(),
+        GOOGLE_CONFIG.redirectUri
+      );
+
+      // Handle user cancellation
+      if (result.type === 'cancel') {
+        throw new Error('Google authentication cancelled by user');
+      }
+
+      // Check for successful redirect with URL
+      if (result.type !== 'success' || !result.url) {
+        throw new Error('Google authentication failed - no redirect URL received');
+      }
+
+      // Parse authorization code from redirect URL
+      const redirectUrl = new URL(result.url);
+      const code = redirectUrl.searchParams.get('code');
+
+      if (!code) {
+        const error = redirectUrl.searchParams.get('error');
+        const errorDescription = redirectUrl.searchParams.get('error_description');
+        throw new Error(
+          `Google authentication failed: ${errorDescription || error || 'No authorization code received'}`
+        );
+      }
+
+      // Exchange authorization code for token via backend
+      const tokenResponse = await this.exchangeOAuthCode('google', code, GOOGLE_CONFIG.redirectUri);
+      return tokenResponse;
+    } catch (error) {
+      console.error('Google sign-in error (native):', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('Google sign-in failed on mobile');
     }
   }
 
@@ -266,34 +342,8 @@ class OAuthService {
   }
 
   /**
-   * Exchange Google Sign-In server auth code for app token via backend
-   *
-   * The Google Sign-In SDK handles the OAuth flow and provides a server auth code.
-   * We send this to our backend which exchanges it for user tokens.
-   */
-  private async exchangeGoogleAuthCode(code: string): Promise<OAuthResult> {
-    const response = await fetch(`${API_BASE_URL}/auth/oauth/google`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        code,
-        // No redirect_uri needed - Google Sign-In SDK handled the OAuth flow
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Google OAuth exchange failed');
-    }
-
-    return response.json();
-  }
-
-  /**
    * Exchange OAuth authorization code for app token via backend
-   * (Used for GitHub and Microsoft OAuth)
+   * (Used for Google, GitHub, and Microsoft OAuth)
    */
   private async exchangeOAuthCode(
     provider: SocialProvider,
