@@ -44,20 +44,24 @@ export type SocialProvider = 'google' | 'apple' | 'github' | 'microsoft';
  * Google OAuth Configuration
  *
  * Development Setup (Current):
- * - Using localhost redirect URI (http://127.0.0.1) for Web OAuth client
+ * - Using localhost redirect URI with port 19006 (Expo web default port)
  * - This works for development/testing with the existing Web OAuth client
- * - No need to create separate iOS/Android OAuth clients
+ * - Add http://127.0.0.1:19006/auth/google to Google Cloud Console
+ *
+ * Limitations:
+ * - Only works when testing on Expo web mode (npm start, then 'w' for web)
+ * - Won't work on physical iOS/Android devices
  *
  * Production Setup (Recommended):
- * - Create separate iOS OAuth client (uses Bundle ID verification)
- * - Create separate Android OAuth client (uses package name + SHA-1 verification)
+ * - Option A: Use @react-native-google-signin/google-signin package (recommended)
+ * - Option B: Create separate iOS/Android OAuth clients
  * - See GOOGLE_OAUTH_MOBILE_SETUP.md for details
  */
 const GOOGLE_CONFIG = {
   clientId: GOOGLE_CLIENT_ID,
-  // Development: Use localhost redirect (accepted by Web OAuth client)
-  // Add http://127.0.0.1 to Google Cloud Console Authorized redirect URIs
-  redirectUri: 'http://127.0.0.1',
+  // Development: Localhost with port (accepted by Web OAuth client)
+  // Port 19006 is Expo's default web development port
+  redirectUri: 'http://127.0.0.1:19006/auth/google',
   scopes: ['openid', 'profile', 'email'],
 };
 
