@@ -46,7 +46,8 @@ const getGoogleConfig = () => {
   let redirectUri: string;
   if (Platform.OS === 'web') {
     // Web uses localhost redirect (works with Web OAuth client)
-    redirectUri = 'http://127.0.0.1:19006/auth/google';
+    // Use localhost instead of 127.0.0.1 for better Google compatibility
+    redirectUri = 'http://localhost:19006/auth/google';
   } else {
     // iOS/Android use custom scheme
     redirectUri = AuthSession.makeRedirectUri({
