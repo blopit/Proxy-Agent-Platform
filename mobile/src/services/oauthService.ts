@@ -45,11 +45,13 @@ const getGoogleConfig = () => {
   // Platform-specific redirect URIs
   let redirectUri: string;
   if (Platform.OS === 'web') {
-    // Web uses localhost redirect (works with Web OAuth client)
-    // Use localhost instead of 127.0.0.1 for better Google compatibility
-    redirectUri = 'http://localhost:19006/auth/google';
+    // Web: Use AuthSession.makeRedirectUri() to generate proper web redirect
+    // This creates a URI that expo-auth-session can automatically handle
+    redirectUri = AuthSession.makeRedirectUri({
+      // No scheme needed for web - generates http://localhost:19006/
+    });
   } else {
-    // iOS/Android use custom scheme
+    // iOS/Android: Use custom scheme
     redirectUri = AuthSession.makeRedirectUri({
       scheme: APP_SCHEME,
       path: 'auth/google',
