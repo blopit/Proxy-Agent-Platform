@@ -34,7 +34,12 @@ export type SocialProvider = 'google' | 'apple' | 'github' | 'microsoft';
  * Google OAuth Configuration
  */
 const getGoogleConfig = () => {
-  const clientId = Constants.expoConfig?.extra?.googleClientId || '';
+  // Try multiple ways to get the client ID
+  const clientId =
+    process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||
+    Constants.expoConfig?.extra?.googleClientId ||
+    '';
+
   const scopes = ['openid', 'profile', 'email'];
 
   // Platform-specific redirect URIs
