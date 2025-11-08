@@ -78,10 +78,12 @@ class OAuthService {
    */
   async signInWithGoogle(): Promise<OAuthResult> {
     try {
-      // Check if Google Play Services are available (Android only)
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      // Check if Google Play Services are available (Android only, not on web)
+      if (Platform.OS === 'android') {
+        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      }
 
-      // Sign in with Google - this opens native Google Sign-In UI
+      // Sign in with Google - this opens native Google Sign-In UI (or popup on web)
       const userInfo = await GoogleSignin.signIn();
 
       // Get the server auth code (this is what we send to our backend)
