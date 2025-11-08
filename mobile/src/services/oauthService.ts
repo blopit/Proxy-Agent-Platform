@@ -43,18 +43,21 @@ export type SocialProvider = 'google' | 'apple' | 'github' | 'microsoft';
 /**
  * Google OAuth Configuration
  *
- * Google requires specific redirect URI formats for mobile apps:
- * - iOS: Uses reversed client ID (com.googleusercontent.apps.{CLIENT_ID})
- * - Android: Uses reversed client ID (for development) or app links (for production)
+ * Development Setup (Current):
+ * - Using localhost redirect URI (http://127.0.0.1) for Web OAuth client
+ * - This works for development/testing with the existing Web OAuth client
+ * - No need to create separate iOS/Android OAuth clients
  *
- * The reversed client ID format is the official Google OAuth standard for mobile apps.
- * This MUST be added to your Google Cloud Console Authorized redirect URIs.
+ * Production Setup (Recommended):
+ * - Create separate iOS OAuth client (uses Bundle ID verification)
+ * - Create separate Android OAuth client (uses package name + SHA-1 verification)
+ * - See GOOGLE_OAUTH_MOBILE_SETUP.md for details
  */
 const GOOGLE_CONFIG = {
   clientId: GOOGLE_CLIENT_ID,
-  // Official Google OAuth redirect URI for mobile apps
-  // Format: com.googleusercontent.apps.{CLIENT_ID}:/oauth2redirect
-  redirectUri: `${GOOGLE_REVERSED_CLIENT_ID}:/oauth2redirect`,
+  // Development: Use localhost redirect (accepted by Web OAuth client)
+  // Add http://127.0.0.1 to Google Cloud Console Authorized redirect URIs
+  redirectUri: 'http://127.0.0.1',
   scopes: ['openid', 'profile', 'email'],
 };
 
