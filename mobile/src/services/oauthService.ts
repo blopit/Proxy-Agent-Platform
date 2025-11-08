@@ -73,35 +73,51 @@ class OAuthService {
    */
   async signInWithGoogle(): Promise<OAuthResult> {
     try {
-      const discovery = {
-        authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-        tokenEndpoint: 'https://oauth2.googleapis.com/token',
-      };
+      // Build the authorization URL manually
+      const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+      authUrl.searchParams.append('client_id', GOOGLE_CONFIG.clientId);
+      authUrl.searchParams.append('redirect_uri', GOOGLE_CONFIG.redirectUri);
+      authUrl.searchParams.append('response_type', 'code');
+      authUrl.searchParams.append('scope', GOOGLE_CONFIG.scopes.join(' '));
+      authUrl.searchParams.append('access_type', 'offline');
+      authUrl.searchParams.append('prompt', 'consent');
 
-      const [request, response, promptAsync] = AuthSession.useAuthRequest(
-        {
-          clientId: GOOGLE_CONFIG.clientId,
-          scopes: GOOGLE_CONFIG.scopes,
-          redirectUri: GOOGLE_CONFIG.redirectUri,
-        },
-        discovery
+      // Start OAuth flow using WebBrowser (modern expo-auth-session v7 API)
+      const result = await WebBrowser.openAuthSessionAsync(
+        authUrl.toString(),
+        GOOGLE_CONFIG.redirectUri
       );
 
-      if (!request) {
-        throw new Error('Failed to create auth request');
+      // Handle user cancellation
+      if (result.type === 'cancel') {
+        throw new Error('Google authentication cancelled by user');
       }
 
-      const result = await promptAsync();
+      // Check for successful redirect with URL
+      if (result.type !== 'success' || !result.url) {
+        throw new Error('Google authentication failed - no redirect URL received');
+      }
 
-      if (result.type !== 'success') {
-        throw new Error('Google authentication cancelled or failed');
+      // Parse authorization code from redirect URL
+      const redirectUrl = new URL(result.url);
+      const code = redirectUrl.searchParams.get('code');
+
+      if (!code) {
+        const error = redirectUrl.searchParams.get('error');
+        const errorDescription = redirectUrl.searchParams.get('error_description');
+        throw new Error(
+          `Google authentication failed: ${errorDescription || error || 'No authorization code received'}`
+        );
       }
 
       // Exchange authorization code for token via backend
-      const tokenResponse = await this.exchangeOAuthCode('google', result.params.code);
+      const tokenResponse = await this.exchangeOAuthCode('google', code, GOOGLE_CONFIG.redirectUri);
       return tokenResponse;
     } catch (error) {
       console.error('Google sign-in error:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
       throw new Error('Google sign-in failed');
     }
   }
@@ -144,15 +160,48 @@ class OAuthService {
    */
   async signInWithGitHub(): Promise<OAuthResult> {
     try {
-      const discovery = {
-        authorizationEndpoint: 'https://github.com/login/oauth/authorize',
-        tokenEndpoint: 'https://github.com/login/oauth/access_token',
-      };
+      // Build the authorization URL for GitHub
+      const authUrl = new URL('https://github.com/login/oauth/authorize');
+      authUrl.searchParams.append('client_id', GITHUB_CONFIG.clientId);
+      authUrl.searchParams.append('redirect_uri', GITHUB_CONFIG.redirectUri);
+      authUrl.searchParams.append('scope', GITHUB_CONFIG.scopes.join(' '));
 
-      // GitHub OAuth implementation would go here
-      throw new Error('GitHub Sign In not yet implemented');
+      // Start OAuth flow using WebBrowser
+      const result = await WebBrowser.openAuthSessionAsync(
+        authUrl.toString(),
+        GITHUB_CONFIG.redirectUri
+      );
+
+      // Handle user cancellation
+      if (result.type === 'cancel') {
+        throw new Error('GitHub authentication cancelled by user');
+      }
+
+      // Check for successful redirect with URL
+      if (result.type !== 'success' || !result.url) {
+        throw new Error('GitHub authentication failed - no redirect URL received');
+      }
+
+      // Parse authorization code from redirect URL
+      const redirectUrl = new URL(result.url);
+      const code = redirectUrl.searchParams.get('code');
+
+      if (!code) {
+        const error = redirectUrl.searchParams.get('error');
+        const errorDescription = redirectUrl.searchParams.get('error_description');
+        throw new Error(
+          `GitHub authentication failed: ${errorDescription || error || 'No authorization code received'}`
+        );
+      }
+
+      // Exchange authorization code for token via backend
+      const tokenResponse = await this.exchangeOAuthCode('github', code, GITHUB_CONFIG.redirectUri);
+      return tokenResponse;
     } catch (error) {
       console.error('GitHub sign-in error:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
       throw new Error('GitHub sign-in failed');
     }
   }
@@ -162,15 +211,52 @@ class OAuthService {
    */
   async signInWithMicrosoft(): Promise<OAuthResult> {
     try {
-      const discovery = {
-        authorizationEndpoint: `https://login.microsoftonline.com/${MICROSOFT_CONFIG.tenant}/oauth2/v2.0/authorize`,
-        tokenEndpoint: `https://login.microsoftonline.com/${MICROSOFT_CONFIG.tenant}/oauth2/v2.0/token`,
-      };
+      // Build the authorization URL for Microsoft
+      const authUrl = new URL(
+        `https://login.microsoftonline.com/${MICROSOFT_CONFIG.tenant}/oauth2/v2.0/authorize`
+      );
+      authUrl.searchParams.append('client_id', MICROSOFT_CONFIG.clientId);
+      authUrl.searchParams.append('redirect_uri', MICROSOFT_CONFIG.redirectUri);
+      authUrl.searchParams.append('response_type', 'code');
+      authUrl.searchParams.append('scope', MICROSOFT_CONFIG.scopes.join(' '));
+      authUrl.searchParams.append('response_mode', 'query');
 
-      // Microsoft OAuth implementation would go here
-      throw new Error('Microsoft Sign In not yet implemented');
+      // Start OAuth flow using WebBrowser
+      const result = await WebBrowser.openAuthSessionAsync(
+        authUrl.toString(),
+        MICROSOFT_CONFIG.redirectUri
+      );
+
+      // Handle user cancellation
+      if (result.type === 'cancel') {
+        throw new Error('Microsoft authentication cancelled by user');
+      }
+
+      // Check for successful redirect with URL
+      if (result.type !== 'success' || !result.url) {
+        throw new Error('Microsoft authentication failed - no redirect URL received');
+      }
+
+      // Parse authorization code from redirect URL
+      const redirectUrl = new URL(result.url);
+      const code = redirectUrl.searchParams.get('code');
+
+      if (!code) {
+        const error = redirectUrl.searchParams.get('error');
+        const errorDescription = redirectUrl.searchParams.get('error_description');
+        throw new Error(
+          `Microsoft authentication failed: ${errorDescription || error || 'No authorization code received'}`
+        );
+      }
+
+      // Exchange authorization code for token via backend
+      const tokenResponse = await this.exchangeOAuthCode('microsoft', code, MICROSOFT_CONFIG.redirectUri);
+      return tokenResponse;
     } catch (error) {
       console.error('Microsoft sign-in error:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
       throw new Error('Microsoft sign-in failed');
     }
   }
@@ -180,14 +266,18 @@ class OAuthService {
    */
   private async exchangeOAuthCode(
     provider: SocialProvider,
-    code: string
+    code: string,
+    redirectUri: string
   ): Promise<OAuthResult> {
     const response = await fetch(`${API_BASE_URL}/auth/oauth/${provider}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({
+        code,
+        redirect_uri: redirectUri,
+      }),
     });
 
     if (!response.ok) {
