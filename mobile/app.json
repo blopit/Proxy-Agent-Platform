@@ -71,6 +71,8 @@
       "appScheme": "proxyagent",
       "apiBaseUrl": "http://localhost:8000/api/v1",
       "googleClientId": "${EXPO_PUBLIC_GOOGLE_CLIENT_ID}",
+      "googleWebClientId": "${EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID}",
+      "googleNativeClientId": "${EXPO_PUBLIC_GOOGLE_NATIVE_CLIENT_ID}",
       "githubClientId": "${EXPO_PUBLIC_GITHUB_CLIENT_ID}",
       "microsoftClientId": "${EXPO_PUBLIC_MICROSOFT_CLIENT_ID}",
       "microsoftTenant": "${EXPO_PUBLIC_MICROSOFT_TENANT}"

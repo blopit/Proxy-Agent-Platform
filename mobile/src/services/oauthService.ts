@@ -32,30 +32,54 @@ export type SocialProvider = 'google' | 'apple' | 'github' | 'microsoft';
 
 /**
  * Google OAuth Configuration
+ * Uses platform-specific client IDs:
+ * - Web: Uses Web Application client (allows localhost redirect URIs)
+ * - iOS/Android: Uses iOS/Desktop client (uses custom schemes)
  */
 const getGoogleConfig = () => {
-  // Try multiple ways to get the client ID
-  const clientId =
-    process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||
-    Constants.expoConfig?.extra?.googleClientId ||
-    '';
+  // Platform-specific client IDs
+  let clientId: string;
+  if (Platform.OS === 'web') {
+    // Web: Use Web Application OAuth client
+    clientId =
+      process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
+      process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||
+      Constants.expoConfig?.extra?.googleWebClientId ||
+      Constants.expoConfig?.extra?.googleClientId ||
+      '';
+  } else {
+    // iOS/Android: Use Native/iOS OAuth client
+    clientId =
+      process.env.EXPO_PUBLIC_GOOGLE_NATIVE_CLIENT_ID ||
+      process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||
+      Constants.expoConfig?.extra?.googleNativeClientId ||
+      Constants.expoConfig?.extra?.googleClientId ||
+      '';
+  }
 
   const scopes = ['openid', 'profile', 'email'];
 
   // Platform-specific redirect URIs
   let redirectUri: string;
   if (Platform.OS === 'web') {
-    // Web: Use AuthSession.makeRedirectUri() to generate proper web redirect
-    // This creates a URI that expo-auth-session can automatically handle
+    // Web: Explicitly use localhost with the correct port
+    // Expo web runs on port 8081 by default
     redirectUri = AuthSession.makeRedirectUri({
-      // No scheme needed for web - generates http://localhost:19006/
+      path: '',  // Empty path for web
     });
+    // Ensure we're using the correct port that Metro is running on
+    console.log('[OAuth Config] Platform: web');
+    console.log('[OAuth Config] Web Client ID:', clientId);
+    console.log('[OAuth Config] Generated web redirect URI:', redirectUri);
   } else {
     // iOS/Android: Use custom scheme
     redirectUri = AuthSession.makeRedirectUri({
       scheme: APP_SCHEME,
       path: 'auth/google',
     });
+    console.log('[OAuth Config] Platform:', Platform.OS);
+    console.log('[OAuth Config] Native Client ID:', clientId);
+    console.log('[OAuth Config] Generated native redirect URI:', redirectUri);
   }
 
   return { clientId, redirectUri, scopes };

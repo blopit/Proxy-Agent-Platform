@@ -20,6 +20,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
+  loginWithToken: (accessToken: string, user: User) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   error: string | null;
@@ -105,6 +106,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const loginWithToken = async (accessToken: string, user: User) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Directly save OAuth token and user data
+      const tokenResponse: TokenResponse = {
+        access_token: accessToken,
+        token_type: 'bearer',
+        expires_in: 3600, // 1 hour default
+        user,
+      };
+
+      await saveAuthData(tokenResponse);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'OAuth login failed';
+      setError(message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const signup = async (name: string, email: string, password: string) => {
     try {
       setIsLoading(true);
@@ -154,6 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
     isAuthenticated: !!user && !!token,
     login,
+    loginWithToken,
     signup,
     logout,
     error,
