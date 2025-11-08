@@ -8,13 +8,23 @@ import * as AuthSession from 'expo-auth-session';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { API_BASE_URL, OAUTH_REDIRECT_SCHEME } from '@/src/api/config';
 
 // Required for dismissing the web browser modal
 WebBrowser.maybeCompleteAuthSession();
 
-// Environment variables (use EXPO_PUBLIC_ prefix for Expo)
-const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://localhost:8000/api/v1';
-const APP_SCHEME = Constants.expoConfig?.extra?.appScheme || 'proxyagent';
+// App scheme for OAuth redirects
+const APP_SCHEME = OAUTH_REDIRECT_SCHEME;
+
+// Google Client ID from environment
+const GOOGLE_CLIENT_ID = Constants.expoConfig?.extra?.googleClientId || '';
+
+// Google reversed client ID for iOS (official Google OAuth redirect URI format)
+// Format: com.googleusercontent.apps.{IDENTIFIER}
+// This is required for Google OAuth on mobile apps
+const GOOGLE_REVERSED_CLIENT_ID = GOOGLE_CLIENT_ID
+  ? `com.googleusercontent.apps.${GOOGLE_CLIENT_ID.split('.')[0]}`
+  : '';
 
 export interface OAuthResult {
   access_token: string;
@@ -32,13 +42,19 @@ export type SocialProvider = 'google' | 'apple' | 'github' | 'microsoft';
 
 /**
  * Google OAuth Configuration
+ *
+ * Google requires specific redirect URI formats for mobile apps:
+ * - iOS: Uses reversed client ID (com.googleusercontent.apps.{CLIENT_ID})
+ * - Android: Uses reversed client ID (for development) or app links (for production)
+ *
+ * The reversed client ID format is the official Google OAuth standard for mobile apps.
+ * This MUST be added to your Google Cloud Console Authorized redirect URIs.
  */
 const GOOGLE_CONFIG = {
-  clientId: Constants.expoConfig?.extra?.googleClientId || '',
-  redirectUri: AuthSession.makeRedirectUri({
-    scheme: APP_SCHEME,
-    path: 'auth/google',
-  }),
+  clientId: GOOGLE_CLIENT_ID,
+  // Official Google OAuth redirect URI for mobile apps
+  // Format: com.googleusercontent.apps.{CLIENT_ID}:/oauth2redirect
+  redirectUri: `${GOOGLE_REVERSED_CLIENT_ID}:/oauth2redirect`,
   scopes: ['openid', 'profile', 'email'],
 };
 

@@ -13,15 +13,45 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.proxyagent.app",
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "proxyagent",
+              "com.googleusercontent.apps.765534073366-98ffgpadh021rmhktv4l16lbnaih12t6"
+            ]
+          }
+        ]
+      }
     },
     "android": {
+      "package": "com.proxyagent.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "proxyagent"
+            },
+            {
+              "scheme": "com.googleusercontent.apps.765534073366-98ffgpadh021rmhktv4l16lbnaih12t6"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
