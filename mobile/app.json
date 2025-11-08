@@ -58,7 +58,13 @@
     },
     "scheme": "proxyagent",
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.765534073366-98ffgpadh021rmhktv4l16lbnaih12t6"
+        }
+      ]
     ],
     "extra": {
       "storybookEnabled": true,
