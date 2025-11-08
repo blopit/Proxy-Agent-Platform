@@ -97,6 +97,11 @@ class OAuthService {
    */
   private async signInWithGoogleWeb(): Promise<OAuthResult> {
     try {
+      console.log('[OAuth Web] Starting Google Sign-In on web');
+      console.log('[OAuth Web] Client ID:', GOOGLE_CONFIG.clientId);
+      console.log('[OAuth Web] Redirect URI:', GOOGLE_CONFIG.redirectUri);
+      console.log('[OAuth Web] Scopes:', GOOGLE_CONFIG.scopes);
+
       // Use AuthSession for web OAuth flow
       const discovery = {
         authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
@@ -115,7 +120,10 @@ class OAuthService {
         },
       });
 
+      console.log('[OAuth Web] Auth request created, opening prompt...');
       const result = await authRequest.promptAsync(discovery);
+      console.log('[OAuth Web] Prompt result type:', result.type);
+      console.log('[OAuth Web] Full result:', JSON.stringify(result, null, 2));
 
       // Handle user cancellation
       if (result.type === 'cancel') {
@@ -135,9 +143,12 @@ class OAuthService {
       }
 
       const code = result.params.code;
+      console.log('[OAuth Web] Authorization code received:', code.substring(0, 20) + '...');
 
       // Exchange authorization code for token via backend
+      console.log('[OAuth Web] Exchanging code with backend...');
       const tokenResponse = await this.exchangeOAuthCode('google', code, GOOGLE_CONFIG.redirectUri);
+      console.log('[OAuth Web] Token exchange successful');
       return tokenResponse;
     } catch (error) {
       console.error('Google sign-in error (web):', error);
@@ -350,7 +361,12 @@ class OAuthService {
     code: string,
     redirectUri: string
   ): Promise<OAuthResult> {
-    const response = await fetch(`${API_BASE_URL}/auth/oauth/${provider}`, {
+    const url = `${API_BASE_URL}/auth/oauth/${provider}`;
+    console.log('[OAuth Exchange] Sending request to:', url);
+    console.log('[OAuth Exchange] Provider:', provider);
+    console.log('[OAuth Exchange] Redirect URI:', redirectUri);
+
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -361,12 +377,22 @@ class OAuthService {
       }),
     });
 
+    console.log('[OAuth Exchange] Response status:', response.status);
+
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || `${provider} OAuth exchange failed`);
+      const errorText = await response.text();
+      console.error('[OAuth Exchange] Error response:', errorText);
+      try {
+        const error = JSON.parse(errorText);
+        throw new Error(error.detail || `${provider} OAuth exchange failed`);
+      } catch {
+        throw new Error(`${provider} OAuth exchange failed: ${response.status} - ${errorText}`);
+      }
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('[OAuth Exchange] Success - received token');
+    return result;
   }
 
   /**
