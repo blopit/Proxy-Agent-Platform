@@ -1,11 +1,13 @@
+/**
+ * Map View - Big picture view & planning (formerly Mapper)
+ * Note: ProfileSwitcher moved to You tab
+ */
+
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import ProfileSwitcher from '../../components/ProfileSwitcher';
-import { useProfile } from '@/src/contexts/ProfileContext';
+import { THEME } from '@/src/theme/colors';
 
-export default function MapperScreen() {
-  const { activeProfile, setActiveProfile } = useProfile();
-
+export default function MapScreen() {
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -18,25 +20,15 @@ export default function MapperScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.emoji}>🗺️</Text>
-          <Text style={styles.title}>Mapper Mode</Text>
-          <Text style={styles.subtitle}>
-            Big picture view & planning
-          </Text>
+          <Text style={styles.title}>Map Mode</Text>
+          <Text style={styles.subtitle}>Big picture view & planning</Text>
         </View>
 
-        {/* Profile Switcher */}
-        <ProfileSwitcher
-          selectedProfile={activeProfile}
-          onProfileChange={setActiveProfile}
-        />
-
-        {/* Profile-specific content */}
+        {/* Overview Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            Overview - {activeProfile === 'personal' ? 'Personal' : activeProfile === 'lionmotel' ? 'Lion Motel' : 'AI Service'}
-          </Text>
+          <Text style={styles.sectionTitle}>Overview</Text>
 
-          {/* Stats placeholder */}
+          {/* Stats card */}
           <View style={styles.card}>
             <View style={styles.statRow}>
               <View style={styles.stat}>
@@ -54,7 +46,7 @@ export default function MapperScreen() {
             </View>
           </View>
 
-          {/* Weekly progress placeholder */}
+          {/* Weekly progress card */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Weekly Progress</Text>
             <Text style={styles.cardDescription}>
@@ -63,7 +55,7 @@ export default function MapperScreen() {
             </Text>
           </View>
 
-          {/* Zones placeholder */}
+          {/* Zones card */}
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Task Zones</Text>
             <View style={styles.zoneList}>
@@ -93,7 +85,7 @@ export default function MapperScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#002b36',
+    backgroundColor: THEME.base03,
   },
   scrollView: {
     flex: 1,
@@ -114,12 +106,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#6c71c4', // Solarized violet
+    color: THEME.violet,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
-    color: '#93a1a1',
+    color: THEME.base01,
     textAlign: 'center',
   },
   section: {
@@ -128,16 +120,16 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#93a1a1',
+    color: THEME.base0,
     marginBottom: 16,
   },
   card: {
-    backgroundColor: '#073642', // Solarized base02
+    backgroundColor: THEME.base02,
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#586e75',
+    borderColor: THEME.base01,
   },
   statRow: {
     flexDirection: 'row',
@@ -149,22 +141,22 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#6c71c4',
+    color: THEME.violet,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 13,
-    color: '#839496',
+    color: THEME.base01,
   },
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#93a1a1',
+    color: THEME.base0,
     marginBottom: 8,
   },
   cardDescription: {
     fontSize: 14,
-    color: '#839496',
+    color: THEME.base01,
     lineHeight: 20,
   },
   zoneList: {
@@ -182,13 +174,13 @@ const styles = StyleSheet.create({
   zoneText: {
     flex: 1,
     fontSize: 15,
-    color: '#93a1a1',
+    color: THEME.base0,
   },
   zoneCount: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6c71c4',
-    backgroundColor: 'rgba(108, 113, 196, 0.2)',
+    color: THEME.violet,
+    backgroundColor: `${THEME.violet}30`,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,

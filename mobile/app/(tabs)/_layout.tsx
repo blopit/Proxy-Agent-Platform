@@ -1,5 +1,5 @@
 import { Tabs as ExpoTabs } from 'expo-router';
-import { Plus, Search, Target, Calendar, Map } from 'lucide-react-native';
+import { Plus, Search, Target, Calendar, User } from 'lucide-react-native';
 import { Text, View } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Tabs, TabItem } from '@/components/core/Tabs';
@@ -53,10 +53,10 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       ),
     },
     {
-      id: 'mapper',
-      icon: Map,
-      color: '#6c71c4',
-      description: 'Map view',
+      id: 'you',
+      icon: User,
+      color: '#859900', // Solarized green
+      description: 'Profile & settings',
     },
   ];
 
@@ -103,7 +103,7 @@ export default function TabLayout() {
       <ExpoTabs.Screen name="scout" options={{ title: 'Scout' }} />
       <ExpoTabs.Screen name="hunter" options={{ title: 'Hunt' }} />
       <ExpoTabs.Screen name="today" options={{ title: 'Today' }} />
-      <ExpoTabs.Screen name="mapper" options={{ title: 'Map' }} />
+      <ExpoTabs.Screen name="you" options={{ title: 'You' }} />
     </ExpoTabs>
   );
 }
