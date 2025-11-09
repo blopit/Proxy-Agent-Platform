@@ -62,8 +62,10 @@ mobile/
 │   ├── preview.tsx
 │   └── stories/               # Example stories
 ├── assets/                    # Images, fonts, icons
+├── docs/                      # Documentation and guides
+│   ├── STORYBOOK_GUIDE.md     # Storybook usage guide
+│   └── archive/               # Historical progress reports
 ├── metro.config.js            # Metro bundler + Storybook integration
-├── MIGRATION_GUIDE.md         # Web → RN migration guide
 └── package.json
 ```
 
@@ -199,11 +201,9 @@ npm run storybook-generate
 
 4. Restart Expo to see your new story!
 
-### Migration from Web Components
+### Component Development
 
-See **[MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)** for detailed instructions on converting web components from `frontend/src/components/mobile/` to React Native.
-
-**Key differences:**
+**Key React Native differences:**
 - `<div>` → `<View>`
 - `<span>`/`<p>` → `<Text>`
 - `className` → `style` (StyleSheet)
@@ -286,10 +286,9 @@ npm start
 - ✅ Auto-generation working
 
 #### Documentation (100%)
-- ✅ [`MIGRATION_GUIDE.md`](./MIGRATION_GUIDE.md) - Component conversion guide
-- ✅ [`COMPONENTS_CONVERTED.md`](./COMPONENTS_CONVERTED.md) - Progress tracker
-- ✅ 4 session summaries documenting progress
-- ✅ Backend screen-by-screen analysis
+- ✅ Active documentation in `docs/` directory
+- ✅ Storybook usage guide
+- ✅ Historical progress reports archived
 
 ### ⏭️ Next Steps
 
@@ -318,13 +317,17 @@ npm start
 - **Storybook:** 100% setup
 - **Estimated time remaining:** 80-100 hours
 
+## Documentation
+
+- **Storybook Guide**: [`docs/STORYBOOK_GUIDE.md`](./docs/STORYBOOK_GUIDE.md)
+- **Progress Archive**: [`docs/archive/`](./docs/archive/2025-11-progress-reports/)
+- **Project Docs**: [`../docs/`](../docs/) - Platform-wide documentation
+
 ## Resources
 
 - **Expo Docs**: https://docs.expo.dev/
 - **Expo Router**: https://docs.expo.dev/router/introduction/
 - **React Native**: https://reactnative.dev/
-- **Design Principles**: `../docs/frontend/DESIGN_PRINCIPLES.md`
-- **Migration Plan**: `../EXPO_MIGRATION_PLAN.md`
 
 ## Universal App Support
 

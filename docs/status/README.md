@@ -16,5 +16,3 @@ This directory contains current status and progress reports for the Proxy Agent 
 - `WORK_COMPLETE_*.md` - Work completion reports by date
 
 For historical/archived reports, see `reports/archive/`.
-
-

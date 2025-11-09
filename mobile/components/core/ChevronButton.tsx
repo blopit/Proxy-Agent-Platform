@@ -71,10 +71,7 @@ const ChevronButton: React.FC<ChevronButtonProps> = ({
         { width: width || 'auto' },
         {
           transform: [{ translateY }],
-          shadowColor: colors.shadow,
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: disabled ? 0 : 0.25,
-          shadowRadius: 4,
+          boxShadow: disabled ? 'none' : `0px 2px 4px ${colors.shadow}40`,
           elevation: disabled ? 0 : 4,
         },
       ]}

@@ -42,5 +42,3 @@ python scripts/simple_cli.py
 - All scripts should be executable (`chmod +x`)
 - Scripts use paths relative to the project root
 - Check individual scripts for specific usage instructions
-
-

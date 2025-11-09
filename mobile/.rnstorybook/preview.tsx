@@ -3,6 +3,8 @@ import type { Preview } from '@storybook/react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { View, StyleSheet } from 'react-native';
 
+// Note: expo-router is mocked via babel-plugin-module-resolver in babel.config.js
+
 const preview: Preview = {
   decorators: [
     (Story, context) => {

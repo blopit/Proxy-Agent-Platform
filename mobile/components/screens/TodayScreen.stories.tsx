@@ -567,10 +567,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.blue,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    boxShadow: '0px 4px 8px #0000004D', // 4D = 30% opacity in hex
     elevation: 8,
   },
   debugControls: {

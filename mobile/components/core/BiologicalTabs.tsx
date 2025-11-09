@@ -186,10 +186,7 @@ const styles = StyleSheet.create({
     height: 6,
     backgroundColor: '#b58900', // Solarized yellow
     borderRadius: 3,
-    shadowColor: '#b58900',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 4,
+    boxShadow: '0px 0px 4px #b5890099', // 99 = 60% opacity in hex
     elevation: 4,
   },
 });

@@ -71,7 +71,8 @@ class EnhancedDatabaseAdapter:
         cursor = conn.cursor()
 
         # Users table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS users (
                 user_id TEXT PRIMARY KEY,
                 username TEXT UNIQUE NOT NULL,
@@ -84,13 +85,17 @@ class EnhancedDatabaseAdapter:
                 preferences TEXT DEFAULT '{}',
                 is_active BOOLEAN DEFAULT 1,
                 last_login TIMESTAMP,
+                oauth_provider TEXT,
+                oauth_provider_id TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
 
         # Projects table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS projects (
                 project_id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
@@ -106,10 +111,12 @@ class EnhancedDatabaseAdapter:
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (owner_id) REFERENCES users(user_id) ON DELETE CASCADE
             )
-        """)
+        """
+        )
 
         # Tasks table (with Epic 7 task splitting fields and progressive hierarchy)
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS tasks (
                 task_id TEXT PRIMARY KEY,
                 title TEXT NOT NULL,
@@ -149,10 +156,12 @@ class EnhancedDatabaseAdapter:
                 FOREIGN KEY (parent_id) REFERENCES tasks(task_id) ON DELETE CASCADE,
                 FOREIGN KEY (assignee_id) REFERENCES users(user_id) ON DELETE SET NULL
             )
-        """)
+        """
+        )
 
         # Task templates table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS task_templates (
                 template_id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
@@ -165,10 +174,12 @@ class EnhancedDatabaseAdapter:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
 
         # Task dependencies table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS task_dependencies (
                 dependency_id TEXT PRIMARY KEY,
                 task_id TEXT NOT NULL,
@@ -181,10 +192,12 @@ class EnhancedDatabaseAdapter:
                 FOREIGN KEY (created_by) REFERENCES users(user_id),
                 UNIQUE(task_id, depends_on_task_id)
             )
-        """)
+        """
+        )
 
         # Task comments table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS task_comments (
                 comment_id TEXT PRIMARY KEY,
                 task_id TEXT NOT NULL,
@@ -196,10 +209,12 @@ class EnhancedDatabaseAdapter:
                 FOREIGN KEY (task_id) REFERENCES tasks(task_id) ON DELETE CASCADE,
                 FOREIGN KEY (author_id) REFERENCES users(user_id) ON DELETE CASCADE
             )
-        """)
+        """
+        )
 
         # Micro-steps table (Epic 7: ADHD Task Splitting)
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS micro_steps (
                 step_id TEXT PRIMARY KEY,
                 parent_task_id TEXT NOT NULL,
@@ -221,10 +236,12 @@ class EnhancedDatabaseAdapter:
                 FOREIGN KEY (parent_task_id) REFERENCES tasks(task_id) ON DELETE CASCADE,
                 FOREIGN KEY (parent_step_id) REFERENCES micro_steps(step_id) ON DELETE CASCADE
             )
-        """)
+        """
+        )
 
         # Focus sessions table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS focus_sessions (
                 session_id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
@@ -244,10 +261,12 @@ class EnhancedDatabaseAdapter:
                 FOREIGN KEY (task_id) REFERENCES tasks(task_id) ON DELETE CASCADE,
                 FOREIGN KEY (project_id) REFERENCES projects(project_id) ON DELETE CASCADE
             )
-        """)
+        """
+        )
 
         # Achievements table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS achievements (
                 achievement_id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
@@ -260,10 +279,12 @@ class EnhancedDatabaseAdapter:
                 is_active BOOLEAN DEFAULT 1,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
 
         # User achievements table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS user_achievements (
                 user_achievement_id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
@@ -277,10 +298,12 @@ class EnhancedDatabaseAdapter:
                 FOREIGN KEY (achievement_id) REFERENCES achievements(achievement_id) ON DELETE CASCADE,
                 UNIQUE(user_id, achievement_id)
             )
-        """)
+        """
+        )
 
         # Productivity metrics table
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS productivity_metrics (
                 metrics_id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
@@ -305,10 +328,12 @@ class EnhancedDatabaseAdapter:
                 FOREIGN KEY (user_id) REFERENCES users(user_id),
                 UNIQUE(user_id, date, period_type)
             )
-        """)
+        """
+        )
 
         # Legacy messages table (for backward compatibility)
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS messages (
                 id TEXT PRIMARY KEY,
                 session_id TEXT NOT NULL,
@@ -318,10 +343,12 @@ class EnhancedDatabaseAdapter:
                 metadata TEXT DEFAULT '{}',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
-        """)
+        """
+        )
 
         # Task Assignments table (BE-00: Task Delegation)
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS task_assignments (
                 assignment_id TEXT PRIMARY KEY,
                 task_id TEXT NOT NULL,
@@ -335,10 +362,12 @@ class EnhancedDatabaseAdapter:
                 actual_hours REAL,
                 FOREIGN KEY (task_id) REFERENCES tasks(task_id)
             )
-        """)
+        """
+        )
 
         # Agent Capabilities table (BE-00: Task Delegation)
-        cursor.execute("""
+        cursor.execute(
+            """
             CREATE TABLE IF NOT EXISTS agent_capabilities (
                 capability_id TEXT PRIMARY KEY,
                 agent_id TEXT NOT NULL,
@@ -351,7 +380,8 @@ class EnhancedDatabaseAdapter:
                 created_at TIMESTAMP NOT NULL,
                 updated_at TIMESTAMP NOT NULL
             )
-        """)
+        """
+        )
 
         # Create indexes for performance
         self._create_indexes(cursor)
@@ -372,6 +402,7 @@ class EnhancedDatabaseAdapter:
             "CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)",
             "CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)",
             "CREATE INDEX IF NOT EXISTS idx_users_active ON users(is_active)",
+            "CREATE INDEX IF NOT EXISTS idx_users_oauth_provider_id ON users(oauth_provider, oauth_provider_id)",
             # Project indexes
             "CREATE INDEX IF NOT EXISTS idx_projects_owner ON projects(owner_id)",
             "CREATE INDEX IF NOT EXISTS idx_projects_active ON projects(is_active)",

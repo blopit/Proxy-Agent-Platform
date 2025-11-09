@@ -72,10 +72,11 @@ const getGoogleConfig = () => {
     console.log('[OAuth Config] Web Client ID:', clientId);
     console.log('[OAuth Config] Generated web redirect URI:', redirectUri);
   } else {
-    // iOS/Android: Use custom scheme
+    // iOS/Android: Use custom scheme with useProxy to avoid exp:// scheme
     redirectUri = AuthSession.makeRedirectUri({
       scheme: APP_SCHEME,
       path: 'auth/google',
+      useProxy: false,  // Force use of custom scheme instead of exp://
     });
     console.log('[OAuth Config] Platform:', Platform.OS);
     console.log('[OAuth Config] Native Client ID:', clientId);
@@ -95,6 +96,7 @@ const GITHUB_CONFIG = {
   redirectUri: AuthSession.makeRedirectUri({
     scheme: APP_SCHEME,
     path: 'auth/github',
+    useProxy: false,  // Force use of custom scheme
   }),
   scopes: ['user', 'user:email'],
 };
@@ -107,6 +109,7 @@ const MICROSOFT_CONFIG = {
   redirectUri: AuthSession.makeRedirectUri({
     scheme: APP_SCHEME,
     path: 'auth/microsoft',
+    useProxy: false,  // Force use of custom scheme
   }),
   scopes: ['openid', 'profile', 'email'],
   tenant: Constants.expoConfig?.extra?.microsoftTenant || 'common',

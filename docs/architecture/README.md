@@ -15,5 +15,3 @@ This directory contains architecture and design documentation for the Proxy Agen
 - `digital-task-delegation-*.md` - Task delegation system vision and storyboards
 
 For technical architecture details, see `docs/backend/` and `docs/frontend/`.
-
-

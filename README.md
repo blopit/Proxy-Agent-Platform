@@ -26,6 +26,8 @@ An ADHD-optimized productivity platform that helps users manage tasks, maintain 
 
 **📈 Change Log** [CHANGELOG.md](CHANGELOG.md) - Recent updates
 
+**🏗️ Architecture** [ARCHITECTURE_OVERVIEW.md](ARCHITECTURE_OVERVIEW.md) - Monorepo structure explained
+
 ## 🎯 Current Status (November 2, 2025)
 
 **Platform Completion**: ~55% (honest assessment)
@@ -85,25 +87,25 @@ We use the app to build the app:
 
 ## 🏗️ Architecture
 
-```
-Backend (Python)
-├── FastAPI - REST API
-├── PydanticAI - Agent framework
-├── SQLite - Database (11 tables)
-└── 5 Proxy Agents (task, focus, energy, progress, gamification)
+This is a **monorepo** with two main applications. See [ARCHITECTURE_OVERVIEW.md](ARCHITECTURE_OVERVIEW.md) for details.
 
-Frontend (TypeScript)
-├── Next.js 14 - React framework
-├── Tailwind CSS - Styling
-├── Storybook - Component development
-└── Mobile-responsive design
-
-Mobile (React Native/Expo)
-├── 5 workflow modes
-├── Gmail OAuth integration
-├── Dopamine reward system
-└── Focus Recovery mode
 ```
+Backend (Python/FastAPI) - /src
+├── REST API endpoints
+├── PydanticAI agents
+├── PostgreSQL database (11 tables)
+├── OAuth authentication
+└── Background job processing
+
+Mobile App (React Native/Expo) - /mobile
+├── Universal app (iOS/Android/Web)
+├── 5 biological workflow modes
+├── Expo Router navigation
+├── Component Storybook
+└── Solarized Dark theme
+```
+
+**Communication**: Mobile app → REST API (http://localhost:8000/api/v1/)
 
 ## 📊 Key Metrics
 
@@ -143,9 +145,11 @@ Mobile (React Native/Expo)
 - **🔄 Real-time Sync**: Seamless synchronization across all devices
 
 ### Frontend Architecture
-- **Primary Frontend**: `mobile/` - Expo/React Native universal app (iOS, Android, Web)
-- **Web Dashboard**: `frontend/` - Next.js web interface for desktop power users
-- **Shared Backend**: FastAPI server at `http://localhost:8000` serving both frontends
+- **Universal App**: `mobile/` - Expo/React Native (iOS, Android, Web from one codebase)
+- **Backend API**: `src/` - FastAPI server at `http://localhost:8000`
+- **Communication**: REST API + WebSocket for real-time updates
+
+See [ARCHITECTURE_OVERVIEW.md](ARCHITECTURE_OVERVIEW.md) for detailed structure
 
 ### Quick Start
 ```bash

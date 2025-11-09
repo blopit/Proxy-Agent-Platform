@@ -9,8 +9,7 @@ import type {
   Task,
   MicroStep,
 } from '../types/capture';
-
-const API_BASE_URL = 'http://localhost:8000';
+import { API_BASE_URL } from '@/src/api/config';
 
 /**
  * Capture a task and decompose it into micro-steps
@@ -25,7 +24,7 @@ export async function captureTask(
   userId: string
 ): Promise<CaptureResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/capture/`, {
+    const response = await fetch(`${API_BASE_URL}/capture/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -68,7 +67,7 @@ export async function saveCapture(
   projectId: string = 'default-project'
 ): Promise<SaveCaptureResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/capture/save`, {
+    const response = await fetch(`${API_BASE_URL}/capture/save`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -108,7 +107,7 @@ export async function submitClarifications(
   answers: Record<string, string>
 ): Promise<ClarifyResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/capture/clarify`, {
+    const response = await fetch(`${API_BASE_URL}/capture/clarify`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

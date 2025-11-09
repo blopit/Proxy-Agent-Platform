@@ -3,7 +3,7 @@
  * Handles user registration, login, and token management
  */
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+import { API_BASE_URL } from '@/src/api/config';
 
 export interface LoginRequest {
   username: string;

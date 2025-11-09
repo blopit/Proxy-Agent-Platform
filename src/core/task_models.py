@@ -570,6 +570,12 @@ class User(BaseModel):
     password_hash: str | None = Field(None, description="Hashed password for authentication")
     full_name: str | None = Field(None, max_length=255)
 
+    # OAuth fields
+    oauth_provider: str | None = Field(
+        None, description="OAuth provider (google, apple, github, microsoft)"
+    )
+    oauth_provider_id: str | None = Field(None, description="User ID from OAuth provider")
+
     # Profile
     timezone: str = Field(default="UTC")
     avatar_url: str | None = None

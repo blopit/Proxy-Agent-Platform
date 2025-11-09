@@ -41,10 +41,10 @@ class Settings(BaseSettings):
 
     # Database Configuration
     database_path: str = Field(
-        default="proxy_agents_enhanced.db", description="SQLite database file path"
+        default=".data/databases/proxy_agents_enhanced.db", description="SQLite database file path"
     )
     test_database_path: str = Field(
-        default="test_proxy_agents.db", description="Test database file path"
+        default=".data/databases/test_proxy_agents.db", description="Test database file path"
     )
 
     # Redis Configuration
@@ -62,6 +62,10 @@ class Settings(BaseSettings):
     brave_api_key: str | None = Field(default=None, description="Brave Search API key")
     github_token: str | None = Field(default=None, description="GitHub API token")
     github_webhook_secret: str | None = Field(default=None, description="GitHub webhook secret")
+
+    # OAuth Configuration
+    google_client_id: str | None = Field(default=None, description="Google OAuth client ID")
+    google_client_secret: str | None = Field(default=None, description="Google OAuth client secret")
 
     # Gmail API
     gmail_credentials_path: str = Field(

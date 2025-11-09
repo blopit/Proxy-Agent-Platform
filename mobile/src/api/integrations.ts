@@ -60,7 +60,7 @@ export interface ConnectionStatus {
  */
 export async function initiateGmailOAuth(userId: string): Promise<AuthorizationResponse> {
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/integrations/gmail/authorize?user_id=${userId}&mobile=true`,
+    `${API_BASE_URL}/integrations/gmail/authorize?user_id=${userId}&mobile=true`,
     {
       method: 'POST',
       headers: {
@@ -88,7 +88,7 @@ export async function listIntegrations(
   userId: string,
   provider?: ProviderType
 ): Promise<Integration[]> {
-  const url = new URL(`${API_BASE_URL}/api/v1/integrations/`);
+  const url = new URL(`${API_BASE_URL}/integrations/`);
   url.searchParams.append('user_id', userId);
   if (provider) {
     url.searchParams.append('provider', provider);
@@ -113,7 +113,7 @@ export async function getIntegrationStatus(
   integrationId: string
 ): Promise<ConnectionStatus> {
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/integrations/${integrationId}/status`
+    `${API_BASE_URL}/integrations/${integrationId}/status`
   );
 
   if (!response.ok) {
@@ -130,7 +130,7 @@ export async function getIntegrationStatus(
  */
 export async function disconnectIntegration(integrationId: string): Promise<void> {
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/integrations/${integrationId}/disconnect`,
+    `${API_BASE_URL}/integrations/${integrationId}/disconnect`,
     {
       method: 'POST',
       headers: {
@@ -152,7 +152,7 @@ export async function disconnectIntegration(integrationId: string): Promise<void
  */
 export async function triggerSync(integrationId: string): Promise<void> {
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/integrations/${integrationId}/sync`,
+    `${API_BASE_URL}/integrations/${integrationId}/sync`,
     {
       method: 'POST',
       headers: {

@@ -12,7 +12,7 @@ from fastapi import APIRouter, HTTPException
 router = APIRouter(prefix="/api/v1", tags=["basic-tasks"])
 
 # Simple database path
-DB_PATH = "/Users/shrenilpatel/Github/Proxy-Agent-Platform/simple_tasks.db"
+DB_PATH = ".data/databases/simple_tasks.db"
 
 
 def init_simple_db():
@@ -21,7 +21,8 @@ def init_simple_db():
     cursor = conn.cursor()
 
     # Create simple tasks table without foreign keys
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE IF NOT EXISTS simple_tasks (
             task_id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
@@ -35,7 +36,8 @@ def init_simple_db():
             tags TEXT,
             metadata TEXT
         )
-    """)
+    """
+    )
 
     conn.commit()
     conn.close()
@@ -74,7 +76,7 @@ async def list_simple_tasks():
 
         return {"tasks": tasks, "total": len(tasks), "limit": 50, "offset": 0}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.post("/simple-tasks")
@@ -116,7 +118,7 @@ async def create_simple_task(task_data: dict):
             "metadata": task_data.get("metadata", {}),
         }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/simple-tasks/{task_id}")
@@ -148,7 +150,7 @@ async def get_simple_task(task_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.put("/simple-tasks/{task_id}")
@@ -224,7 +226,7 @@ async def update_simple_task(task_id: str, task_data: dict):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.delete("/simple-tasks/{task_id}")
@@ -246,7 +248,7 @@ async def delete_simple_task(task_id: str):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e
 
 
 @router.get("/simple-tasks/stats/summary")
@@ -282,4 +284,4 @@ async def get_task_stats():
             else 0,
         }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e)) from e

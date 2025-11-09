@@ -18,5 +18,3 @@ For other guides, see:
 - `docs/installation.md` - Installation guide
 - `docs/backend/` - Backend development guides
 - `docs/frontend/` - Frontend development guides
-
-

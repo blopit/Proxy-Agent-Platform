@@ -5,9 +5,9 @@
 
 import React from 'react';
 import { TouchableOpacity, StyleSheet, ActivityIndicator, View } from 'react-native';
-import { Chrome, Github, Apple as AppleIcon } from 'lucide-react-native';
 import { THEME } from '../../src/theme/colors';
 import { Text } from '@/src/components/ui/Text';
+import { GoogleLogo, AppleLogo, GitHubLogo } from './brand-icons';
 
 export type SocialProvider = 'google' | 'apple' | 'github' | 'microsoft';
 
@@ -18,31 +18,38 @@ export interface SocialLoginButtonProps {
   disabled?: boolean;
 }
 
-const PROVIDER_CONFIG = {
+interface ProviderConfig {
+  label: string;
+  icon: React.ComponentType<{ size?: number; color?: string }>;
+  backgroundColor: string;
+  textColor: string;
+  iconColor?: string;
+}
+
+const PROVIDER_CONFIG: Record<SocialProvider, ProviderConfig> = {
   google: {
     label: 'Continue with Google',
-    icon: Chrome,
+    icon: GoogleLogo,
     backgroundColor: '#FFFFFF',
     textColor: '#1F1F1F',
-    iconColor: '#4285F4',
   },
   apple: {
     label: 'Continue with Apple',
-    icon: AppleIcon,
+    icon: AppleLogo,
     backgroundColor: '#000000',
     textColor: '#FFFFFF',
     iconColor: '#FFFFFF',
   },
   github: {
     label: 'Continue with GitHub',
-    icon: Github,
+    icon: GitHubLogo,
     backgroundColor: '#24292E',
     textColor: '#FFFFFF',
     iconColor: '#FFFFFF',
   },
   microsoft: {
     label: 'Continue with Microsoft',
-    icon: Chrome, // Using Chrome as placeholder - would need Microsoft icon
+    icon: GoogleLogo, // Placeholder - would need Microsoft icon
     backgroundColor: '#2F2F2F',
     textColor: '#FFFFFF',
     iconColor: '#00A4EF',

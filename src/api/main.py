@@ -35,6 +35,9 @@ from src.api.rewards import router as rewards_router
 from src.api.ritual import router as ritual_router  # MVP: Morning ritual
 from src.api.routes import tasks_v2_router  # New v2 API
 from src.api.routes.integrations import router as integrations_router  # Provider integration system
+from src.api.routes.oauth import (
+    router as oauth_router,  # OAuth authentication (Google, Apple, GitHub, Microsoft)
+)
 from src.api.routes.onboarding import router as onboarding_router  # User onboarding system
 from src.api.routes.statistics import (
     router as statistics_router,  # Task statistics and productivity metrics
@@ -126,6 +129,7 @@ app.include_router(onboarding_router)  # User onboarding system
 app.include_router(dogfooding_router)  # Mobile-first task execution with swipe interactions
 app.include_router(capture_router)  # Capture Mode brain dump system (Epic: Capture)
 app.include_router(auth_router)  # Authentication endpoints
+app.include_router(oauth_router)  # OAuth authentication (Google, Apple, GitHub, Microsoft)
 app.include_router(focus_router)  # Focus & Pomodoro endpoints (MVP Simplified)
 app.include_router(energy_router)  # Energy management endpoints (MVP Simplified)
 app.include_router(progress_router)  # Progress tracking endpoints (Epic 2.3)
