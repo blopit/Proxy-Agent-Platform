@@ -1,8 +1,25 @@
 # 📚 Documentation Hub
 
-**Last Updated**: November 6, 2025
+**Last Updated**: November 10, 2025
 
 Welcome to the Proxy Agent Platform documentation! This is your central navigation point for all project documentation.
+
+---
+
+## 🤖 For AI Agents (NEW!)
+
+**Specialized documentation by agent role**:
+- **[Backend Agent](../Agent_Resources/backend/README.md)** - API, database, services (~30 docs)
+- **[Frontend Agent](../Agent_Resources/frontend/README.md)** - Expo/React Native mobile (~40 docs)
+- **[Architecture Agent](../Agent_Resources/architecture/README.md)** - System design, patterns (~30 docs)
+- **[Testing Agent](../Agent_Resources/testing/README.md)** - TDD, QA, validation (~15 docs)
+- **[Project Agent](../Agent_Resources/project/README.md)** - Tasks, roadmaps, status (~50 docs)
+
+Each agent view includes:
+- Quick start guide (10 min read)
+- Common tasks with step-by-step instructions
+- Focused documentation links
+- THINGS_TO_UPDATE.md with action items
 
 ---
 

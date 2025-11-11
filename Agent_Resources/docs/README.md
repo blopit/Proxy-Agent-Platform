@@ -1,17 +1,80 @@
-# Agent Resources - Documentation
+# Agent Resources - Documentation & Specialization
 
-This directory contains comprehensive documentation and resources for AI agents working with the Proxy Agent Platform codebase.
+This directory provides specialized views of documentation organized by AI agent role/specialty.
 
-## Directory Structure
+**Last Updated**: November 10, 2025
+
+---
+
+## 🤖 Agent Specializations
+
+Choose your agent specialty to see focused, relevant documentation:
+
+### [Backend Agent](../backend/README.md)
+**Focus**: Python/FastAPI backend, database, APIs
+- API endpoints and services
+- Database schema and migrations
+- Backend architecture and patterns
+- ~30 relevant documents
+
+### [Frontend Agent](../frontend/README.md)
+**Focus**: Expo/React Native mobile app (iOS/Android/Web)
+- Mobile components and screens
+- Storybook development
+- Design system and UX patterns
+- ~40 relevant documents
+
+### [Architecture Agent](../architecture/README.md)
+**Focus**: System design, patterns, technical strategy
+- System architecture
+- Design patterns and frameworks
+- Integration architecture
+- ~30 relevant documents
+
+### [Testing Agent](../testing/README.md)
+**Focus**: Testing, QA, validation
+- TDD and testing strategies
+- Test coverage and quality
+- Testing workflows
+- ~15 relevant documents
+
+### [Project Agent](../project/README.md)
+**Focus**: Task management, roadmaps, coordination
+- Current status and priorities
+- Epic and task tracking
+- Roadmaps and planning
+- ~50 relevant documents
+
+---
+
+## 📁 Directory Structure
 
 ```
 Agent_Resources/
-├── docs/
-│   ├── providers/           # Provider integration documentation
-│   │   └── Google/          # Google-based integrations
-│   │       ├── Gmail.md     # Gmail integration guide
-│   │       └── README.md    # Google provider overview
-│   └── README.md           # This file
+├── backend/              # Backend agent resources
+│   ├── README.md         # Backend quick start
+│   ├── THINGS_TO_UPDATE.md
+│   └── docs/             # Symlinks to relevant docs
+├── frontend/             # Frontend agent resources
+│   ├── README.md         # Frontend quick start
+│   ├── THINGS_TO_UPDATE.md
+│   └── docs/             # Symlinks to relevant docs
+├── architecture/         # Architecture agent resources
+│   ├── README.md         # Architecture quick start
+│   ├── THINGS_TO_UPDATE.md
+│   └── docs/             # Symlinks to relevant docs
+├── testing/              # Testing agent resources
+│   ├── README.md         # Testing quick start
+│   ├── THINGS_TO_UPDATE.md
+│   └── docs/             # Symlinks to relevant docs
+├── project/              # Project agent resources
+│   ├── README.md         # Project quick start
+│   ├── THINGS_TO_UPDATE.md
+│   └── docs/             # Symlinks to relevant docs
+└── docs/                 # Provider-specific docs
+    ├── authentication/   # Auth system docs
+    ├── onboarding/       # Onboarding system docs
+    └── providers/        # Provider integrations
 ```
 
 ---
