@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """
 Mobile-Backend Integration Test
+
 Tests the complete onboarding API flow that the mobile app will use.
+This is an integration test that requires the backend server to be running.
+
+Run with: uv run python tests/integration/test_onboarding_flow.py
 """
 
 import json

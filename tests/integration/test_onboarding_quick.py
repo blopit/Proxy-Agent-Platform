@@ -1,5 +1,11 @@
-"""Quick test of onboarding API endpoints"""
+"""
+Quick Integration Test for Onboarding API
 
+A simpler, faster integration test for basic onboarding API validation.
+This is an integration test that requires the backend server to be running.
+
+Run with: uv run python tests/integration/test_onboarding_quick.py
+"""
 
 import requests
 
@@ -127,8 +133,7 @@ if __name__ == "__main__":
         test_onboarding_flow()
     except requests.exceptions.ConnectionError:
         print("❌ Error: Cannot connect to API server")
-        print(
-            "   Make sure the server is running: uv run python -m uvicorn src.api.main:app --reload"
-        )
+        print("   Make sure the server is running:")
+        print("   uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000")
     except Exception as e:
         print(f"❌ Error: {e}")
