@@ -20,9 +20,10 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
-  loginWithToken: (accessToken: string, user: User) => Promise<void>;
+  loginWithToken: (tokenResponse: TokenResponse) => Promise<void>;
   signup: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshAccessToken: () => Promise<string | null>;
   error: string | null;
   clearError: () => void;
 }
@@ -30,11 +31,13 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const TOKEN_KEY = '@auth_token';
+const REFRESH_TOKEN_KEY = '@auth_refresh_token';
 const USER_KEY = '@auth_user';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,17 +48,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadStoredAuth = async () => {
     try {
-      const [storedToken, storedUser] = await Promise.all([
+      const [storedToken, storedRefreshToken, storedUser] = await Promise.all([
         AsyncStorage.getItem(TOKEN_KEY),
+        AsyncStorage.getItem(REFRESH_TOKEN_KEY),
         AsyncStorage.getItem(USER_KEY),
       ]);
 
+      console.log('[AuthContext] Loading stored auth from AsyncStorage...');
+      console.log('[AuthContext] Stored token exists:', !!storedToken);
+      console.log('[AuthContext] Stored refresh_token exists:', !!storedRefreshToken);
+      console.log('[AuthContext] Stored user exists:', !!storedUser);
+
       if (storedToken && storedUser) {
         setToken(storedToken);
+        setRefreshToken(storedRefreshToken);
         setUser(JSON.parse(storedUser));
+        console.log('[AuthContext] Auth state restored from AsyncStorage');
+      } else {
+        console.log('[AuthContext] No stored auth data found');
       }
     } catch (err) {
-      console.error('Failed to load auth data:', err);
+      console.error('[AuthContext] Failed to load auth data:', err);
     } finally {
       setIsLoading(false);
     }
@@ -63,14 +76,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const saveAuthData = async (tokenResponse: TokenResponse) => {
     try {
+      console.log('[AuthContext] Saving auth data...');
+      console.log('[AuthContext] Has access_token:', !!tokenResponse.access_token);
+      console.log('[AuthContext] Has refresh_token:', !!tokenResponse.refresh_token);
+      console.log('[AuthContext] Has user:', !!tokenResponse.user);
+
       await Promise.all([
         AsyncStorage.setItem(TOKEN_KEY, tokenResponse.access_token),
+        AsyncStorage.setItem(REFRESH_TOKEN_KEY, tokenResponse.refresh_token),
         AsyncStorage.setItem(USER_KEY, JSON.stringify(tokenResponse.user)),
       ]);
+
+      console.log('[AuthContext] Auth data saved to AsyncStorage successfully');
+
       setToken(tokenResponse.access_token);
+      setRefreshToken(tokenResponse.refresh_token);
       setUser(tokenResponse.user);
     } catch (err) {
-      console.error('Failed to save auth data:', err);
+      console.error('[AuthContext] Failed to save auth data:', err);
       throw new Error('Failed to save authentication data');
     }
   };
@@ -79,9 +102,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await Promise.all([
         AsyncStorage.removeItem(TOKEN_KEY),
+        AsyncStorage.removeItem(REFRESH_TOKEN_KEY),
         AsyncStorage.removeItem(USER_KEY),
       ]);
       setToken(null);
+      setRefreshToken(null);
       setUser(null);
     } catch (err) {
       console.error('Failed to clear auth data:', err);
@@ -106,19 +131,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const loginWithToken = async (accessToken: string, user: User) => {
+  const loginWithToken = async (tokenResponse: TokenResponse) => {
     try {
       setIsLoading(true);
       setError(null);
 
-      // Directly save OAuth token and user data
-      const tokenResponse: TokenResponse = {
-        access_token: accessToken,
-        token_type: 'bearer',
-        expires_in: 3600, // 1 hour default
-        user,
-      };
-
+      // Save OAuth token response (includes access_token and refresh_token)
       await saveAuthData(tokenResponse);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'OAuth login failed';
@@ -156,15 +174,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshAccessToken = async (): Promise<string | null> => {
+    try {
+      if (!refreshToken) {
+        console.warn('No refresh token available');
+        return null;
+      }
+
+      const response = await authService.refreshToken(refreshToken);
+      await saveAuthData(response);
+      return response.access_token;
+    } catch (err) {
+      console.error('Token refresh failed:', err);
+      // If refresh fails, clear auth data and force re-login
+      await clearAuthData();
+      return null;
+    }
+  };
+
   const logout = async () => {
+    console.log('[AuthContext] Logout called');
+    console.log('[AuthContext] Current token exists:', !!token);
     try {
       setIsLoading(true);
-      await authService.logout();
+      console.log('[AuthContext] Calling authService.logout()...');
+      await authService.logout(token || undefined);
+      console.log('[AuthContext] Backend logout successful, clearing local data...');
       await clearAuthData();
+      console.log('[AuthContext] Logout complete - all data cleared');
     } catch (err) {
-      console.error('Logout error:', err);
+      console.error('[AuthContext] Logout error:', err);
     } finally {
       setIsLoading(false);
+      console.log('[AuthContext] Logout finished, isLoading set to false');
     }
   };
 
@@ -181,6 +223,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loginWithToken,
     signup,
     logout,
+    refreshAccessToken,
     error,
     clearError,
   };

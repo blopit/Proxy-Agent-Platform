@@ -19,6 +19,7 @@ export interface RegisterRequest {
 
 export interface TokenResponse {
   access_token: string;
+  refresh_token: string;
   token_type: string;
   expires_in: number;
   user: {
@@ -100,11 +101,53 @@ class AuthService {
   }
 
   /**
-   * Logout user (client-side only - clear token)
+   * Refresh access token using refresh token
    */
-  async logout(): Promise<void> {
-    // Token will be cleared by AuthContext
-    return Promise.resolve();
+  async refreshToken(refreshToken: string): Promise<TokenResponse> {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Token refresh failed');
+    }
+
+    return response.json();
+  }
+
+  /**
+   * Logout user (revoke all refresh tokens on backend)
+   */
+  async logout(token?: string): Promise<void> {
+    console.log('[AuthService] Logout called, token provided:', !!token);
+    if (token) {
+      try {
+        console.log('[AuthService] Sending logout request to backend...');
+        const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        console.log('[AuthService] Backend logout response status:', response.status);
+        if (!response.ok) {
+          console.warn('[AuthService] Backend logout failed with status:', response.status);
+        } else {
+          console.log('[AuthService] Backend logout successful');
+        }
+      } catch (error) {
+        console.error('[AuthService] Logout API call failed:', error);
+        // Continue with local cleanup even if backend call fails
+      }
+    } else {
+      console.log('[AuthService] No token provided, skipping backend logout call');
+    }
   }
 }
 

@@ -6,12 +6,11 @@
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import EmailSignupScreen from '@/components/auth/EmailSignupScreen';
-import { authService } from '@/src/services/authService';
 import { useAuth } from '@/src/contexts/AuthContext';
 
 export default function EmailSignupRoute() {
   const router = useRouter();
-  const { login: saveAuthToken } = useAuth();
+  const { signup } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -23,20 +22,8 @@ export default function EmailSignupRoute() {
     setError('');
 
     try {
-      // Extract username from email (part before @)
-      // Backend requires alphanumeric + underscores only
-      const username = email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
-
-      // Call backend registration API
-      const response = await authService.register({
-        username,
-        email,
-        password,
-        full_name: name,
-      });
-
-      // Save token to AuthContext (will persist to AsyncStorage)
-      await saveAuthToken(response.access_token, response.user);
+      // AuthContext's signup function handles API call and token storage
+      await signup(name, email, password);
 
       // Navigate to onboarding (new users always go through onboarding)
       router.replace('/(auth)/onboarding/welcome');

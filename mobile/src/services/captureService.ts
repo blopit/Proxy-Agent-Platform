@@ -10,6 +10,7 @@ import type {
   MicroStep,
 } from '../types/capture';
 import { API_BASE_URL } from '@/src/api/config';
+import { apiPost } from '@/src/api/apiClient';
 
 /**
  * Capture a task and decompose it into micro-steps
@@ -24,16 +25,10 @@ export async function captureTask(
   userId: string
 ): Promise<CaptureResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/capture/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query,
-        user_id: userId,
-        mode: 'auto',
-      }),
+    const response = await apiPost(`${API_BASE_URL}/capture/`, {
+      query,
+      user_id: userId,
+      mode: 'auto',
     });
 
     if (!response.ok) {
@@ -67,17 +62,11 @@ export async function saveCapture(
   projectId: string = 'default-project'
 ): Promise<SaveCaptureResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/capture/save`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        task,
-        micro_steps: microSteps,
-        user_id: userId,
-        project_id: projectId,
-      }),
+    const response = await apiPost(`${API_BASE_URL}/capture/save`, {
+      task,
+      micro_steps: microSteps,
+      user_id: userId,
+      project_id: projectId,
     });
 
     if (!response.ok) {
@@ -107,15 +96,9 @@ export async function submitClarifications(
   answers: Record<string, string>
 ): Promise<ClarifyResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/capture/clarify`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        micro_steps: microSteps,
-        answers,
-      }),
+    const response = await apiPost(`${API_BASE_URL}/capture/clarify`, {
+      micro_steps: microSteps,
+      answers,
     });
 
     if (!response.ok) {

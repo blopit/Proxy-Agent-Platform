@@ -1,6 +1,6 @@
 /**
  * Onboarding Complete Screen - Celebration and transition to main app
- * Step 6 (final) of onboarding flow
+ * Step 7 (final) of onboarding flow
  */
 
 import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
@@ -53,8 +53,8 @@ export default function OnboardingCompleteScreen() {
     <View style={styles.container}>
       <StatusBar style="light" />
 
-      {/* Progress Indicator - Step 6 (Complete) */}
-      <StepProgress currentStep={6} totalSteps={6} />
+      {/* Progress Indicator - Step 7 (Complete) */}
+      <StepProgress currentStep={7} totalSteps={7} />
 
       {/* Main Content */}
       <View style={styles.content}>

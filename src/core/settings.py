@@ -36,7 +36,10 @@ class Settings(BaseSettings):
     jwt_secret_key: str = Field(..., description="Secret key for JWT token generation (required)")
     jwt_algorithm: str = Field(default="HS256", description="JWT encoding algorithm")
     jwt_access_token_expire_minutes: int = Field(
-        default=30, description="JWT token expiry in minutes"
+        default=30, description="JWT access token expiry in minutes"
+    )
+    jwt_refresh_token_expire_days: int = Field(
+        default=30, description="JWT refresh token expiry in days"
     )
 
     # Database Configuration

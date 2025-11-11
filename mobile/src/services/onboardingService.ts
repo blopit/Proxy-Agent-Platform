@@ -10,7 +10,7 @@
  */
 
 import { API_BASE_URL } from './config';
-import { getAuthToken } from './authService';
+import { apiGet, apiPost, apiPut, apiDelete } from '@/src/api/apiClient';
 import type { OnboardingData, DailySchedule } from '@/src/types/onboarding';
 
 /**
@@ -40,11 +40,6 @@ class OnboardingService {
    */
   async upsertOnboarding(userId: string, data: Partial<OnboardingData>): Promise<OnboardingResponse> {
     try {
-      const token = await getAuthToken();
-      if (!token) {
-        throw new Error('Not authenticated');
-      }
-
       // Map frontend fields to backend format
       const requestBody: any = {};
 
@@ -69,14 +64,10 @@ class OnboardingService {
         requestBody.productivity_goals = data.productivityGoals.map(g => g.type);
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/users/${userId}/onboarding`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
+      const response = await apiPut(
+        `${API_BASE_URL}/api/v1/users/${userId}/onboarding`,
+        requestBody
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -95,17 +86,7 @@ class OnboardingService {
    */
   async getOnboarding(userId: string): Promise<OnboardingResponse> {
     try {
-      const token = await getAuthToken();
-      if (!token) {
-        throw new Error('Not authenticated');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/v1/users/${userId}/onboarding`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await apiGet(`${API_BASE_URL}/api/v1/users/${userId}/onboarding`);
 
       if (!response.ok) {
         if (response.status === 404) {
@@ -128,19 +109,10 @@ class OnboardingService {
    */
   async markComplete(userId: string, completed: boolean): Promise<OnboardingResponse> {
     try {
-      const token = await getAuthToken();
-      if (!token) {
-        throw new Error('Not authenticated');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/v1/users/${userId}/onboarding/complete`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ completed }),
-      });
+      const response = await apiPost(
+        `${API_BASE_URL}/api/v1/users/${userId}/onboarding/complete`,
+        { completed }
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -159,17 +131,7 @@ class OnboardingService {
    */
   async deleteOnboarding(userId: string): Promise<void> {
     try {
-      const token = await getAuthToken();
-      if (!token) {
-        throw new Error('Not authenticated');
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/v1/users/${userId}/onboarding`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await apiDelete(`${API_BASE_URL}/api/v1/users/${userId}/onboarding`);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));

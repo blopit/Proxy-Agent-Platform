@@ -18,6 +18,7 @@ const APP_SCHEME = OAUTH_REDIRECT_SCHEME;
 
 export interface OAuthResult {
   access_token: string;
+  refresh_token: string;
   token_type: string;
   expires_in: number;
   user: {
@@ -156,6 +157,8 @@ class OAuthService {
       });
 
       console.log('[OAuth Web] Auth request created, opening prompt...');
+      // On web, promptAsync will redirect in the same window by default
+      // This is expected behavior for Expo web apps
       const result = await authRequest.promptAsync(discovery);
       console.log('[OAuth Web] Prompt result type:', result.type);
       console.log('[OAuth Web] Full result:', JSON.stringify(result, null, 2));

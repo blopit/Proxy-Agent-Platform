@@ -18,7 +18,16 @@ function NavigationGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
+    console.log('[NavigationGuard] Auth state:', {
+      user: !!user,
+      authLoading,
+      onboardingLoading,
+      hasCompletedOnboarding,
+      segments: segments.join('/'),
+    });
+
     if (authLoading || onboardingLoading) {
+      console.log('[NavigationGuard] Still loading, waiting...');
       return; // Wait for auth/onboarding state to load
     }
 
@@ -27,6 +36,7 @@ function NavigationGuard({ children }: { children: React.ReactNode }) {
 
     if (!user) {
       // Not authenticated - redirect to auth flow
+      console.log('[NavigationGuard] No user, redirecting to auth');
       if (!inAuthGroup) {
         router.replace('/(auth)');
       }
@@ -34,13 +44,15 @@ function NavigationGuard({ children }: { children: React.ReactNode }) {
       // Authenticated - check onboarding
       if (!hasCompletedOnboarding) {
         // Not onboarded - redirect to onboarding
+        console.log('[NavigationGuard] User not onboarded, redirecting to onboarding');
         if (!segments.includes('onboarding')) {
           router.replace('/(auth)/onboarding/welcome');
         }
       } else {
         // Authenticated and onboarded - redirect to main app
+        console.log('[NavigationGuard] User onboarded, redirecting to capture/add');
         if (!inTabsGroup && segments[0] !== 'storybook') {
-          router.replace('/(tabs)');
+          router.replace('/(tabs)/capture/add');
         }
       }
     }

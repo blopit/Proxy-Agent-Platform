@@ -1,13 +1,13 @@
 /**
- * Help Preferences Screen - How much assistance do you want?
- * Step 3 of onboarding flow
+ * Support Level Screen - How much assistance do you want?
+ * Step 4 of onboarding flow - Shows recommended support level based on challenges
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Sparkles, ArrowRight, ArrowLeft, Check } from 'lucide-react-native';
+import { Sparkles, ArrowRight, ArrowLeft, Check, Star } from 'lucide-react-native';
 import { THEME } from '@/src/theme/colors';
 import { useOnboarding } from '@/src/contexts/OnboardingContext';
 import { ONBOARDING_STEPS, ADHDSupportLevel } from '@/src/types/onboarding';
@@ -44,29 +44,39 @@ const HELP_LEVELS = [
   },
 ];
 
-const COMMON_CHALLENGES = [
-  { id: 'starting', label: 'Getting started on tasks', emoji: '🏁' },
-  { id: 'focus', label: 'Staying focused', emoji: '🎯' },
-  { id: 'time', label: 'Time awareness', emoji: '⏰' },
-  { id: 'organization', label: 'Keeping things organized', emoji: '📋' },
-  { id: 'procrastination', label: 'Beating procrastination', emoji: '⚡' },
-  { id: 'overwhelm', label: 'Managing overwhelm', emoji: '🌊' },
-];
+/**
+ * Calculate recommended support level based on selected challenges
+ * More challenges = higher support level recommended
+ */
+const getRecommendedLevel = (challengeCount: number): ADHDSupportLevel => {
+  if (challengeCount === 0) return 5; // Balanced by default
+  if (challengeCount <= 2) return 3; // Light Touch
+  if (challengeCount <= 4) return 5; // Balanced Support
+  if (challengeCount <= 6) return 7; // Extra Help
+  return 10; // Maximum Support
+};
 
 export default function ADHDSupportScreen() {
   const router = useRouter();
   const { data, setADHDSupportLevel, markStepComplete, nextStep, skipOnboarding } =
     useOnboarding();
 
+  const challenges = data.adhdChallenges || [];
+  const recommendedLevel = getRecommendedLevel(challenges.length);
+
   const [selectedLevel, setSelectedLevel] = useState<ADHDSupportLevel>(
-    (data.adhdSupportLevel as ADHDSupportLevel) || 5
-  );
-  const [selectedChallenges, setSelectedChallenges] = useState<string[]>(
-    data.adhdChallenges || []
+    (data.adhdSupportLevel as ADHDSupportLevel) || recommendedLevel
   );
 
+  // Set recommended level on mount if no level is set
+  useEffect(() => {
+    if (!data.adhdSupportLevel) {
+      setSelectedLevel(recommendedLevel);
+    }
+  }, [recommendedLevel, data.adhdSupportLevel]);
+
   const handleContinue = async () => {
-    await setADHDSupportLevel(selectedLevel, selectedChallenges);
+    await setADHDSupportLevel(selectedLevel, challenges);
     await markStepComplete(ONBOARDING_STEPS.ADHD_SUPPORT);
     await nextStep();
     router.push('/(auth)/onboarding/daily-schedule');
@@ -81,18 +91,12 @@ export default function ADHDSupportScreen() {
     router.replace('/(tabs)');
   };
 
-  const toggleChallenge = (challengeId: string) => {
-    setSelectedChallenges((prev) =>
-      prev.includes(challengeId) ? prev.filter((c) => c !== challengeId) : [...prev, challengeId]
-    );
-  };
-
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
 
       {/* Progress Indicator */}
-      <StepProgress currentStep={3} totalSteps={7} />
+      <StepProgress currentStep={4} totalSteps={7} />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {/* Title */}
@@ -101,17 +105,26 @@ export default function ADHDSupportScreen() {
             <Sparkles size={32} color={THEME.cyan} />
             <Text style={styles.title}>How can we help?</Text>
           </View>
-          <Text style={styles.subtitle}>Choose the amount of guidance that works for you</Text>
+          <Text style={styles.subtitle}>
+            {challenges.length > 0
+              ? `Based on your ${challenges.length} selected ${challenges.length === 1 ? 'challenge' : 'challenges'}, we recommend a support level. You can adjust it below.`
+              : 'Choose the amount of guidance that works for you'}
+          </Text>
         </View>
 
         {/* Help Level Cards */}
         <View style={styles.levelsContainer}>
           {HELP_LEVELS.map((helpLevel) => {
             const isSelected = selectedLevel === helpLevel.level;
+            const isRecommended = recommendedLevel === helpLevel.level;
             return (
               <TouchableOpacity
                 key={helpLevel.level}
-                style={[styles.levelCard, isSelected && styles.levelCardSelected]}
+                style={[
+                  styles.levelCard,
+                  isSelected && styles.levelCardSelected,
+                  isRecommended && !isSelected && styles.levelCardRecommended,
+                ]}
                 onPress={() => setSelectedLevel(helpLevel.level)}
                 activeOpacity={0.7}
               >
@@ -122,6 +135,12 @@ export default function ADHDSupportScreen() {
                     <Text style={[styles.levelTitle, isSelected && styles.levelTitleSelected]}>
                       {helpLevel.title}
                     </Text>
+                    {isRecommended && !isSelected && (
+                      <View style={styles.recommendedBadge}>
+                        <Star size={12} color={THEME.yellow} fill={THEME.yellow} />
+                        <Text style={styles.recommendedText}>Recommended</Text>
+                      </View>
+                    )}
                   </View>
                   {isSelected && (
                     <View style={styles.checkmark}>
@@ -144,33 +163,6 @@ export default function ADHDSupportScreen() {
               </TouchableOpacity>
             );
           })}
-        </View>
-
-        {/* Common Challenges */}
-        <View style={styles.challengesContainer}>
-          <Text style={styles.challengesTitle}>What do you need help with? (optional)</Text>
-          <Text style={styles.challengesSubtitle}>Tap any that resonate with you</Text>
-
-          <View style={styles.challengesList}>
-            {COMMON_CHALLENGES.map((challenge) => {
-              const isSelected = selectedChallenges.includes(challenge.id);
-              return (
-                <TouchableOpacity
-                  key={challenge.id}
-                  style={[styles.challengeChip, isSelected && styles.challengeChipSelected]}
-                  onPress={() => toggleChallenge(challenge.id)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.challengeEmoji}>{challenge.emoji}</Text>
-                  <Text
-                    style={[styles.challengeText, isSelected && styles.challengeTextSelected]}
-                  >
-                    {challenge.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
         </View>
       </ScrollView>
 
@@ -249,6 +241,10 @@ const styles = StyleSheet.create({
     borderColor: THEME.cyan,
     backgroundColor: `${THEME.cyan}15`,
   },
+  levelCardRecommended: {
+    borderColor: THEME.yellow,
+    backgroundColor: `${THEME.yellow}10`,
+  },
   levelCardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -260,6 +256,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     flex: 1,
+    flexWrap: 'wrap',
+  },
+  recommendedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: `${THEME.yellow}20`,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  recommendedText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: THEME.yellow,
   },
   levelEmoji: {
     fontSize: 28,
@@ -305,52 +316,6 @@ const styles = StyleSheet.create({
     color: THEME.base0,
     flex: 1,
     lineHeight: 20,
-  },
-  challengesContainer: {
-    marginBottom: 24,
-  },
-  challengesTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: THEME.base0,
-    marginBottom: 6,
-  },
-  challengesSubtitle: {
-    fontSize: 14,
-    color: THEME.base01,
-    marginBottom: 16,
-  },
-  challengesList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  challengeChip: {
-    backgroundColor: THEME.base02,
-    borderWidth: 2,
-    borderColor: THEME.base01,
-    borderRadius: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  challengeChipSelected: {
-    backgroundColor: `${THEME.cyan}20`,
-    borderColor: THEME.cyan,
-  },
-  challengeEmoji: {
-    fontSize: 16,
-  },
-  challengeText: {
-    fontSize: 14,
-    color: THEME.base0,
-    fontWeight: '500',
-  },
-  challengeTextSelected: {
-    color: THEME.cyan,
-    fontWeight: '600',
   },
   actions: {
     gap: 12,

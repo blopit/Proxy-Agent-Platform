@@ -51,8 +51,8 @@ export default function SignupRoute() {
           throw new Error(`Unsupported provider: ${provider}`);
       }
 
-      // Save token to AuthContext
-      await loginWithToken(result.access_token, result.user);
+      // Save token to AuthContext (includes access_token and refresh_token)
+      await loginWithToken(result);
 
       // Navigate to onboarding
       router.replace('/(auth)/onboarding/welcome');

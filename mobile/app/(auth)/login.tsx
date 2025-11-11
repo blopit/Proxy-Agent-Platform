@@ -7,14 +7,13 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 import LoginScreen from '@/components/auth/LoginScreen';
-import { authService } from '@/src/services/authService';
 import { oauthService } from '@/src/services/oauthService';
 import { useAuth } from '@/src/contexts/AuthContext';
 import type { SocialProvider } from '@/components/auth/SocialLoginButton';
 
 export default function LoginRoute() {
   const router = useRouter();
-  const { login: saveAuthToken } = useAuth();
+  const { login, loginWithToken } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -26,14 +25,8 @@ export default function LoginRoute() {
     setError('');
 
     try {
-      // Call backend login API
-      const response = await authService.login({
-        username: email, // Using email as username
-        password,
-      });
-
-      // Save token to AuthContext (will persist to AsyncStorage)
-      await saveAuthToken(response.access_token, response.user);
+      // AuthContext's login function handles API call and token storage
+      await login(email, password);
 
       // Navigate to onboarding (will check if already onboarded)
       router.replace('/(auth)/onboarding/welcome');
@@ -71,8 +64,8 @@ export default function LoginRoute() {
           throw new Error(`Unsupported provider: ${provider}`);
       }
 
-      // Save token to AuthContext
-      await saveAuthToken(result.access_token, result.user);
+      // Save token to AuthContext (includes access_token and refresh_token)
+      await loginWithToken(result);
 
       // Navigate to onboarding
       router.replace('/(auth)/onboarding/welcome');

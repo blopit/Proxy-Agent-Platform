@@ -27,6 +27,7 @@ interface OnboardingContextValue {
 
   // Update methods
   setWorkPreference: (preference: WorkPreference) => Promise<void>;
+  setChallenges: (challenges: string[]) => Promise<void>;
   setADHDSupportLevel: (level: ADHDSupportLevel, challenges?: string[]) => Promise<void>;
   setDailySchedule: (schedule: DailySchedule) => Promise<void>;
   setProductivityGoals: (goals: ProductivityGoal[]) => Promise<void>;
@@ -70,18 +71,30 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
 
   const loadOnboardingData = async () => {
     try {
+      console.log('[OnboardingContext] Loading onboarding data from AsyncStorage...');
       setIsLoading(true);
 
       // Load data
       const storedData = await AsyncStorage.getItem(STORAGE_KEY);
+      console.log('[OnboardingContext] Stored data exists:', !!storedData);
+
       if (storedData) {
         const parsedData = JSON.parse(storedData) as OnboardingData;
+        console.log('[OnboardingContext] Parsed data:', {
+          completedAt: parsedData.completedAt,
+          skipped: parsedData.skipped,
+        });
         setData(parsedData);
 
         // Check if onboarding was completed or skipped
         if (parsedData.completedAt || parsedData.skipped) {
+          console.log('[OnboardingContext] Onboarding was completed/skipped, setting hasCompletedOnboarding = true');
           setHasCompletedOnboarding(true);
+        } else {
+          console.log('[OnboardingContext] Onboarding not completed, hasCompletedOnboarding = false');
         }
+      } else {
+        console.log('[OnboardingContext] No stored data, hasCompletedOnboarding = false');
       }
 
       // Load progress
@@ -89,8 +102,10 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       if (storedProgress) {
         setProgress(JSON.parse(storedProgress) as OnboardingProgress);
       }
+
+      console.log('[OnboardingContext] Loading complete, isLoading = false');
     } catch (error) {
-      console.error('Failed to load onboarding data:', error);
+      console.error('[OnboardingContext] Failed to load onboarding data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -139,6 +154,17 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const setWorkPreference = useCallback(
     async (preference: WorkPreference) => {
       const newData = { ...data, workPreference: preference };
+      await saveData(newData);
+    },
+    [data, saveData]
+  );
+
+  /**
+   * Update challenges
+   */
+  const setChallenges = useCallback(
+    async (challenges: string[]) => {
+      const newData = { ...data, adhdChallenges: challenges };
       await saveData(newData);
     },
     [data, saveData]
@@ -320,6 +346,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     data,
     progress,
     setWorkPreference,
+    setChallenges,
     setADHDSupportLevel,
     setDailySchedule,
     setProductivityGoals,

@@ -1,6 +1,6 @@
 /**
  * Productivity Goals Screen - Collect user's productivity goals
- * Step 5 of 6 in onboarding flow
+ * Step 6 of 7 in onboarding flow
  */
 
 import { useState } from 'react';
@@ -199,7 +199,7 @@ export default function ProductivityGoalsScreen() {
       <StatusBar style="light" />
 
       {/* Progress Indicator */}
-      <StepProgress currentStep={5} totalSteps={6} />
+      <StepProgress currentStep={6} totalSteps={7} />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {/* Title */}

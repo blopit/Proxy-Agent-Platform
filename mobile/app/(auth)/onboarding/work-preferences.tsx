@@ -56,7 +56,7 @@ export default function WorkPreferencesScreen() {
       await setWorkPreference(selectedPreference);
       await markStepComplete(ONBOARDING_STEPS.WORK_PREFERENCES);
       await nextStep();
-      router.push('/(auth)/onboarding/adhd-support');
+      router.push('/(auth)/onboarding/challenges');
     }
   };
 

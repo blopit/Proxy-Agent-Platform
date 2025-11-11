@@ -7,12 +7,13 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 
 import httpx
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr
 
-from src.api.auth import TokenResponse, create_access_token
+from src.api.auth import TokenResponse, create_access_token, create_refresh_token
 from src.core.settings import get_settings
 from src.core.task_models import User
+from src.database.enhanced_adapter import EnhancedDatabaseAdapter, get_enhanced_database
 from src.repositories.enhanced_repositories import UserRepository
 
 router = APIRouter(prefix="/api/v1/auth/oauth", tags=["oauth"])
@@ -179,7 +180,9 @@ def get_or_create_oauth_user(profile: OAuthUserProfile) -> User:
 
 
 @router.post("/google", response_model=TokenResponse)
-async def google_oauth_callback(request: GoogleOAuthRequest):
+async def google_oauth_callback(
+    request: GoogleOAuthRequest, db: EnhancedDatabaseAdapter = Depends(get_enhanced_database)
+):
     """
     Handle Google OAuth callback and create user session.
 
@@ -187,13 +190,14 @@ async def google_oauth_callback(request: GoogleOAuthRequest):
     1. Exchanges authorization code for access token
     2. Fetches user profile from Google
     3. Creates or retrieves user from database
-    4. Returns JWT access token
+    4. Returns JWT access token + refresh token
 
     Args:
         request: Google OAuth request with authorization code
+        db: Database adapter dependency
 
     Returns:
-        JWT token response with user info
+        JWT token response with user info and refresh token
 
     Raises:
         HTTPException 400: If OAuth flow fails
@@ -222,8 +226,12 @@ async def google_oauth_callback(request: GoogleOAuthRequest):
             data={"sub": user.username, "user_id": user.user_id}, expires_delta=access_token_expires
         )
 
+        # Create refresh token
+        refresh_token, _ = create_refresh_token(user.user_id, db)
+
         return TokenResponse(
             access_token=jwt_token,
+            refresh_token=refresh_token,
             token_type="bearer",
             expires_in=settings.jwt_access_token_expire_minutes * 60,
             user={

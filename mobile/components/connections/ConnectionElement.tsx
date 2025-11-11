@@ -12,7 +12,6 @@
 import React from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { Check, AlertCircle } from 'lucide-react-native';
-import Svg, { Path } from 'react-native-svg';
 import ChevronStep from '../core/ChevronStep';
 import ChevronButton from '../core/ChevronButton';
 import { THEME } from '../../src/theme/colors';
@@ -22,17 +21,17 @@ export type ConnectionStatus = 'disconnected' | 'connected' | 'error' | 'connect
 
 export interface ConnectionElementProps {
   provider: string;
-  iconSvg: string; // SVG path data
-  iconColor: string; // Brand color
+  icon: React.ReactNode; // Brand icon component
   status: ConnectionStatus;
+  email?: string; // Connected email address
   onConnect?: () => void;
 }
 
 const ConnectionElement: React.FC<ConnectionElementProps> = ({
   provider,
-  iconSvg,
-  iconColor,
+  icon,
   status,
+  email,
   onConnect,
 }) => {
   const getChevronStatus = (): 'done' | 'error' | 'active' | 'pending' => {
@@ -104,13 +103,16 @@ const ConnectionElement: React.FC<ConnectionElementProps> = ({
         <View style={styles.content}>
           {/* Brand Icon */}
           <View style={styles.iconContainer}>
-            <Svg width={24} height={24} viewBox="0 0 24 24">
-              <Path d={iconSvg} fill={iconColor} />
-            </Svg>
+            {icon}
           </View>
 
-          {/* Provider Name */}
-          <Text style={styles.providerName}>{provider}</Text>
+          {/* Provider Name and Email */}
+          <View style={styles.providerInfo}>
+            <Text style={styles.providerName}>{provider}</Text>
+            {status === 'connected' && email && (
+              <Text style={styles.emailText}>{email}</Text>
+            )}
+          </View>
 
           {/* Spacer */}
           <View style={{ flex: 1 }} />
@@ -139,10 +141,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  providerInfo: {
+    flexDirection: 'column',
+    gap: 2,
+  },
   providerName: {
     fontSize: 14,
     fontWeight: '600',
     color: THEME.base1,
+  },
+  emailText: {
+    fontSize: 11,
+    color: THEME.base01,
   },
   statusContent: {
     flexDirection: 'row',

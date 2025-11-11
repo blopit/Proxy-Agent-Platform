@@ -1,6 +1,6 @@
 /**
  * Daily Schedule Screen - Collect user's work schedule and availability
- * Step 4 of onboarding flow
+ * Step 5 of onboarding flow
  */
 
 import { useState } from 'react';
@@ -88,7 +88,7 @@ export default function DailyScheduleScreen() {
       <StatusBar style="light" />
 
       {/* Progress Indicator */}
-      <StepProgress currentStep={4} totalSteps={7} />
+      <StepProgress currentStep={5} totalSteps={7} />
 
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
         {/* Title */}

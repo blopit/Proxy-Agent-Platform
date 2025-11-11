@@ -1,6 +1,6 @@
 /**
  * Onboarding Layout - Stack navigation for onboarding screens
- * Manages the 6-step onboarding flow
+ * Manages the 7-step onboarding flow
  */
 
 import { Stack } from 'expo-router';
@@ -35,9 +35,15 @@ export default function OnboardingLayout() {
           }}
         />
         <Stack.Screen
+          name="challenges"
+          options={{
+            title: 'Challenges',
+          }}
+        />
+        <Stack.Screen
           name="adhd-support"
           options={{
-            title: 'ADHD Support',
+            title: 'Support Level',
           }}
         />
         <Stack.Screen

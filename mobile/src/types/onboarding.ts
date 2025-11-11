@@ -143,6 +143,7 @@ export const DEFAULT_DAILY_SCHEDULE: DailySchedule = {
 export const ONBOARDING_STEPS = {
   WELCOME: 'welcome',
   WORK_PREFERENCES: 'work_preferences',
+  CHALLENGES: 'challenges',
   ADHD_SUPPORT: 'adhd_support',
   DAILY_SCHEDULE: 'daily_schedule',
   PRODUCTIVITY_GOALS: 'productivity_goals',
