@@ -1,11 +1,12 @@
 /**
  * Card Component (React Native)
  * Replaces shadcn/ui Card for mobile
- * Solarized Dark theme with ADHD-optimized design
+ * Theme-aware with ADHD-optimized design
  */
 
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
+import { useTheme } from '@/src/theme/ThemeContext';
 
 interface CardProps {
   children: React.ReactNode;
@@ -14,8 +15,33 @@ interface CardProps {
 }
 
 export function Card({ children, style, variant = 'default' }: CardProps) {
+  const { colors } = useTheme();
+
+  const getVariantStyle = () => {
+    switch (variant) {
+      case 'high-priority':
+        return { borderColor: colors.red };
+      case 'medium-priority':
+        return { borderColor: colors.yellow };
+      case 'low-priority':
+        return { borderColor: colors.base01 };
+      default:
+        return { borderColor: colors.base01 };
+    }
+  };
+
   return (
-    <View style={[styles.card, styles[variant], style]}>
+    <View
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.base02,
+          borderColor: colors.base01,
+        },
+        getVariantStyle(),
+        style,
+      ]}
+    >
       {children}
     </View>
   );
@@ -35,26 +61,9 @@ export function CardFooter({ children, style }: { children: React.ReactNode; sty
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#073642', // Solarized base02
     borderRadius: 12,
     padding: 16,
     borderWidth: 2,
-    borderColor: '#586e75', // Solarized base01
-  },
-  'high-priority': {
-    borderColor: '#dc322f', // Solarized red
-    borderWidth: 2,
-  },
-  'medium-priority': {
-    borderColor: '#b58900', // Solarized yellow
-    borderWidth: 2,
-  },
-  'low-priority': {
-    borderColor: '#586e75', // Solarized base01
-    borderWidth: 2,
-  },
-  default: {
-    borderColor: '#586e75',
   },
   header: {
     marginBottom: 12,
