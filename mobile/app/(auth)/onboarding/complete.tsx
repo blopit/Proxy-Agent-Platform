@@ -12,6 +12,7 @@ import { THEME } from '@/src/theme/colors';
 import { useOnboarding } from '@/src/contexts/OnboardingContext';
 import { ONBOARDING_STEPS } from '@/src/types/onboarding';
 import StepProgress from '@/src/components/onboarding/StepProgress';
+import OpenMoji from '@/src/components/ui/OpenMoji';
 
 export default function OnboardingCompleteScreen() {
   const router = useRouter();
@@ -46,7 +47,7 @@ export default function OnboardingCompleteScreen() {
     await completeOnboarding();
 
     // Navigate to main app (capture tab)
-    router.replace('/(tabs)/capture');
+    router.replace('/(tabs)/capture/add');
   };
 
   return (
@@ -83,7 +84,7 @@ export default function OnboardingCompleteScreen() {
 
           <View style={styles.featuresList}>
             <View style={styles.featureItem}>
-              <Text style={styles.featureEmoji}>🧠</Text>
+              <OpenMoji emoji="🧠" size={32} />
               <View style={styles.featureText}>
                 <Text style={styles.featureLabel}>Brain Dump Mode</Text>
                 <Text style={styles.featureDescription}>
@@ -93,7 +94,7 @@ export default function OnboardingCompleteScreen() {
             </View>
 
             <View style={styles.featureItem}>
-              <Text style={styles.featureEmoji}>🎯</Text>
+              <OpenMoji emoji="🎯" size={32} />
               <View style={styles.featureText}>
                 <Text style={styles.featureLabel}>Focus Sessions</Text>
                 <Text style={styles.featureDescription}>
@@ -103,7 +104,7 @@ export default function OnboardingCompleteScreen() {
             </View>
 
             <View style={styles.featureItem}>
-              <Text style={styles.featureEmoji}>🗺️</Text>
+              <OpenMoji emoji="🗺️" size={32} />
               <View style={styles.featureText}>
                 <Text style={styles.featureLabel}>Task Landscape</Text>
                 <Text style={styles.featureDescription}>
@@ -113,7 +114,7 @@ export default function OnboardingCompleteScreen() {
             </View>
 
             <View style={styles.featureItem}>
-              <Text style={styles.featureEmoji}>🤖</Text>
+              <OpenMoji emoji="🤖" size={32} />
               <View style={styles.featureText}>
                 <Text style={styles.featureLabel}>AI Task Breakdown</Text>
                 <Text style={styles.featureDescription}>
@@ -197,9 +198,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     gap: 16,
     paddingHorizontal: 12,
-  },
-  featureEmoji: {
-    fontSize: 32,
   },
   featureText: {
     flex: 1,

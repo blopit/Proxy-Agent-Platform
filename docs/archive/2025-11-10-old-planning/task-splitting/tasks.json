@@ -1,0 +1,739 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Task Card UI Component System",
+        "description": "Create a comprehensive task card component with visual task management inspired by claude-task-master",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "details": "Build a reusable task card component system that displays tasks with their metadata, subtasks, dependencies, and progress indicators. Include color coding by priority, status badges, and interactive elements.",
+        "testStrategy": "Render sample tasks with all combinations of priority, status, and dependency states. Verify visual hierarchy and readability.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create TaskCard base component",
+            "description": "Build the fundamental TaskCard React component with TypeScript types",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Create TaskCard.tsx in frontend/src/components/tasks/ with props interface for id, title, description, status, priority, dependencies, details, testStrategy, and subtasks. Use Tailwind CSS for styling."
+          },
+          {
+            "id": 2,
+            "title": "Add status badge component",
+            "description": "Create visual status indicators with color coding",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Status badges: pending (gray), in-progress (blue), done (green), review (yellow), deferred (orange), cancelled (red). Use pill-shaped badges with icons."
+          },
+          {
+            "id": 3,
+            "title": "Add priority indicator component",
+            "description": "Visual priority markers (high/medium/low)",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Priority indicators: high (red flag), medium (yellow flag), low (gray flag). Position in top-right corner of card."
+          },
+          {
+            "id": 4,
+            "title": "Implement dependency visualization",
+            "description": "Show task dependencies with completion status",
+            "status": "pending",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Display dependencies as chips/pills with checkmarks (\u2705) for completed or clock icons (\u23f1\ufe0f) for pending. Group at bottom of card."
+          },
+          {
+            "id": 5,
+            "title": "Add subtask progress tracker",
+            "description": "Visual progress bar for subtask completion",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Progress bar showing X/Y subtasks completed with percentage. Color transitions from red \u2192 yellow \u2192 green as completion increases."
+          },
+          {
+            "id": 6,
+            "title": "Create expandable details section",
+            "description": "Collapsible section for task details and test strategy",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Use accordion pattern. Click to expand/collapse. Show 'Details' and 'Test Strategy' in separate subsections with icons."
+          },
+          {
+            "id": 7,
+            "title": "Implement subtask list rendering",
+            "description": "Nested display of subtasks within parent task card",
+            "status": "pending",
+            "dependencies": [
+              1,
+              2,
+              5
+            ],
+            "details": "Render subtasks as indented mini-cards. Show subtask title, status, and dependencies. Support clicking to expand subtask details."
+          },
+          {
+            "id": 8,
+            "title": "Add action buttons (start, complete, defer)",
+            "description": "Interactive buttons to change task status",
+            "status": "pending",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Buttons: 'Start Task' (pending \u2192 in-progress), 'Mark Complete' (any \u2192 done), 'Defer' (any \u2192 deferred). Show conditionally based on current status."
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Task Data Model & Type System",
+        "description": "Define TypeScript types and interfaces for task management system",
+        "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "details": "Create comprehensive type definitions following claude-task-master structure. Include Task, Subtask, TaskStatus, TaskPriority, and TaggedTaskList interfaces.",
+        "testStrategy": "TypeScript compilation with strict mode. Create sample data objects to verify type safety.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define TaskStatus enum",
+            "description": "Create enum for all possible task states",
+            "status": "pending",
+            "dependencies": [],
+            "details": "enum TaskStatus { PENDING, IN_PROGRESS, DONE, REVIEW, DEFERRED, CANCELLED }"
+          },
+          {
+            "id": 2,
+            "title": "Define TaskPriority enum",
+            "description": "Create enum for task priority levels",
+            "status": "pending",
+            "dependencies": [],
+            "details": "enum TaskPriority { HIGH, MEDIUM, LOW }"
+          },
+          {
+            "id": 3,
+            "title": "Create Subtask interface",
+            "description": "Define subtask data structure",
+            "status": "pending",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "interface Subtask { id: number; title: string; description: string; status: TaskStatus; dependencies: number[]; details: string; }"
+          },
+          {
+            "id": 4,
+            "title": "Create Task interface",
+            "description": "Define main task data structure",
+            "status": "pending",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "interface Task { id: number; title: string; description: string; status: TaskStatus; dependencies: number[]; priority: TaskPriority; details: string; testStrategy: string; subtasks: Subtask[]; }"
+          },
+          {
+            "id": 5,
+            "title": "Create TaggedTaskList interface",
+            "description": "Define structure for tagged task organization",
+            "status": "pending",
+            "dependencies": [
+              4
+            ],
+            "details": "interface TaggedTaskList { [tag: string]: { tasks: Task[] } }. Supports multi-context task management like 'master', 'feature-x', etc."
+          },
+          {
+            "id": 6,
+            "title": "Add TaskComplexity type",
+            "description": "Define complexity analysis structure",
+            "status": "pending",
+            "dependencies": [],
+            "details": "interface TaskComplexity { taskId: number; complexityScore: number; recommendedSubtasks: number; expansionPrompt: string; }"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Backend Task Management API Endpoints",
+        "description": "Create FastAPI endpoints for task CRUD operations with subtask support",
+        "status": "pending",
+        "dependencies": [
+          2
+        ],
+        "priority": "high",
+        "details": "Implement RESTful API endpoints following repository pattern. Support tagged task lists, subtask management, status updates, and dependency validation.",
+        "testStrategy": "Write pytest tests for each endpoint. Test dependency validation, circular dependency detection, and tag isolation.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Task Pydantic models",
+            "description": "Define Pydantic models for request/response validation",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Create TaskCreate, TaskUpdate, TaskResponse, SubtaskCreate, SubtaskUpdate models in src/core/task_models.py. Match TypeScript interfaces."
+          },
+          {
+            "id": 2,
+            "title": "Implement task database schema",
+            "description": "Design SQLite schema for tasks and subtasks",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Tables: tasks (task_id, title, description, status, priority, tag, user_id, created_at, updated_at), subtasks (subtask_id, task_id, title, description, status, details, created_at, updated_at), task_dependencies (task_id, depends_on_task_id)."
+          },
+          {
+            "id": 3,
+            "title": "Create TaskRepository",
+            "description": "Build repository layer for task data access",
+            "status": "pending",
+            "dependencies": [
+              2
+            ],
+            "details": "Extend BaseRepository. Methods: create_task, update_task, delete_task, get_task, get_all_tasks_by_tag, add_dependency, remove_dependency, validate_dependencies."
+          },
+          {
+            "id": 4,
+            "title": "Implement GET /api/v1/tasks/tagged endpoints",
+            "description": "Endpoints for tagged task list retrieval",
+            "status": "pending",
+            "dependencies": [
+              3
+            ],
+            "details": "GET /api/v1/tasks/tagged?user_id=X&tag=master - returns all tasks in tag. GET /api/v1/tasks/tagged/all?user_id=X - returns all tags with their tasks."
+          },
+          {
+            "id": 5,
+            "title": "Implement POST /api/v1/tasks/create endpoint",
+            "description": "Create new task with optional subtasks",
+            "status": "pending",
+            "dependencies": [
+              3
+            ],
+            "details": "POST /api/v1/tasks/create with TaskCreate body. Validate dependencies exist. Auto-assign task ID. Support creating subtasks in same request."
+          },
+          {
+            "id": 6,
+            "title": "Implement PUT /api/v1/tasks/{task_id}/status endpoint",
+            "description": "Update task status with validation",
+            "status": "pending",
+            "dependencies": [
+              3
+            ],
+            "details": "PUT /api/v1/tasks/{task_id}/status?new_status=done. Validate status transitions. Send WebSocket event on update."
+          },
+          {
+            "id": 7,
+            "title": "Implement dependency validation logic",
+            "description": "Validate dependencies and detect circular references",
+            "status": "pending",
+            "dependencies": [
+              3
+            ],
+            "details": "Create validate_dependencies() function. Check: 1) Dependencies exist in same tag, 2) No circular references (DFS cycle detection), 3) Dependencies are not self-referential."
+          },
+          {
+            "id": 8,
+            "title": "Add subtask management endpoints",
+            "description": "CRUD endpoints for subtasks",
+            "status": "pending",
+            "dependencies": [
+              3
+            ],
+            "details": "POST /api/v1/tasks/{task_id}/subtasks, PUT /api/v1/tasks/{task_id}/subtasks/{subtask_id}, DELETE /api/v1/tasks/{task_id}/subtasks/{subtask_id}."
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Task Dashboard UI Page",
+        "description": "Create comprehensive task dashboard with filtering, sorting, and tag switching",
+        "status": "pending",
+        "dependencies": [
+          1,
+          3
+        ],
+        "priority": "high",
+        "details": "Build full-page task dashboard at /tasks route. Display task cards in grid/list view. Support filtering by status, priority, tag. Show task statistics and progress charts.",
+        "testStrategy": "Test with various task datasets. Verify filtering, sorting, and tag switching work correctly. Test mobile responsiveness.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create TaskDashboard page component",
+            "description": "Main dashboard page at /tasks route",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Create frontend/src/app/tasks/page.tsx. Use Next.js App Router. Implement layout with header, filters, and task grid."
+          },
+          {
+            "id": 2,
+            "title": "Implement tag selector dropdown",
+            "description": "Dropdown to switch between task tags/contexts",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Dropdown shows all available tags (master, feature-x, etc.). Current tag highlighted. Fetch tasks for selected tag on change."
+          },
+          {
+            "id": 3,
+            "title": "Add filter panel (status, priority)",
+            "description": "Filter controls for narrowing task list",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Checkboxes for status (pending, in-progress, done, etc.) and priority (high, medium, low). Multi-select support. Clear filters button."
+          },
+          {
+            "id": 4,
+            "title": "Implement task search bar",
+            "description": "Real-time search across task titles and descriptions",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Search input with debounce (300ms). Highlights matching tasks. Searches title, description, and details fields."
+          },
+          {
+            "id": 5,
+            "title": "Add sorting controls",
+            "description": "Sort tasks by priority, ID, status, or dependencies",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Dropdown selector: Sort by Priority, ID, Status, Dependency Count. Ascending/descending toggle. Default: Priority (high first) \u2192 ID (low first)."
+          },
+          {
+            "id": 6,
+            "title": "Create task statistics panel",
+            "description": "Summary stats dashboard (total, completed, in-progress, etc.)",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Show: Total tasks, Completed count, In Progress count, Pending count, Completion percentage. Use card layout with icons."
+          },
+          {
+            "id": 7,
+            "title": "Implement task grid/list rendering",
+            "description": "Render TaskCard components in responsive grid",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "CSS Grid layout. 1 column mobile, 2 columns tablet, 3 columns desktop. Gap between cards. Support list view toggle."
+          },
+          {
+            "id": 8,
+            "title": "Add 'Create Task' modal",
+            "description": "Modal dialog for creating new tasks",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Form fields: title, description, priority, tag, details, test strategy. Dependency multi-select dropdown. Add subtasks button. Validate before submission."
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Task Complexity Analysis System",
+        "description": "AI-powered task complexity analysis inspired by claude-task-master",
+        "status": "pending",
+        "dependencies": [
+          2,
+          3
+        ],
+        "priority": "medium",
+        "details": "Analyze task complexity using AI to recommend optimal subtask breakdown. Generate expansion prompts tailored to each task. Create complexity reports in JSON format.",
+        "testStrategy": "Analyze sample tasks with various complexity levels. Verify complexity scores (1-10) and subtask recommendations are reasonable.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create complexity analysis prompt template",
+            "description": "Design AI prompt for task complexity assessment",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Prompt should analyze: 1) Technical complexity, 2) Scope/breadth, 3) Dependencies, 4) Estimated effort. Return complexity score (1-10) and recommended subtask count."
+          },
+          {
+            "id": 2,
+            "title": "Implement analyze_complexity API endpoint",
+            "description": "POST endpoint to analyze one or all tasks",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "POST /api/v1/tasks/analyze-complexity?task_id=X or ?all=true. Calls AI model with complexity prompt. Returns ComplexityAnalysis object."
+          },
+          {
+            "id": 3,
+            "title": "Create complexity report generation",
+            "description": "Generate and save complexity analysis reports",
+            "status": "pending",
+            "dependencies": [
+              2
+            ],
+            "details": "Save reports to docs/task-splitting/complexity-report-{timestamp}.json. Include: per-task analysis, complexity distribution stats, expansion commands."
+          },
+          {
+            "id": 4,
+            "title": "Implement task expansion from complexity data",
+            "description": "Auto-generate subtasks based on complexity analysis",
+            "status": "pending",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "POST /api/v1/tasks/{task_id}/expand. Uses complexity report recommendations. Calls AI with expansion prompt. Creates subtasks automatically."
+          },
+          {
+            "id": 5,
+            "title": "Add complexity visualization to UI",
+            "description": "Display complexity scores on task cards",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Show complexity score (1-10) as color-coded badge. Green (1-3), Yellow (4-6), Orange (7-8), Red (9-10). Add 'Expand' button for high-complexity tasks."
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Task 'Next' Recommendation System",
+        "description": "Smart recommendation system to suggest the next task to work on",
+        "status": "pending",
+        "dependencies": [
+          2,
+          3
+        ],
+        "priority": "medium",
+        "details": "Implement algorithm to identify the next actionable task based on dependencies, priority, and status. Similar to claude-task-master's 'next' command.",
+        "testStrategy": "Test with various task graphs. Verify it correctly identifies unblocked high-priority tasks. Handle edge cases (all tasks blocked, all tasks done).",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement next task algorithm",
+            "description": "Logic to determine next actionable task",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Algorithm: 1) Filter pending/in-progress tasks, 2) Filter tasks with satisfied dependencies, 3) Sort by priority (high first), then dependency count (low first), then ID (low first). Return top result."
+          },
+          {
+            "id": 2,
+            "title": "Create GET /api/v1/tasks/next endpoint",
+            "description": "API endpoint to fetch recommended next task",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "GET /api/v1/tasks/next?user_id=X&tag=master. Returns full task object with dependency status info. Includes suggested actions."
+          },
+          {
+            "id": 3,
+            "title": "Add 'Next Task' UI component",
+            "description": "Prominent card showing recommended next task",
+            "status": "pending",
+            "dependencies": [
+              2
+            ],
+            "details": "Display at top of task dashboard. Large card with title, description, priority, and 'Start Task' button. Show dependency completion status."
+          },
+          {
+            "id": 4,
+            "title": "Implement dependency status visualization",
+            "description": "Show which dependencies are blocking or satisfied",
+            "status": "pending",
+            "dependencies": [
+              2
+            ],
+            "details": "List task dependencies with checkmarks (\u2705 done) or clocks (\u23f1\ufe0f pending). Helps user understand what's blocking the next task."
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Mobile Task Management Interface",
+        "description": "Mobile-optimized task management UI for on-the-go task updates",
+        "status": "pending",
+        "dependencies": [
+          1,
+          3,
+          4
+        ],
+        "priority": "medium",
+        "details": "Create mobile-friendly task interface at /mobile/tasks. Swipe gestures for status updates. Touch-optimized controls. Quick actions for common operations.",
+        "testStrategy": "Test on iOS and Android devices. Verify touch targets are 44x44px minimum. Test swipe gestures and animations.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create mobile task list view",
+            "description": "Simplified task cards for mobile screens",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Compact task cards: title, status badge, priority indicator. Tap to expand details. Single column layout. Virtualized scrolling for performance."
+          },
+          {
+            "id": 2,
+            "title": "Implement swipe gestures",
+            "description": "Swipe left/right for quick status changes",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Swipe right: Mark complete. Swipe left: Defer/delete. Show action hints during swipe. Animate card slide and color change."
+          },
+          {
+            "id": 3,
+            "title": "Add quick action bottom sheet",
+            "description": "Bottom sheet modal for task actions",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Slides up from bottom. Actions: Start Task, Mark Complete, Defer, Edit, Delete. Large touch targets (56px height). Backdrop dismiss."
+          },
+          {
+            "id": 4,
+            "title": "Implement pull-to-refresh",
+            "description": "Refresh task list by pulling down",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Standard pull-to-refresh pattern. Loading spinner. Refetches tasks from API. Success feedback animation."
+          },
+          {
+            "id": 5,
+            "title": "Add floating action button (FAB)",
+            "description": "Quick create task button",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "Fixed position bottom-right. Plus icon. Opens create task modal. Material Design style. Hides on scroll down, shows on scroll up."
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Task Dependency Validation & Cycle Detection",
+        "description": "Robust dependency validation system with circular reference detection",
+        "status": "pending",
+        "dependencies": [
+          2,
+          3
+        ],
+        "priority": "high",
+        "details": "Implement graph algorithms to detect circular dependencies. Validate dependencies exist and are within same tag. Prevent invalid dependency chains.",
+        "testStrategy": "Create test cases with circular dependencies (A\u2192B\u2192C\u2192A). Verify detection and error messages. Test cross-tag dependency rejection.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement DFS cycle detection algorithm",
+            "description": "Depth-first search to find circular dependencies",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Function: detect_circular_dependencies(tasks: Task[]). Returns list of cycles found. Uses DFS with visited/recursion stack tracking. Handles disconnected graphs."
+          },
+          {
+            "id": 2,
+            "title": "Create dependency validation rules",
+            "description": "Define and implement validation constraints",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Rules: 1) Dependencies must exist in same tag, 2) No self-dependencies (task\u2192task), 3) No circular chains, 4) Referenced tasks must exist. Return validation errors with details."
+          },
+          {
+            "id": 3,
+            "title": "Implement validate-dependencies endpoint",
+            "description": "API endpoint to validate all dependencies in a tag",
+            "status": "pending",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "GET /api/v1/tasks/validate-dependencies?tag=master. Returns validation report: valid (true/false), errors array, warnings array, cycle details."
+          },
+          {
+            "id": 4,
+            "title": "Add real-time validation in create/update",
+            "description": "Validate dependencies on task creation/updates",
+            "status": "pending",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Run validation before committing task changes. Return 400 error if validation fails. Include detailed error message explaining the issue."
+          },
+          {
+            "id": 5,
+            "title": "Create dependency graph visualization",
+            "description": "Visual representation of task dependency graph",
+            "status": "pending",
+            "dependencies": [
+              3
+            ],
+            "details": "Use D3.js or React Flow. Nodes = tasks, Edges = dependencies. Color-code nodes by status. Highlight cycles in red. Zoom/pan support."
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Task Progress Gamification Integration",
+        "description": "Integrate task completion with existing gamification system",
+        "status": "pending",
+        "dependencies": [
+          3
+        ],
+        "priority": "medium",
+        "details": "Award XP for task completion. Higher complexity tasks = more XP. Achievements for task streaks, all tasks complete, etc. Update progress API with task data.",
+        "testStrategy": "Complete tasks and verify XP awards. Check achievement unlocks. Verify WebSocket events fire correctly.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define XP award formula",
+            "description": "Calculate XP based on task properties",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Formula: Base XP (10) + Priority multiplier (high=2x, med=1.5x, low=1x) + Complexity multiplier (score/5). Subtask completion awards 20% of parent XP."
+          },
+          {
+            "id": 2,
+            "title": "Hook task completion to XP system",
+            "description": "Award XP when tasks marked as done",
+            "status": "pending",
+            "dependencies": [
+              1
+            ],
+            "details": "In status update endpoint, if new_status == 'done', call gamification service to award XP. Include task details in event payload."
+          },
+          {
+            "id": 3,
+            "title": "Create task-specific achievements",
+            "description": "Define achievements for task completion milestones",
+            "status": "pending",
+            "dependencies": [],
+            "details": "Achievements: 'First Task' (1 task), 'Getting Started' (5 tasks), 'Task Master' (25 tasks), 'Dependency Champion' (complete task with 5+ deps), 'Complexity Crusher' (complete complexity 9+ task)."
+          },
+          {
+            "id": 4,
+            "title": "Add task completion celebrations",
+            "description": "Confetti and animations on task completion",
+            "status": "pending",
+            "dependencies": [
+              2
+            ],
+            "details": "Trigger confetti animation when marking task complete. Show XP gained notification. Play success sound (optional). Animate task card fade-out."
+          },
+          {
+            "id": 5,
+            "title": "Implement task completion streaks",
+            "description": "Track consecutive days of task completions",
+            "status": "pending",
+            "dependencies": [
+              2
+            ],
+            "details": "Store last_task_completion_date per user. Increment streak if completed task today and yesterday. Reset if gap > 1 day. Show streak in dashboard."
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Task Export & Import System",
+        "description": "Export tasks to various formats (JSON, Markdown, CSV) and import from external sources",
+        "status": "pending",
+        "dependencies": [
+          2,
+          3
+        ],
+        "priority": "low",
+        "details": "Support exporting tasks for backup, sharing, or migration. Import tasks from JSON or CSV. Generate markdown reports for documentation.",
+        "testStrategy": "Export tasks to all formats and verify data integrity. Import exported data and check round-trip accuracy.",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement JSON export",
+            "description": "Export full task structure to JSON",
+            "status": "pending",
+            "dependencies": [],
+            "details": "GET /api/v1/tasks/export/json?tag=master. Returns complete TaggedTaskList JSON. Include all metadata, subtasks, dependencies."
+          },
+          {
+            "id": 2,
+            "title": "Implement Markdown export",
+            "description": "Generate readable markdown task reports",
+            "status": "pending",
+            "dependencies": [],
+            "details": "GET /api/v1/tasks/export/markdown?tag=master. Format: # Task ID - Title, ## Description, ### Subtasks list. Include status badges and dependency info."
+          },
+          {
+            "id": 3,
+            "title": "Implement CSV export",
+            "description": "Export tasks as CSV for spreadsheet import",
+            "status": "pending",
+            "dependencies": [],
+            "details": "GET /api/v1/tasks/export/csv?tag=master. Columns: ID, Title, Description, Status, Priority, Dependencies (comma-sep), Details, Test Strategy. Flatten subtasks as separate rows."
+          },
+          {
+            "id": 4,
+            "title": "Create JSON import endpoint",
+            "description": "Import tasks from JSON file",
+            "status": "pending",
+            "dependencies": [],
+            "details": "POST /api/v1/tasks/import/json. Upload JSON file. Validate structure matches TaggedTaskList. Merge or replace existing tasks (user choice). Return import summary."
+          },
+          {
+            "id": 5,
+            "title": "Add export UI controls",
+            "description": "Download buttons for each export format",
+            "status": "pending",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Dropdown menu: Export as JSON, Markdown, CSV. Trigger browser download. Show success toast notification."
+          }
+        ]
+      }
+    ]
+  },
+  "feature-mobile-dopamine": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Quick Capture AI Intelligence",
+        "description": "Enhanced AI-powered task capture with Auto Mode and Clarity Mode (COMPLETED)",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "details": "Implemented dual-mode task capture with voice-to-text support and AI enhancement",
+        "testStrategy": "Tested with various input formats and verified AI processing quality",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Energy API Integration",
+        "description": "Real-time circadian energy tracking (COMPLETED)",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "details": "Created GET endpoint with time-based energy estimation",
+        "testStrategy": "Verified energy levels at different times of day",
+        "subtasks": []
+      }
+    ]
+  }
+}

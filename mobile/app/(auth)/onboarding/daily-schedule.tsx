@@ -17,6 +17,7 @@ import {
   WeeklyAvailability,
 } from '@/src/types/onboarding';
 import StepProgress from '@/src/components/onboarding/StepProgress';
+import OpenMoji from '@/src/components/ui/OpenMoji';
 
 const TIME_PREFERENCES: { value: TimePreference; label: string; emoji: string }[] = [
   { value: 'early_morning', label: 'Early Morning', emoji: '🌅' },
@@ -73,7 +74,7 @@ export default function DailyScheduleScreen() {
 
   const handleSkip = async () => {
     await skipOnboarding();
-    router.replace('/(tabs)');
+    router.replace('/(tabs)/capture/add');
   };
 
   const toggleDay = (day: keyof WeeklyAvailability) => {
@@ -119,7 +120,7 @@ export default function DailyScheduleScreen() {
                   onPress={() => setTimePreference(pref.value)}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.timePrefEmoji}>{pref.emoji}</Text>
+                  <OpenMoji emoji={pref.emoji} size={20} />
                   <Text style={[styles.timePrefText, isSelected && styles.timePrefTextSelected]}>
                     {pref.label}
                   </Text>
@@ -275,9 +276,6 @@ const styles = StyleSheet.create({
   timePrefChipSelected: {
     backgroundColor: `${THEME.cyan}30`,
     borderColor: THEME.cyan,
-  },
-  timePrefEmoji: {
-    fontSize: 18,
   },
   timePrefText: {
     fontSize: 14,

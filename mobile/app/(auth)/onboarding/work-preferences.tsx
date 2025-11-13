@@ -66,7 +66,7 @@ export default function WorkPreferencesScreen() {
 
   const handleSkip = async () => {
     await skipOnboarding();
-    router.replace('/(tabs)');
+    router.replace('/(tabs)/capture/add');
   };
 
   return (

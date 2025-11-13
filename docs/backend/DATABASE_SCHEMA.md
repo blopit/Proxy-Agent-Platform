@@ -1,6 +1,6 @@
 # Database Schema Documentation
 
-**Last Updated**: October 28, 2025
+**Last Updated**: January 13, 2025
 **Version**: 0.1.0
 **Database**: PostgreSQL 13+ (prod) / SQLite 3+ (dev)
 
@@ -456,6 +456,34 @@ Following [NAMING_CONVENTIONS.md](../design/NAMING_CONVENTIONS.md):
 
 ---
 
+### 14. `refresh_tokens`
+
+**Purpose**: JWT refresh token storage for secure token rotation
+**Migration**: 026_create_refresh_tokens_table.sql (Created: 2025-01-09)
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `token_id` | TEXT | PRIMARY KEY | Unique token identifier |
+| `user_id` | TEXT | FK → users(user_id) ON DELETE CASCADE, NOT NULL | Token owner |
+| `token_hash` | TEXT | NOT NULL | Hashed refresh token (bcrypt) |
+| `expires_at` | TIMESTAMP | NOT NULL | Token expiration time |
+| `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP | Creation time |
+| `revoked` | BOOLEAN | DEFAULT 0 (FALSE) | Revocation flag |
+| `revoked_at` | TIMESTAMP | NULLABLE | Revocation timestamp |
+
+**Indexes**:
+- `idx_refresh_tokens_user_id` on `user_id` - Efficient user lookup
+- `idx_refresh_tokens_expires_at` on `expires_at` - Token cleanup queries
+- `idx_refresh_tokens_revoked` on `revoked` - Revoked token filtering
+
+**Security Features**:
+- Tokens are hashed before storage (bcrypt)
+- Automatic cleanup of expired tokens
+- Revocation support for security incidents
+- CASCADE delete when user is deleted
+
+---
+
 ## Indexes
 
 ### Performance Indexes
@@ -576,6 +604,7 @@ users (1) ────── (M) focus_sessions
 users (1) ────── (M) goals
 users (1) ────── (M) habits
 users (1) ────── (M) user_achievements
+users (1) ────── (M) refresh_tokens
 
 projects (1) ─── (M) tasks
 

@@ -12,16 +12,18 @@ import { THEME } from '@/src/theme/colors';
 import { useOnboarding } from '@/src/contexts/OnboardingContext';
 import { ONBOARDING_STEPS } from '@/src/types/onboarding';
 import StepProgress from '@/src/components/onboarding/StepProgress';
+import OpenMoji from '@/src/components/ui/OpenMoji';
 
+// Challenge IDs must match backend ADHDChallenge enum values
 const COMMON_CHALLENGES = [
-  { id: 'starting', label: 'Getting started on tasks', emoji: '🏁' },
+  { id: 'task_initiation', label: 'Getting started on tasks', emoji: '🏁' },
   { id: 'focus', label: 'Staying focused', emoji: '🎯' },
-  { id: 'time', label: 'Time awareness', emoji: '⏰' },
+  { id: 'time_blindness', label: 'Time awareness', emoji: '⏰' },
   { id: 'organization', label: 'Keeping things organized', emoji: '📋' },
-  { id: 'procrastination', label: 'Beating procrastination', emoji: '⚡' },
   { id: 'overwhelm', label: 'Managing overwhelm', emoji: '🌊' },
   { id: 'transitions', label: 'Switching between tasks', emoji: '🔄' },
-  { id: 'completion', label: 'Finishing what I start', emoji: '✅' },
+  { id: 'prioritization', label: 'Deciding what to do first', emoji: '🤔' },
+  { id: 'hyperfocus', label: 'Getting too focused on one thing', emoji: '🔍' },
 ];
 
 export default function ChallengesScreen() {
@@ -45,7 +47,7 @@ export default function ChallengesScreen() {
 
   const handleSkip = async () => {
     await skipOnboarding();
-    router.replace('/(tabs)');
+    router.replace('/(tabs)/capture/add');
   };
 
   const toggleChallenge = (challengeId: string) => {
@@ -85,7 +87,7 @@ export default function ChallengesScreen() {
                   onPress={() => toggleChallenge(challenge.id)}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.challengeEmoji}>{challenge.emoji}</Text>
+                  <OpenMoji emoji={challenge.emoji} size={18} />
                   <Text
                     style={[styles.challengeText, isSelected && styles.challengeTextSelected]}
                   >
@@ -100,16 +102,9 @@ export default function ChallengesScreen() {
         {/* Optional hint */}
         {selectedChallenges.length === 0 && (
           <View style={styles.hintContainer}>
+            <OpenMoji emoji="💡" size={16} />
             <Text style={styles.hintText}>
-              💡 Select as many as you'd like, or skip if you prefer to explore on your own
-            </Text>
-          </View>
-        )}
-
-        {selectedChallenges.length > 0 && (
-          <View style={styles.selectionSummary}>
-            <Text style={styles.summaryText}>
-              {selectedChallenges.length} {selectedChallenges.length === 1 ? 'area' : 'areas'} selected
+              Select as many as you'd like, or skip if you prefer to explore on your own
             </Text>
           </View>
         )}
@@ -199,9 +194,6 @@ const styles = StyleSheet.create({
     backgroundColor: `${THEME.magenta}20`,
     borderColor: THEME.magenta,
   },
-  challengeEmoji: {
-    fontSize: 18,
-  },
   challengeText: {
     fontSize: 14,
     color: THEME.base0,
@@ -212,29 +204,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   hintContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
     backgroundColor: `${THEME.blue}15`,
     borderRadius: 12,
     padding: 16,
     marginTop: 8,
   },
   hintText: {
+    flex: 1,
     fontSize: 14,
     color: THEME.base01,
     lineHeight: 20,
-  },
-  selectionSummary: {
-    alignItems: 'center',
-    marginTop: 16,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    backgroundColor: `${THEME.magenta}20`,
-    borderRadius: 20,
-    alignSelf: 'center',
-  },
-  summaryText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: THEME.magenta,
   },
   actions: {
     gap: 12,

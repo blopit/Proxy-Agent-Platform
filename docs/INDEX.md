@@ -4,57 +4,70 @@
 
 Welcome to the Proxy Agent Platform documentation! This is your central navigation point for all project documentation.
 
+> **📝 Documentation Reorganization (Nov 10, 2025)**
+>
+> Useful documentation has been moved to [`agent_resources/`](../agent_resources/README.md) for better organization.
+> Legacy and historical docs remain in [`docs/archive/`](./archive/).
+> See [DOCUMENTATION_ORGANIZATION_PLAN.md](../agent_resources/DOCUMENTATION_ORGANIZATION_PLAN.md) for details.
+
 ---
 
-## 🤖 For AI Agents (NEW!)
+## 🤖 For AI Agents (RECOMMENDED!)
 
-**Specialized documentation by agent role**:
-- **[Backend Agent](../Agent_Resources/backend/README.md)** - API, database, services (~30 docs)
-- **[Frontend Agent](../Agent_Resources/frontend/README.md)** - Expo/React Native mobile (~40 docs)
-- **[Architecture Agent](../Agent_Resources/architecture/README.md)** - System design, patterns (~30 docs)
-- **[Testing Agent](../Agent_Resources/testing/README.md)** - TDD, QA, validation (~15 docs)
-- **[Project Agent](../Agent_Resources/project/README.md)** - Tasks, roadmaps, status (~50 docs)
+**✨ NEW: Organized documentation in [agent_resources/](../agent_resources/README.md)**
 
-Each agent view includes:
-- Quick start guide (10 min read)
-- Common tasks with step-by-step instructions
-- Focused documentation links
-- THINGS_TO_UPDATE.md with action items
+All useful documentation has been organized into `agent_resources/` for better AI agent accessibility:
+
+### Specialized Views by Agent Role
+- **[Backend Agent](../agent_resources/backend/README.md)** - API, database, services
+- **[Frontend Agent](../agent_resources/frontend/README.md)** - Expo/React Native mobile
+- **[Architecture Agent](../agent_resources/architecture/README.md)** - System design, patterns
+- **[Testing Agent](../agent_resources/testing/README.md)** - TDD, QA, validation
+- **[Project Agent](../agent_resources/project/README.md)** - Tasks, roadmaps, status
+
+### Core Documentation
+- **[Getting Started](../agent_resources/docs/getting-started/README.md)** - Installation, setup, quick starts
+- **[References](../agent_resources/docs/references/README.md)** - ADHD research, project vision, tech stack
+- **[Implementation Guides](../agent_resources/docs/guides/README.md)** - Feature implementation guides
+- **[API Documentation](../agent_resources/backend/docs/api/README.md)** - REST API reference
+- **[Design Documents](../agent_resources/architecture/docs/design/)** - ADHD UX, system designs
 
 ---
 
 ## 🚀 Quick Start
 
 **New to the project?** Start here:
-- [Installation Guide](getting-started/installation.md)
-- [Frontend Developer Start](getting-started/FRONTEND_DEVELOPER_START.md)
-- [Backend Developer Start](getting-started/BACKEND_DEVELOPER_START.md)
+- [Installation Guide](../agent_resources/docs/getting-started/installation.md) ⭐
+- [Frontend Developer Start](../agent_resources/docs/getting-started/FRONTEND_DEVELOPER_START.md)
+- [Backend Developer Start](../agent_resources/docs/getting-started/BACKEND_DEVELOPER_START.md)
 
 **Quick Links:**
 - [Project Root README](../README.md)
 - [START_HERE.md](../START_HERE.md) - Week-by-week guide
 - [CLAUDE.md](../CLAUDE.md) - Development standards
+- [Agent Resources](../agent_resources/README.md) - Organized documentation hub
 
 ---
 
 ## 📁 Documentation Structure
 
-### 🎯 Getting Started
-**First steps for new developers**
+### ⭐ Primary Documentation (agent_resources/)
+**All useful docs have been moved here** - [View agent_resources →](../agent_resources/README.md)
 
-- [Installation Guide](getting-started/installation.md)
-- [Frontend Developer Start](getting-started/FRONTEND_DEVELOPER_START.md)
-- [Backend Developer Start](getting-started/BACKEND_DEVELOPER_START.md)
-- [Agent Development Entry Point](guides/AGENT_DEVELOPMENT_ENTRY_POINT.md)
+- **[Getting Started](../agent_resources/docs/getting-started/)** - Installation, developer quick starts
+- **[References](../agent_resources/docs/references/)** - ADHD research, project vision, tech stack
+- **[Guides](../agent_resources/docs/guides/)** - Implementation guides
+- **[API Docs](../agent_resources/backend/docs/api/)** - REST API reference
+- **[Design Docs](../agent_resources/architecture/docs/design/)** - ADHD UX, system designs
+- **[Authentication](../agent_resources/docs/authentication/)** - Auth system docs
+- **[Onboarding](../agent_resources/docs/onboarding/)** - Onboarding system docs
 
-### 🏗️ Architecture & Design
-**System design and technical architecture**
+### 🏗️ Architecture & Design (docs/)
+**System architecture remaining in docs/**
 
 - [System Overview](architecture/system-overview.md)
 - [AI System Architecture](architecture/AI_SYSTEM_ARCHITECTURE.md)
 - [AI System Enhancement Proposal](architecture/AI_SYSTEM_ENHANCEMENT_PROPOSAL.md)
-- [Design Documents](design/) - ADHD UX, progress bars, temporal architecture
-- [Core Agents](components/core-agents.md)
 
 ### 💻 Development Guides
 

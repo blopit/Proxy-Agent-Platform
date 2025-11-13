@@ -12,6 +12,7 @@ import { THEME } from '@/src/theme/colors';
 import { useOnboarding } from '@/src/contexts/OnboardingContext';
 import { ONBOARDING_STEPS, ADHDSupportLevel } from '@/src/types/onboarding';
 import StepProgress from '@/src/components/onboarding/StepProgress';
+import OpenMoji from '@/src/components/ui/OpenMoji';
 
 const HELP_LEVELS = [
   {
@@ -88,7 +89,7 @@ export default function ADHDSupportScreen() {
 
   const handleSkip = async () => {
     await skipOnboarding();
-    router.replace('/(tabs)');
+    router.replace('/(tabs)/capture/add');
   };
 
   return (
@@ -131,7 +132,7 @@ export default function ADHDSupportScreen() {
                 {/* Selection Indicator */}
                 <View style={styles.levelCardHeader}>
                   <View style={styles.levelTitleRow}>
-                    <Text style={styles.levelEmoji}>{helpLevel.emoji}</Text>
+                    <OpenMoji emoji={helpLevel.emoji} size={24} />
                     <Text style={[styles.levelTitle, isSelected && styles.levelTitleSelected]}>
                       {helpLevel.title}
                     </Text>
@@ -271,9 +272,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: THEME.yellow,
-  },
-  levelEmoji: {
-    fontSize: 28,
   },
   levelTitle: {
     fontSize: 20,

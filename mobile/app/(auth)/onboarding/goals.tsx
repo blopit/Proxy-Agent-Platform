@@ -152,7 +152,7 @@ export default function ProductivityGoalsScreen() {
 
   const handleSkip = async () => {
     await skipOnboarding();
-    router.replace('/(tabs)');
+    router.replace('/(tabs)/capture/add');
   };
 
   const handleToggleSuggestedGoal = (suggestedGoal: typeof SUGGESTED_GOALS[0]) => {

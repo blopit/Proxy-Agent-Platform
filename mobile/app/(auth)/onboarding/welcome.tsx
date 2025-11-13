@@ -25,7 +25,7 @@ export default function WelcomeScreen() {
 
   const handleSkip = async () => {
     await skipOnboarding();
-    router.replace('/(tabs)'); // Navigate to main app
+    router.replace('/(tabs)/capture/add'); // Navigate to main app
   };
 
   return (

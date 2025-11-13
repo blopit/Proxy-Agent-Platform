@@ -270,9 +270,11 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       skipped: false,
     };
 
+    // Set state FIRST to ensure it's updated before navigation
+    setHasCompletedOnboarding(true);
+
     // Save locally
     await saveData(completedData);
-    setHasCompletedOnboarding(true);
 
     // Mark as completed on backend
     if (user?.user_id) {
@@ -283,6 +285,9 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         // Continue anyway - local state is updated
       }
     }
+
+    // Small delay to ensure React state update has propagated
+    await new Promise(resolve => setTimeout(resolve, 100));
   }, [data, saveData, user]);
 
   /**
@@ -295,9 +300,11 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
       completedAt: new Date().toISOString(),
     };
 
+    // Set state FIRST to ensure it's updated before navigation
+    setHasCompletedOnboarding(true);
+
     // Save locally
     await saveData(skippedData);
-    setHasCompletedOnboarding(true);
 
     // Mark as skipped on backend
     if (user?.user_id) {
@@ -308,6 +315,9 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         // Continue anyway - local state is updated
       }
     }
+
+    // Small delay to ensure React state update has propagated
+    await new Promise(resolve => setTimeout(resolve, 100));
   }, [saveData, user]);
 
   /**

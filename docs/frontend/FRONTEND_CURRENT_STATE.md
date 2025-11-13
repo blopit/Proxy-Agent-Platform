@@ -2,8 +2,8 @@
 
 **🎯 START HERE: This document explains the current frontend architecture**
 
-**Last Updated:** November 5, 2025
-**Status:** Mobile-first Expo app (PRIMARY) | Web dashboard (DEPRECATED)
+**Last Updated:** November 13, 2025
+**Status:** Mobile-first Expo app (PRIMARY) | Next.js Web REMOVED October 2025
 
 ---
 
@@ -19,26 +19,30 @@
 
 ```
 PRIMARY FRONTEND:    mobile/              (Expo/React Native - ACTIVE DEVELOPMENT)
-DEPRECATED:          frontend/            (DOES NOT EXIST - docs only)
-DOCUMENTATION:       docs/frontend/       (Historical reference - describes old web app)
+REMOVED OCT 2025:    frontend/            (COMPLETELY REMOVED - no code exists)
+DOCUMENTATION:       docs/frontend/       (Historical reference ONLY - describes removed Next.js app)
 ```
 
 ---
 
 ## Architecture Evolution
 
-### Phase 1: Next.js Web App (DEPRECATED - October 2025)
+### Phase 1: Next.js Web App (REMOVED - October 2025)
 
-**Location:** `frontend/src/components/mobile/` ❌ **REMOVED**
+**Location:** `frontend/` ❌ **COMPLETELY REMOVED**
 
+**Previous Stack** (no longer exists):
 - Next.js 15 with App Router
 - Web-first components (HTML/CSS/Tailwind)
 - shadcn/ui components
 - lucide-react icons
 - Framer Motion animations
-- Two Storybooks (web + mobile)
+- Separate Storybook for web
 
-**Status:** Codebase removed, documentation remains as reference
+**Status:**
+- ❌ All Next.js code DELETED October 2025
+- ✅ Documentation archived at `docs/archive/2025-11-10-deprecated-arch/nextjs-web/`
+- ⚠️ DO NOT reference or attempt to use any Next.js patterns
 
 ### Phase 2: Expo Mobile App (CURRENT - November 2025)
 
@@ -53,7 +57,7 @@ DOCUMENTATION:       docs/frontend/       (Historical reference - describes old 
 - Single Storybook (React Native)
 - Universal deployment: iOS + Android + Web
 
-**Status:** In active development, 16% components migrated
+**Status:** In active development, ~65% Phase 1 complete (5 biological modes + onboarding + auth)
 
 ---
 
@@ -95,14 +99,25 @@ DOCUMENTATION:       docs/frontend/       (Historical reference - describes old 
 - ✅ Solarized Dark theme system
 - ✅ Tab navigation working
 
-#### Core Screens (3/7 = 43%)
-1. ✅ **Capture/Add** (580 lines) - Task input with AI breakdown
-2. ✅ **Capture/Connect** - Gmail OAuth integration
-3. ✅ **Capture/Clarify** (470 lines) - Q&A for task refinement
-4. ⏭️ Scout - Task list view (NEXT CRITICAL)
-5. ⏭️ Hunter - Focus mode execution
-6. ⏭️ Today - Daily planning
-7. ⏭️ Mapper - Visual task organization
+#### Core Screens (5/5 = 100% Basic Structure)
+1. ✅ **Capture** - Brain dump tab (placeholder ready)
+2. ✅ **Scout** - Task list tab (placeholder ready)
+3. ✅ **Today** - Daily planning tab (placeholder ready)
+4. ✅ **Mapper** - Visual organization tab (placeholder ready)
+5. ✅ **Hunter** - Focus mode tab (placeholder ready)
+
+#### Auth & Onboarding (100% Complete)
+1. ✅ **Authentication** - Login/Signup screens with OAuth
+2. ✅ **Onboarding Flow** - 7-step progressive onboarding
+   - Welcome screen
+   - Work preferences
+   - Challenges identification (8 ADHD challenges)
+   - ADHD support level (1-10 slider)
+   - Daily schedule preferences
+   - Productivity goals
+   - Completion summary with ChatGPT export
+3. ✅ **OAuth Integration** - Google, Apple social login
+4. ✅ **Context Providers** - AuthContext, OnboardingContext
 
 #### Components (8/51 = 16%)
 - ✅ Card, Button, Badge (base UI)
@@ -124,26 +139,27 @@ DOCUMENTATION:       docs/frontend/       (Historical reference - describes old 
 
 ### ⏭️ Remaining Work
 
-#### High Priority (Next 2 weeks)
-- [ ] Scout mode UI (task list)
-- [ ] BiologicalTabs component
-- [ ] CaptureModal refinements
-- [ ] SwipeableTaskCard
-- [ ] TaskBreakdownModal
-- [ ] 35 more components to migrate
+#### High Priority (Next Sprint)
+- [ ] Implement full functionality in 5 biological mode tabs
+- [ ] Connect backend APIs to mobile screens
+- [ ] TaskBreakdownModal integration
+- [ ] SwipeableTaskCard component
+- [ ] Real-time task sync
+- [ ] Complete remaining 43 components
 
-#### Medium Priority (Weeks 3-4)
-- [ ] Hunter mode UI
-- [ ] Today mode UI
+#### Medium Priority (Following Sprints)
 - [ ] Animation system (react-native-reanimated)
 - [ ] Gesture handling (react-native-gesture-handler)
-- [ ] State management (Zustand)
-
-#### Future (Weeks 5-6)
-- [ ] Mapper mode UI
-- [ ] Offline support (AsyncStorage)
+- [ ] Advanced filtering and search
+- [ ] Offline sync with AsyncStorage
 - [ ] Push notifications
-- [ ] App store deployment
+- [ ] Performance optimization
+
+#### Future Enhancements
+- [ ] Advanced gamification (XP, levels, achievements)
+- [ ] AI agent delegation
+- [ ] Habit tracking
+- [ ] App store deployment (iOS/Android)
 
 ---
 
@@ -294,26 +310,27 @@ docs/frontend/                      ← DESCRIBES OLD WEB APP
 
 ### Where to find things NOW:
 
-| What | OLD Location (removed) | NEW Location (current) |
+| What | OLD Location (DELETED Oct 2025) | NEW Location (current) |
 |------|----------------------|----------------------|
-| **Mobile components** | `frontend/src/components/mobile/` ❌ | `mobile/components/` ✅ |
-| **Design system** | `frontend/src/lib/design-system.ts` ❌ | `mobile/components/ui/` ✅ |
-| **API client** | `frontend/src/lib/api.ts` ❌ | `mobile/src/services/` ✅ |
-| **Storybook** | `frontend/.storybook/` ❌ | `mobile/.rnstorybook/` ✅ |
-| **Routes** | `frontend/src/app/` ❌ | `mobile/app/` ✅ |
-| **Documentation** | `docs/frontend/` ⚠️ | Same (but historical) |
+| **Mobile components** | `frontend/src/components/mobile/` ❌ REMOVED | `mobile/components/` ✅ |
+| **Design system** | `frontend/src/lib/design-system.ts` ❌ REMOVED | `mobile/components/ui/` ✅ |
+| **API client** | `frontend/src/lib/api.ts` ❌ REMOVED | `mobile/src/services/` ✅ |
+| **Storybook** | `frontend/.storybook/` ❌ REMOVED | `mobile/.rnstorybook/` ✅ |
+| **Routes** | `frontend/src/app/` (Next.js) ❌ REMOVED | `mobile/app/` (Expo Router) ✅ |
+| **Documentation** | `docs/frontend/` ⚠️ HISTORICAL ONLY | Same (describes deleted code) |
 
 ### What each directory means NOW:
 
 ```
 Proxy-Agent-Platform/
-├── mobile/              ✅ PRIMARY FRONTEND (Expo app)
+├── mobile/              ✅ PRIMARY FRONTEND (Expo React Native app)
 ├── src/                 ✅ Backend (Python/FastAPI)
 ├── docs/
-│   ├── frontend/        ⚠️ Historical docs (describes old web app)
-│   └── mobile/          ✅ Current mobile docs
-├── frontend/            ❌ DOES NOT EXIST
-└── reports/             ✅ Analysis reports
+│   ├── frontend/        ⚠️ Historical docs ONLY (describes deleted Next.js web app)
+│   ├── mobile/          ✅ Current mobile app documentation
+│   └── archive/         📁 Archived Next.js code documentation
+├── frontend/            ❌ COMPLETELY REMOVED October 2025 (no code exists)
+└── agent_resources/     ✅ AI agent documentation and guides
 ```
 
 ---

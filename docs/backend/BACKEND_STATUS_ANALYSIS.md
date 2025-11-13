@@ -1,6 +1,6 @@
 # Backend Status Analysis - What's Left to Build
 
-**Date**: October 30, 2025
+**Date**: January 13, 2025
 **Analysis by**: Claude Code
 **Status**: Comprehensive Review
 
@@ -102,6 +102,45 @@
     - Location: `src/services/champs_tag_service.py`
     - Features: ADHD-friendly task categorization
 
+18. ✅ **OAuth Authentication** - COMPLETE
+    - Location: `src/api/routes/oauth.py`
+    - Routes: `/api/v1/oauth/*`
+    - Features: Google, Apple, GitHub, Microsoft OAuth
+    - Migration 025: OAuth fields added to users table
+    - Migration 026: Refresh tokens table for token rotation
+
+19. ✅ **User Onboarding System** - COMPLETE
+    - Location: `src/api/routes/onboarding.py`
+    - Routes: `/api/v1/onboarding/*`
+    - Features: Progressive onboarding flow
+    - Migration 024: user_onboarding table
+
+20. ✅ **Statistics & Analytics** - COMPLETE
+    - Location: `src/api/routes/statistics.py`
+    - Routes: `/api/v1/statistics/*`
+    - Features: Task statistics, productivity metrics
+
+21. ✅ **Provider Integrations** - COMPLETE
+    - Location: `src/api/routes/integrations.py`
+    - Routes: `/api/v1/integrations/*`
+    - Features: Gmail, Calendar integration framework
+    - Migration 023: provider_integrations table
+
+22. ✅ **AI Workflows (Dogfooding)** - COMPLETE
+    - Location: `src/api/dogfooding.py`
+    - Routes: `/api/v1/dogfooding/*`
+    - Features: Mobile-first task execution with swipe interactions
+
+23. ✅ **User Pets Service** (BE-02) - COMPLETE
+    - Location: `src/api/pets.py`
+    - Routes: `/api/v1/pets/*`
+    - Features: Virtual pet system (basic implementation)
+
+24. ✅ **Task API v2** - COMPLETE (New Unified API)
+    - Location: `src/api/routes/tasks_v2.py`
+    - Routes: `/api/v2/tasks/*`
+    - Features: Unified RESTful task API with TaskService v2 DI
+
 ---
 
 ## ⚠️ What's STUB/INCOMPLETE (Need Implementation)
@@ -178,23 +217,22 @@ Based on `docs/BACKEND_DEVELOPER_START.md`, these tasks are **not yet started**:
 
 #### Wave 2: Core Services (Not Started)
 
-##### BE-02: User Pets ❌ NOT STARTED
-**Status**: No implementation found
-**What's Needed**:
-- Virtual pet system
+##### BE-02: User Pets ✅ COMPLETE (Basic Implementation)
+**Status**: Basic implementation exists at `src/api/pets.py`
+**What's Implemented**:
+- Basic virtual pet system
 - Pet models (database schema)
-- Pet evolution logic
 - Pet interaction endpoints
-- Pet health/happiness tracking
+- Routes: `/api/v1/pets/*`
 
-**Files to Create**:
-- `src/services/pet_service.py`
-- `src/api/pets.py`
-- `src/core/pet_models.py`
-- `src/repositories/pet_repository.py`
+**What's Still Needed** (Advanced Features):
+- Pet evolution logic
+- Pet health/happiness tracking system
+- Advanced pet abilities
+- Pet customization
 
-**Priority**: Low (gamification feature)
-**Effort**: 8 hours
+**Priority**: Low (gamification enhancements)
+**Effort**: 4 hours (for advanced features)
 
 ---
 
@@ -587,6 +625,6 @@ user_id: str = "default"  # TODO: Get from auth
 
 ---
 
-**Conclusion**: The backend is **70-80% complete** for MVP functionality. The core task management, capture system, and delegation features are solid. Main gaps are production infrastructure (cache, queue, monitoring) and some nice-to-have features (pets, analytics, social sharing).
+**Conclusion**: The backend is **75-85% complete** for MVP functionality. The core task management, capture system, delegation features, OAuth authentication, and onboarding are solid. Main gaps are production infrastructure (cache, queue, real-time monitoring) and some advanced features (ML pipeline, webhooks, social sharing).
 
 **Recommendation**: Focus on HIGH priority items for production readiness before adding new features.
