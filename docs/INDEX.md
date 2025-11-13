@@ -2,153 +2,183 @@
 
 **Last Updated**: November 13, 2025
 
-> **📝 Documentation Reorganization Complete (Nov 13, 2025)**
+> **✅ Documentation Consolidation Complete (Nov 13, 2025)**
 >
-> All primary documentation is now in **[`agent_resources/`](../agent_resources/README.md)** for better organization.
-> This directory contains specialized documentation only.
+> All active documentation is now in **[`agent_resources/`](../agent_resources/README.md)**.
+> This directory now only contains **historical archives**.
 
 ---
 
-## 🤖 Primary Documentation (agent_resources/)
+## 🤖 Active Documentation (agent_resources/)
 
-**✨ All organized documentation is now in [agent_resources/](../agent_resources/README.md)**
+**All organized, active documentation is in [agent_resources/](../agent_resources/README.md)**
 
-Start here:
-- **[Quick Start Guide](../agent_resources/QUICKSTART.md)** - 5-minute overview
-- **[Complete Sitemap](../agent_resources/SITEMAP.md)** - All 92 docs cataloged
-- **[Project Status](../agent_resources/STATUS.md)** - Current state
-- **[Backend Guide](../agent_resources/backend/README.md)** - Backend development
-- **[Frontend Guide](../agent_resources/frontend/README.md)** - Frontend development
-- **[Architecture Guide](../agent_resources/architecture/README.md)** - System design
-- **[Testing Guide](../agent_resources/testing/README.md)** - Testing strategies
+### Quick Links
+
+| Role | Quick Start | Documentation |
+|------|-------------|---------------|
+| **All Roles** | [5-Min Quick Start](../agent_resources/QUICKSTART.md) | [Complete Sitemap](../agent_resources/SITEMAP.md) |
+| **Backend Dev** | [Backend README](../agent_resources/backend/README.md) | [API Reference](../agent_resources/backend/api/API_REFERENCE.md) |
+| **Frontend Dev** | [Frontend README](../agent_resources/frontend/README.md) | [Current State](../agent_resources/frontend/FRONTEND_CURRENT_STATE.md) |
+| **Architect** | [Architecture README](../agent_resources/architecture/README.md) | [System Overview](../agent_resources/architecture/system-overview.md) |
+| **QA Engineer** | [Testing README](../agent_resources/testing/README.md) | [Test Strategy](../agent_resources/testing/00_OVERVIEW.md) |
+| **Project Manager** | [Project README](../agent_resources/project/README.md) | [Project Status](../agent_resources/STATUS.md) |
+
+### Documentation Categories in agent_resources/
+
+```
+agent_resources/
+├── README.md                    # Main navigation hub
+├── QUICKSTART.md                # 5-minute quick start
+├── SITEMAP.md                   # Complete documentation index
+├── STATUS.md                    # Current project status
+│
+├── backend/                     # Backend development
+│   ├── api/                     # API documentation
+│   ├── tasks/                   # Backend task tracking
+│   ├── DEPRECATION_NOTICE.md    # Deprecated APIs
+│   └── INTEGRATION_GUIDE.md     # Integration guides
+│
+├── frontend/                    # Frontend development
+│
+├── architecture/                # System architecture
+│   ├── design/                  # Design documents
+│   ├── system-overview.md       # Complete system overview
+│   ├── AI_SYSTEM_ARCHITECTURE.md
+│   └── digital-task-delegation-* # Task delegation docs
+│
+├── testing/                     # Testing guides
+│   ├── 00_OVERVIEW.md through 06_QUICK_START.md
+│   └── README.md
+│
+├── project/                     # Project management
+│
+├── docs/                        # Core documentation
+│   ├── getting-started/         # Onboarding guides
+│   ├── references/              # Core knowledge
+│   ├── guides/                  # Implementation guides
+│   ├── authentication/          # Auth system
+│   ├── onboarding/              # Onboarding system
+│   ├── providers/               # Integration providers
+│   ├── integration/             # Pipelex and other integrations
+│   ├── devops/                  # DevOps and deployment
+│   └── workflows/               # Development workflows
+│
+├── tasks/                       # Task tracking
+│   ├── roadmap/                 # Current sprint & priorities
+│   └── archives/                # Historical tasks
+│
+└── reports/                     # Time-bound reports
+    └── README.md                # Report guidelines
+```
 
 ---
 
-## 📁 Specialized Documentation (docs/)
+## 📦 Historical Archives (docs/archive/)
 
-This directory now contains only specialized operational documentation:
+This directory contains **historical documentation** from past development phases:
 
-### Architecture & Vision
-High-level architecture and vision documents (referenced by agent_resources/):
-- [System Overview](architecture/system-overview.md) - Complete system architecture
-- [AI System Architecture](architecture/AI_SYSTEM_ARCHITECTURE.md) - AI/agent design
-- [AI System Enhancement Proposal](architecture/AI_SYSTEM_ENHANCEMENT_PROPOSAL.md) - Proposed improvements
-- [Agent Architecture Overview](architecture/agent-architecture-overview.md) - Agent patterns
-- [Digital Task Delegation Vision](architecture/digital-task-delegation-vision.md) - Task delegation system
+### Archive Organization
 
-### Development Resources
-Operational development documentation:
-- [Deprecation Notice](development/DEPRECATION_NOTICE.md) - Deprecated code and migration guide
-- [Developer Guide](development/README.md) - Comprehensive developer guide
-- [Product Development Playbook](development/PRODUCT_DEVELOPMENT_PLAYBOOK.md) - Product processes
-- [Integration Guide](development/INTEGRATION_GUIDE.md) - Integration patterns
-- [Quick Wins](development/QUICK_WINS.md) - Quick improvement tasks
+```
+docs/archive/
+├── 2025-11-13-*/               # Nov 13, 2025 consolidation archives
+├── 2025-11-10-*/               # Nov 10, 2025 reorganization archives
+├── 2025-11-09-cleanup/         # Nov 9, 2025 cleanup archives
+└── [older archives...]         # Historical snapshots
+```
 
-### DevOps & Deployment
-Deployment and operational documentation:
-- [DevOps README](devops/README.md) - DevOps overview
-- [CI/CD Guide](devops/cicd.md) - Continuous integration/deployment
-- [Deployment Guide](devops/deployment.md) - Deployment procedures
-- [Docker Setup](devops/docker.md) - Container configuration
-- [Environment Setup](devops/environment-setup.md) - Environment configuration
-- [Monitoring](devops/monitoring.md) - System monitoring
+### What's Archived
 
-### Integration Specifications
-Third-party integration documentation:
-- [Pipelex Integration](integration/pipelex/README.md) - Complete Pipelex integration spec (15 docs)
-- [Pipelex Integration Spec](integration/PIPELEX_INTEGRATION_SPEC.md) - Integration overview
+- **Completion Reports**: Historical feature completion summaries
+- **Status Reports**: Past status snapshots
+- **Deprecated Docs**: Documentation for removed/deprecated features
+- **Old Planning**: Historical planning documents
+- **Reorganization Artifacts**: Previous documentation structures
 
-### Workflow Documentation
-Team workflow and process documentation:
-- [AI Coding Workflows](workflows/AI_CODING_WORKFLOWS.md) - AI-assisted development workflows
-- [Human Testing Process](workflows/HUMAN_TESTING_PROCESS.md) - Manual testing procedures
+### When to Reference Archives
 
-### Status & Planning
-Current status tracking (consolidated):
-- [Status README](status/README.md) - Status documentation overview
+- Understanding past decisions
+- Tracking feature evolution
+- Learning from completed work
+- Historical context for current features
 
-### Historical Documentation
-- [Archive](archive/) - Archived documentation (200+ files)
+**Note**: Archives are not updated. For current information, use [agent_resources/](../agent_resources/README.md).
 
 ---
 
 ## 🔍 Finding Documentation
 
-### Search Documentation
+### Quick Search
+
 ```bash
-# Search agent_resources (primary docs)
-./scripts/search-docs.sh "keyword"
+# Search all active documentation
+rg "search term" agent_resources/ -i --heading
 
-# Or use ripgrep directly
-rg "keyword" agent_resources/ -i
+# Search specific category
+rg "authentication" agent_resources/docs/ -i
 
-# Search specialized docs
-rg "keyword" docs/architecture/ docs/devops/ docs/integration/ -i
+# Search historical archives
+rg "old feature" docs/archive/ -i
 ```
 
-### By Role
-- **Backend Developer**: Start at [agent_resources/backend/README.md](../agent_resources/backend/README.md)
-- **Frontend Developer**: Start at [agent_resources/frontend/README.md](../agent_resources/frontend/README.md)
-- **Architect**: Start at [agent_resources/architecture/README.md](../agent_resources/architecture/README.md) then [docs/architecture/](architecture/)
-- **DevOps**: Start at [docs/devops/README.md](devops/README.md)
-- **QA Engineer**: Start at [agent_resources/testing/README.md](../agent_resources/testing/README.md)
-
 ### By Topic
-- **Getting Started**: [agent_resources/QUICKSTART.md](../agent_resources/QUICKSTART.md)
-- **Architecture**: [docs/architecture/system-overview.md](architecture/system-overview.md)
-- **API Reference**: [agent_resources/backend/api/](../agent_resources/backend/api/)
-- **Testing**: [agent_resources/testing/](../agent_resources/testing/)
-- **Deployment**: [docs/devops/](devops/)
-- **Integrations**: [docs/integration/](integration/)
+
+| Topic | Location |
+|-------|----------|
+| **Architecture** | [agent_resources/architecture/](../agent_resources/architecture/README.md) |
+| **Backend API** | [agent_resources/backend/api/](../agent_resources/backend/api/API_REFERENCE.md) |
+| **Frontend** | [agent_resources/frontend/](../agent_resources/frontend/README.md) |
+| **Testing** | [agent_resources/testing/](../agent_resources/testing/README.md) |
+| **Authentication** | [agent_resources/docs/authentication/](../agent_resources/docs/authentication/01_overview.md) |
+| **Onboarding** | [agent_resources/docs/onboarding/](../agent_resources/docs/onboarding/00_OVERVIEW.md) |
+| **DevOps** | [agent_resources/docs/devops/](../agent_resources/docs/devops/README.md) |
+| **Integrations** | [agent_resources/docs/integration/](../agent_resources/docs/integration/pipelex/README.md) |
+| **Workflows** | [agent_resources/docs/workflows/](../agent_resources/docs/workflows/AI_CODING_WORKFLOWS.md) |
+| **Project Status** | [agent_resources/STATUS.md](../agent_resources/STATUS.md) |
 
 ---
 
-## 📊 Documentation Structure Summary
+## 📚 Documentation Principles
 
-| Location | Purpose | File Count |
-|----------|---------|------------|
-| **agent_resources/** | Primary documentation hub | 92 files |
-| **docs/architecture/** | High-level architecture vision | 11 files |
-| **docs/development/** | Operational dev docs | 5 files |
-| **docs/devops/** | Deployment & operations | 6 files |
-| **docs/integration/** | Integration specifications | 17 files |
-| **docs/workflows/** | Team workflows | 2 files |
-| **docs/status/** | Status tracking | 1 file |
-| **docs/archive/** | Historical documentation | 200+ files |
+### Active vs. Archive
 
-**Total Active Documentation**: ~140 files (92 in agent_resources + ~48 in docs)
+| Active (agent_resources/) | Archive (docs/archive/) |
+|---------------------------|-------------------------|
+| ✅ Current, maintained docs | ❌ Historical snapshots |
+| ✅ Updated regularly | ❌ Not updated |
+| ✅ Linked from main navigation | ❌ Reference only |
+| ✅ Reflects current codebase | ❌ May be outdated |
 
----
+### Finding What You Need
 
-## 🎯 Quick Links
-
-### Essential Files
-- **[CLAUDE.md](../CLAUDE.md)** - Development standards
-- **[README.md](../README.md)** - Project overview
-- **[START_HERE.md](../START_HERE.md)** - Weekly guide
-- **[CONTRIBUTING.md](../CONTRIBUTING.md)** - How to contribute
-
-### Documentation Navigation
-- **[agent_resources/SITEMAP.md](../agent_resources/SITEMAP.md)** - Complete doc index
-- **[agent_resources/README.md](../agent_resources/README.md)** - Main doc hub
-- **[agent_resources/STATUS.md](../agent_resources/STATUS.md)** - Project status
+1. **Start with [agent_resources/README.md](../agent_resources/README.md)** - Main navigation hub
+2. **Use role-specific quick starts** - Fastest onboarding (10-15 min)
+3. **Check [SITEMAP.md](../agent_resources/SITEMAP.md)** - Complete index of all docs
+4. **Search with rg** - Fast text search across all documentation
 
 ---
 
-## 📞 Help
+## 🎯 Quick Actions
 
-### Can't Find What You Need?
-1. **Search**: Use `./scripts/search-docs.sh "keyword"`
-2. **Browse**: Check [SITEMAP.md](../agent_resources/SITEMAP.md)
-3. **Ask**: See [CONTRIBUTING.md](../CONTRIBUTING.md)
+```bash
+# Navigate to active documentation
+cd agent_resources/
 
-### Documentation Issues?
-- Outdated? Update it!
-- Missing? Create it in `agent_resources/`!
-- Confusing? Clarify it!
+# Quick start for your role
+open agent_resources/backend/README.md    # Backend developers
+open agent_resources/frontend/README.md   # Frontend developers
+open agent_resources/architecture/README.md # Architects
+open agent_resources/testing/README.md    # QA engineers
+open agent_resources/project/README.md    # Project managers
+
+# Search all documentation
+rg "keyword" agent_resources/ -i --heading
+
+# View project status
+cat agent_resources/STATUS.md
+```
 
 ---
 
-**Navigation**: [↑ Project Root](../) | [📚 Agent Resources](../agent_resources/) | [🎯 Quick Start](../agent_resources/QUICKSTART.md)
-
-*Last major reorganization: November 13, 2025*
+**Navigation**: [↑ Project Root](../) | [🤖 Agent Resources](../agent_resources/README.md) | [🎯 Quick Start](../agent_resources/QUICKSTART.md)
