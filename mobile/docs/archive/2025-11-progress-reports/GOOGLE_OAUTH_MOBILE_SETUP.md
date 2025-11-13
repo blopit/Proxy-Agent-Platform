@@ -7,7 +7,7 @@
 
 ## Problem
 
-The current OAuth client (`765534073366-98ffgpadh021rmhktv4l16lbnaih12t6`) is a **Web** client type, which requires `http` or `https` redirect URIs. It rejects custom URI schemes with:
+The current OAuth client (`YOUR-CLIENT-ID`) is a **Web** client type, which requires `http` or `https` redirect URIs. It rejects custom URI schemes with:
 
 ```
 Invalid Redirect: must use either http or https as the scheme.

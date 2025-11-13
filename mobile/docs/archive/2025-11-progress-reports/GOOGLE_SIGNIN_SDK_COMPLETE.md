@@ -59,7 +59,7 @@ const serverAuthCode = userInfo.serverAuthCode;
     [
       "@react-native-google-signin/google-signin",
       {
-        "iosUrlScheme": "com.googleusercontent.apps.765534073366-98ffgpadh021rmhktv4l16lbnaih12t6"
+        "iosUrlScheme": "com.googleusercontent.apps.YOUR-CLIENT-ID-HERE"
       }
     ]
   ]
@@ -119,7 +119,7 @@ The backend (`src/api/routes/oauth.py`) already supports:
 ### Step 1: No Google Cloud Console Changes Needed!
 
 The existing **Web OAuth client** works perfectly with the Google Sign-In SDK:
-- **Client ID**: `YOUR-GOOGLE-CLIENT-ID.apps.googleusercontent.com`
+- **Client ID**: `your-google-client-id.apps.googleusercontent.com` (from .env file)
 - **No redirect URIs needed** in Google Cloud Console
 - **No iOS/Android OAuth clients needed**
 
@@ -129,13 +129,13 @@ The SDK uses the `webClientId` to perform OAuth and returns a server auth code t
 
 **mobile/.env**:
 ```bash
-EXPO_PUBLIC_GOOGLE_CLIENT_ID=YOUR-GOOGLE-CLIENT-ID.apps.googleusercontent.com
+EXPO_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 ```
 
 **Backend .env** (project root):
 ```bash
-GOOGLE_CLIENT_ID=YOUR-GOOGLE-CLIENT-ID.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=YOUR-GOOGLE-CLIENT-SECRET
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret
 ```
 
 ### Step 3: Build the App (Required for Native Features)

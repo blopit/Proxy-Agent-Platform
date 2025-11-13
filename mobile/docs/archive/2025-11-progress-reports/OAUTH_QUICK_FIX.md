@@ -22,7 +22,7 @@ Updated the redirect URI from `http://127.0.0.1` (invalid - no port) to `http://
 ### Step 1: Add the New Redirect URI
 
 1. Go to [Google Cloud Console - Credentials](https://console.cloud.google.com/apis/credentials)
-2. Click on your OAuth 2.0 Client ID: `765534073366-98ffgpadh021rmhktv4l16lbnaih12t6`
+2. Click on your OAuth 2.0 Client ID: `YOUR-CLIENT-ID`
 3. Under **Authorized redirect URIs**, click **+ ADD URI**
 4. Enter exactly: `http://127.0.0.1:19006/auth/google`
 5. Click **Save**

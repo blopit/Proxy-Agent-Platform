@@ -31,12 +31,12 @@ YOUR-GOOGLE-CLIENT-ID.apps.googleusercontent.com
 
 **Reversed Client ID** (URL Scheme):
 ```
-com.googleusercontent.apps.765534073366-98ffgpadh021rmhktv4l16lbnaih12t6
+com.googleusercontent.apps.YOUR-CLIENT-ID
 ```
 
 **Complete Redirect URI**:
 ```
-com.googleusercontent.apps.765534073366-98ffgpadh021rmhktv4l16lbnaih12t6:/oauth2redirect
+com.googleusercontent.apps.YOUR-CLIENT-ID:/oauth2redirect
 ```
 
 This is the **official Google OAuth standard** for mobile apps on both iOS and Android.
@@ -77,7 +77,7 @@ const GOOGLE_CONFIG = {
         {
           "CFBundleURLSchemes": [
             "proxyagent",
-            "com.googleusercontent.apps.765534073366-98ffgpadh021rmhktv4l16lbnaih12t6"
+            "com.googleusercontent.apps.YOUR-CLIENT-ID"
           ]
         }
       ]
@@ -102,7 +102,7 @@ const GOOGLE_CONFIG = {
             "scheme": "proxyagent"
           },
           {
-            "scheme": "com.googleusercontent.apps.765534073366-98ffgpadh021rmhktv4l16lbnaih12t6"
+            "scheme": "com.googleusercontent.apps.YOUR-CLIENT-ID"
           }
         ],
         "category": ["BROWSABLE", "DEFAULT"]
@@ -120,14 +120,14 @@ const GOOGLE_CONFIG = {
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Navigate to: **APIs & Services** > **Credentials**
-3. Click on your OAuth 2.0 Client ID: `765534073366-98ffgpadh021rmhktv4l16lbnaih12t6`
+3. Click on your OAuth 2.0 Client ID: `YOUR-CLIENT-ID`
 
 ### Step 2: Add the Redirect URI
 
 Under **Authorized redirect URIs**, add:
 
 ```
-com.googleusercontent.apps.765534073366-98ffgpadh021rmhktv4l16lbnaih12t6:/oauth2redirect
+com.googleusercontent.apps.YOUR-CLIENT-ID:/oauth2redirect
 ```
 
 **Important Notes**:
@@ -218,7 +218,7 @@ If issues occur:
 4. User authenticates with Google
    ↓
 5. Google redirects to:
-   com.googleusercontent.apps.765534073366-98ffgpadh021rmhktv4l16lbnaih12t6:/oauth2redirect?code=...
+   com.googleusercontent.apps.YOUR-CLIENT-ID:/oauth2redirect?code=...
    ↓
 6. iOS/Android captures the redirect (registered URL scheme)
    ↓

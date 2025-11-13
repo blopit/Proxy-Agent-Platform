@@ -73,8 +73,8 @@ EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your-web-client-id.apps.googleusercontent.com
 EXPO_PUBLIC_GOOGLE_WEB_CLIENT_SECRET=your-web-client-secret
 
 # Google OAuth - NATIVE CLIENT (for iOS/Android)
-EXPO_PUBLIC_GOOGLE_NATIVE_CLIENT_ID=YOUR-GOOGLE-CLIENT-ID.apps.googleusercontent.com
-EXPO_PUBLIC_GOOGLE_CLIENT_SECRET=YOUR-GOOGLE-CLIENT-SECRET
+EXPO_PUBLIC_GOOGLE_NATIVE_CLIENT_ID=your-native-client-id.apps.googleusercontent.com
+EXPO_PUBLIC_GOOGLE_CLIENT_SECRET=your-client-secret-here
 ```
 
 ### 2. Update app.json
