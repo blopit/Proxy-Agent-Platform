@@ -10,7 +10,6 @@ Following TDD RED-GREEN-REFACTOR:
 3. REFACTOR: Verify all dependent tests can now run
 """
 
-
 from src.database.enhanced_adapter import EnhancedDatabaseAdapter
 
 
@@ -123,6 +122,14 @@ class TestDatabaseInitialization:
         # Enable foreign keys (should already be on)
         cursor.execute("PRAGMA foreign_keys = ON")
 
+        # Create a project first (required by foreign key constraint)
+        cursor.execute(
+            """
+            INSERT INTO projects (project_id, name, description, owner_id)
+            VALUES ('test_project', 'Test Project', 'Test Description', NULL)
+        """
+        )
+
         # Create a task
         cursor.execute(
             """
@@ -181,7 +188,7 @@ class TestDatabaseInitialization:
             WHERE type='table' AND name='messages'
         """
         )
-        messages_exists = cursor.fetchone() is not None
+        _ = cursor.fetchone()  # Check passed if no exception
 
         # If messages doesn't exist (expected), that's fine
         # The bug we're fixing is that indexes try to reference it anyway

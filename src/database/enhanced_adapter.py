@@ -417,6 +417,9 @@ class EnhancedDatabaseAdapter:
             # Task dependency indexes
             "CREATE INDEX IF NOT EXISTS idx_dependencies_task ON task_dependencies(task_id)",
             "CREATE INDEX IF NOT EXISTS idx_dependencies_depends ON task_dependencies(depends_on_task_id)",
+            # Micro-step indexes (BE-05: Task Splitting Service)
+            "CREATE INDEX IF NOT EXISTS idx_micro_steps_parent_task ON micro_steps(parent_task_id)",
+            "CREATE INDEX IF NOT EXISTS idx_micro_steps_completed ON micro_steps(completed)",
             # Comment indexes
             "CREATE INDEX IF NOT EXISTS idx_comments_task ON task_comments(task_id)",
             "CREATE INDEX IF NOT EXISTS idx_comments_author ON task_comments(author_id)",
