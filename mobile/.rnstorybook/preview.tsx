@@ -3,7 +3,6 @@ import type { Preview } from '@storybook/react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { View, StyleSheet } from 'react-native';
 import { ThemeName } from '../src/theme/themes';
-import { StorybookThemeHeader } from './StorybookThemeHeader';
 
 // Note: expo-router is mocked via babel-plugin-module-resolver in babel.config.js
 
@@ -11,22 +10,10 @@ const preview: Preview = {
   decorators: [
     (Story, context) => {
       const themeName = (context.globals.theme || 'solarized-dark') as ThemeName;
-      const updateGlobals = context.updateGlobals || (() => {});
-
-      const handleThemeChange = (newTheme: ThemeName) => {
-        updateGlobals({ theme: newTheme });
-      };
-
       return (
         <ThemeProvider initialTheme={themeName}>
           <View style={styles.container}>
-            <StorybookThemeHeader
-              currentTheme={themeName}
-              onThemeChange={handleThemeChange}
-            />
-            <View style={styles.storyContainer}>
-              <Story />
-            </View>
+            <Story />
           </View>
         </ThemeProvider>
       );
@@ -69,9 +56,6 @@ const preview: Preview = {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  storyContainer: {
     flex: 1,
     padding: 16,
   },
