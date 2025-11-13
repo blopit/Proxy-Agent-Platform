@@ -1,6 +1,6 @@
 # Database Schema Documentation
 
-**Last Updated**: January 13, 2025
+**Last Updated**: November 13, 2025
 **Version**: 0.1.0
 **Database**: PostgreSQL 13+ (prod) / SQLite 3+ (dev)
 
