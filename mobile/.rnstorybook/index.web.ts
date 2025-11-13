@@ -3,6 +3,7 @@ import React from 'react';
 import { View as RNView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { start, View } from '@storybook/react-native';
+import { ThemeProvider } from '../src/theme/ThemeContext';
 import { StorybookThemePicker } from './StorybookThemePicker';
 
 // Manual story imports (web-compatible - no require.context)
@@ -151,8 +152,6 @@ const StorybookUI = view.getStorybookUI({
 
 // Wrap Storybook UI with theme picker
 // ThemeProvider is needed for StorybookThemePicker to access theme context
-import { ThemeProvider } from '../src/theme/ThemeContext';
-
 const StorybookUIRoot = () => (
   <ThemeProvider initialTheme="solarized-dark">
     <RNView style={{ flex: 1 }}>
