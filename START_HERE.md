@@ -133,7 +133,7 @@ curl -X POST http://localhost:8000/api/v1/delegation/assignments/<ASSIGNMENT-ID>
 
 Before you start, read these in order:
 
-1. **[reports/current/PLATFORM_STATUS_2025-11-02.md](reports/current/PLATFORM_STATUS_2025-11-02.md)** (10 min)
+1. **[agent_resources/STATUS.md](agent_resources/STATUS.md)** (10 min)
    - Honest assessment of what's working
    - What's actually complete vs. planned
 
@@ -373,7 +373,7 @@ After completing your first task:
 ### **Documentation**
 - `CLAUDE.md` - Code conventions and standards
 - `NEXT_TASKS_PRIORITIZED.md` - Top 5 tasks detailed
-- `reports/current/PLATFORM_STATUS_2025-11-02.md` - Honest status
+- `agent_resources/STATUS.md` - Current platform status
 - `DOGFOODING_GUIDE.md` - How to use delegation system
 
 ### **Task Specs**

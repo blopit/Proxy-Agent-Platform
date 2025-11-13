@@ -42,7 +42,16 @@ coverage.xml
 # Test outputs
 test_results*.txt
 test_output*.txt
-Agent_Resources/reports/
+
+# Test reports (generated, not committed)
+agent_resources/reports/*.txt
+agent_resources/reports/*.json
+agent_resources/reports/*.xml
+agent_resources/reports/coverage-*/
+agent_resources/reports/pytest-*/
+
+# Allow markdown documentation reports (commit these)
+!agent_resources/reports/*.md
 
 # Temporary scripts
 fix_*.py

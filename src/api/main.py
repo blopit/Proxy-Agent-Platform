@@ -55,6 +55,9 @@ from src.services.chatgpt_prompts.routes import (
     router as chatgpt_prompts_router,  # ChatGPT video task prompts
 )
 from src.services.delegation.routes import router as delegation_router  # BE-00: Task delegation
+from src.services.focus_sessions.routes import (
+    router as focus_sessions_router,  # BE-03: Focus sessions
+)
 from src.services.templates.routes import router as templates_router  # BE-01: Task templates
 
 logger = structlog.get_logger()
@@ -121,6 +124,7 @@ app.include_router(comprehensive_task_router)  # Legacy: v1 task service
 app.include_router(delegation_router)  # BE-00: Task delegation system
 app.include_router(templates_router)  # BE-01: Task templates service
 app.include_router(pets_router)  # BE-02: User pets service
+app.include_router(focus_sessions_router)  # BE-03: Focus sessions service
 app.include_router(chatgpt_prompts_router)  # ChatGPT video task prompt generator
 app.include_router(workflows_router)  # AI-powered workflow execution (dogfooding)
 app.include_router(integrations_router)  # Provider integration system (Gmail, Calendar, etc.)

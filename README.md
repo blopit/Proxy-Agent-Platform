@@ -16,7 +16,7 @@ An ADHD-optimized productivity platform that helps users manage tasks, maintain 
 
 **📚 Documentation Hub** [docs/INDEX.md](docs/INDEX.md) - Find any documentation
 
-**📊 Current Status** [reports/current/](reports/current/) - Latest platform status
+**📊 Current Status** [agent_resources/STATUS.md](agent_resources/STATUS.md) - Latest platform status
 
 **💻 Ready to Code?** [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
 

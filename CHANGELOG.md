@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Added
 - Comprehensive repository reorganization for improved navigation
 - New `.data/` directory for runtime data (databases, logs)
-- `reports/current/` directory for latest status reports
+- `agent_resources/` directory for documentation and status tracking
 - `examples/` directory (renamed from `use-cases/`)
 - Comprehensive navigation README files in all major directories
 - `docs/INDEX.md` - Central documentation hub
@@ -125,4 +125,4 @@ Example entry:
 
 **Last Updated**: November 6, 2025
 
-**Navigation**: [↑ README](README.md) | [📚 Docs](docs/INDEX.md) | [📊 Reports](reports/)
+**Navigation**: [↑ README](README.md) | [📚 Docs](docs/INDEX.md) | [📊 Status](agent_resources/STATUS.md)
