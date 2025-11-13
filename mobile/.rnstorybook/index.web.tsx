@@ -33,6 +33,12 @@ import * as TabsStories from '../components/core/Tabs.stories';
 // Focus
 import * as FocusTimerStories from '../components/focus/FocusTimer.stories';
 
+// Mapper
+import * as MapperViewStories from '../components/mapper/MapperView.stories';
+
+// Modals
+import * as TaskBreakdownModalStories from '../components/modals/TaskBreakdownModal.stories';
+
 // Profile
 import * as ProfileSwitcherStories from '../components/ProfileSwitcher.stories';
 
@@ -48,6 +54,10 @@ import * as BionicTextCardStories from '../components/shared/BionicTextCard.stor
 
 // Tasks
 import * as TaskListStories from '../components/tasks/TaskList.stories';
+import * as TaskRowStories from '../components/tasks/TaskRow.stories';
+
+// Templates
+import * as TemplateCardStories from '../components/templates/TemplateCard.stories';
 
 // Timeline
 import * as TimelineViewStories from '../components/timeline/TimelineView.stories';
@@ -91,6 +101,12 @@ const storyModules = {
   // Focus
   './focus/FocusTimer.stories.tsx': FocusTimerStories,
 
+  // Mapper
+  './mapper/MapperView.stories.tsx': MapperViewStories,
+
+  // Modals
+  './modals/TaskBreakdownModal.stories.tsx': TaskBreakdownModalStories,
+
   // Profile
   './ProfileSwitcher.stories.tsx': ProfileSwitcherStories,
 
@@ -106,6 +122,10 @@ const storyModules = {
 
   // Tasks
   './tasks/TaskList.stories.tsx': TaskListStories,
+  './tasks/TaskRow.stories.tsx': TaskRowStories,
+
+  // Templates
+  './templates/TemplateCard.stories.tsx': TemplateCardStories,
 
   // Timeline
   './timeline/TimelineView.stories.tsx': TimelineViewStories,

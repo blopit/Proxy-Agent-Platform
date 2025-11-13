@@ -27,6 +27,7 @@ Analysis of documentation structure, hygiene, and reorganization efforts.
 - `DOCUMENTATION_HYGIENE_REPORT.md` - Nov 13, 2025 documentation audit
 - `REPOSITORY_HYGIENE_REPORT.md` - Nov 13, 2025 repository structure audit
 - `REPOSITORY_HYGIENE_VALIDATED_ACTIONS.md` - Nov 13, 2025 hygiene validation
+- `DOCUMENTATION_COMPLETION_REPORT.md` - Nov 13, 2025 documentation review
 - `DOCS_REORGANIZATION_REPORT.md` - Nov 10, 2025 documentation migration analysis (archived)
 - `DOCUMENTATION_REORGANIZATION_SUMMARY.md` - Nov 10, 2025 reorganization summary
 - `NAVIGATION_AUDIT.md` - Nov 13, 2025 navigation path verification
@@ -38,6 +39,8 @@ Snapshots of work completed in specific development sessions.
 - `WORK_SESSION_SUMMARY_2025-11-13.md` - Backend implementation session
 - `BUG_FIX_SUMMARY.md` - Onboarding bug fixes (Nov 10, 2025)
 - `ROUTING_FIX_SUMMARY.md` - Onboarding routing fixes (Nov 10, 2025)
+- `STORYBOOK_HEADER_IMPLEMENTATION_REPORT.md` - Storybook header attempt (Jan 2025, not working)
+- `FRONTEND_STORYBOOK_STORIES_SUMMARY.md` - Storybook stories implementation (Nov 13, 2025)
 
 ### 3. Test Reports & Coverage
 Test execution results, coverage data, and analysis (generated, not committed).

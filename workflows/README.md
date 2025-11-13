@@ -84,8 +84,8 @@ dependencies = ["implement"]
 
 For **documentation about workflows**, see:
 
-- **[AI Coding Workflows](../docs/workflows/AI_CODING_WORKFLOWS.md)** - How to use AI effectively
-- **[Human Testing Process](../docs/workflows/HUMAN_TESTING_PROCESS.md)** - Manual testing procedures
+- **[AI Coding Workflows](../agent_resources/docs/workflows/AI_CODING_WORKFLOWS.md)** - How to use AI effectively
+- **[Human Testing Process](../agent_resources/docs/workflows/HUMAN_TESTING_PROCESS.md)** - Manual testing procedures
 
 ---
 
