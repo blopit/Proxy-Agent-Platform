@@ -3,37 +3,19 @@
  * Appears as part of Storybook UI overlay, not inside story content
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, ScrollView } from 'react-native';
-import { useGlobals } from '@storybook/react-native';
 import { useTheme } from '../src/theme/ThemeContext';
 import { ThemeName, THEMES, getThemeNames } from '../src/theme/themes';
 import { Palette, X, Check } from 'lucide-react-native';
 
 export function StorybookThemePicker() {
-  const [globals, updateGlobals] = useGlobals();
   const { colors, themeName, setTheme } = useTheme();
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const currentTheme = (globals.theme || 'solarized-dark') as ThemeName;
   const allThemes = getThemeNames();
 
-  // Sync Storybook global theme with ThemeProvider
-  useEffect(() => {
-    if (currentTheme !== themeName) {
-      setTheme(currentTheme);
-    }
-  }, [currentTheme]);
-
-  // Sync ThemeProvider theme with Storybook global
-  useEffect(() => {
-    if (themeName !== currentTheme) {
-      updateGlobals({ theme: themeName });
-    }
-  }, [themeName]);
-
-  const handleThemeSelect = (name: ThemeName) => {
-    updateGlobals({ theme: name });
-    setTheme(name);
+  const handleThemeSelect = async (name: ThemeName) => {
+    await setTheme(name);
     setIsModalVisible(false);
   };
 
@@ -66,7 +48,7 @@ export function StorybookThemePicker() {
             <ScrollView style={styles.themeList}>
               {allThemes.map((name) => {
                 const theme = THEMES[name];
-                const isSelected = name === currentTheme;
+                const isSelected = name === themeName;
 
                 return (
                   <TouchableOpacity
