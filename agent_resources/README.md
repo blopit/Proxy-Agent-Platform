@@ -66,7 +66,7 @@ agent_resources/
 
 ## 🎯 Quick Navigation
 
-### 🗺️ **By Role**
+###🗺️ **By Role**
 
 | Role | Quick Start | Key Resources |
 |------|-------------|---------------|
@@ -75,6 +75,50 @@ agent_resources/
 | **Architect** | [architecture/README.md](architecture/README.md) | [Design Docs](architecture/design/), [Vision](docs/references/PROJECT_VISION_SYNTHESIS.md) |
 | **QA Engineer** | [testing/README.md](testing/README.md) | [Strategy](testing/00_OVERVIEW.md), [Quick Start](testing/06_QUICK_START.md) |
 | **Project Manager** | [STATUS.md](STATUS.md) | [Sprint](tasks/roadmap/current_sprint.md), [Next Tasks](tasks/roadmap/next_5_tasks.md) |
+
+---
+
+## 📊 Documentation Flow
+
+```
+New Developer → QUICKSTART.md (5 min)
+                    ↓
+            Choose Your Role
+            /     |    \     \
+     Backend  Frontend  Architect  QA
+        ↓        ↓         ↓        ↓
+   backend/  frontend/  architecture/ testing/
+   README    README     README       README
+        ↓        ↓         ↓          ↓
+   API docs  Components  Design    Test guides
+
+All paths lead to:
+→ SITEMAP.md (find anything)
+→ STATUS.md (current state)
+→ tasks/ (work to do)
+```
+
+---
+
+## 🔗 Documentation Pathways
+
+### Learning Path (New to Project)
+1. Start: [QUICKSTART.md](QUICKSTART.md) - 5-minute overview
+2. Vision: [PROJECT_VISION_SYNTHESIS.md](docs/references/PROJECT_VISION_SYNTHESIS.md) - Why we build this
+3. Structure: [REPOSITORY_STRUCTURE.md](docs/references/REPOSITORY_STRUCTURE.md) - Code organization
+4. Choose role above and dive in
+
+### Implementation Path (Ready to Code)
+1. Status: [STATUS.md](STATUS.md) - What's done/what's needed
+2. Sprint: [current_sprint.md](tasks/roadmap/current_sprint.md) - This week's work
+3. Next: [next_5_tasks.md](tasks/roadmap/next_5_tasks.md) - Upcoming tasks
+4. Code: Follow your role's README above
+
+### Research Path (Understanding the System)
+1. Index: [SITEMAP.md](SITEMAP.md) - All 92 docs cataloged
+2. Search: `./scripts/search-docs.sh "keyword"` - Find what you need
+3. Architecture: [architecture/README.md](architecture/README.md) - System design
+4. Deep dive into specific area
 
 ### 📖 Documentation
 
