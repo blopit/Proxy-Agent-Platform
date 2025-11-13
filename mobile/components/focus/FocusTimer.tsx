@@ -10,11 +10,14 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Animated, Platform } from 'react-native';
 import { Play, Pause, Square, RotateCcw } from 'lucide-react-native';
 import Svg, { Circle, Path, Defs, LinearGradient, Stop } from 'react-native-svg';
 import { THEME } from '../../src/theme/colors';
 import { Text } from '@/src/components/ui/Text';
+
+// Native driver is not supported on web platform
+const USE_NATIVE_DRIVER = Platform.OS !== 'web';
 
 const AnimatedPath = Animated.createAnimatedComponent(Path);
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -251,12 +254,12 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
         Animated.timing(glow, {
           toValue: 1,
           duration: 200,
-          useNativeDriver: true,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
         Animated.timing(glow, {
           toValue: 0,
           duration: 400,
-          useNativeDriver: true,
+          useNativeDriver: USE_NATIVE_DRIVER,
         }),
       ]).start();
     }
@@ -275,13 +278,13 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
             toValue: 1.3,
             tension: 100,
             friction: 3,
-            useNativeDriver: true,
+            useNativeDriver: USE_NATIVE_DRIVER,
           }),
           Animated.spring(scale, {
             toValue: 1,
             tension: 100,
             friction: 7,
-            useNativeDriver: true,
+            useNativeDriver: USE_NATIVE_DRIVER,
           }),
         ]),
         // White flash: 0 → 0.7 → 0 (quick flash)
@@ -289,12 +292,12 @@ const FocusTimer: React.FC<FocusTimerProps> = ({
           Animated.timing(flash, {
             toValue: 0.7,
             duration: 100,
-            useNativeDriver: true,
+            useNativeDriver: USE_NATIVE_DRIVER,
           }),
           Animated.timing(flash, {
             toValue: 0,
             duration: 200,
-            useNativeDriver: true,
+            useNativeDriver: USE_NATIVE_DRIVER,
           }),
         ]),
       ]).start();

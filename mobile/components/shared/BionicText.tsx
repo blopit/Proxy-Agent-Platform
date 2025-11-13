@@ -178,17 +178,24 @@ export default function BionicText({
 }: BionicTextProps) {
   // Backward compatibility: if boldRatio is provided, use it as boldZoneEnd
   const actualBoldZoneEnd = boldRatio !== undefined ? boldRatio : boldZoneEnd;
+
+  // Type guard: ensure children is a string
+  // Convert to string if it's not already (handles ReactNode, numbers, etc.)
+  const textContent = typeof children === 'string'
+    ? children
+    : String(children ?? '');
+
   // If bionic reading is disabled, just render normal text with Lexend
   if (!enabled) {
     return (
       <RNText style={[styles.container, style, { color: baseColor, letterSpacing, fontFamily: DEFAULT_FONT_FAMILY }]}>
-        {children}
+        {textContent}
       </RNText>
     );
   }
 
   // Split text into words while preserving spaces and punctuation
-  const words = children.split(/(\s+)/);
+  const words = textContent.split(/(\s+)/);
 
   return (
     <RNText style={[styles.container, style, { color: baseColor, letterSpacing, fontFamily: DEFAULT_FONT_FAMILY }]}>
