@@ -1,6 +1,9 @@
 /* Web-specific story loader - manual imports for Metro compatibility */
+import React from 'react';
+import { View as RNView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { start, View } from '@storybook/react-native';
+import { StorybookThemePicker } from './StorybookThemePicker';
 
 // Manual story imports (web-compatible - no require.context)
 
@@ -136,7 +139,7 @@ const view: View = start({
 });
 
 // Get Storybook UI
-const StorybookUIRoot = view.getStorybookUI({
+const StorybookUI = view.getStorybookUI({
   storage: {
     getItem: AsyncStorage.getItem,
     setItem: AsyncStorage.setItem,
@@ -145,5 +148,13 @@ const StorybookUIRoot = view.getStorybookUI({
   tabOpen: 1, // Open addons panel by default (0 = sidebar, 1 = addons)
   enableWebsockets: true,
 });
+
+// Wrap Storybook UI with theme picker
+const StorybookUIRoot = () => (
+  <RNView style={{ flex: 1 }}>
+    <StorybookUI />
+    <StorybookThemePicker />
+  </RNView>
+);
 
 export default StorybookUIRoot;
