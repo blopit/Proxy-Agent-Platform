@@ -1,276 +1,154 @@
 # 📚 Documentation Hub
 
-**Last Updated**: November 10, 2025
+**Last Updated**: November 13, 2025
 
-Welcome to the Proxy Agent Platform documentation! This is your central navigation point for all project documentation.
-
-> **📝 Documentation Reorganization (Nov 10, 2025)**
+> **📝 Documentation Reorganization Complete (Nov 13, 2025)**
 >
-> Useful documentation has been moved to [`agent_resources/`](../agent_resources/README.md) for better organization.
-> Legacy and historical docs remain in [`docs/archive/`](./archive/).
-> See [DOCUMENTATION_ORGANIZATION_PLAN.md](../agent_resources/DOCUMENTATION_ORGANIZATION_PLAN.md) for details.
+> All primary documentation is now in **[`agent_resources/`](../agent_resources/README.md)** for better organization.
+> This directory contains specialized documentation only.
 
 ---
 
-## 🤖 For AI Agents (RECOMMENDED!)
+## 🤖 Primary Documentation (agent_resources/)
 
-**✨ NEW: Organized documentation in [agent_resources/](../agent_resources/README.md)**
+**✨ All organized documentation is now in [agent_resources/](../agent_resources/README.md)**
 
-All useful documentation has been organized into `agent_resources/` for better AI agent accessibility:
-
-### Specialized Views by Agent Role
-- **[Backend Agent](../agent_resources/backend/README.md)** - API, database, services
-- **[Frontend Agent](../agent_resources/frontend/README.md)** - Expo/React Native mobile
-- **[Architecture Agent](../agent_resources/architecture/README.md)** - System design, patterns
-- **[Testing Agent](../agent_resources/testing/README.md)** - TDD, QA, validation
-- **[Project Agent](../agent_resources/project/README.md)** - Tasks, roadmaps, status
-
-### Core Documentation
-- **[Getting Started](../agent_resources/docs/getting-started/README.md)** - Installation, setup, quick starts
-- **[References](../agent_resources/docs/references/README.md)** - ADHD research, project vision, tech stack
-- **[Implementation Guides](../agent_resources/docs/guides/README.md)** - Feature implementation guides
-- **[API Documentation](../agent_resources/backend/docs/api/README.md)** - REST API reference
-- **[Design Documents](../agent_resources/architecture/docs/design/)** - ADHD UX, system designs
+Start here:
+- **[Quick Start Guide](../agent_resources/QUICKSTART.md)** - 5-minute overview
+- **[Complete Sitemap](../agent_resources/SITEMAP.md)** - All 92 docs cataloged
+- **[Project Status](../agent_resources/STATUS.md)** - Current state
+- **[Backend Guide](../agent_resources/backend/README.md)** - Backend development
+- **[Frontend Guide](../agent_resources/frontend/README.md)** - Frontend development
+- **[Architecture Guide](../agent_resources/architecture/README.md)** - System design
+- **[Testing Guide](../agent_resources/testing/README.md)** - Testing strategies
 
 ---
 
-## 🚀 Quick Start
+## 📁 Specialized Documentation (docs/)
 
-**New to the project?** Start here:
-- [Installation Guide](../agent_resources/docs/getting-started/installation.md) ⭐
-- [Frontend Developer Start](../agent_resources/docs/getting-started/FRONTEND_DEVELOPER_START.md)
-- [Backend Developer Start](../agent_resources/docs/getting-started/BACKEND_DEVELOPER_START.md)
+This directory now contains only specialized operational documentation:
 
-**Quick Links:**
-- [Project Root README](../README.md)
-- [START_HERE.md](../START_HERE.md) - Week-by-week guide
-- [CLAUDE.md](../CLAUDE.md) - Development standards
-- [Agent Resources](../agent_resources/README.md) - Organized documentation hub
+### Architecture & Vision
+High-level architecture and vision documents (referenced by agent_resources/):
+- [System Overview](architecture/system-overview.md) - Complete system architecture
+- [AI System Architecture](architecture/AI_SYSTEM_ARCHITECTURE.md) - AI/agent design
+- [AI System Enhancement Proposal](architecture/AI_SYSTEM_ENHANCEMENT_PROPOSAL.md) - Proposed improvements
+- [Agent Architecture Overview](architecture/agent-architecture-overview.md) - Agent patterns
+- [Digital Task Delegation Vision](architecture/digital-task-delegation-vision.md) - Task delegation system
 
----
+### Development Resources
+Operational development documentation:
+- [Deprecation Notice](development/DEPRECATION_NOTICE.md) - Deprecated code and migration guide
+- [Developer Guide](development/README.md) - Comprehensive developer guide
+- [Product Development Playbook](development/PRODUCT_DEVELOPMENT_PLAYBOOK.md) - Product processes
+- [Integration Guide](development/INTEGRATION_GUIDE.md) - Integration patterns
+- [Quick Wins](development/QUICK_WINS.md) - Quick improvement tasks
 
-## 📁 Documentation Structure
+### DevOps & Deployment
+Deployment and operational documentation:
+- [DevOps README](devops/README.md) - DevOps overview
+- [CI/CD Guide](devops/cicd.md) - Continuous integration/deployment
+- [Deployment Guide](devops/deployment.md) - Deployment procedures
+- [Docker Setup](devops/docker.md) - Container configuration
+- [Environment Setup](devops/environment-setup.md) - Environment configuration
+- [Monitoring](devops/monitoring.md) - System monitoring
 
-### ⭐ Primary Documentation (agent_resources/)
-**All useful docs have been moved here** - [View agent_resources →](../agent_resources/README.md)
+### Integration Specifications
+Third-party integration documentation:
+- [Pipelex Integration](integration/pipelex/README.md) - Complete Pipelex integration spec (15 docs)
+- [Pipelex Integration Spec](integration/PIPELEX_INTEGRATION_SPEC.md) - Integration overview
 
-- **[Getting Started](../agent_resources/docs/getting-started/)** - Installation, developer quick starts
-- **[References](../agent_resources/docs/references/)** - ADHD research, project vision, tech stack
-- **[Guides](../agent_resources/docs/guides/)** - Implementation guides
-- **[API Docs](../agent_resources/backend/docs/api/)** - REST API reference
-- **[Design Docs](../agent_resources/architecture/docs/design/)** - ADHD UX, system designs
-- **[Authentication](../agent_resources/docs/authentication/)** - Auth system docs
-- **[Onboarding](../agent_resources/docs/onboarding/)** - Onboarding system docs
+### Workflow Documentation
+Team workflow and process documentation:
+- [AI Coding Workflows](workflows/AI_CODING_WORKFLOWS.md) - AI-assisted development workflows
+- [Human Testing Process](workflows/HUMAN_TESTING_PROCESS.md) - Manual testing procedures
 
-### 🏗️ Architecture & Design (docs/)
-**System architecture remaining in docs/**
+### Status & Planning
+Current status tracking (consolidated):
+- [Status README](status/README.md) - Status documentation overview
 
-- [System Overview](architecture/system-overview.md)
-- [AI System Architecture](architecture/AI_SYSTEM_ARCHITECTURE.md)
-- [AI System Enhancement Proposal](architecture/AI_SYSTEM_ENHANCEMENT_PROPOSAL.md)
-
-### 💻 Development Guides
-
-#### Backend Development
-- [Backend Documentation](backend/)
-- [Backend Status Analysis](backend/BACKEND_STATUS_ANALYSIS.md)
-- [Development Guides](development/)
-
-#### Frontend Development
-- [Frontend Documentation](frontend/)
-- [Frontend Current State](frontend/FRONTEND_CURRENT_STATE.md)
-- [Storybook Guide](frontend/STORYBOOK.md)
-
-#### Mobile Development
-- [Mobile Documentation](mobile/)
-- [Mobile ADHD System Status](frontend/MOBILE_ADHD_SYSTEM_STATUS.md)
-
-### 🔌 API Documentation
-**REST API and integration guides**
-
-- [API Schemas](api/schemas/)
-- [API Documentation](api/)
-
-### 📖 User & Process Guides
-**How to use the platform and workflows**
-
-- [Focus Mode Guide](guides/FOCUS_MODE_GUIDE.md)
-- [Dogfooding Guide](guides/DOGFOODING_START.md)
-- [Dogfooding Interaction Model](guides/DOGFOODING_INTERACTION_MODEL.md)
-- [BEAST Loop System](guides/BEAST_LOOP_SYSTEM.md)
-- [Task Card Breakdown](guides/TASK_CARD_BREAKDOWN.md)
-- [Email OAuth Integration](guides/EMAIL_OAUTH_INTEGRATION.md)
-- [Gmail OAuth Mobile Setup](guides/GMAIL_OAUTH_MOBILE_SETUP.md)
-- [Human Agent Workflow](guides/HUMAN_AGENT_WORKFLOW.md)
-- [ChatGPT Video Task Workflow](guides/CHATGPT_VIDEO_TASK_WORKFLOW.md)
-
-### 🧪 Testing & Quality
-**Testing strategies and guides**
-
-- [Testing Documentation](testing/)
-- [Human Testing Process](workflows/HUMAN_TESTING_PROCESS.md)
-
-### 🔧 Integration & DevOps
-**Deployment and system integration**
-
-- [Integration Guide](integration/)
-- [DevOps Documentation](devops/)
-- [Workflows](workflows/)
-
-### 🎯 Project Management
-**Tasks, status, and progress tracking**
-
-- [Master Task List](status/MASTER_TASK_LIST.md)
-- [Implementation Summary](status/IMPLEMENTATION_SUMMARY.md)
-- [Wave Execution Plan](status/WAVE_EXECUTION_PLAN.md)
-- [Documentation Organization](status/DOCUMENTATION_ORGANIZATION.md)
-- [Backend Documentation Summary](status/BACKEND_DOCUMENTATION_SUMMARY.md)
-- [Documentation Update Summary](status/DOCUMENTATION_UPDATE_SUMMARY.md)
-- [Parallel Development Summary](status/PARALLEL_DEVELOPMENT_SUMMARY.md)
-- [Tasks Directory](tasks/)
-
-### 📚 References
-**Technical specifications and reference materials**
-
-- [ADHD Task Management Master](references/ADHD_TASK_MANAGEMENT_MASTER.md)
-- [External References](references/EXTERNAL_REFERENCES.md)
-- [Tech Stack](references/TECH_STACK.md)
-- [Project Vision Synthesis](references/PROJECT_VISION_SYNTHESIS.md)
-- [Repository Structure](references/REPOSITORY_STRUCTURE.md)
-
-### 🎨 Templates & Workflow Examples
-- [Workflow Templates](workflow-templates/)
-- [AI Coding Workflows](workflows/AI_CODING_WORKFLOWS.md)
-
-### 📊 Reports & Status
-- [Current Reports](../reports/current/) - Latest status reports
-- [Report Archive](../reports/archive/) - Historical reports
-
-### 📦 Historical Documentation
-- [Archive](archive/) - Completed features and old reports
+### Historical Documentation
+- [Archive](archive/) - Archived documentation (200+ files)
 
 ---
 
-## 🔍 Documentation by Role
+## 🔍 Finding Documentation
 
-### For New Developers
-1. [Installation](getting-started/installation.md)
-2. [Tech Stack](references/TECH_STACK.md)
-3. [Repository Structure](references/REPOSITORY_STRUCTURE.md)
-4. [Development Playbook](development/)
-5. Choose: [Frontend](getting-started/FRONTEND_DEVELOPER_START.md) or [Backend](getting-started/BACKEND_DEVELOPER_START.md) start
-
-### For Backend Developers
-1. [Backend Developer Start](getting-started/BACKEND_DEVELOPER_START.md)
-2. [Backend Status](backend/BACKEND_STATUS_ANALYSIS.md)
-3. [AI System Architecture](architecture/AI_SYSTEM_ARCHITECTURE.md)
-4. [API Schemas](api/schemas/)
-5. [Testing Guide](testing/)
-
-### For Frontend Developers
-1. [Frontend Developer Start](getting-started/FRONTEND_DEVELOPER_START.md)
-2. [Frontend Current State](frontend/FRONTEND_CURRENT_STATE.md)
-3. [Component Catalog](frontend/)
-4. [Storybook Guide](frontend/STORYBOOK.md)
-5. [ADHD UX Design](design/)
-
-### For Product/Design
-1. [Project Vision](references/PROJECT_VISION_SYNTHESIS.md)
-2. [ADHD Task Management](references/ADHD_TASK_MANAGEMENT_MASTER.md)
-3. [Design System](design/)
-4. [User Guide](user-guide/)
-
----
-
-## 🔄 Common Tasks
-
-### Finding Information
+### Search Documentation
 ```bash
-# Search all documentation
-grep -r "keyword" docs/
+# Search agent_resources (primary docs)
+./scripts/search-docs.sh "keyword"
 
-# Find files by name
-find docs/ -name "*keyword*"
+# Or use ripgrep directly
+rg "keyword" agent_resources/ -i
 
-# List all markdown files
-find docs/ -name "*.md"
+# Search specialized docs
+rg "keyword" docs/architecture/ docs/devops/ docs/integration/ -i
 ```
 
-### Understanding Architecture
-1. Start: [System Overview](architecture/system-overview.md)
-2. Deep Dive: [Architecture Directory](architecture/)
-3. Design Decisions: [Design Directory](design/)
+### By Role
+- **Backend Developer**: Start at [agent_resources/backend/README.md](../agent_resources/backend/README.md)
+- **Frontend Developer**: Start at [agent_resources/frontend/README.md](../agent_resources/frontend/README.md)
+- **Architect**: Start at [agent_resources/architecture/README.md](../agent_resources/architecture/README.md) then [docs/architecture/](architecture/)
+- **DevOps**: Start at [docs/devops/README.md](devops/README.md)
+- **QA Engineer**: Start at [agent_resources/testing/README.md](../agent_resources/testing/README.md)
 
-### Setting Up Development
-1. [Installation Guide](getting-started/installation.md)
-2. [Development Environment](development/)
-3. [First Task Guide](../START_HERE.md)
-
-### Contributing
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines
-
----
-
-## 📋 Directory Guide
-
-| Directory | Purpose | Key Files |
-|-----------|---------|-----------|
-| `getting-started/` | Onboarding docs | Installation, setup guides |
-| `architecture/` | System architecture | Technical designs, AI architecture |
-| `backend/` | Backend docs | API, services, database |
-| `frontend/` | Frontend docs | Components, Storybook, patterns |
-| `mobile/` | Mobile app docs | React Native, Expo setup |
-| `guides/` | How-to guides | Workflows, processes, features |
-| `design/` | Design documents | UX, UI, system design |
-| `api/` | API documentation | REST schemas, endpoints |
-| `testing/` | Testing docs | Strategies, guides |
-| `status/` | Project status | Progress tracking, summaries |
-| `references/` | Reference materials | Tech stack, vision, conventions |
-| `tasks/` | Task management | Epic breakdown, task lists |
-| `archive/` | Historical docs | Completed work, old designs |
+### By Topic
+- **Getting Started**: [agent_resources/QUICKSTART.md](../agent_resources/QUICKSTART.md)
+- **Architecture**: [docs/architecture/system-overview.md](architecture/system-overview.md)
+- **API Reference**: [agent_resources/backend/api/](../agent_resources/backend/api/)
+- **Testing**: [agent_resources/testing/](../agent_resources/testing/)
+- **Deployment**: [docs/devops/](devops/)
+- **Integrations**: [docs/integration/](integration/)
 
 ---
 
-## 📞 Help & Support
+## 📊 Documentation Structure Summary
+
+| Location | Purpose | File Count |
+|----------|---------|------------|
+| **agent_resources/** | Primary documentation hub | 92 files |
+| **docs/architecture/** | High-level architecture vision | 11 files |
+| **docs/development/** | Operational dev docs | 5 files |
+| **docs/devops/** | Deployment & operations | 6 files |
+| **docs/integration/** | Integration specifications | 17 files |
+| **docs/workflows/** | Team workflows | 2 files |
+| **docs/status/** | Status tracking | 1 file |
+| **docs/archive/** | Historical documentation | 200+ files |
+
+**Total Active Documentation**: ~140 files (92 in agent_resources + ~48 in docs)
+
+---
+
+## 🎯 Quick Links
+
+### Essential Files
+- **[CLAUDE.md](../CLAUDE.md)** - Development standards
+- **[README.md](../README.md)** - Project overview
+- **[START_HERE.md](../START_HERE.md)** - Weekly guide
+- **[CONTRIBUTING.md](../CONTRIBUTING.md)** - How to contribute
+
+### Documentation Navigation
+- **[agent_resources/SITEMAP.md](../agent_resources/SITEMAP.md)** - Complete doc index
+- **[agent_resources/README.md](../agent_resources/README.md)** - Main doc hub
+- **[agent_resources/STATUS.md](../agent_resources/STATUS.md)** - Project status
+
+---
+
+## 📞 Help
 
 ### Can't Find What You Need?
-
-1. **Search**: Use grep or your IDE's search
-2. **Browse**: Check relevant directory from table above
-3. **Ask**: See [START_HERE.md](../START_HERE.md) FAQ section
-4. **Code**: Sometimes the code is the best documentation
+1. **Search**: Use `./scripts/search-docs.sh "keyword"`
+2. **Browse**: Check [SITEMAP.md](../agent_resources/SITEMAP.md)
+3. **Ask**: See [CONTRIBUTING.md](../CONTRIBUTING.md)
 
 ### Documentation Issues?
-
-- Outdated docs? Update them!
-- Missing docs? Create them!
-- Confusing docs? Clarify them!
-
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for how to contribute.
+- Outdated? Update it!
+- Missing? Create it in `agent_resources/`!
+- Confusing? Clarify it!
 
 ---
 
-## 🎯 Key Project Files
+**Navigation**: [↑ Project Root](../) | [📚 Agent Resources](../agent_resources/) | [🎯 Quick Start](../agent_resources/QUICKSTART.md)
 
-Outside of docs/, these are essential:
-
-- **[CLAUDE.md](../CLAUDE.md)** - Development standards (READ THIS FIRST)
-- **[README.md](../README.md)** - Project overview
-- **[START_HERE.md](../START_HERE.md)** - Weekly guide for new developers
-- **[CONTRIBUTING.md](../CONTRIBUTING.md)** - How to contribute
-- **[.data/](../.data/)** - Runtime data (databases, logs)
-
----
-
-## 📊 Documentation Health
-
-- **Total Docs**: ~100+ markdown files
-- **Organization**: 24+ subdirectories
-- **Last Major Reorganization**: November 6, 2025
-- **Maintenance**: Ongoing
-
----
-
-**Navigation**: [↑ Project Root](../) | [📊 Current Status](../reports/current/) | [🎯 Start Coding](../START_HERE.md)
-
-*This index is maintained manually. When adding new docs, please update this file.*
+*Last major reorganization: November 13, 2025*

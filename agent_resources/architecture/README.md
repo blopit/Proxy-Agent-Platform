@@ -21,12 +21,11 @@
 - [Agent Architecture Overview](../../docs/architecture/agent-architecture-overview.md) - Agent patterns
 
 ### Task Delegation System
-- [Digital Task Delegation - Vision](../../docs/architecture/digital-task-delegation-vision-comprehensive.md)
-- [Digital Task Delegation - Agent Design](../../docs/architecture/digital-task-delegation-agent-design.md)
-- [Digital Task Delegation - Protocol](../../docs/architecture/digital-task-delegation-protocol.md)
-- [Digital Task Delegation - Roadmap](../../docs/architecture/digital-task-delegation-roadmap.md)
-- [Digital Task Delegation - System Design](../../docs/architecture/digital-task-delegation-system-design.md)
-- [Digital Task Delegation - User Experience](../../docs/architecture/digital-task-delegation-user-experience.md)
+- [Digital Task Delegation - Vision](../../docs/architecture/digital-task-delegation-vision.md)
+- [Digital Task Delegation - Universe](../../docs/architecture/digital-task-delegation-universe.md)
+- [Digital Task Delegation - Storyboard](../../docs/architecture/digital-task-delegation-storyboard.md)
+- [Digital Task Delegation - Complete Storyboard](../../docs/architecture/digital-task-delegation-complete-storyboard.md)
+- [Digital Task Delegation - Universe Complete](../../docs/architecture/Digital-Task-Delegation-Universe-Complete.md)
 
 ### Design Systems & Frameworks
 - [CHAMPS Framework](./design/CHAMPS_FRAMEWORK.md) - Core framework
