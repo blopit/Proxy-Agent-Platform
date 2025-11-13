@@ -150,11 +150,16 @@ const StorybookUI = view.getStorybookUI({
 });
 
 // Wrap Storybook UI with theme picker
+// ThemeProvider is needed for StorybookThemePicker to access theme context
+import { ThemeProvider } from '../src/theme/ThemeContext';
+
 const StorybookUIRoot = () => (
-  <RNView style={{ flex: 1 }}>
-    <StorybookUI />
-    <StorybookThemePicker />
-  </RNView>
+  <ThemeProvider initialTheme="solarized-dark">
+    <RNView style={{ flex: 1 }}>
+      <StorybookUI />
+      <StorybookThemePicker />
+    </RNView>
+  </ThemeProvider>
 );
 
 export default StorybookUIRoot;
