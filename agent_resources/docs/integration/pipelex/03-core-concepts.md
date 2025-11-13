@@ -129,7 +129,7 @@ user_preferences = {
 
 # Workflow execution respects user settings
 pipeline = Pipeline.from_file(workflow.plx_file_path)
-pipeline.set_provider(user_preferences["llm_provider"]) 
-pipeline.set_credentials(user_preferences["api_key"]) 
-pipeline.set_max_cost(user_preferences["max_cost_per_execution"]) 
+pipeline.set_provider(user_preferences["llm_provider"])
+pipeline.set_credentials(user_preferences["api_key"])
+pipeline.set_max_cost(user_preferences["max_cost_per_execution"])
 ```
