@@ -98,6 +98,32 @@ open agent_resources/architecture/design/
 open agent_resources/testing/README.md
 ```
 
+### Search Documentation
+
+```bash
+# Use the search script (best option)
+./scripts/search-docs.sh "authentication"
+./scripts/search-docs.sh "API" --files-only
+
+# Or use ripgrep directly
+rg "search term" agent_resources/ -i --heading
+
+# Search specific area
+rg "OAuth" agent_resources/docs/authentication/ -i
+
+# Search for file names
+find agent_resources -name "*auth*"
+
+# GitHub search (when browsing online)
+# Use: path:agent_resources/ your search term
+```
+
+**Pro Tips**:
+- Add `-i` for case-insensitive search
+- Use `--files-only` to see just file names
+- Search specific directories for faster results
+- Check [SITEMAP.md](./SITEMAP.md) for complete file index
+
 ---
 
 ## Key Directories

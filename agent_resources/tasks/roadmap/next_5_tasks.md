@@ -1,7 +1,7 @@
 # Next 5 High-Priority Tasks
 
-**Updated**: November 10, 2025
-**Source**: [NEXT_TASKS_PRIORITIZED.md](../../../docs/status/NEXT_TASKS_PRIORITIZED.md)
+**Updated**: November 13, 2025
+**Source**: See [current_sprint.md](./current_sprint.md) for latest priorities
 
 These are the top 5 tasks ready to start after current sprint completes.
 

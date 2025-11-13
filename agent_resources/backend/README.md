@@ -71,12 +71,13 @@ uv run mypy src/
 ### Architecture & Design
 - [Backend Architecture](../../docs/backend/BACKEND_ARCHITECTURE.md) - System overview
 - [Database Schema](../../docs/backend/DATABASE_SCHEMA.md) - Complete schema
-- [Naming Conventions](../../docs/design/NAMING_CONVENTIONS.md) - Entity-specific PKs
+- [Naming Conventions](../architecture/design/NAMING_CONVENTIONS.md) - Entity-specific PKs
 
 ### API & Services
 - [API Complete Reference](../../docs/backend/API_COMPLETE_REFERENCE.md) - All endpoints
-- [API Schemas](../../docs/api/schemas/) - Request/response models
-- [Task API Spec V2](../../docs/api/TASK_API_SPEC_V2.md) - Task endpoints
+- [API Reference](./api/API_REFERENCE.md) - API documentation
+- [API Schemas](./api/schemas/) - Request/response models
+- [Task API Spec V2](./api/TASK_API_SPEC_V2.md) - Task endpoints
 
 ### Development Guides
 - [Backend Onboarding](../../docs/backend/BACKEND_ONBOARDING.md) - Getting started

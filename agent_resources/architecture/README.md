@@ -29,21 +29,21 @@
 - [Digital Task Delegation - User Experience](../../docs/architecture/digital-task-delegation-user-experience.md)
 
 ### Design Systems & Frameworks
-- [CHAMPS Framework](../../docs/design/CHAMPS_FRAMEWORK.md) - Core framework
-- [Anti-Procrastination System](../../docs/design/ANTI_PROCRASTINATION_SYSTEM_DESIGN.md) - System design
-- [Capture Hierarchy System](../../docs/design/CAPTURE_HIERARCHY_SYSTEM_REPORT.md) - Capture design
-- [Energy Estimation Design](../../docs/design/ENERGY_ESTIMATION_DESIGN.md) - Energy tracking
-- [Progress Bar System](../../docs/design/PROGRESS_BAR_SYSTEM_DESIGN.md) - Progress UX
-- [Temporal Architecture](../../docs/design/TEMPORAL_ARCHITECTURE.md) - Time-based architecture
-- [Temporal Knowledge Graph](../../docs/design/TEMPORAL_KG_DESIGN.md) - Knowledge graph
-- [Extended Task Metadata](../../docs/design/EXTENDED_TASK_METADATA.md) - Task data model
-- [Mapper Subtabs Brainstorm](../../docs/design/MAPPER_SUBTABS_BRAINSTORM.md) - Mapper design
-- [Architecture Deep Dive](../../docs/design/ARCHITECTURE_DEEP_DIVE.md) - Deep technical dive
+- [CHAMPS Framework](./design/CHAMPS_FRAMEWORK.md) - Core framework
+- [Anti-Procrastination System](./design/ANTI_PROCRASTINATION_SYSTEM_DESIGN.md) - System design
+- [Capture Hierarchy System](./design/CAPTURE_HIERARCHY_SYSTEM_REPORT.md) - Capture design
+- [Energy Estimation Design](./design/ENERGY_ESTIMATION_DESIGN.md) - Energy tracking
+- [Progress Bar System](./design/PROGRESS_BAR_SYSTEM_DESIGN.md) - Progress UX
+- [Temporal Architecture](./design/TEMPORAL_ARCHITECTURE.md) - Time-based architecture
+- [Temporal Knowledge Graph](./design/TEMPORAL_KG_DESIGN.md) - Knowledge graph
+- [Extended Task Metadata](./design/EXTENDED_TASK_METADATA.md) - Task data model
+- [Mapper Subtabs Brainstorm](./design/MAPPER_SUBTABS_BRAINSTORM.md) - Mapper design
+- [Architecture Deep Dive](./design/ARCHITECTURE_DEEP_DIVE.md) - Deep technical dive
 
 ### Standards & Conventions
-- [Naming Conventions](../../docs/design/NAMING_CONVENTIONS.md) - Entity-specific PKs, field naming
-- [Tech Stack](../../docs/references/TECH_STACK.md) - Technology choices
-- [Repository Structure](../../docs/references/REPOSITORY_STRUCTURE.md) - Codebase organization
+- [Naming Conventions](./design/NAMING_CONVENTIONS.md) - Entity-specific PKs, field naming
+- [Tech Stack](../docs/references/TECH_STACK.md) - Technology choices
+- [Repository Structure](../docs/references/REPOSITORY_STRUCTURE.md) - Codebase organization
 - [CLAUDE.md](../../CLAUDE.md) - Development standards
 
 ### Integration Architecture

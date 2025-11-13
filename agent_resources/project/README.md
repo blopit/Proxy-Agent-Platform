@@ -1,16 +1,16 @@
-# Project Agent - Quick Start
+# Project Management - Quick Start
 
 **Your Mission**: Manage tasks, track progress, prioritize work, coordinate development
 
-**Last Updated**: November 10, 2025
+**Last Updated**: November 13, 2025
 
 ---
 
 ## 🎯 Essential Reading (10 minutes)
 
-1. **[START_HERE.md](../../START_HERE.md)** (5 min) - Current focus and priorities
-2. **[Master Task List](../../docs/status/MASTER_TASK_LIST.md)** (3 min) - All epics and tasks
-3. **[Current Status](../../docs/status/CURRENT_STATUS_AND_NEXT_STEPS.md)** (2 min) - Platform status
+1. **[Project Status](../STATUS.md)** (5 min) - Current system status
+2. **[Current Sprint](../tasks/roadmap/current_sprint.md)** (3 min) - Active work
+3. **[Next 5 Tasks](../tasks/roadmap/next_5_tasks.md)** (2 min) - Upcoming priorities
 
 ## 📊 Current Status (November 10, 2025)
 
@@ -46,24 +46,21 @@ See [START_HERE.md](../../START_HERE.md) for detailed task specs.
 ## 📚 Core Documentation
 
 ### Status & Planning
-- [Current Status and Next Steps](../../docs/status/CURRENT_STATUS_AND_NEXT_STEPS.md)
-- [Master Task List](../../docs/status/MASTER_TASK_LIST.md) - All epics
-- [Next Tasks Prioritized](../../docs/status/NEXT_TASKS_PRIORITIZED.md) - Top 5 tasks
-- [Wave Execution Plan](../../docs/status/WAVE_EXECUTION_PLAN.md) - Execution waves
-- [Technical Debt](../../docs/status/TECHNICAL_DEBT.md) - TODOs tracker
+- [Project Status](../STATUS.md) - Comprehensive system status
+- [Current Sprint](../tasks/roadmap/current_sprint.md) - This week's work
+- [Next 5 Tasks](../tasks/roadmap/next_5_tasks.md) - Upcoming priorities
+- [Roadmap README](../tasks/roadmap/README.md) - Full roadmap overview
+- [Onboarding Integration](../tasks/ONBOARDING_INTEGRATION.md) - Critical integration task
 
-### Task Specifications
-- [Backend Tasks](../../docs/tasks/backend/) - 16 backend task specs
-- [Frontend Tasks](../../docs/tasks/frontend/) - 20 frontend task specs
-- [Epic Breakdown](../../tasks/epics/EPIC_BREAKDOWN.md) - All epics
+### Task Management
+- [Tasks Overview](../tasks/README.md) - Task tracking system
+- [Epic Breakdown](../tasks/archives/old_epic_structure/EPIC_BREAKDOWN.md) - Historical epics
+- [Onboarding Strategy](../tasks/onboarding/PROGRESSIVE_ONBOARDING_STRATEGY.md) - Onboarding plan
 
-### Roadmaps
-- [Integration Roadmap](../../docs/roadmap/INTEGRATION_ROADMAP.md)
-- [Phase 1 Specs](../../docs/roadmap/PHASE_1_SPECS.md)
-
-### Project Management
-- [Documentation Organization](../../docs/status/DOCUMENTATION_ORGANIZATION.md)
-- [Dogfooding Guide](../../docs/guides/DOGFOODING_START.md) - Use the app to build the app
+### Documentation Organization
+- [Documentation Reorganization Summary](../DOCUMENTATION_REORGANIZATION_SUMMARY.md) - Recent reorg
+- [Documentation Organization Plan](../DOCUMENTATION_ORGANIZATION_PLAN.md) - Organization strategy
+- [Improvement Roadmap](../IMPROVEMENT_ROADMAP.md) - Future improvements
 
 ## 🎯 Your Responsibilities
 
