@@ -2,16 +2,17 @@ import React from 'react';
 import type { Preview } from '@storybook/react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { View, StyleSheet } from 'react-native';
+import { ThemeName } from '../src/theme/themes';
 
 // Note: expo-router is mocked via babel-plugin-module-resolver in babel.config.js
 
 const preview: Preview = {
   decorators: [
     (Story, context) => {
-      const theme = context.globals.theme || 'dark';
+      const themeName = (context.globals.theme || 'solarized-dark') as ThemeName;
       return (
-        <ThemeProvider initialMode={theme}>
-          <View style={[styles.container, { backgroundColor: theme === 'dark' ? '#002b36' : '#fdf6e3' }]}>
+        <ThemeProvider initialTheme={themeName}>
+          <View style={styles.container}>
             <Story />
           </View>
         </ThemeProvider>
@@ -26,12 +27,9 @@ const preview: Preview = {
       },
     },
     backgrounds: {
-      default: 'dark',
+      default: 'transparent',
       values: [
-        { name: 'dark', value: '#002b36' },
-        { name: 'light', value: '#fdf6e3' },
-        { name: 'black', value: '#000000' },
-        { name: 'white', value: '#ffffff' },
+        { name: 'transparent', value: 'transparent' },
       ],
     },
   },
@@ -39,12 +37,16 @@ const preview: Preview = {
     theme: {
       name: 'Theme',
       description: 'Global theme for components',
-      defaultValue: 'dark',
+      defaultValue: 'solarized-dark',
       toolbar: {
-        icon: 'circlehollow',
+        icon: 'paintbrush',
         items: [
-          { value: 'dark', title: 'Dark', icon: 'moon' },
-          { value: 'light', title: 'Light', icon: 'sun' },
+          { value: 'solarized-dark', title: 'Solarized Dark', icon: 'moon' },
+          { value: 'solarized-light', title: 'Solarized Light', icon: 'sun' },
+          { value: 'nord', title: 'Nord', icon: 'circlehollow' },
+          { value: 'dracula', title: 'Dracula', icon: 'starhollow' },
+          { value: 'catppuccin-mocha', title: 'Catppuccin', icon: 'heart' },
+          { value: 'high-contrast', title: 'High Contrast', icon: 'contrast' },
         ],
         dynamicTitle: true,
       },

@@ -1,13 +1,17 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { THEME, FONTS } from './colors';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { FONTS } from './colors';
+import { Theme, ThemeName, getTheme, isDarkTheme } from './themes';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export type ThemeMode = 'dark' | 'light';
+const THEME_STORAGE_KEY = '@proxy_agent_theme';
 
 interface ThemeContextType {
-  mode: ThemeMode;
-  colors: typeof THEME;
+  themeName: ThemeName;
+  theme: Theme;
+  colors: Theme['colors'];
   fonts: typeof FONTS;
-  setMode: (mode: ThemeMode) => void;
+  setTheme: (name: ThemeName) => Promise<void>;
+  isDark: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -22,39 +26,67 @@ export const useTheme = () => {
 
 interface ThemeProviderProps {
   children: ReactNode;
-  initialMode?: ThemeMode;
+  initialTheme?: ThemeName;
 }
-
-// Solarized Light theme (inverse of dark)
-const THEME_LIGHT = {
-  base03: '#fdf6e3',
-  base02: '#eee8d5',
-  base01: '#93a1a1',
-  base00: '#839496',
-  base0: '#657b83',
-  base1: '#586e75',
-  base2: '#073642',
-  base3: '#002b36',
-  yellow: '#b58900',
-  orange: '#cb4b16',
-  red: '#dc322f',
-  magenta: '#d33682',
-  violet: '#6c71c4',
-  blue: '#268bd2',
-  cyan: '#2aa198',
-  green: '#859900',
-} as const;
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   children,
-  initialMode = 'dark',
+  initialTheme = 'solarized-dark',
 }) => {
-  const [mode, setMode] = useState<ThemeMode>(initialMode);
-  const colors = mode === 'dark' ? THEME : THEME_LIGHT;
+  const [themeName, setThemeName] = useState<ThemeName>(initialTheme);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load saved theme on mount
+  useEffect(() => {
+    loadSavedTheme();
+  }, []);
+
+  const loadSavedTheme = async () => {
+    try {
+      const saved = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+      if (saved) {
+        setThemeName(saved as ThemeName);
+      }
+    } catch (error) {
+      console.error('Failed to load saved theme:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const setTheme = async (name: ThemeName) => {
+    try {
+      setThemeName(name);
+      await AsyncStorage.setItem(THEME_STORAGE_KEY, name);
+    } catch (error) {
+      console.error('Failed to save theme:', error);
+    }
+  };
+
+  const theme = getTheme(themeName);
+  const isDark = isDarkTheme(themeName);
+
+  // Show loading state while loading saved theme
+  if (isLoading) {
+    return null; // Or a loading spinner
+  }
 
   return (
-    <ThemeContext.Provider value={{ mode, colors, fonts: FONTS, setMode }}>
+    <ThemeContext.Provider
+      value={{
+        themeName,
+        theme,
+        colors: theme.colors,
+        fonts: FONTS,
+        setTheme,
+        isDark,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );
 };
+
+// Backward compatibility exports
+export type ThemeMode = 'dark' | 'light';
+export { ThemeName };

@@ -52,6 +52,7 @@ import * as TimelineViewStories from '../components/timeline/TimelineView.storie
 import * as BadgeStories from '../components/ui/Badge.stories';
 import * as ButtonStories from '../components/ui/Button.stories';
 import * as CardStories from '../components/ui/Card.stories';
+import * as ThemeSwitcherStories from '../components/ui/ThemeSwitcher.stories';
 
 // Import preview configuration
 const previewAnnotations = [
@@ -109,6 +110,7 @@ const storyModules = {
   './ui/Badge.stories.tsx': BadgeStories,
   './ui/Button.stories.tsx': ButtonStories,
   './ui/Card.stories.tsx': CardStories,
+  './ui/ThemeSwitcher.stories.tsx': ThemeSwitcherStories,
 };
 
 // Create a function that mimics require.context

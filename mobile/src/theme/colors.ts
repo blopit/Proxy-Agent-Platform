@@ -1,31 +1,19 @@
 /**
- * Theme Colors - Solarized Dark Palette
+ * Theme Colors - Solarized Dark Palette (Legacy Export)
  * Centralized color definitions for the mobile app
+ *
+ * NOTE: For multi-theme support, use:
+ * - import { useTheme } from '@/src/theme/ThemeContext'
+ * - const { colors } = useTheme()
+ *
+ * This export maintained for backward compatibility.
  */
 
 import { FONT_FAMILY } from './fonts';
+import { SOLARIZED_DARK } from './themes';
 
-export const THEME = {
-  // Base colors (dark to light)
-  base03: '#002b36', // Background highlights
-  base02: '#073642', // Background
-  base01: '#586e75', // Optional emphasized content
-  base00: '#657b83', // Body text / default code / primary content
-  base0: '#839496',  // Comments / secondary content
-  base1: '#93a1a1',  // De-emphasized content
-  base2: '#eee8d5',  // Background highlights (light)
-  base3: '#fdf6e3',  // Background (light)
-
-  // Accent colors
-  yellow: '#b58900',
-  orange: '#cb4b16',
-  red: '#dc322f',
-  magenta: '#d33682',
-  violet: '#6c71c4',
-  blue: '#268bd2',
-  cyan: '#2aa198',
-  green: '#859900',
-} as const;
+// Export Solarized Dark as default THEME for backward compatibility
+export const THEME = SOLARIZED_DARK.colors;
 
 /**
  * Semantic color mappings for common UI elements
