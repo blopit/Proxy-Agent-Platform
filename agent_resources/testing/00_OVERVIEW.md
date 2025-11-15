@@ -1,5 +1,16 @@
 # Testing System Overview
 
+## ⚠️ Migration Notice (November 2025)
+
+**Breaking Change**: Tests have been migrated from vertical slice architecture (tests next to code) to centralized structure (all tests in `/tests/`).
+
+**Old Location**: `src/services/tests/test_task_service.py`
+**New Location**: `tests/unit/services/test_task_service.py`
+
+See [TEST_MIGRATION_REPORT.md](../../TEST_MIGRATION_REPORT.md) for complete details.
+
+---
+
 ## Purpose
 
 The testing system ensures code quality, reliability, and maintainability through comprehensive test coverage following Test-Driven Development (TDD) principles.
@@ -77,42 +88,46 @@ Following CLAUDE.md guidelines, we practice strict TDD:
 
 ## Test Organization
 
-### Vertical Slice Architecture
+### Centralized Testing Architecture
 
-Tests live **next to the code they test**:
+All tests are centralized in the `/tests/` directory:
 
 ```
-src/
+tests/
+├── unit/                                  # Unit tests (70-80%)
+│   ├── agents/
+│   │   └── test_split_proxy_agent.py
+│   ├── api/
+│   │   └── test_task_endpoints.py
+│   ├── services/
+│   │   └── test_task_service.py
+│   └── ...
+│
+├── integration/                           # Integration tests
+│   ├── api/
+│   │   └── test_onboarding_flow.py
+│   └── database/
+│       └── test_relationships.py
+│
+└── e2e/                                   # E2E tests
+    └── test_complete_user_journey.py
+
+src/                                       # No tests here
+├── agents/
+│   └── split_proxy_agent.py
 ├── api/
 │   └── routes/
-│       ├── onboarding.py
-│       └── tests/
-│           └── test_onboarding.py        # Unit tests
-│
-├── services/
-│   ├── onboarding_service.py
-│   └── tests/
-│       └── test_onboarding_service.py    # Unit tests
-│
-└── database/
-    ├── connection.py
-    └── tests/
-        └── test_connection.py             # Unit tests
-
-tests/
-├── integration/                           # Integration tests
-│   ├── test_onboarding_flow.py
-│   └── test_task_routes.py
-│
-└── e2e/                                   # E2E tests (future)
-    └── test_complete_user_journey.py
+│       └── tasks.py
+└── services/
+    └── task_service.py
 ```
 
 **Benefits**:
-- ✅ Tests are easy to find
-- ✅ Changes to code prompt test updates
-- ✅ Clear boundaries between test types
-- ✅ Follows CLAUDE.md guidelines
+- ✅ Clear separation of production and test code
+- ✅ Easier test discovery
+- ✅ Consistent import patterns
+- ✅ Standard Python project structure
+- ✅ Simpler CI/CD configuration
 
 ### Test File Naming
 
@@ -120,8 +135,8 @@ tests/
 # Source file
 src/services/task_service.py
 
-# Test file (same directory)
-src/services/tests/test_task_service.py
+# Test file (in tests/unit directory)
+tests/unit/services/test_task_service.py
 
 # Test classes
 class TestTaskService:
@@ -135,9 +150,10 @@ class TestTaskService:
 ```
 
 **Naming Convention**:
-- File: `test_<module_name>.py`
+- File: `tests/unit/<module>/test_<module_name>.py`
 - Class: `Test<ClassName>`
 - Function: `test_<what_is_tested>_<expected_behavior>`
+- Imports: Use absolute imports (`from src.services import TaskService`)
 
 ## Test Coverage Goals
 

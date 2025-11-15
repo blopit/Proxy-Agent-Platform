@@ -32,32 +32,23 @@ Avoid building functionality on speculation. Implement features only when they a
 
 ### Project Architecture
 
-Follow strict vertical slice architecture with tests living next to the code they test:
+Follow centralized testing architecture with all tests in `/tests/`:
 
 ```
-src/project/
+src/
     __init__.py
     main.py
-    tests/
-        test_main.py
-    conftest.py
 
     # Core modules
     database/
         __init__.py
         connection.py
         models.py
-        tests/
-            test_connection.py
-            test_models.py
 
     auth/
         __init__.py
         authentication.py
         authorization.py
-        tests/
-            test_authentication.py
-            test_authorization.py
 
     # Feature slices
     features/
@@ -65,17 +56,32 @@ src/project/
             __init__.py
             handlers.py
             validators.py
-            tests/
-                test_handlers.py
-                test_validators.py
 
         payment_processing/
             __init__.py
             processor.py
             gateway.py
-            tests/
+
+tests/
+    conftest.py
+    unit/
+        database/
+            test_connection.py
+            test_models.py
+        auth/
+            test_authentication.py
+            test_authorization.py
+        features/
+            user_management/
+                test_handlers.py
+                test_validators.py
+            payment_processing/
                 test_processor.py
                 test_gateway.py
+    integration/
+        test_feature_integration.py
+    e2e/
+        test_user_workflows.py
 ```
 
 ## 🛠️ Development Environment
