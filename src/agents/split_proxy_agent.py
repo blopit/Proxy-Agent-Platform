@@ -90,16 +90,39 @@ class SplitProxyAgent:
             user_id: User requesting the split
 
         Returns:
-            Dict with task_id, scope, micro_steps, and next_action/message
+            Dict with task_id, scope, micro_steps, next_action/message,
+            and metadata indicating if LLM or fallback was used
         """
         scope = self._determine_task_scope(task)
 
         if scope == TaskScope.SIMPLE:
-            return self._handle_simple_scope(task)
+            result = self._handle_simple_scope(task)
         elif scope == TaskScope.PROJECT:
-            return self._handle_project_scope(task)
+            result = self._handle_project_scope(task)
         else:
-            return await self._handle_multi_scope(task, user_id)
+            result = await self._handle_multi_scope(task, user_id)
+
+        # Add metadata about LLM usage
+        result["metadata"] = {
+            "ai_provider": self.ai_provider if scope == TaskScope.MULTI else None,
+            "llm_used": bool(
+                scope == TaskScope.MULTI and (self.openai_client or self.anthropic_client)
+            ),
+            "generation_method": self._get_generation_method(scope),
+        }
+
+        return result
+
+    def _get_generation_method(self, scope: TaskScope) -> str:
+        """Get the method used to generate steps."""
+        if scope == TaskScope.SIMPLE:
+            return "none"  # No splitting for simple tasks
+        elif scope == TaskScope.PROJECT:
+            return "phase_suggestions"  # Project-level phases
+        elif self.openai_client or self.anthropic_client:
+            return "ai_llm"  # Real LLM API call
+        else:
+            return "rule_based_fallback"  # ⚠️ FALLBACK USED!
 
     def _handle_simple_scope(self, task: Task) -> dict[str, Any]:
         """
@@ -291,10 +314,43 @@ class SplitProxyAgent:
         elif self.anthropic_client and self.ai_provider == "anthropic":
             steps_data = await self._split_with_anthropic(prompt, task)
         else:
-            logger.warning("No LLM available, using rule-based fallback")
+            # CRITICAL WARNING: Fallback to rule-based splitting
+            # This happens when:
+            # - No API key found in environment
+            # - Wrong LLM provider selected
+            # - LLM client failed to initialize
+            reason = self._get_fallback_reason()
+            logger.error(
+                f"🚨 LLM FALLBACK TRIGGERED 🚨 Using rule-based splitting instead of AI. "
+                f"Reason: {reason}. Task: {task.task_id}"
+            )
+            # IMPORTANT: This should be monitored in production!
             steps_data = self._split_with_rules(task)
 
         return self._convert_to_micro_steps(steps_data, task)
+
+    def _get_fallback_reason(self) -> str:
+        """Get detailed reason why LLM fallback was triggered."""
+        import os
+
+        if not OPENAI_AVAILABLE and not ANTHROPIC_AVAILABLE:
+            return "No LLM libraries installed (missing openai and anthropic packages)"
+
+        if self.ai_provider == "openai":
+            if not OPENAI_AVAILABLE:
+                return "OpenAI package not installed"
+            if not os.getenv("LLM_API_KEY") and not os.getenv("OPENAI_API_KEY"):
+                return "OPENAI_API_KEY or LLM_API_KEY not found in environment"
+            return "OpenAI client failed to initialize"
+
+        if self.ai_provider == "anthropic":
+            if not ANTHROPIC_AVAILABLE:
+                return "Anthropic package not installed"
+            if not os.getenv("LLM_API_KEY") and not os.getenv("ANTHROPIC_API_KEY"):
+                return "ANTHROPIC_API_KEY or LLM_API_KEY not found in environment"
+            return "Anthropic client failed to initialize"
+
+        return f"Unknown provider '{self.ai_provider}' (should be 'openai' or 'anthropic')"
 
     def _convert_to_micro_steps(self, steps_data: list[dict], task: Task) -> list[MicroStep]:
         """

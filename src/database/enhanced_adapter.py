@@ -65,6 +65,39 @@ class EnhancedDatabaseAdapter:
             self._connection.close()
             self._connection = None
 
+    def execute_read(self, query: str, params: tuple = ()) -> list[sqlite3.Row]:
+        """
+        Execute a read-only query and return results.
+
+        Args:
+            query: SQL SELECT query
+            params: Query parameters tuple
+
+        Returns:
+            List of Row objects with query results
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        return cursor.fetchall()
+
+    def execute_write(self, query: str, params: tuple = ()) -> int:
+        """
+        Execute a write query (INSERT, UPDATE, DELETE) and commit.
+
+        Args:
+            query: SQL write query
+            params: Query parameters tuple
+
+        Returns:
+            Number of affected rows (lastrowid for INSERT)
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        conn.commit()
+        return cursor.lastrowid if query.strip().upper().startswith("INSERT") else cursor.rowcount
+
     def _init_db(self):
         """Initialize SQLite database with comprehensive schema"""
         conn = self._create_connection()
@@ -91,6 +124,33 @@ class EnhancedDatabaseAdapter:
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """
+        )
+
+        # Refresh tokens table
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS refresh_tokens (
+                token_id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                token_hash TEXT NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                revoked BOOLEAN DEFAULT 0,
+                revoked_at TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+            )
+        """
+        )
+
+        # Create indexes for refresh_tokens
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens(user_id)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires_at ON refresh_tokens(expires_at)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_refresh_tokens_revoked ON refresh_tokens(revoked)"
         )
 
         # Projects table

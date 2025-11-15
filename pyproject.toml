@@ -161,6 +161,9 @@ markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
+    "e2e: marks tests as end-to-end tests",
+    "requires_llm: marks tests as requiring real LLM API calls",
+    "requires_providers: marks tests as requiring real OAuth providers",
 ]
 
 [tool.coverage.run]

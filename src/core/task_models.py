@@ -4,7 +4,7 @@ Enhanced Task Models - Comprehensive task management with hierarchy, dependencie
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any
@@ -189,11 +189,11 @@ class MicroStep(BaseModel):
     def mark_completed(self) -> None:
         """Mark micro-step as completed"""
         self.status = TaskStatus.COMPLETED
-        self.completed_at = datetime.utcnow()
+        self.completed_at = datetime.now(UTC)
 
         # Auto-calculate actual time if not set
         if self.actual_minutes is None and self.created_at:
-            duration = datetime.utcnow() - self.created_at
+            duration = datetime.now(UTC) - self.created_at
             self.actual_minutes = max(1, int(duration.total_seconds() / 60))
 
     model_config = ConfigDict(
@@ -292,27 +292,27 @@ class Task(BaseModel):
         """Check if task is overdue"""
         if not self.due_date or self.status == TaskStatus.COMPLETED:
             return False
-        return datetime.utcnow() > self.due_date
+        return datetime.now(UTC) > self.due_date
 
     def add_time(self, hours: Decimal) -> None:
         """Add hours to actual time"""
         if hours < 0:
             raise ValueError("Cannot add negative hours")
         self.actual_hours += hours
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(UTC)
 
     def mark_started(self) -> None:
         """Mark task as started"""
         if self.status == TaskStatus.TODO:
             self.status = TaskStatus.IN_PROGRESS
-            self.started_at = datetime.utcnow()
-            self.updated_at = datetime.utcnow()
+            self.started_at = datetime.now(UTC)
+            self.updated_at = datetime.now(UTC)
 
     def mark_completed(self) -> None:
         """Mark task as completed"""
         self.status = TaskStatus.COMPLETED
-        self.completed_at = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
+        self.completed_at = datetime.now(UTC)
+        self.updated_at = datetime.now(UTC)
 
     # Epic 7: Task Splitting Methods
 
@@ -512,7 +512,7 @@ class TaskComment(BaseModel):
             raise ValueError("Content cannot be empty")
 
         self.content = new_content.strip()
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(UTC)
         self.is_edited = True
 
     model_config = ConfigDict(
@@ -657,7 +657,7 @@ class FocusSession(BaseModel):
         if self.ended_at:
             raise ValueError("Session already completed")
 
-        self.ended_at = datetime.utcnow()
+        self.ended_at = datetime.now(UTC)
         self.was_completed = True
 
         # Calculate actual duration
@@ -726,7 +726,7 @@ class UserAchievement(BaseModel):
         if not self.is_completed:
             self.is_completed = True
             self.progress = 100.0
-            self.earned_at = datetime.utcnow()
+            self.earned_at = datetime.now(UTC)
 
     model_config = ConfigDict(
         use_enum_values=True,
@@ -788,7 +788,7 @@ class ProductivityMetrics(BaseModel):
         """Calculate derived metrics"""
         self.completion_rate = self.task_completion_rate
         self.focus_efficiency = self.focus_completion_rate
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(UTC)
 
     model_config = ConfigDict(
         use_enum_values=True,
@@ -860,8 +860,8 @@ class Goal(BaseModel):
     def update_progress(self, new_value: Decimal) -> None:
         """Update goal progress"""
         self.current_value = new_value
-        self.last_progress_update = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
+        self.last_progress_update = datetime.now(UTC)
+        self.updated_at = datetime.now(UTC)
 
         # Calculate percentage if target_value exists
         if self.target_value and self.target_value > 0:
@@ -871,13 +871,13 @@ class Goal(BaseModel):
             # Check if achieved
             if self.current_value >= self.target_value and not self.is_achieved:
                 self.is_achieved = True
-                self.achieved_at = datetime.utcnow()
+                self.achieved_at = datetime.now(UTC)
 
     def add_milestone(self, value: Decimal, date: datetime, description: str | None = None) -> None:
         """Add a new milestone"""
         milestone = Milestone(value=value, date=date, description=description)
         self.milestones.append(milestone)
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(UTC)
 
     model_config = ConfigDict(
         use_enum_values=True,
@@ -967,14 +967,14 @@ class Habit(BaseModel):
     def mark_completed_today(self, completion_date: str | None = None) -> HabitCompletion:
         """Mark habit as completed for today and update streak"""
         if completion_date is None:
-            completion_date = datetime.utcnow().strftime("%Y-%m-%d")
+            completion_date = datetime.now(UTC).strftime("%Y-%m-%d")
 
         # Create completion record
         completion = HabitCompletion(habit_id=self.habit_id, completion_date=completion_date)
 
         # Update habit stats
         self.total_completions += 1
-        self.last_completed_at = datetime.utcnow()
+        self.last_completed_at = datetime.now(UTC)
 
         # Add to history (keep last 90 days)
         if completion_date not in self.completion_history:
@@ -986,14 +986,14 @@ class Habit(BaseModel):
         if self.streak_count > self.longest_streak:
             self.longest_streak = self.streak_count
 
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(UTC)
 
         return completion
 
     def reset_streak(self) -> None:
         """Reset current streak (when habit is missed)"""
         self.streak_count = 0
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(UTC)
 
     model_config = ConfigDict(
         use_enum_values=True,
@@ -1040,10 +1040,10 @@ class ShoppingListItem(BaseModel):
     def mark_purchased(self, actual_price: Decimal | None = None) -> None:
         """Mark item as purchased"""
         self.is_purchased = True
-        self.purchased_at = datetime.utcnow()
+        self.purchased_at = datetime.now(UTC)
         if actual_price is not None:
             self.actual_price = actual_price
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(UTC)
 
     model_config = ConfigDict(
         use_enum_values=True,
@@ -1115,9 +1115,9 @@ class ShoppingList(BaseModel):
         if self.total_items > 0 and self.purchased_items == self.total_items:
             self.is_completed = True
             if not self.completed_at:
-                self.completed_at = datetime.utcnow()
+                self.completed_at = datetime.now(UTC)
 
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(UTC)
 
     model_config = ConfigDict(
         use_enum_values=True,

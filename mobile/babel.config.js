@@ -1,5 +1,7 @@
 module.exports = function (api) {
   api.cache(true);
+  const isStorybook = process.env.STORYBOOK_ENABLED === 'true';
+
   return {
     presets: ['babel-preset-expo'],
     plugins: [
@@ -8,12 +10,19 @@ module.exports = function (api) {
         {
           alias: {
             // Mock expo-router in Storybook mode only
-            ...(process.env.STORYBOOK_ENABLED === 'true'
+            ...(isStorybook
               ? {
                   'expo-router': './.rnstorybook/mocks/expo-router',
                 }
               : {}),
           },
+        },
+      ],
+      // Replace process.env.STORYBOOK_ENABLED with actual value at build time
+      [
+        'transform-inline-environment-variables',
+        {
+          include: ['STORYBOOK_ENABLED'],
         },
       ],
     ],

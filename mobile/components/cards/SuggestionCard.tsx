@@ -159,6 +159,7 @@ const styles = StyleSheet.create({
   },
   addButton: {
     flexShrink: 0,
+    marginLeft: 'auto',
   },
 });
 
