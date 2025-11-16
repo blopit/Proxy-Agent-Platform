@@ -72,10 +72,12 @@ class TestEnhancedDatabaseAdapter:
         # Test that foreign key constraint actually works
         # Try to insert a task with non-existent project_id
         with pytest.raises(sqlite3.IntegrityError):
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO tasks (task_id, title, description, project_id)
                 VALUES ('test-task', 'Test Task', 'Test Description', 'non-existent-project')
-            """)
+            """
+            )
 
         conn.close()
 
@@ -192,7 +194,8 @@ class TestEnhancedDatabaseAdapter:
             legacy_conn = sqlite3.connect(legacy_temp.name)
             legacy_cursor = legacy_conn.cursor()
 
-            legacy_cursor.execute("""
+            legacy_cursor.execute(
+                """
                 CREATE TABLE messages (
                     id TEXT PRIMARY KEY,
                     session_id TEXT NOT NULL,
@@ -202,13 +205,16 @@ class TestEnhancedDatabaseAdapter:
                     metadata TEXT DEFAULT '{}',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """
+            )
 
             # Insert test data
-            legacy_cursor.execute("""
+            legacy_cursor.execute(
+                """
                 INSERT INTO messages (id, session_id, message_type, content, agent_type)
                 VALUES ('legacy-1', 'legacy-session', 'user_input', 'Legacy message', 'task')
-            """)
+            """
+            )
 
             legacy_conn.commit()
             legacy_conn.close()
@@ -323,11 +329,13 @@ class TestEnhancedDatabaseSingleton:
         cursor = conn.cursor()
 
         # Check that achievements have required fields
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT achievement_id, name, description, category, criteria, xp_reward
             FROM achievements
             WHERE achievement_id = 'first_task'
-        """)
+        """
+        )
 
         result = cursor.fetchone()
         assert result is not None

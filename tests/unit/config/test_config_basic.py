@@ -6,8 +6,8 @@ Run with: uv run python config/test_config_basic.py
 """
 
 import logging
-from pathlib import Path
-from config import get_config_loader, load_agent_config, AgentType
+
+from config import get_config_loader
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s - %(message)s")
@@ -105,9 +105,7 @@ def test_config_system():
     print("💾 Test 7: Checking memory configurations...")
     for agent_type, config in configs.items():
         mem_status = "enabled" if config.memory.enabled else "disabled"
-        print(
-            f"✅ {agent_type}: Memory {mem_status} (limit: {config.memory.search_limit})"
-        )
+        print(f"✅ {agent_type}: Memory {mem_status} (limit: {config.memory.search_limit})")
     print()
 
     # Test 8: Behavior settings
@@ -141,8 +139,8 @@ def test_config_system():
     print("=" * 70)
     print("🎉 All configuration tests passed!")
     print(f"   - {len(configs)} agent configurations loaded")
-    print(f"   - All prompts render correctly")
-    print(f"   - All validations passed")
+    print("   - All prompts render correctly")
+    print("   - All validations passed")
     print("=" * 70 + "\n")
 
     # Display config summary
@@ -154,7 +152,9 @@ def test_config_system():
         print(f"  Model: {config.model_name}")
         print(f"  Tools: {len(config.tools)}")
         print(f"  MCP Servers: {len(config.mcp_servers)}")
-        print(f"  Capabilities: {', '.join(config.capabilities[:3])}{'...' if len(config.capabilities) > 3 else ''}")
+        print(
+            f"  Capabilities: {', '.join(config.capabilities[:3])}{'...' if len(config.capabilities) > 3 else ''}"
+        )
 
     print("\n" + "=" * 70 + "\n")
     return True

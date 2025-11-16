@@ -67,10 +67,12 @@ class TestEpic7DatabaseSchema:
         conn = db.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT name FROM sqlite_master
             WHERE type='table' AND name='micro_steps'
-        """)
+        """
+        )
         result = cursor.fetchone()
 
         assert result is not None
@@ -134,10 +136,12 @@ class TestEpic7TaskPersistence:
         # Create a test project to satisfy foreign key constraints
         conn = adapter.get_connection()
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO projects (project_id, name, description)
             VALUES ('project_123', 'Test Project', 'Test Project Description')
-        """)
+        """
+        )
         conn.commit()
 
         yield adapter
@@ -394,17 +398,21 @@ class TestEpic7TaskPersistence:
         conn = db.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO tasks (task_id, title, description, project_id)
             VALUES ('task_123', 'Test', 'Description', 'project_123')
-        """)
+        """
+        )
         conn.commit()
 
         # Retrieve and check defaults
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT scope, delegation_mode, is_micro_step
             FROM tasks WHERE task_id = 'task_123'
-        """)
+        """
+        )
         row = cursor.fetchone()
 
         assert row is not None
@@ -426,10 +434,12 @@ class TestEpic7MigrationBackwardsCompatibility:
         # Create a test project to satisfy foreign key constraints
         conn = adapter.get_connection()
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO projects (project_id, name, description)
             VALUES ('project_123', 'Test Project', 'Test Project Description')
-        """)
+        """
+        )
         conn.commit()
 
         yield adapter
@@ -441,11 +451,13 @@ class TestEpic7MigrationBackwardsCompatibility:
         conn = db.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO tasks
             (task_id, title, description, project_id, status, priority)
             VALUES ('old_task', 'Old Task', 'Created before Epic 7', 'project_123', 'todo', 'medium')
-        """)
+        """
+        )
         conn.commit()
 
         # Should still be retrievable
@@ -462,11 +474,13 @@ class TestEpic7MigrationBackwardsCompatibility:
         cursor = conn.cursor()
 
         # Create old-style task
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT INTO tasks
             (task_id, title, description, project_id)
             VALUES ('old_task_2', 'Old Task 2', 'Description', 'project_123')
-        """)
+        """
+        )
         conn.commit()
 
         # Update with Epic 7 fields
@@ -481,10 +495,12 @@ class TestEpic7MigrationBackwardsCompatibility:
         conn.commit()
 
         # Verify update
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT scope, delegation_mode, is_micro_step
             FROM tasks WHERE task_id = 'old_task_2'
-        """)
+        """
+        )
         row = cursor.fetchone()
 
         assert row[0] == "multi"

@@ -5,9 +5,8 @@ Tests that Mem0 client can store and retrieve memories.
 Run with: uv run python src/memory/test_memory_basic.py
 """
 
-import asyncio
 import logging
-from pathlib import Path
+
 from src.memory import MemoryClient, MemoryConfig
 
 # Setup logging
@@ -27,7 +26,7 @@ def test_memory_basic():
         collection_name="test_memories",
     )
 
-    print(f"📂 Initializing memory client...")
+    print("📂 Initializing memory client...")
     print(f"   - Vector store: {config.vector_store_provider}")
     print(f"   - Path: {config.vector_store_path}")
     print(f"   - Collection: {config.collection_name}\n")
@@ -52,8 +51,8 @@ def test_memory_basic():
                 "content": "That's great! Python and FastAPI are excellent for building APIs.",
             },
         ]
-        result = client.add_memory(messages, user_id=test_user)
-        print(f"✅ Memory added successfully\n")
+        client.add_memory(messages, user_id=test_user)
+        print("✅ Memory added successfully\n")
 
         # Test 2: Search memory
         print("🔍 Test 2: Searching memory...")

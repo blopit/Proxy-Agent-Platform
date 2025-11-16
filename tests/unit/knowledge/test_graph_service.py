@@ -25,7 +25,8 @@ def db():
     # Get connection and create KG tables
     conn = db.get_connection()
 
-    conn.execute("""
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS kg_entities (
             entity_id TEXT PRIMARY KEY,
             entity_type TEXT NOT NULL,
@@ -36,9 +37,11 @@ def db():
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(user_id, entity_type, name)
         )
-    """)
+    """
+    )
 
-    conn.execute("""
+    conn.execute(
+        """
         CREATE TABLE IF NOT EXISTS kg_relationships (
             relationship_id TEXT PRIMARY KEY,
             from_entity_id TEXT NOT NULL,
@@ -48,7 +51,8 @@ def db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             UNIQUE(from_entity_id, to_entity_id, relationship_type)
         )
-    """)
+    """
+    )
 
     conn.commit()
 

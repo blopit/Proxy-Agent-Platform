@@ -4,6 +4,8 @@ Tests for UserPetRepository (TDD - RED phase)
 Following TDD: Write tests FIRST, then implement repository.
 """
 
+import sqlite3
+
 import pytest
 
 from src.core.pet_models import UserPetCreate, UserPetUpdate
@@ -19,7 +21,8 @@ def db():
     # Create user_pets table directly for testing
     conn = db.get_connection()
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE user_pets (
             pet_id TEXT PRIMARY KEY,
             user_id TEXT NOT NULL UNIQUE,
@@ -37,7 +40,8 @@ def db():
             CHECK (happiness >= 0 AND happiness <= 100),
             CHECK (evolution_stage >= 1 AND evolution_stage <= 3)
         )
-    """)
+    """
+    )
     cursor.execute("CREATE INDEX idx_user_pets_user_id ON user_pets(user_id)")
     conn.commit()
 
@@ -93,7 +97,7 @@ def test_create_pet_fails_for_duplicate_user(repository, sample_pet_data):
     repository.create(sample_pet_data)
 
     # Attempt to create second pet for same user
-    with pytest.raises(Exception):  # Should raise IntegrityError or similar
+    with pytest.raises(sqlite3.IntegrityError):
         repository.create(UserPetCreate(user_id="user-123", species="cat", name="Mittens"))
 
 

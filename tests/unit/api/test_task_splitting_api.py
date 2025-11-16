@@ -31,46 +31,56 @@ def test_db(tmp_path):
     # Create test project
     conn = db.get_connection()
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO projects (project_id, name, description)
         VALUES ('test_project', 'Test Project', 'Test Project Description')
-    """)
+    """
+    )
 
     # Create test user
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO users (user_id, username, email)
         VALUES ('test_user', 'testuser', 'test@example.com')
-    """)
+    """
+    )
 
     # Create a MULTI-scope task (needs splitting)
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO tasks
         (task_id, title, description, project_id, estimated_hours, scope, status)
         VALUES
         ('task_multi', 'Implement Login Feature',
          'Add user authentication with email and password',
          'test_project', 0.5, 'multi', 'todo')
-    """)
+    """
+    )
 
     # Create a SIMPLE-scope task (no splitting needed)
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO tasks
         (task_id, title, description, project_id, estimated_hours, scope, status)
         VALUES
         ('task_simple', 'Reply to Email',
          'Send quick response to John',
          'test_project', 0.05, 'simple', 'todo')
-    """)
+    """
+    )
 
     # Create a PROJECT-scope task (complex)
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO tasks
         (task_id, title, description, project_id, estimated_hours, scope, status)
         VALUES
         ('task_project', 'Build Mobile App',
          'Complete mobile application with all features',
          'test_project', 40.0, 'project', 'todo')
-    """)
+    """
+    )
 
     conn.commit()
 

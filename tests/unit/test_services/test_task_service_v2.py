@@ -12,18 +12,16 @@ Key TDD Principle: Test services with MOCKED repositories
 - This tests business logic in isolation
 """
 
-import pytest
 from unittest.mock import Mock
-from datetime import datetime, timezone
-from uuid import uuid4
 
+import pytest
+
+from src.core.task_models import Project, Task, TaskPriority, TaskStatus
 from src.services.task_service_v2 import (
-    TaskService,
-    TaskServiceError,
+    ProjectNotFoundError,
     TaskNotFoundError,
-    ProjectNotFoundError
+    TaskService,
 )
-from src.core.task_models import Task, Project, TaskStatus, TaskPriority
 
 
 @pytest.mark.unit
@@ -37,11 +35,7 @@ class TestTaskServiceCreate:
         THEN: Task is created via repository
         """
         # Arrange
-        project = Project(
-            project_id="proj_123",
-            name="Test Project",
-            description="Test"
-        )
+        project = Project(project_id="proj_123", name="Test Project", description="Test")
         mock_project_repository.get_by_id.return_value = project
 
         expected_task = Task(
@@ -50,20 +44,17 @@ class TestTaskServiceCreate:
             description="Test Description",
             project_id="proj_123",
             status=TaskStatus.TODO,
-            priority=TaskPriority.HIGH
+            priority=TaskPriority.HIGH,
         )
         mock_task_repository.create.return_value = expected_task
 
         # Act
-        service = TaskService(
-            task_repo=mock_task_repository,
-            project_repo=mock_project_repository
-        )
+        service = TaskService(task_repo=mock_task_repository, project_repo=mock_project_repository)
         result = service.create_task(
             title="Test Task",
             description="Test Description",
             project_id="proj_123",
-            priority=TaskPriority.HIGH
+            priority=TaskPriority.HIGH,
         )
 
         # Assert
@@ -85,17 +76,10 @@ class TestTaskServiceCreate:
         mock_project_repository.get_by_id.return_value = None
 
         # Act & Assert
-        service = TaskService(
-            task_repo=mock_task_repository,
-            project_repo=mock_project_repository
-        )
+        service = TaskService(task_repo=mock_task_repository, project_repo=mock_project_repository)
 
         with pytest.raises(ProjectNotFoundError, match="Project proj_999 not found"):
-            service.create_task(
-                title="Test Task",
-                description="Test",
-                project_id="proj_999"
-            )
+            service.create_task(title="Test Task", description="Test", project_id="proj_999")
 
         # Verify create was never called
         mock_task_repository.create.assert_not_called()
@@ -111,6 +95,7 @@ class TestTaskServiceCreate:
 
         # Capture the task passed to repository
         created_task = None
+
         def capture_task(task):
             nonlocal created_task
             created_task = task
@@ -119,15 +104,8 @@ class TestTaskServiceCreate:
         mock_task_repository.create.side_effect = capture_task
 
         # Act
-        service = TaskService(
-            task_repo=mock_task_repository,
-            project_repo=mock_project_repository
-        )
-        service.create_task(
-            title="Test",
-            description="Test",
-            project_id="proj_1"
-        )
+        service = TaskService(task_repo=mock_task_repository, project_repo=mock_project_repository)
+        service.create_task(title="Test", description="Test", project_id="proj_1")
 
         # Assert
         assert created_task is not None
@@ -147,18 +125,12 @@ class TestTaskServiceRead:
         """
         # Arrange
         expected_task = Task(
-            task_id="task_1",
-            title="Found Task",
-            description="Test",
-            project_id="proj_1"
+            task_id="task_1", title="Found Task", description="Test", project_id="proj_1"
         )
         mock_task_repository.get_by_id.return_value = expected_task
 
         # Act
-        service = TaskService(
-            task_repo=mock_task_repository,
-            project_repo=mock_project_repository
-        )
+        service = TaskService(task_repo=mock_task_repository, project_repo=mock_project_repository)
         result = service.get_task("task_1")
 
         # Assert
@@ -176,10 +148,7 @@ class TestTaskServiceRead:
         mock_task_repository.get_by_id.return_value = None
 
         # Act & Assert
-        service = TaskService(
-            task_repo=mock_task_repository,
-            project_repo=mock_project_repository
-        )
+        service = TaskService(task_repo=mock_task_repository, project_repo=mock_project_repository)
 
         with pytest.raises(TaskNotFoundError, match="Task task_999 not found"):
             service.get_task("task_999")
@@ -201,7 +170,7 @@ class TestTaskServiceUpdate:
             title="Test",
             description="Test",
             project_id="proj_1",
-            status=TaskStatus.TODO
+            status=TaskStatus.TODO,
         )
         mock_task_repository.get_by_id.return_value = existing_task
 
@@ -209,17 +178,16 @@ class TestTaskServiceUpdate:
         mock_task_repository.update.return_value = updated_task
 
         # Act
-        service = TaskService(
-            task_repo=mock_task_repository,
-            project_repo=mock_project_repository
-        )
+        service = TaskService(task_repo=mock_task_repository, project_repo=mock_project_repository)
         result = service.update_task_status("task_1", TaskStatus.IN_PROGRESS)
 
         # Assert
         assert result.status == TaskStatus.IN_PROGRESS
         mock_task_repository.update.assert_called_once()
 
-    def test_update_task_status_sets_started_at(self, mock_task_repository, mock_project_repository):
+    def test_update_task_status_sets_started_at(
+        self, mock_task_repository, mock_project_repository
+    ):
         """
         GIVEN: Task without started_at
         WHEN: update_task_status(IN_PROGRESS) is called
@@ -232,16 +200,13 @@ class TestTaskServiceUpdate:
             description="Test",
             project_id="proj_1",
             status=TaskStatus.TODO,
-            started_at=None
+            started_at=None,
         )
         mock_task_repository.get_by_id.return_value = existing_task
         mock_task_repository.update.return_value = existing_task
 
         # Act
-        service = TaskService(
-            task_repo=mock_task_repository,
-            project_repo=mock_project_repository
-        )
+        service = TaskService(task_repo=mock_task_repository, project_repo=mock_project_repository)
         service.update_task_status("task_1", TaskStatus.IN_PROGRESS)
 
         # Assert - check the update dict passed to repository
@@ -250,7 +215,9 @@ class TestTaskServiceUpdate:
         assert "started_at" in updates_dict
         assert updates_dict["started_at"] is not None
 
-    def test_update_task_status_sets_completed_at(self, mock_task_repository, mock_project_repository):
+    def test_update_task_status_sets_completed_at(
+        self, mock_task_repository, mock_project_repository
+    ):
         """
         GIVEN: Task in progress
         WHEN: update_task_status(COMPLETED) is called
@@ -263,16 +230,13 @@ class TestTaskServiceUpdate:
             description="Test",
             project_id="proj_1",
             status=TaskStatus.IN_PROGRESS,
-            completed_at=None
+            completed_at=None,
         )
         mock_task_repository.get_by_id.return_value = existing_task
         mock_task_repository.update.return_value = existing_task
 
         # Act
-        service = TaskService(
-            task_repo=mock_task_repository,
-            project_repo=mock_project_repository
-        )
+        service = TaskService(task_repo=mock_task_repository, project_repo=mock_project_repository)
         service.update_task_status("task_1", TaskStatus.COMPLETED)
 
         # Assert
@@ -291,10 +255,7 @@ class TestTaskServiceUpdate:
         mock_task_repository.get_by_id.return_value = None
 
         # Act & Assert
-        service = TaskService(
-            task_repo=mock_task_repository,
-            project_repo=mock_project_repository
-        )
+        service = TaskService(task_repo=mock_task_repository, project_repo=mock_project_repository)
 
         with pytest.raises(TaskNotFoundError):
             service.update_task_status("task_999", TaskStatus.COMPLETED)
@@ -314,10 +275,7 @@ class TestTaskServiceDelete:
         mock_task_repository.delete.return_value = True
 
         # Act
-        service = TaskService(
-            task_repo=mock_task_repository,
-            project_repo=mock_project_repository
-        )
+        service = TaskService(task_repo=mock_task_repository, project_repo=mock_project_repository)
         result = service.delete_task("task_1")
 
         # Assert
@@ -334,10 +292,7 @@ class TestTaskServiceDelete:
         mock_task_repository.delete.return_value = False
 
         # Act
-        service = TaskService(
-            task_repo=mock_task_repository,
-            project_repo=mock_project_repository
-        )
+        service = TaskService(task_repo=mock_task_repository, project_repo=mock_project_repository)
         result = service.delete_task("task_999")
 
         # Assert
@@ -362,10 +317,7 @@ class TestTaskServiceList:
         mock_task_repository.get_by_project.return_value = tasks
 
         # Act
-        service = TaskService(
-            task_repo=mock_task_repository,
-            project_repo=mock_project_repository
-        )
+        service = TaskService(task_repo=mock_task_repository, project_repo=mock_project_repository)
         result = service.list_tasks_by_project("proj_1")
 
         # Assert
@@ -380,17 +332,19 @@ class TestTaskServiceList:
         """
         # Arrange
         tasks = [
-            Task(task_id=f"task_{i}", title=f"Task {i}", description="Test",
-                 project_id="proj_1", status=TaskStatus.TODO)
+            Task(
+                task_id=f"task_{i}",
+                title=f"Task {i}",
+                description="Test",
+                project_id="proj_1",
+                status=TaskStatus.TODO,
+            )
             for i in range(2)
         ]
         mock_task_repository.get_by_status.return_value = tasks
 
         # Act
-        service = TaskService(
-            task_repo=mock_task_repository,
-            project_repo=mock_project_repository
-        )
+        service = TaskService(task_repo=mock_task_repository, project_repo=mock_project_repository)
         result = service.list_tasks_by_status(TaskStatus.TODO)
 
         # Assert

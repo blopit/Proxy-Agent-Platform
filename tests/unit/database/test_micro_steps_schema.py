@@ -5,6 +5,7 @@ Tests written FIRST before migration implementation.
 Following Test-Driven Development: Red → Green → Refactor
 """
 
+import sqlite3
 from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
@@ -16,13 +17,15 @@ import pytest
 def db(isolated_db):
     """Provide test database with migrations applied"""
     # Create minimal tasks table for foreign key testing
-    isolated_db.execute("""
+    isolated_db.execute(
+        """
         CREATE TABLE IF NOT EXISTS tasks (
             task_id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """)
+    """
+    )
 
     # Apply 007_add_micro_steps.sql migration
     migration_path = Path(__file__).parent.parent / "migrations" / "007_add_micro_steps.sql"
@@ -110,7 +113,7 @@ class TestMicroStepsTableSchema:
 
         # Try to insert without description (should fail)
 
-        with pytest.raises(Exception):  # Will raise IntegrityError
+        with pytest.raises(sqlite3.IntegrityError):
             db.execute(
                 """
                 INSERT INTO micro_steps (step_id, parent_task_id, estimated_minutes)
@@ -161,7 +164,7 @@ class TestMicroStepsForeignKeys:
 
         # Try to insert micro_step with non-existent parent task
         # Should fail if foreign key is enforced
-        with pytest.raises(Exception):  # IntegrityError
+        with pytest.raises(sqlite3.IntegrityError):
             db.execute(
                 """
                 INSERT INTO micro_steps (
@@ -389,9 +392,11 @@ class TestMicroStepsQueries:
         )
 
         # Query incomplete only
-        cursor = db.execute("""
+        cursor = db.execute(
+            """
             SELECT * FROM micro_steps WHERE completed = 0
-        """)
+        """
+        )
 
         results = cursor.fetchall()
         assert len(results) == 1

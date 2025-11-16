@@ -20,7 +20,8 @@ def workflows_dir(tmp_path: Path) -> Path:
 
     # Create a simple test workflow
     test_workflow = workflows_dir / "test-workflow.toml"
-    test_workflow.write_text("""
+    test_workflow.write_text(
+        """
 workflow_id = "test_workflow"
 name = "Test Workflow"
 description = "A simple test workflow"
@@ -46,7 +47,8 @@ Expected format (JSON array):
   }}
 ]
 '''
-    """)
+    """
+    )
 
     return workflows_dir
 

@@ -5,6 +5,7 @@ Tests written FIRST before migration implementation.
 Following Test-Driven Development: Red → Green → Refactor
 """
 
+import sqlite3
 from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
@@ -16,15 +17,18 @@ import pytest
 def db(isolated_db):
     """Provide test database with migrations applied"""
     # Create minimal tasks and micro_steps tables for foreign key testing
-    isolated_db.execute("""
+    isolated_db.execute(
+        """
         CREATE TABLE IF NOT EXISTS tasks (
             task_id TEXT PRIMARY KEY,
             title TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """)
+    """
+    )
 
-    isolated_db.execute("""
+    isolated_db.execute(
+        """
         CREATE TABLE IF NOT EXISTS micro_steps (
             step_id TEXT PRIMARY KEY,
             parent_task_id TEXT NOT NULL,
@@ -34,7 +38,8 @@ def db(isolated_db):
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (parent_task_id) REFERENCES tasks(task_id) ON DELETE CASCADE
         )
-    """)
+    """
+    )
 
     # Apply 008_add_reflections.sql migration
     migration_path = Path(__file__).parent.parent / "migrations" / "008_add_reflections.sql"
@@ -117,7 +122,7 @@ class TestReflectionsTableSchema:
         assert columns["user_id"] == "TEXT"
 
         # Try to insert without user_id (should fail)
-        with pytest.raises(Exception):  # Will raise IntegrityError
+        with pytest.raises(sqlite3.IntegrityError):
             db.execute(
                 """
                 INSERT INTO reflections (
@@ -139,7 +144,7 @@ class TestReflectionsTableSchema:
         assert columns["what_happened"] == "TEXT"
 
         # Try to insert without what_happened (should fail)
-        with pytest.raises(Exception):
+        with pytest.raises(sqlite3.IntegrityError):
             db.execute(
                 """
                 INSERT INTO reflections (reflection_id, user_id, reflection_date)
@@ -185,7 +190,7 @@ class TestReflectionsForeignKeys:
 
         # Try to insert reflection with non-existent step_id
         # Should fail if foreign key is enforced
-        with pytest.raises(Exception):  # IntegrityError
+        with pytest.raises(sqlite3.IntegrityError):
             db.execute(
                 """
                 INSERT INTO reflections (
@@ -201,7 +206,7 @@ class TestReflectionsForeignKeys:
         """Test that task_id has foreign key to tasks table"""
         # Try to insert reflection with non-existent task_id
         # Should fail if foreign key is enforced
-        with pytest.raises(Exception):  # IntegrityError
+        with pytest.raises(sqlite3.IntegrityError):
             db.execute(
                 """
                 INSERT INTO reflections (

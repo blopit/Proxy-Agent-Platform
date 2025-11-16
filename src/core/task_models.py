@@ -193,7 +193,13 @@ class MicroStep(BaseModel):
 
         # Auto-calculate actual time if not set
         if self.actual_minutes is None and self.created_at:
-            duration = datetime.now(UTC) - self.created_at
+            # Ensure created_at is timezone-aware for comparison
+            created_aware = (
+                self.created_at
+                if self.created_at.tzinfo is not None
+                else self.created_at.replace(tzinfo=UTC)
+            )
+            duration = datetime.now(UTC) - created_aware
             self.actual_minutes = max(1, int(duration.total_seconds() / 60))
 
     model_config = ConfigDict(

@@ -10,10 +10,8 @@ These tests verify the complete request/response cycle through FastAPI.
 """
 
 import pytest
-from httpx import AsyncClient
 from fastapi import status
-
-from src.core.task_models import TaskStatus, TaskPriority
+from httpx import AsyncClient
 
 
 @pytest.mark.integration
@@ -150,9 +148,7 @@ class TestTaskRoutesRead:
         assert data["limit"] == 50  # Default limit
         assert data["skip"] == 0
 
-    async def test_list_tasks_with_data(
-        self, api_client: AsyncClient, test_project, test_task
-    ):
+    async def test_list_tasks_with_data(self, api_client: AsyncClient, test_project, test_task):
         """
         GIVEN: Tasks exist in database
         WHEN: GET /api/v2/tasks
@@ -184,13 +180,9 @@ class TestTaskRoutesRead:
         # Assert
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert all(
-            task["project_id"] == test_project.project_id for task in data["tasks"]
-        )
+        assert all(task["project_id"] == test_project.project_id for task in data["tasks"])
 
-    async def test_list_tasks_with_status_filter(
-        self, api_client: AsyncClient, test_task
-    ):
+    async def test_list_tasks_with_status_filter(self, api_client: AsyncClient, test_task):
         """
         GIVEN: Tasks with different statuses
         WHEN: GET /api/v2/tasks?status=todo
@@ -211,9 +203,7 @@ class TestTaskRoutesRead:
         THEN: Pagination parameters are respected
         """
         # Act
-        response = await api_client.get(
-            "/api/v2/tasks", params={"limit": 10, "skip": 0}
-        )
+        response = await api_client.get("/api/v2/tasks", params={"limit": 10, "skip": 0})
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -242,9 +232,7 @@ class TestTaskRoutesUpdate:
         }
 
         # Act
-        response = await api_client.put(
-            f"/api/v2/tasks/{test_task.task_id}", json=update_data
-        )
+        response = await api_client.put(f"/api/v2/tasks/{test_task.task_id}", json=update_data)
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -265,9 +253,7 @@ class TestTaskRoutesUpdate:
         update_data = {"title": "Updated Title"}
 
         # Act
-        response = await api_client.put(
-            "/api/v2/tasks/nonexistent_task_123", json=update_data
-        )
+        response = await api_client.put("/api/v2/tasks/nonexistent_task_123", json=update_data)
 
         # Assert
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -281,13 +267,10 @@ class TestTaskRoutesUpdate:
         THEN: Only specified fields are updated
         """
         # Arrange
-        original_description = test_task.description
         update_data = {"title": "Only Title Updated"}
 
         # Act
-        response = await api_client.put(
-            f"/api/v2/tasks/{test_task.task_id}", json=update_data
-        )
+        response = await api_client.put(f"/api/v2/tasks/{test_task.task_id}", json=update_data)
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -301,9 +284,7 @@ class TestTaskRoutesUpdate:
 class TestTaskRoutesStatusManagement:
     """Test task status update endpoint"""
 
-    async def test_update_status_to_in_progress(
-        self, api_client: AsyncClient, test_task
-    ):
+    async def test_update_status_to_in_progress(self, api_client: AsyncClient, test_task):
         """
         GIVEN: Task in todo status
         WHEN: PATCH /api/v2/tasks/{task_id}/status with in_progress
@@ -324,9 +305,7 @@ class TestTaskRoutesStatusManagement:
         assert data["started_at"] is not None  # Should be set automatically
         assert data["completed_at"] is None
 
-    async def test_update_status_to_completed(
-        self, api_client: AsyncClient, test_task_in_progress
-    ):
+    async def test_update_status_to_completed(self, api_client: AsyncClient, test_task_in_progress):
         """
         GIVEN: Task in progress
         WHEN: PATCH /api/v2/tasks/{task_id}/status with completed
@@ -408,18 +387,14 @@ class TestTaskRoutesDelete:
 class TestTaskRoutesSearch:
     """Test task search endpoint"""
 
-    async def test_search_tasks_success(
-        self, api_client: AsyncClient, test_task_searchable
-    ):
+    async def test_search_tasks_success(self, api_client: AsyncClient, test_task_searchable):
         """
         GIVEN: Task with searchable content exists
         WHEN: GET /api/v2/tasks/search?q=authentication
         THEN: Matching tasks are returned
         """
         # Act
-        response = await api_client.get(
-            "/api/v2/tasks/search", params={"q": "authentication"}
-        )
+        response = await api_client.get("/api/v2/tasks/search", params={"q": "authentication"})
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -458,9 +433,7 @@ class TestTaskRoutesSearch:
 class TestTaskRoutesStats:
     """Test task statistics endpoint"""
 
-    async def test_get_task_stats(
-        self, api_client: AsyncClient, test_project_with_tasks
-    ):
+    async def test_get_task_stats(self, api_client: AsyncClient, test_project_with_tasks):
         """
         GIVEN: Project with multiple tasks
         WHEN: GET /api/v2/tasks/stats?project_id=X

@@ -85,7 +85,7 @@ class TestFocusSessionsAPI:
     def test_get_user_sessions(self, test_client, sample_session_data):
         """Test retrieving user's focus sessions."""
         # Create 3 sessions
-        for i in range(3):
+        for _i in range(3):
             test_client.post("/api/v1/focus/sessions", json=sample_session_data)
 
         # Get user sessions
@@ -99,7 +99,7 @@ class TestFocusSessionsAPI:
     def test_get_user_sessions_with_limit(self, test_client, sample_session_data):
         """Test pagination with limit parameter."""
         # Create 5 sessions
-        for i in range(5):
+        for _i in range(5):
             test_client.post("/api/v1/focus/sessions", json=sample_session_data)
 
         # Get only 2
@@ -112,7 +112,7 @@ class TestFocusSessionsAPI:
     def test_get_focus_analytics(self, test_client, sample_session_data):
         """Test analytics endpoint calculates metrics correctly."""
         # Create and complete 2 sessions
-        for i in range(2):
+        for _i in range(2):
             create_resp = test_client.post("/api/v1/focus/sessions", json=sample_session_data)
             session_id = create_resp.json()["session_id"]
             # Complete session

@@ -33,7 +33,8 @@ def test_pet_db():
     # Create user_pets table
     conn = db.get_connection()
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
         CREATE TABLE user_pets (
             pet_id TEXT PRIMARY KEY,
             user_id TEXT NOT NULL UNIQUE,
@@ -51,7 +52,8 @@ def test_pet_db():
             CHECK (happiness >= 0 AND happiness <= 100),
             CHECK (evolution_stage >= 1 AND evolution_stage <= 3)
         )
-    """)
+    """
+    )
     cursor.execute("CREATE INDEX idx_user_pets_user_id ON user_pets(user_id)")
     conn.commit()
 

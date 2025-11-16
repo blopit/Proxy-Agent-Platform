@@ -7,8 +7,8 @@ This file provides common test fixtures and configuration for TDD.
 import asyncio
 import os
 import sys
-from datetime import datetime, timezone
-from typing import Generator
+from collections.abc import Generator
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
@@ -18,8 +18,8 @@ from faker import Faker
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from src.core.task_models import TaskPriority, TaskScope, TaskStatus
 from src.database.models import Base
-from src.core.task_models import TaskStatus, TaskPriority, TaskScope
 
 # Add project paths
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "agent"))
@@ -131,6 +131,7 @@ def test_data_factory():
 # Database Fixtures for TDD (Sprint 1.2)
 # ============================================================================
 
+
 @pytest.fixture(scope="function")
 def test_db() -> Generator[Session, None, None]:
     """
@@ -164,6 +165,7 @@ def make_task_data():
     Usage:
         task_data = make_task_data(title="Custom Title", priority=TaskPriority.HIGH)
     """
+
     def _make_task_data(**overrides):
         data = {
             "task_id": str(uuid4()),
@@ -173,11 +175,12 @@ def make_task_data():
             "status": TaskStatus.TODO.value,
             "priority": TaskPriority.MEDIUM.value,
             "scope": TaskScope.SIMPLE.value,
-            "created_at": datetime.now(timezone.utc),
-            "updated_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
+            "updated_at": datetime.now(UTC),
         }
         data.update(overrides)
         return data
+
     return _make_task_data
 
 
@@ -189,16 +192,18 @@ def make_project_data():
     Usage:
         project_data = make_project_data(name="Test Project")
     """
+
     def _make_project_data(**overrides):
         data = {
             "project_id": str(uuid4()),
             "name": fake.catch_phrase(),
             "description": fake.text(),
-            "created_at": datetime.now(timezone.utc),
-            "updated_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
+            "updated_at": datetime.now(UTC),
         }
         data.update(overrides)
         return data
+
     return _make_project_data
 
 
@@ -207,17 +212,19 @@ def make_user_data():
     """
     Factory for creating user data dictionaries
     """
+
     def _make_user_data(**overrides):
         data = {
             "user_id": str(uuid4()),
             "username": fake.user_name(),
             "email": fake.email(),
             "full_name": fake.name(),
-            "created_at": datetime.now(timezone.utc),
-            "updated_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
+            "updated_at": datetime.now(UTC),
         }
         data.update(overrides)
         return data
+
     return _make_user_data
 
 
@@ -241,6 +248,7 @@ def mock_project_repository():
 # Integration Test Fixtures (Sprint 1.3)
 # ============================================================================
 
+
 @pytest_asyncio.fixture(scope="function")
 async def api_client(test_db):
     """
@@ -249,7 +257,8 @@ async def api_client(test_db):
     Uses AsyncClient from httpx for async support.
     Overrides the database dependency to use test_db.
     """
-    from httpx import AsyncClient, ASGITransport
+    from httpx import ASGITransport, AsyncClient
+
     from src.api.main import app
     from src.database.connection import get_db_session
 
@@ -277,15 +286,15 @@ def test_project(test_db):
 
     Returns Project domain model.
     """
-    from src.database.models import Project as ProjectModel
     from src.core.task_models import Project
+    from src.database.models import Project as ProjectModel
 
     project_data = {
         "project_id": str(uuid4()),
         "name": "Test Project",
         "description": "A test project for integration tests",
-        "created_at": datetime.now(timezone.utc),
-        "updated_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(UTC),
+        "updated_at": datetime.now(UTC),
     }
 
     project_model = ProjectModel(**project_data)
@@ -303,8 +312,8 @@ def test_task(test_db, test_project):
 
     Returns Task domain model.
     """
-    from src.database.models import Task as TaskModel
     from src.core.task_models import Task
+    from src.database.models import Task as TaskModel
 
     task_data = {
         "task_id": str(uuid4()),
@@ -313,8 +322,8 @@ def test_task(test_db, test_project):
         "project_id": test_project.project_id,
         "status": TaskStatus.TODO.value,
         "priority": TaskPriority.MEDIUM.value,
-        "created_at": datetime.now(timezone.utc),
-        "updated_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(UTC),
+        "updated_at": datetime.now(UTC),
     }
 
     task_model = TaskModel(**task_data)
@@ -342,8 +351,8 @@ def test_task_in_progress(test_db, test_project):
 
     Returns Task domain model.
     """
-    from src.database.models import Task as TaskModel
     from src.core.task_models import Task
+    from src.database.models import Task as TaskModel
 
     task_data = {
         "task_id": str(uuid4()),
@@ -352,9 +361,9 @@ def test_task_in_progress(test_db, test_project):
         "project_id": test_project.project_id,
         "status": TaskStatus.IN_PROGRESS.value,
         "priority": TaskPriority.HIGH.value,
-        "started_at": datetime.now(timezone.utc),
-        "created_at": datetime.now(timezone.utc),
-        "updated_at": datetime.now(timezone.utc),
+        "started_at": datetime.now(UTC),
+        "created_at": datetime.now(UTC),
+        "updated_at": datetime.now(UTC),
     }
 
     task_model = TaskModel(**task_data)
@@ -382,8 +391,8 @@ def test_task_searchable(test_db, test_project):
 
     Returns Task domain model.
     """
-    from src.database.models import Task as TaskModel
     from src.core.task_models import Task
+    from src.database.models import Task as TaskModel
 
     task_data = {
         "task_id": str(uuid4()),
@@ -392,8 +401,8 @@ def test_task_searchable(test_db, test_project):
         "project_id": test_project.project_id,
         "status": TaskStatus.TODO.value,
         "priority": TaskPriority.HIGH.value,
-        "created_at": datetime.now(timezone.utc),
-        "updated_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(UTC),
+        "updated_at": datetime.now(UTC),
     }
 
     task_model = TaskModel(**task_data)
@@ -420,16 +429,17 @@ def test_project_with_tasks(test_db):
 
     Returns Project domain model with tasks populated.
     """
-    from src.database.models import Project as ProjectModel, Task as TaskModel
     from src.core.task_models import Project
+    from src.database.models import Project as ProjectModel
+    from src.database.models import Task as TaskModel
 
     # Create project
     project_data = {
         "project_id": str(uuid4()),
         "name": "Project with Tasks",
         "description": "A project with multiple tasks for statistics testing",
-        "created_at": datetime.now(timezone.utc),
-        "updated_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(UTC),
+        "updated_at": datetime.now(UTC),
     }
 
     project_model = ProjectModel(**project_data)
@@ -440,7 +450,7 @@ def test_project_with_tasks(test_db):
     statuses = [TaskStatus.TODO, TaskStatus.TODO, TaskStatus.IN_PROGRESS, TaskStatus.COMPLETED]
     priorities = [TaskPriority.LOW, TaskPriority.MEDIUM, TaskPriority.HIGH, TaskPriority.HIGH]
 
-    for i, (status, priority) in enumerate(zip(statuses, priorities)):
+    for i, (status, priority) in enumerate(zip(statuses, priorities, strict=False)):
         task_data = {
             "task_id": str(uuid4()),
             "title": f"Task {i+1}",
@@ -448,14 +458,14 @@ def test_project_with_tasks(test_db):
             "project_id": project_data["project_id"],
             "status": status.value,
             "priority": priority.value,
-            "created_at": datetime.now(timezone.utc),
-            "updated_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
+            "updated_at": datetime.now(UTC),
         }
 
         if status == TaskStatus.COMPLETED:
-            task_data["completed_at"] = datetime.now(timezone.utc)
+            task_data["completed_at"] = datetime.now(UTC)
         elif status == TaskStatus.IN_PROGRESS:
-            task_data["started_at"] = datetime.now(timezone.utc)
+            task_data["started_at"] = datetime.now(UTC)
 
         task_model = TaskModel(**task_data)
         test_db.add(task_model)

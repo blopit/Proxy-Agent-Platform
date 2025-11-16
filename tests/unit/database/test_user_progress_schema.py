@@ -7,6 +7,7 @@ Following Test-Driven Development: Red → Green → Refactor
 User Progress tracks gamification: XP, levels, badges, streaks
 """
 
+import sqlite3
 from datetime import datetime
 from pathlib import Path
 
@@ -92,7 +93,7 @@ class TestUserProgressTableSchema:
         assert columns["user_id"] == "TEXT"
 
         # Try to insert without user_id (should fail)
-        with pytest.raises(Exception):  # Will raise IntegrityError
+        with pytest.raises(sqlite3.IntegrityError):
             db.execute(
                 """
                 INSERT INTO user_progress (total_xp, current_level)
@@ -303,7 +304,7 @@ class TestUserProgressConstraints:
         db.execute("INSERT INTO user_progress (user_id) VALUES (?)", (user_id,))
 
         # Try to insert same user_id again - should fail
-        with pytest.raises(Exception):  # IntegrityError
+        with pytest.raises(sqlite3.IntegrityError):
             db.execute("INSERT INTO user_progress (user_id) VALUES (?)", (user_id,))
 
 
@@ -476,11 +477,13 @@ class TestUserProgressQueries:
             )
 
         # Query top 3 by XP
-        cursor = db.execute("""
+        cursor = db.execute(
+            """
             SELECT user_id, total_xp FROM user_progress
             ORDER BY total_xp DESC
             LIMIT 3
-        """)
+        """
+        )
 
         results = cursor.fetchall()
         assert len(results) == 3

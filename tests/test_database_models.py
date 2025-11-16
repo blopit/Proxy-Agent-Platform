@@ -4,19 +4,16 @@ Test database models and schemas.
 Comprehensive tests for database functionality to increase coverage.
 """
 
-from datetime import datetime
 
 import pytest
 
 # Import models from correct locations
 from src.core.task_models import (
-    Achievement,
     FocusSession,
     Task,
     TaskPriority,
     TaskStatus,
     User,
-    UserAchievement,
 )
 
 
@@ -73,9 +70,7 @@ class TestTaskModel:
     def test_task_model_defaults(self):
         """Test Task model default values."""
         task = Task(
-            title="Minimal Task",
-            description="Minimal description",
-            project_id="project-456"
+            title="Minimal Task", description="Minimal description", project_id="project-456"
         )
 
         # Test defaults
